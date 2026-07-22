@@ -25,8 +25,9 @@
 │   ├── app.js                # 作品元数据、搜索与渲染逻辑
 │   ├── styles.css            # 首页视觉样式
 │   └── supplemental-samples/ # 补充截图样例
-├── EX-BWLT.../               # 原始作品目录
-└── NBZEX-BWLT.../            # 原始作品目录
+└── pages/                    # 原始页面作品目录
+    ├── EX-BWLT.../
+    └── NBZEX-BWLT.../
 ```
 
 ## 本地预览
