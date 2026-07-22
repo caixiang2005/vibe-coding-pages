@@ -11,7 +11,7 @@
 - 原始页面目录集中归档在 `pages/` 中，保持作品内部资源引用稳定。
 - README 保留项目说明、展示截图、在线入口和部署方式，适合作为 GitHub 仓库首页展示。
 
-## 界面展示
+## 部分页面展示
 
 ![短视频素材剪接合成界面样例](assets/supplemental-samples/short-video-editing-sample.png)
 
