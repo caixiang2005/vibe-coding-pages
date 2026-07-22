@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消息通知</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --gold: #C9A84C; --gold-dark: #A07830; --red: #C0392B; --bg: #FDF8F0; --text: #2C1810; --text2: #6B4C3B; --text3: #9C7B6B; }
+  body { font-family: 'Noto Sans SC', sans-serif; background: #E8E0D0; display: flex; justify-content: center; }
+  .phone-frame { width: 100%; height: 100vh; background: var(--bg); overflow: hidden; overflow-y: auto; display: flex; flex-direction: column; }
+  .status-bar { background: linear-gradient(135deg,#8B1A1A,#C9A84C); color:white; padding:12px 24px 8px; display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+  .status-bar .time { font-weight:700; font-size:15px; }
+  .status-icons { display:flex; gap:6px; }
+
+  .page-header { background: linear-gradient(135deg,#8B1A1A 0%,#C0392B 50%,#C9A84C 100%); padding:14px 20px 20px; display:flex; align-items:center; gap:14px; }
+  .back-btn { width:36px; height:36px; background:rgba(255,255,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; text-decoration:none; border:1px solid rgba(255,255,255,0.2); cursor:pointer; }
+  .page-title { color:white; font-size:18px; font-weight:700; font-family:'Noto Serif SC',serif; flex:1; }
+
+  .content { flex:1; overflow-y:auto; padding:16px 20px 90px; }
+  .content::-webkit-scrollbar { display:none; }
+
+  .section-title { font-family:'Noto Serif SC',serif; font-size:14px; font-weight:700; color:var(--text); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .section-title::before { content:''; width:3px; height:14px; background:linear-gradient(to bottom,var(--red),var(--gold)); border-radius:2px; }
+
+  .notif-card { background:white; border-radius:16px; padding:16px; margin-bottom:12px; border:1px solid #F0E8D8; }
+  .notif-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #F0E8D8; cursor:pointer; transition:all 0.2s; }
+  .notif-item:last-child { border-bottom:none; padding-bottom:0; }
+  .notif-item:first-child { padding-top:0; }
+  .notif-item:active { background:#FEF9EE; margin:0 -16px; padding-left:16px; padding-right:16px; border-radius:8px; }
+  .notif-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; color:white; flex-shrink:0; }
+  .notif-icon.red { background:var(--red); }
+  .notif-icon.gold { background:var(--gold); }
+  .notif-icon.blue { background:#2980B9; }
+  .notif-icon.green { background:#27AE60; }
+  .notif-info { flex:1; }
+  .notif-name { font-size:14px; font-weight:600; color:var(--text); margin-bottom:2px; display:flex; align-items:center; justify-content:space-between; }
+  .notif-desc { font-size:12px; color:var(--text3); }
+  .toggle { width:44px; height:26px; background:#ccc; border-radius:13px; position:relative; cursor:pointer; transition:all 0.2s; }
+  .toggle.on { background:#27AE60; }
+  .toggle::after { content:''; position:absolute; width:22px; height:22px; background:white; border-radius:50%; top:2px; left:2px; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.2); }
+  .toggle.on::after { left:20px; }
+
+  .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width: 100%; background:white; border-top:1px solid #EDE0C8; display:flex; padding:8px 0 20px; box-shadow:0 -4px 20px rgba(44,24,16,0.08); z-index:100; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; text-decoration:none; padding:4px 0; }
+  .nav-item i { font-size:20px; color:#BDB0A0; }
+  .nav-item span { font-size:10px; color:#BDB0A0; font-weight:500; }
+  .nav-item.active i { color:var(--red); }
+  .nav-item.active span { color:var(--red); font-weight:700; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  
+  <div class="page-header">
+    <a href="profile.html" class="back-btn"><i class="fa fa-arrow-left"></i></a>
+    <div class="page-title">消息通知</div>
+  </div>
+
+  <div class="content">
+    <div class="section-title">系统通知</div>
+    <div class="notif-card">
+      <div class="notif-item" onclick="toggleItem(this)">
+        <div class="notif-icon red"><i class="fa-solid fa-bell"></i></div>
+        <div class="notif-info">
+          <div class="notif-name">学习提醒 <span style="font-size:11px;color:var(--text3);font-weight:400;">每日 09:00</span></div>
+          <div class="notif-desc">提醒您按时完成每日学习计划</div>
+        </div>
+        <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"></div>
+      </div>
+      <div class="notif-item" onclick="toggleItem(this)">
+        <div class="notif-icon gold"><i class="fa-solid fa-trophy"></i></div>
+        <div class="notif-info">
+          <div class="notif-name">成就解锁 <span style="font-size:11px;color:var(--text3);font-weight:400;">即时</span></div>
+          <div class="notif-desc">学习成就获得时立即通知</div>
+        </div>
+        <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"></div>
+      </div>
+      <div class="notif-item" onclick="toggleItem(this)">
+        <div class="notif-icon blue"><i class="fa-solid fa-newspaper"></i></div>
+        <div class="notif-info">
+          <div class="notif-name">新内容上线 <span style="font-size:11px;color:var(--text3);font-weight:400;">即时</span></div>
+          <div class="notif-desc">剧目、课程更新时通知</div>
+        </div>
+        <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"></div>
+      </div>
+    </div>
+
+    <div class="section-title">互动通知</div>
+    <div class="notif-card">
+      <div class="notif-item" onclick="toggleItem(this)">
+        <div class="notif-icon green"><i class="fa-solid fa-comment"></i></div>
+        <div class="notif-info">
+          <div class="notif-name">评论回复 <span style="font-size:11px;color:var(--text3);font-weight:400;">即时</span></div>
+          <div class="notif-desc">有人回复您的评论时通知</div>
+        </div>
+        <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"></div>
+      </div>
+      <div class="notif-item" onclick="toggleItem(this)">
+        <div class="notif-icon gold"><i class="fa-solid fa-heart"></i></div>
+        <div class="notif-info">
+          <div class="notif-name">笔记点赞 <span style="font-size:11px;color:var(--text3);font-weight:400;">即时</span></div>
+          <div class="notif-desc">您的笔记被点赞时通知</div>
+        </div>
+        <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"></div>
+      </div>
+      <div class="notif-item" onclick="toggleItem(this)">
+        <div class="notif-icon red"><i class="fa-solid fa-users"></i></div>
+        <div class="notif-info">
+          <div class="notif-name">新增关注 <span style="font-size:11px;color:var(--text3);font-weight:400;">即时</span></div>
+          <div class="notif-desc">有人关注您时通知</div>
+        </div>
+        <div class="toggle" onclick="event.stopPropagation();toggleSwitch(this)"></div>
+      </div>
+    </div>
+
+    <div class="section-title">考试通知</div>
+    <div class="notif-card">
+      <div class="notif-item" onclick="toggleItem(this)">
+        <div class="notif-icon blue"><i class="fa-solid fa-pen-to-square"></i></div>
+        <div class="notif-info">
+          <div class="notif-name">练习提醒 <span style="font-size:11px;color:var(--text3);font-weight:400;">每日 20:00</span></div>
+          <div class="notif-desc">提醒您完成每日练习任务</div>
+        </div>
+        <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"></div>
+      </div>
+      <div class="notif-item" onclick="toggleItem(this)">
+        <div class="notif-icon green"><i class="fa-solid fa-chart-line"></i></div>
+        <div class="notif-info">
+          <div class="notif-name">成绩通报 <span style="font-size:11px;color:var(--text3);font-weight:400;">即时</span></div>
+          <div class="notif-desc">练习成绩出来后通知</div>
+        </div>
+        <div class="toggle on" onclick="event.stopPropagation();toggleSwitch(this)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>首页</span></a>
+    <a href="repertoire.html" class="nav-item"><i class="fa-solid fa-film"></i><span>剧目</span></a>
+    <a href="study.html" class="nav-item"><i class="fa-solid fa-graduation-cap"></i><span>学习</span></a>
+    <a href="exam.html" class="nav-item"><i class="fa-solid fa-pen-to-square"></i><span>练习</span></a>
+    <a href="profile.html" class="nav-item active"><i class="fa-regular fa-circle-user"></i><span>我的</span></a>
+  </div>
+</div>
+
+<script>
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeIn 0.3s';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.animation = 'fadeOut 0.3s'; setTimeout(() => toast.remove(), 300); }, 1500);
+}
+
+function toggleSwitch(el) {
+  el.classList.toggle('on');
+  if (el.classList.contains('on')) {
+    showToast('已开启');
+  } else {
+    showToast('已关闭');
+  }
+}
+
+function toggleItem(el) {
+  showToast('查看详情');
+}
+</script>
+<style>
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.8); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+</style>
+</body>
+</html>

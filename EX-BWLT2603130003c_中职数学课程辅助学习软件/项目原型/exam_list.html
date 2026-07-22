@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4A6CF7">
+  <title>模拟考试 - 中职数学课程辅助学习软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    :root{--primary:#4A6CF7;--primary-light:#6B8AFF;--primary-dark:#3451D1;--accent:#FF6B6B;--accent-orange:#FF9F43;--accent-green:#2ED573;--accent-purple:#A66CFF;--bg:#F5F7FB;--card:#FFFFFF;--text:#1E293B;--text-sec:#64748B;--text-light:#94A3B8;--border:#E2E8F0;--shadow:0 2px 12px rgba(74,108,247,0.08);--shadow-lg:0 8px 32px rgba(74,108,247,0.12);--radius:16px}
+    html,body{font-family:'Noto Sans SC',sans-serif;background:#1a1a2e;height:100%;overflow:hidden}
+    .phone-frame{width:100%;height:100vh;background:var(--bg);overflow:hidden;position:relative}
+    .page{height:100%;overflow-y:auto;overflow-x:hidden;background:var(--bg);-webkit-overflow-scrolling:touch}
+    .page::-webkit-scrollbar{display:none}
+    .sub-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+    .sub-back{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+    .sub-back:active{transform:scale(0.9)}
+    .sub-title{color:#fff;font-size:17px;font-weight:700;flex:1}
+    .sub-body{padding:16px}
+    .tabs{display:flex;gap:0;background:var(--card);padding:4px;border-radius:12px;margin-bottom:16px;box-shadow:var(--shadow)}
+    .tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;color:var(--text-light);border-radius:10px;cursor:pointer;transition:all 0.3s}
+    .tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(74,108,247,0.3)}
+    .exam-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;transition:all 0.25s}
+    .exam-card:active{transform:scale(0.98)}
+    .exam-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .exam-title{font-size:15px;font-weight:600;color:var(--text)}
+    .exam-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600}
+    .exam-tag.blue{background:#E8EDFF;color:var(--primary)}
+    .exam-tag.orange{background:#FEF3C7;color:var(--accent-orange)}
+    .exam-tag.green{background:#ECFDF5;color:var(--accent-green)}
+    .exam-meta{display:flex;gap:16px;margin-bottom:10px}
+    .exam-meta span{font-size:12px;color:var(--text-light);display:flex;align-items:center;gap:4px}
+    .exam-desc{font-size:12px;color:var(--text-sec);line-height:1.5}
+    .exam-footer{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);margin-top:10px}
+    .exam-score{font-size:14px;font-weight:700;color:var(--primary)}
+    .exam-btn{padding:6px 14px;background:var(--primary);color:#fff;font-size:12px;font-weight:600;border-radius:8px;border:none;cursor:pointer;font-family:inherit;transition:all 0.2s}
+    .exam-btn:active{background:var(--primary-dark)}
+    .exam-btn.done{background:var(--accent-green)}
+    .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#1E293B;color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;font-weight:500;z-index:1000;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:all 0.3s}
+    .modal-overlay.show{opacity:1;pointer-events:auto}
+    .modal{background:var(--card);border-radius:var(--radius);width:85%;max-width:320px;transform:scale(0.9);transition:all 0.3s}
+    .modal.show{transform:scale(1)}
+    .modal-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:16px;border-radius:var(--radius) var(--radius) 0 0;text-align:center}
+    .modal-title{color:#fff;font-size:16px;font-weight:700}
+    .modal-body{padding:20px;text-align:center}
+    .modal-text{font-size:14px;color:var(--text);line-height:1.7}
+    .modal-btn{display:block;width:100%;padding:14px;background:var(--primary);color:#fff;font-size:15px;font-weight:600;border:none;border-radius:0 0 var(--radius) var(--radius);cursor:pointer;font-family:inherit;transition:all 0.2s}
+    .modal-btn:active{background:var(--primary-dark)}
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="page">
+      <div class="sub-header">
+        <div class="sub-back" onclick="goBack()"><i class="ri-arrow-left-s-line"></i></div>
+        <div class="sub-title">模拟考试</div>
+      </div>
+      <div class="sub-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this)">全部</div>
+          <div class="tab" onclick="switchTab(this)">单元测试</div>
+          <div class="tab" onclick="switchTab(this)">综合测试</div>
+        </div>
+        <div class="exam-card" onclick="location.href='exam_detail.html'">
+          <div class="exam-header">
+            <div class="exam-title">第一章·集合与函数测试</div>
+            <div class="exam-tag blue">单元测试</div>
+          </div>
+          <div class="exam-meta">
+            <span><i class="ri-time-line"></i> 60 分钟</span>
+            <span><i class="ri-file-list-3-line"></i> 20 题</span>
+            <span><i class="ri-star-line"></i> 100 分</span>
+          </div>
+          <div class="exam-desc">测试内容包含集合的概念、表示方法、基本运算，函数的概念、表示方法及性质等知识点。</div>
+          <div class="exam-footer">
+            <div class="exam-score">最高分：85 分</div>
+            <button class="exam-btn">开始答题</button>
+          </div>
+        </div>
+        <div class="exam-card" onclick="showModal('基础模块综合测试','本测试包含基础模块所有知识点，共 50 题，满分 100 分，限时 90 分钟。确认开始吗？')">
+          <div class="exam-header">
+            <div class="exam-title">基础模块综合测试</div>
+            <div class="exam-tag orange">综合测试</div>
+          </div>
+          <div class="exam-meta">
+            <span><i class="ri-time-line"></i> 90 分钟</span>
+            <span><i class="ri-file-list-3-line"></i> 50 题</span>
+            <span><i class="ri-star-line"></i> 100 分</span>
+          </div>
+          <div class="exam-desc">涵盖集合、不等式、数列、三角函数等基础模块全部知识点。</div>
+          <div class="exam-footer">
+            <div class="exam-score">未参加</div>
+            <button class="exam-btn">开始答题</button>
+          </div>
+        </div>
+        <div class="exam-card" onclick="showModal('不等式单元测试','本测试包含一元一次不等式、一元二次不等式等内容，共 30 题，限时 45 分钟。')">
+          <div class="exam-header">
+            <div class="exam-title">第二章·不等式测试</div>
+            <div class="exam-tag blue">单元测试</div>
+          </div>
+          <div class="exam-meta">
+            <span><i class="ri-time-line"></i> 45 分钟</span>
+            <span><i class="ri-file-list-3-line"></i> 30 题</span>
+            <span><i class="ri-star-line"></i> 100 分</span>
+          </div>
+          <div class="exam-desc">测试内容包含不等式的基本性质、一元一次不等式、一元二次不等式的解法等。</div>
+          <div class="exam-footer">
+            <div class="exam-score">最高分：92 分</div>
+            <button class="exam-btn done"><i class="ri-check-line"></i> 已完成</button>
+          </div>
+        </div>
+        <div class="exam-card" onclick="showModal('数列单元测试','本测试包含等差数列、等比数列的通项公式及求和公式，共 25 题，限时 40 分钟。')">
+          <div class="exam-header">
+            <div class="exam-title">第三章·数列测试</div>
+            <div class="exam-tag blue">单元测试</div>
+          </div>
+          <div class="exam-meta">
+            <span><i class="ri-time-line"></i> 40 分钟</span>
+            <span><i class="ri-file-list-3-line"></i> 25 题</span>
+            <span><i class="ri-star-line"></i> 100 分</span>
+          </div>
+          <div class="exam-desc">测试内容包含等差数列、等比数列的概念、通项公式、前 n 项和公式及其应用。</div>
+          <div class="exam-footer">
+            <div class="exam-score">未参加</div>
+            <button class="exam-btn">开始答题</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title" id="modalTitle">考试说明</div>
+        </div>
+        <div class="modal-body">
+          <div class="modal-text" id="modalText"></div>
+        </div>
+        <button class="modal-btn" onclick="startExam()">开始考试</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    function switchTab(el){
+      el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+    }
+    function showModal(title,text){
+      document.getElementById('modalTitle').textContent=title;
+      document.getElementById('modalText').textContent=text;
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+    function closeModal(e){
+      if(e&&e.target!==document.getElementById('modalOverlay'))return;
+      document.getElementById('modalOverlay').classList.remove('show');
+    }
+    function startExam(){
+      closeModal();
+      showToast('正在加载试卷...');
+      setTimeout(()=>location.href='exam_detail.html',1000);
+    }
+    function goBack(){
+      if(window.history.length>1){
+        window.history.back();
+      }else{
+        location.href='home.html';
+      }
+    }
+    function showToast(msg){
+      const t=document.getElementById('toast');
+      t.textContent=msg;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'),2000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>水利工程质量问题整改督办系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            color-scheme: light;
+        }
+
+        .leaflet-control-attribution {
+            display: none;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        .desktop-shell {
+            width: min(1720px, 100vw);
+            height: min(1080px, 100vh);
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        .mac-window {
+            height: 100%;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            background: rgba(248, 250, 253, 0.78);
+            backdrop-filter: blur(20px) saturate(150%);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08);
+        }
+
+        .window-titlebar {
+            height: 44px;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            background: linear-gradient(180deg, rgba(249, 251, 255, 0.92) 0%, rgba(240, 245, 252, 0.78) 100%);
+            backdrop-filter: blur(22px);
+        }
+
+        .sidebar-blur {
+            background: linear-gradient(180deg, rgba(243, 247, 251, 0.88) 0%, rgba(236, 242, 249, 0.78) 100%);
+            backdrop-filter: blur(24px);
+            border-right: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .glass-card {
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.78), rgba(251, 253, 255, 0.62));
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+            transition: transform 180ms ease, box-shadow 220ms ease, border-color 180ms ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(148, 163, 184, 0.28);
+            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.1);
+        }
+
+        .toolbar-surface {
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .active-nav {
+            background: linear-gradient(135deg, rgba(0, 87, 146, 0.18), rgba(0, 122, 255, 0.14));
+            color: #0b3d71;
+            font-weight: 600;
+            box-shadow: inset 0 0 0 1px rgba(0, 87, 146, 0.08);
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .mac-input {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+        }
+
+        .mac-input:focus {
+            border-color: rgba(0, 122, 255, 0.42);
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12);
+        }
+
+        .alert-dot {
+            animation: pulse-dot 1.6s ease-in-out infinite;
+        }
+
+        .project-map {
+            width: 100%;
+            height: 100%;
+            min-height: 260px;
+        }
+
+        .map-fallback {
+            height: 100%;
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 100%);
+            color: #334155;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .leaflet-container {
+            background: #e2e8f0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 10px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
+        }
+
+        .leaflet-popup-content {
+            margin: 10px 12px;
+            font-size: 12px;
+            color: #334155;
+        }
+
+        .risk-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            border: 2px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.22);
+            background: #ef4444;
+        }
+
+        .risk-dot.low {
+            background: #3b82f6;
+            box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.22);
+        }
+
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.15);
+                opacity: 0.7;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.36);
+            border-radius: 999px;
+        }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .modal-box { background: white; border-radius: 16px; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25); min-width: 420px; max-width: 480px; }
+        .modal-header-center { padding: 14px 20px; border-bottom: 1px solid rgba(148, 163, 184, 0.2); display: flex; align-items: center; cursor: move; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid rgba(148, 163, 184, 0.2); display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #005792, #0074d9); color: white; padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 150ms ease; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 87, 146, 0.3); }
+        .btn-secondary { background: rgba(148, 163, 184, 0.15); color: #475569; padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(148, 163, 184, 0.3); cursor: pointer; transition: all 150ms ease; }
+        .btn-secondary:hover { background: rgba(148, 163, 184, 0.25); }
+        .notification-item { padding: 12px; border-radius: 10px; transition: all 150ms ease; cursor: pointer; }
+        .notification-item:hover { background: rgba(0, 87, 146, 0.08); }
+        .notification-item.unread { border-left: 3px solid #ef4444; }
+        .live-indicator { animation: pulse-live 1.5s ease-in-out infinite; }
+        @keyframes pulse-live { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+
+<body class="min-h-screen overflow-hidden">
+    <div class="desktop-shell">
+        <div class="mac-window">
+            <header class="window-titlebar px-5 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                    </div>
+                </div>
+            </header>
+            <div class="h-[calc(100%-44px)] flex overflow-hidden">
+                <aside class="w-72 sidebar-blur flex flex-col h-full flex-shrink-0">
+                    <div class="p-6 pb-2">
+                        <div class="flex items-center space-x-3 mb-8">
+                            <div
+                                class="w-11 h-11 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                                <img alt="系统Logo" class="w-11 h-11 object-contain" src="./static/logo.png" />
+                            </div>
+                            <div>
+                                <h1 class="text-[13px] font-bold text-slate-800 tracking-tight">水利工程质量问题</h1>
+                                <h1 class="text-[13px] font-bold text-slate-800 tracking-tight">整改督办系统</h1>
+                                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">macOS 客户端</p>
+                            </div>
+                        </div>
+                        <nav class="space-y-1">
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg active-nav transition-all" href="#">
+                                <i class="fa-solid fa-chart-line text-lg"></i>
+                                <span class="text-sm">综合态势</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="task-assignment.html">
+                                <i class="fa-solid fa-list-check text-lg"></i>
+                                <span class="text-sm">任务分派</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="rectification-tracking.html">
+                                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                                <span class="text-sm">整改跟踪</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="quality-statistics.html">
+                                <i class="fa-solid fa-chart-pie text-lg"></i>
+                                <span class="text-sm">质量统计</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="project-distribution.html">
+                                <i class="fa-solid fa-map-location-dot text-lg"></i>
+                                <span class="text-sm">项目分布</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="system-security.html">
+                                <i class="fa-solid fa-shield-halved text-lg"></i>
+                                <span class="text-sm">系统安全</span>
+                            </a>
+                        </nav>
+                    </div>
+                    <div class="mt-auto p-4 border-t border-slate-200/70 bg-white/40">
+                        <div class="flex items-center space-x-3">
+                            <img alt="User Profile" class="w-9 h-9 rounded-full ring-2 ring-white shadow-sm"
+                                src="https://i01piccdn.sogoucdn.com/6de4845d273e3386" />
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold text-slate-800 truncate">文丹</p>
+                                <p class="text-[10px] text-[#005792]">管理员</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+                <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+        <!-- Toolbar (Top Bar) -->
+                    <header
+                        class="h-12 border-b border-slate-200/70 flex items-center justify-between px-4 toolbar-surface sticky top-0 z-10">
+            <div class="flex items-center space-x-3">
+                <div class="px-3 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-semibold tracking-wide">
+                    LIVE
+                </div>
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-700">综合态势</h2>
+                    <p class="text-[10px] text-slate-500">实时监测 · 督办执行 · 风险闭环</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input
+                        class="pl-9 pr-4 py-1.5 mac-input rounded-xl text-xs w-64 transition-all outline-none"
+                        placeholder="搜索工程项目或预警编号..." type="text" />
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="openNotificationModal()" class="relative text-slate-500 hover:text-slate-800">
+                        <i class="fa-solid fa-bell text-xl"></i>
+                        <span id="notifBadge" class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                    </button>
+                </div>
+            </div>
+                    </header>
+                    <div class="flex-1 overflow-y-hidden p-4 space-y-4 bg-[#f2f5fa]">
+            <div class="flex items-end justify-between">
+                <div>
+                    <p class="text-sm text-slate-600 mt-1">目前全省共有 <span class="font-bold text-[#0A66C2]">12</span>
+                        个重大质量隐患待督办，请及时关注。</p>
+                </div>
+                <div class="flex bg-white/75 rounded-xl p-1 shadow-sm border border-slate-200/70 backdrop-blur">
+                    <button id="btnLive" onclick="switchToLive()" class="px-4 py-1.5 text-xs font-medium bg-slate-900 text-white rounded-lg shadow-inner flex items-center">
+                        <i class="fa-solid fa-circle text-[6px] mr-2 text-red-500 live-indicator"></i>实时视角
+                    </button>
+                    <button id="btnHistory" onclick="switchToHistory()" class="px-4 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 rounded-lg flex items-center">
+                        <i class="fa-solid fa-history mr-2"></i>历史回顾
+                    </button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="glass-card p-4 rounded-2xl">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="fa-solid fa-clipboard-list text-blue-600"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">+12.5%</span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">累计排查问题项</p>
+                    <h4 class="text-xl font-bold text-slate-800 mt-1">1,284</h4>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border-l-4 border-l-orange-400">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                            <i class="fa-solid fa-triangle-exclamation text-orange-600"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">高危</span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">当前整改中</p>
+                    <h4 class="text-xl font-bold text-slate-800 mt-1">156</h4>
+                </div>
+                <div class="glass-card p-4 rounded-2xl">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                            <i class="fa-solid fa-check-circle text-green-600"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400">稳定</span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">整改闭环率</p>
+                    <h4 class="text-xl font-bold text-slate-800 mt-1">94.2%</h4>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border-l-4 border-l-red-500">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                            <i class="fa-solid fa-clock text-red-600"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-red-600">严重</span>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">逾期未响应</p>
+                    <h4 class="text-xl font-bold text-slate-800 mt-1">8</h4>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="lg:col-span-2 glass-card p-4 rounded-2xl h-[240px]">
+                    <div class="flex items-center justify-between mb-3">
+                        <h5 class="text-sm font-bold text-slate-800">全省水利工程质量风险态势记录</h5>
+                        <select class="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none">
+                            <option>最近30天</option>
+                            <option>本季度</option>
+                        </select>
+                    </div>
+                    <div class="w-full h-full pb-4" id="trendChart"></div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl h-[240px] flex flex-col">
+                    <h5 class="text-sm font-bold text-slate-800 mb-2">缺陷类别分布</h5>
+                    <div class="w-full flex-1" id="typeChart"></div>
+                    <div class="mt-2 space-y-1.5">
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="flex items-center text-slate-600"><span
+                                    class="w-2 h-2 rounded-full bg-[#005792] mr-2"></span>基础施工</span>
+                            <span class="font-bold">42%</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="flex items-center text-slate-600"><span
+                                    class="w-2 h-2 rounded-full bg-[#28C840] mr-2"></span>配套设施</span>
+                            <span class="font-bold">28%</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="flex items-center text-slate-600"><span
+                                    class="w-2 h-2 rounded-full bg-[#FFBD2E] mr-2"></span>堤坝裂缝</span>
+                            <span class="font-bold">30%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 pb-1">
+                <div class="lg:col-span-3 glass-card rounded-2xl overflow-hidden h-[400px] flex flex-col">
+                    <div class="p-3 border-b border-slate-100 flex items-center justify-between bg-white/60">
+                        <h5 class="text-sm font-bold text-slate-800">各市重点项目质量地图监视</h5>
+                        <div class="flex space-x-2">
+                            <span class="px-2 py-1 text-[10px] bg-red-100 text-red-600 rounded-full">预警: 5</span>
+                            <span class="px-2 py-1 text-[10px] bg-blue-100 text-blue-600 rounded-full">正常: 48</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative bg-slate-50 group">
+                        <div class="project-map" id="projectMap"></div>
+                        <div
+                            class="absolute top-4 left-4 px-3 py-1.5 bg-white/85 border border-slate-200 text-[11px] text-slate-600 rounded-lg backdrop-blur-sm">
+                            <span id="mapSourceLabel">实时地理地图 · 高德地图</span>
+                        </div>
+                        <div
+                            class="absolute bottom-4 right-4 p-4 glass-card rounded-xl text-xs space-y-2 w-52 shadow-lg">
+                            <p class="font-bold border-b pb-1" id="mapProjectName">选中项目：黑水河堤防</p>
+                            <p class="text-slate-600 flex justify-between"><span>风险指数：</span><span class="text-red-500 font-bold"
+                                    id="mapRiskIndex">88</span></p>
+                            <p class="text-slate-600 flex justify-between"><span>整改进度：</span><span class="text-blue-600"
+                                    id="mapProgress">25%</span></p>
+                            <button class="w-full py-1.5 bg-[#0A66C2] text-white rounded-lg mt-2">查看实景视频</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl h-[400px] flex flex-col overflow-hidden">
+                    <div class="p-3 border-b border-slate-100 bg-white/60">
+                        <h5 class="text-sm font-bold text-slate-800">紧急督办列表</h5>
+                    </div>
+                    <div class="flex-1 overflow-y-auto">
+                        <div class="p-3 border-b border-slate-100 hover:bg-red-50/30 transition-colors">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="status-badge bg-red-100 text-red-600">重大</span>
+                                <span class="text-[10px] text-slate-400">10分钟前</span>
+                            </div>
+                            <h6 class="text-xs font-bold text-slate-800">南调干渠三标段混凝土强度不达标</h6>
+                            <p class="text-[10px] text-slate-500 mt-1">责任人：赵广生 | 已发送催办函</p>
+                        </div>
+                        <div class="p-3 border-b border-slate-100 hover:bg-orange-50/30 transition-colors">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="status-badge bg-orange-100 text-orange-600">一般</span>
+                                <span class="text-[10px] text-slate-400">2小时前</span>
+                            </div>
+                            <h6 class="text-xs font-bold text-slate-800">东岗水库泄洪闸门电气腐蚀</h6>
+                            <p class="text-[10px] text-slate-500 mt-1">状态：待分派责任工程师</p>
+                        </div>
+                        <div class="p-3 border-b border-slate-100 hover:bg-blue-50/30 transition-colors">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="status-badge bg-blue-100 text-blue-600">跟进</span>
+                                <span class="text-[10px] text-slate-400">昨天</span>
+                            </div>
+                            <h6 class="text-xs font-bold text-slate-800">青山闸加固工程材料检测延期</h6>
+                            <p class="text-[10px] text-slate-500 mt-1">需监理现场复核签字</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                    </div>
+                    <footer
+                        class="h-8 border-t border-slate-200/70 px-4 flex items-center justify-between bg-white/75 backdrop-blur text-[10px] text-slate-500">
+            <div class="flex items-center space-x-4">
+                <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
+                    数据中心连接正常</span>
+                <span>最后同步: 2026-03-19 14:32:01</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span>版本: V1.0.0</span>
+            </div>
+                    </footer>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <div id="notificationModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header-center" id="notifModalHeader">
+                <div class="flex space-x-2 mr-4">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 flex-1 text-center pr-8">通知中心</h3>
+                <button onclick="closeNotificationModal()" class="ml-auto text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body p-3 space-y-2 max-h-[400px]">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-600">全部已读</span>
+                    <button onclick="markAllRead()" class="text-xs text-[#005792] hover:underline">标为已读</button>
+                </div>
+                <div class="notification-item unread" onclick="handleNotification('urgent')">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-circle-exclamation text-red-500 text-sm"></i>
+                            <span class="text-xs font-bold text-red-600">紧急预警</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">10分钟前</span>
+                    </div>
+                    <p class="text-xs text-slate-700 mt-1">南调干渠三标段混凝土强度复检结果不合格，需立即处理</p>
+                    <p class="text-[10px] text-slate-400 mt-1">南调干渠三标段 | 责任人：赵广生</p>
+                </div>
+                <div class="notification-item unread" onclick="handleNotification('normal')">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-info-circle text-blue-500 text-sm"></i>
+                            <span class="text-xs font-bold text-blue-600">系统通知</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">2小时前</span>
+                    </div>
+                    <p class="text-xs text-slate-700 mt-1">东岗水库泄洪闸门整改任务已分配，请及时跟进</p>
+                    <p class="text-[10px] text-slate-400 mt-1">东岗水库 | 责任人：张志明</p>
+                </div>
+                <div class="notification-item" onclick="handleNotification('normal')">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-check-circle text-green-500 text-sm"></i>
+                            <span class="text-xs font-bold text-green-600">整改完成</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">昨天</span>
+                    </div>
+                    <p class="text-xs text-slate-700 mt-1">青山闸加固工程材料检测已通过验收</p>
+                    <p class="text-[10px] text-slate-400 mt-1">青山闸加固 | 责任人：王建国</p>
+                </div>
+                <div class="notification-item" onclick="handleNotification('normal')">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-clock text-orange-500 text-sm"></i>
+                            <span class="text-xs font-bold text-orange-600">临期提醒</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">昨天</span>
+                    </div>
+                    <p class="text-xs text-slate-700 mt-1">渭河橡胶坝渗水检测任务即将到期，请尽快处理</p>
+                    <p class="text-[10px] text-slate-400 mt-1">渭河橡胶坝 | 责任人：陈晓东</p>
+                </div>
+                <div class="notification-item" onclick="handleNotification('normal')">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-bell text-slate-500 text-sm"></i>
+                            <span class="text-xs font-bold text-slate-600">系统公告</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">3天前</span>
+                    </div>
+                    <p class="text-xs text-slate-700 mt-1">系统将于本周六凌晨2:00进行例行维护，请提前做好数据备份</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal-overlay hidden">
+        <div class="modal-box" style="min-width: 600px; max-width: 700px;">
+            <div class="modal-header-center" id="historyModalHeader">
+                <div class="flex space-x-2 mr-4">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 flex-1 text-center pr-8">历史回顾</h3>
+                <button onclick="closeHistoryModal()" class="ml-auto text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-1">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">开始日期</label>
+                            <input type="date" id="historyStartDate" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">结束日期</label>
+                            <input type="date" id="historyEndDate" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none" />
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="loadHistoryData()" class="btn-primary">
+                                <i class="fa-solid fa-search mr-2"></i>查询
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="p-3 bg-blue-50 rounded-xl text-center">
+                            <p class="text-lg font-bold text-blue-600" id="historyIssues">0</p>
+                            <p class="text-[10px] text-slate-500">问题总数</p>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded-xl text-center">
+                            <p class="text-lg font-bold text-green-600" id="historyCompleted">0</p>
+                            <p class="text-[10px] text-slate-500">完成整改</p>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-xl text-center">
+                            <p class="text-lg font-bold text-orange-600" id="historyRate">0%</p>
+                            <p class="text-[10px] text-slate-500">闭环率</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-2">历史记录列表</label>
+                        <div class="space-y-2 max-h-[200px] overflow-y-auto">
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fa-solid fa-check-circle text-green-500"></i>
+                                        <span class="text-xs font-semibold text-slate-700">青山闸加固工程 - 材料检测完成</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400">2026-03-15</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fa-solid fa-check-circle text-green-500"></i>
+                                        <span class="text-xs font-semibold text-slate-700">黑水河堤防 - 裂缝修补第一阶段完成</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400">2026-03-14</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fa-solid fa-exclamation-triangle text-orange-500"></i>
+                                        <span class="text-xs font-semibold text-slate-700">东岗水库 - 发现闸门腐蚀问题</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400">2026-03-12</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fa-solid fa-plus-circle text-blue-500"></i>
+                                        <span class="text-xs font-semibold text-slate-700">南调干渠 - 新增质量问题1项</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400">2026-03-10</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="exportHistory()" class="btn-secondary">
+                            <i class="fa-solid fa-download mr-2"></i>导出报表
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLiveMode = true;
+        let isDraggingNotif = false, isDraggingHistory = false;
+        let notifOffsetX, notifOffsetY, historyOffsetX, historyOffsetY;
+        let unreadCount = 2;
+
+        function switchToLive() {
+            isLiveMode = true;
+            document.getElementById('btnLive').className = 'px-4 py-1.5 text-xs font-medium bg-slate-900 text-white rounded-lg shadow-inner flex items-center';
+            document.getElementById('btnLive').innerHTML = '<i class="fa-solid fa-circle text-[6px] mr-2 text-red-500 live-indicator"></i>实时视角';
+            document.getElementById('btnHistory').className = 'px-4 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 rounded-lg flex items-center';
+            document.getElementById('btnHistory').innerHTML = '<i class="fa-solid fa-history mr-2"></i>历史回顾';
+            document.getElementById('liveIndicator').textContent = 'LIVE';
+            document.getElementById('liveIndicator').className = 'px-3 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-semibold tracking-wide';
+            alert('已切换到实时视角\n\n当前显示实时数据：\n- 累计问题：1,284\n- 整改中：156\n- 闭环率：94.2%\n- 逾期：8');
+        }
+
+        function switchToHistory() {
+            isLiveMode = false;
+            document.getElementById('btnLive').className = 'px-4 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 rounded-lg flex items-center';
+            document.getElementById('btnLive').innerHTML = '<i class="fa-solid fa-circle text-[6px] mr-2 text-slate-400"></i>实时视角';
+            document.getElementById('btnHistory').className = 'px-4 py-1.5 text-xs font-medium bg-slate-900 text-white rounded-lg shadow-inner flex items-center';
+            document.getElementById('btnHistory').innerHTML = '<i class="fa-solid fa-history mr-2"></i>历史回顾';
+            openHistoryModal();
+        }
+
+        function openNotificationModal() {
+            document.getElementById('notificationModal').classList.remove('hidden');
+            isDraggingNotif = false;
+        }
+
+        function closeNotificationModal() {
+            document.getElementById('notificationModal').classList.add('hidden');
+        }
+
+        function markAllRead() {
+            unreadCount = 0;
+            document.getElementById('notifBadge').style.display = 'none';
+            const items = document.querySelectorAll('.notification-item.unread');
+            items.forEach(item => item.classList.remove('unread'));
+            alert('已将所有通知标为已读');
+        }
+
+        function handleNotification(type) {
+            if (type === 'urgent') {
+                const items = document.querySelectorAll('.notification-item.unread');
+                items.forEach(item => item.classList.remove('unread'));
+                unreadCount = 0;
+                document.getElementById('notifBadge').style.display = 'none';
+            }
+            alert('通知详情：\n南调干渠三标段混凝土强度复检结果不合格\n\n建议操作：\n1. 立即暂停该标段施工\n2. 联系第三方检测机构重新检测\n3. 制定整改方案');
+            closeNotificationModal();
+        }
+
+        function openHistoryModal() {
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            document.getElementById('historyStartDate').value = weekAgo.toISOString().split('T')[0];
+            document.getElementById('historyEndDate').value = today.toISOString().split('T')[0];
+            loadHistoryData();
+            document.getElementById('historyModal').classList.remove('hidden');
+            isDraggingHistory = false;
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.add('hidden');
+        }
+
+        function loadHistoryData() {
+            const startDate = document.getElementById('historyStartDate').value;
+            const endDate = document.getElementById('historyEndDate').value;
+
+            if (!startDate || !endDate) {
+                alert('请选择开始日期和结束日期！');
+                return;
+            }
+
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('开始日期不能晚于结束日期！');
+                return;
+            }
+
+            document.getElementById('historyIssues').textContent = '128';
+            document.getElementById('historyCompleted').textContent = '115';
+            document.getElementById('historyRate').textContent = '89.8%';
+        }
+
+        function exportHistory() {
+            const startDate = document.getElementById('historyStartDate').value;
+            const endDate = document.getElementById('historyEndDate').value;
+            alert('历史报表导出成功！\n\n时间范围：' + startDate + ' 至 ' + endDate + '\n问题总数：128\n完成整改：115\n闭环率：89.8%\n\n报表已保存至：/exports/history_' + startDate + '_' + endDate + '.pdf');
+        }
+
+        document.getElementById('notifModalHeader').addEventListener('mousedown', function(e) {
+            isDraggingNotif = true;
+            notifOffsetX = e.clientX - this.parentElement.getBoundingClientRect().left;
+            notifOffsetY = e.clientY - this.parentElement.getBoundingClientRect().top;
+        });
+
+        document.getElementById('historyModalHeader').addEventListener('mousedown', function(e) {
+            isDraggingHistory = true;
+            historyOffsetX = e.clientX - this.parentElement.getBoundingClientRect().left;
+            historyOffsetY = e.clientY - this.parentElement.getBoundingClientRect().top;
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (isDraggingNotif) {
+                const modal = document.querySelector('#notificationModal .modal-box');
+                modal.style.margin = '0';
+                modal.style.position = 'fixed';
+                modal.style.left = (e.clientX - notifOffsetX) + 'px';
+                modal.style.top = (e.clientY - notifOffsetY) + 'px';
+            }
+            if (isDraggingHistory) {
+                const modal = document.querySelector('#historyModal .modal-box');
+                modal.style.margin = '0';
+                modal.style.position = 'fixed';
+                modal.style.left = (e.clientX - historyOffsetX) + 'px';
+                modal.style.top = (e.clientY - historyOffsetY) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDraggingNotif = false;
+            isDraggingHistory = false;
+        });
+
+        window.addEventListener('load', () => {
+            // Trend Chart
+            const trendDom = document.getElementById('trendChart');
+            const trendChart = echarts.init(trendDom);
+            const trendOption = {
+                tooltip: { trigger: 'axis' },
+                grid: { left: '2%', right: '2%', bottom: '5%', top: '10%', containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['03-13', '03-14', '03-15', '03-16', '03-17', '03-18', '03-19'],
+                    axisLine: { lineStyle: { color: '#E5E7EB' } },
+                    axisLabel: { color: '#9CA3AF', fontSize: 10 }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitLine: { lineStyle: { type: 'dashed', color: '#F3F4F6' } },
+                    axisLabel: { color: '#9CA3AF', fontSize: 10 }
+                },
+                series: [{
+                    name: '新增问题',
+                    data: [15, 23, 18, 35, 28, 42, 38],
+                    type: 'line',
+                    smooth: true,
+                    symbol: 'none',
+                    lineStyle: { width: 3, color: '#005792' },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(0, 87, 146, 0.2)' },
+                            { offset: 1, color: 'rgba(0, 87, 146, 0)' }
+                        ])
+                    }
+                }, {
+                    name: '完成整改',
+                    data: [12, 18, 25, 20, 22, 30, 35],
+                    type: 'line',
+                    smooth: true,
+                    symbol: 'none',
+                    lineStyle: { width: 3, opacity: 0.5, color: '#28C840' }
+                }]
+            };
+            trendChart.setOption(trendOption);
+
+            // Type Distribution Chart
+            const typeDom = document.getElementById('typeChart');
+            const typeChart = echarts.init(typeDom);
+            const typeOption = {
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['60%', '85%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: { borderRadius: 4 },
+                    label: { show: false },
+                    data: [
+                        { value: 42, name: '基础施工', itemStyle: { color: '#005792' } },
+                        { value: 28, name: '配套设施', itemStyle: { color: '#28C840' } },
+                        { value: 30, name: '堤坝裂缝', itemStyle: { color: '#FFBD2E' } }
+                    ]
+                }]
+            };
+            typeChart.setOption(typeOption);
+
+            const mapContainer = document.getElementById('projectMap');
+            const projectNameEl = document.getElementById('mapProjectName');
+            const riskIndexEl = document.getElementById('mapRiskIndex');
+            const progressEl = document.getElementById('mapProgress');
+            const mapSourceLabelEl = document.getElementById('mapSourceLabel');
+            const projects = [
+                { name: '黑水河堤防', city: '西安市', risk: 88, progress: 25, lat: 34.28, lng: 108.95, level: 'high' },
+                { name: '东岗水库闸门', city: '宝鸡市', risk: 72, progress: 53, lat: 34.36, lng: 107.23, level: 'high' },
+                { name: '青山闸加固工程', city: '咸阳市', risk: 46, progress: 78, lat: 34.33, lng: 108.71, level: 'low' },
+                { name: '南调干渠三标段', city: '渭南市', risk: 81, progress: 31, lat: 34.5, lng: 109.5, level: 'high' }
+            ];
+            let map = null;
+            let currentLayer = null;
+            const tileProviders = [
+                {
+                    name: '高德地图',
+                    url: 'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+                    options: { subdomains: '1234', maxZoom: 18, minZoom: 3 }
+                },
+                {
+                    name: '高德影像',
+                    url: 'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                    options: { subdomains: '1234', maxZoom: 18, minZoom: 3 }
+                },
+                {
+                    name: 'OpenStreetMap',
+                    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    options: { maxZoom: 18, minZoom: 3 }
+                }
+            ];
+
+            if (mapContainer && window.L) {
+                map = L.map('projectMap', {
+                    zoomControl: false
+                }).setView([34.35, 108.9], 6);
+                L.control.zoom({ position: 'topright' }).addTo(map);
+                let providerIndex = 0;
+                let tileErrors = 0;
+
+                const applyProvider = (index) => {
+                    const provider = tileProviders[index];
+                    if (!provider || !map) {
+                        return;
+                    }
+                    if (currentLayer) {
+                        map.removeLayer(currentLayer);
+                    }
+                    currentLayer = L.tileLayer(provider.url, provider.options).addTo(map);
+                    if (mapSourceLabelEl) {
+                        mapSourceLabelEl.textContent = `实时地理地图 · ${provider.name}`;
+                    }
+                    tileErrors = 0;
+                    currentLayer.on('tileerror', () => {
+                        tileErrors += 1;
+                        if (tileErrors >= 3) {
+                            providerIndex += 1;
+                            if (providerIndex < tileProviders.length) {
+                                applyProvider(providerIndex);
+                            } else if (mapContainer) {
+                                map.remove();
+                                map = null;
+                                mapContainer.innerHTML = '<div class="map-fallback">地图瓦片加载失败，请检查网络连接</div>';
+                                if (mapSourceLabelEl) {
+                                    mapSourceLabelEl.textContent = '地图服务不可用';
+                                }
+                            }
+                        }
+                    });
+                };
+                applyProvider(providerIndex);
+
+                projects.forEach((project) => {
+                    const dotClass = project.level === 'low' ? 'risk-dot low' : 'risk-dot';
+                    const marker = L.marker([project.lat, project.lng], {
+                        icon: L.divIcon({
+                            className: '',
+                            html: `<div class="${dotClass}"></div>`,
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8]
+                        })
+                    }).addTo(map);
+
+                    marker.bindPopup(`<div class="font-semibold">${project.name}</div><div>${project.city} · 风险指数 ${project.risk}</div>`);
+                    marker.on('click', () => {
+                        projectNameEl.textContent = `选中项目：${project.name}`;
+                        riskIndexEl.textContent = String(project.risk);
+                        progressEl.textContent = `${project.progress}%`;
+                        riskIndexEl.className = project.risk >= 75 ? 'text-red-500 font-bold' : 'text-amber-500 font-bold';
+                    });
+                });
+            } else if (mapContainer) {
+                mapContainer.innerHTML = '<div class="map-fallback">地图组件未加载，请刷新页面后重试</div>';
+                if (mapSourceLabelEl) {
+                    mapSourceLabelEl.textContent = '地图组件未加载';
+                }
+            }
+
+            window.addEventListener('resize', () => {
+                trendChart.resize();
+                typeChart.resize();
+                if (map) {
+                    map.invalidateSize();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

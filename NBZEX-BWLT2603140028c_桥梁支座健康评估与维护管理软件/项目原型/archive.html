@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据档案 - 桥梁支座健康评估与维护管理系统</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpeg') no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .mac-window {
+      width: 1120px;
+      max-width: 96vw;
+      background: #f5f5f5;
+      border-radius: 10px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+
+    .mac-tb {
+      height: 52px;
+      background: linear-gradient(180deg, #e8e6e8 0%, #d6d3d6 100%);
+      border-bottom: 1px solid #b8b6b8;
+      display: flex;
+      align-items: center;
+      padding: 0 13px;
+      position: relative;
+    }
+
+    .mac-dots {
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .mac-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .mac-dot-r {
+      background: #ff5f57;
+      border: 0.5px solid #e14640;
+    }
+
+    .mac-dot-y {
+      background: #febc2e;
+      border: 0.5px solid #dfa123;
+    }
+
+    .mac-dot-g {
+      background: #28c840;
+      border: 0.5px solid #1dad2b;
+    }
+
+    .mac-tb-ctr {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .mac-tb-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      letter-spacing: -0.08px;
+      white-space: nowrap;
+    }
+
+    .mac-tb-sub {
+      font-size: 10px;
+      color: #888;
+      margin-top: 1px;
+    }
+
+    .mac-body {
+      display: flex;
+      height: 600px;
+      max-height: 600px;
+      overflow: hidden;
+    }
+
+    .mac-side {
+      width: 220px;
+      background: rgba(246, 244, 246, 0.95);
+      border-right: 1px solid #d1cfd1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mac-side-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #d1cfd1;
+      margin-bottom: 6px;
+    }
+
+    .mac-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #007aff, #5ac8fa);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .mac-side-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px;
+      margin: 0 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .mac-side-item:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .mac-side-item.active {
+      background: rgba(0, 122, 255, 0.12);
+      color: #0062cc;
+    }
+
+    .si-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      flex-shrink: 0;
+    }
+
+    .si-badge {
+      margin-left: auto;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      background: #ff3b30;
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      flex-shrink: 0;
+    }
+
+    .mc-proj-wrap {
+      padding: 10px 16px;
+      border-top: 1px solid #d1cfd1;
+      position: relative;
+      margin-top: auto;
+    }
+
+    .mc-proj-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .mc-proj-label {
+      font-size: 10px;
+      color: #aaa;
+    }
+
+    .mc-proj-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .mac-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .mac-toolbar {
+      height: 38px;
+      background: #fbfbfb;
+      border-bottom: 1px solid #e5e3e5;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 6px;
+    }
+
+    .mac-search {
+      height: 24px;
+      border-radius: 5px;
+      border: 0.5px solid #c0bec0;
+      background: #fff;
+      padding: 0 8px;
+      font-size: 12px;
+      width: 180px;
+      outline: none;
+      font-family: inherit;
+      color: #333;
+    }
+
+    .mac-tb-btn {
+      width: 28px;
+      height: 22px;
+      border-radius: 5px;
+      border: 0.5px solid #c0bec0;
+      background: linear-gradient(180deg, #fff 0%, #f0eef0 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .mac-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .mc-panel {
+      background: #fff;
+      border: 0.5px solid #e5e3e5;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .mc-panel-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mc-panel-link {
+      font-size: 11px;
+      font-weight: 400;
+      color: #007aff;
+      cursor: pointer;
+    }
+
+    .mc-form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      background: #fff;
+      border-bottom: 0.5px solid #f0f0f0;
+      font-size: 12px;
+    }
+
+    .mc-form-row:last-child {
+      border-bottom: none;
+    }
+
+    .mc-form-val {
+      color: #555;
+      font-weight: 400;
+    }
+
+    .mc-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .mc-tbl th {
+      text-align: left;
+      padding: 6px 8px;
+      font-weight: 500;
+      color: #888;
+      font-size: 11px;
+      border-bottom: 1px solid #eee;
+      background: #fafafa;
+    }
+
+    .mc-tbl td {
+      padding: 7px 8px;
+      border-bottom: 0.5px solid #f2f2f2;
+      color: #333;
+    }
+
+    .mc-tbl tr:last-child td {
+      border-bottom: none;
+    }
+
+    .mc-tbl tr:hover td {
+      background: #f7f7ff;
+    }
+
+    .btn-primary {
+      height: 26px;
+      padding: 0 12px;
+      font-size: 11px;
+      border-radius: 5px;
+      border: none;
+      background: #007aff;
+      color: white;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+    }
+
+    .btn-primary:hover {
+      background: #0062cc;
+    }
+
+    .btn-secondary {
+      height: 26px;
+      padding: 0 10px;
+      font-size: 11px;
+      border-radius: 5px;
+      border: 0.5px solid #c0bec0;
+      background: linear-gradient(180deg, #fff, #f4f2f4);
+      cursor: pointer;
+      font-family: inherit;
+      color: #333;
+    }
+
+    .mac-statusbar {
+      height: 22px;
+      background: #f0eef0;
+      border-top: 1px solid #d1cfd1;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #888;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      border: 0.5px solid #d1cfd1;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      min-width: 420px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e3e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: linear-gradient(180deg, #f8f8f8 0%, #f0f0f0 100%);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .modal-traffic-lights {
+      position: absolute;
+      left: 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #ff5f57;
+      border: 0.5px solid #e14640;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #febc2e;
+      border: 0.5px solid #dfa123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28c840;
+      border: 0.5px solid #1dad2b;
+    }
+
+    .modal-title {
+      color: #333;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 16px;
+    }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #e5e3e5;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      color: #666;
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 7px 10px;
+      background: #fafafa;
+      border: 0.5px solid #d1cfd1;
+      border-radius: 5px;
+      color: #333;
+      font-size: 12px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #007aff;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 7px 10px;
+      background: #fafafa;
+      border: 0.5px solid #d1cfd1;
+      border-radius: 5px;
+      color: #333;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .detail-item {
+      display: flex;
+      padding: 6px 0;
+      border-bottom: 0.5px solid #f0f0f0;
+    }
+
+    .detail-label {
+      width: 80px;
+      color: #888;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .detail-value {
+      flex: 1;
+      color: #333;
+      font-size: 12px;
+    }
+
+    .archive-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      background: #f9f9f9;
+      border: 0.5px solid #e8e6e8;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .archive-item:hover {
+      background: #f0f0f5;
+    }
+
+    .archive-icon {
+      width: 32px;
+      height: 32px;
+      background: #e5f5ff;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #007aff;
+      margin-right: 10px;
+    }
+
+    .archive-info {
+      flex: 1;
+    }
+
+    .archive-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .archive-meta {
+      font-size: 10px;
+      color: #888;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="mac-window">
+  <div class="mac-tb">
+    <div class="mac-dots">
+      <div class="mac-dot mac-dot-r"></div>
+      <div class="mac-dot mac-dot-y"></div>
+      <div class="mac-dot mac-dot-g"></div>
+    </div>
+    <div class="mac-tb-ctr">
+      <div class="mac-tb-title">桥梁支座健康评估与维护管理系统</div>
+      <div class="mac-tb-sub">数据档案</div>
+    </div>
+  </div>
+
+  <div class="mac-body">
+    <div class="mac-side">
+      <div class="mac-side-user">
+        <div class="mac-avatar">
+          <img class="mac-avatar-img" src="https://i04piccdn.sogoucdn.com/c42ce10a21ee0932" alt="王海斌" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+        </div>
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: #222;">王海斌</div>
+          <div style="font-size: 10px; color: #999;">高级工程师 / 在线</div>
+        </div>
+      </div>
+
+      <div class="mac-side-item" onclick="location.href='main.html'">
+        <div class="si-icon"><i class="fa-solid fa-table-cells"></i></div>
+        综合面板
+      </div>
+      <div class="mac-side-item" onclick="location.href='inspect.html'">
+        <div class="si-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+        检测管理
+        <div class="si-badge">3</div>
+      </div>
+      <div class="mac-side-item" onclick="location.href='assess.html'">
+        <div class="si-icon"><i class="fa-solid fa-star"></i></div>
+        健康评估
+      </div>
+      <div class="mac-side-item" onclick="location.href='maintain.html'">
+        <div class="si-icon"><i class="fa-solid fa-wrench"></i></div>
+        维护计划
+        <div class="si-badge" style="background:#ff9f0a;">5</div>
+      </div>
+      <div class="mac-side-item active">
+        <div class="si-icon"><i class="fa-solid fa-folder-open"></i></div>
+        数据档案
+      </div>
+      <div class="mac-side-item" onclick="location.href='report.html'">
+        <div class="si-icon"><i class="fa-solid fa-file-lines"></i></div>
+        报告输出
+      </div>
+
+      <div class="mc-proj-wrap">
+        <div class="mc-proj-head">
+          <div class="mc-proj-label">当前项目</div>
+        </div>
+        <div class="mc-proj-name">沪宁高速长江大桥</div>
+        <div style="font-size: 10px; color: #999; margin-top: 2px;">支座 128 组 / 盆式 72 / 板式 56</div>
+      </div>
+    </div>
+
+    <div class="mac-main">
+      <div class="mac-toolbar">
+        <input class="mac-search" type="text" placeholder="搜索档案名称..." />
+        <div style="flex:1;"></div>
+        <button class="btn-secondary" id="btnUpload"><i class="fa-solid fa-upload" style="margin-right:4px;"></i>上传档案</button>
+        <button class="btn-primary" id="btnNewArchive">新建档案</button>
+      </div>
+
+      <div class="mac-content">
+        <div style="font-size:15px;font-weight:600;color:#222;margin-bottom:14px;">数据档案中心</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div class="mc-panel">
+            <div class="mc-panel-title">支座台账</div>
+            <div class="archive-item" onclick="showArchiveDetail('bearing')">
+              <div class="archive-icon"><i class="fa-solid fa-list"></i></div>
+              <div class="archive-info">
+                <div class="archive-name">支座基本信息表</div>
+                <div class="archive-meta">128 条记录 / 最后更新 2026-03-15</div>
+              </div>
+            </div>
+            <div class="archive-item" onclick="showArchiveDetail('param')">
+              <div class="archive-icon"><i class="fa-solid fa-sliders"></i></div>
+              <div class="archive-info">
+                <div class="archive-name">安装参数记录</div>
+                <div class="archive-meta">128 条记录 / 最后更新 2026-01-10</div>
+              </div>
+            </div>
+            <div class="archive-item" onclick="showArchiveDetail('drawing')">
+              <div class="archive-icon"><i class="fa-solid fa-drafting-compass"></i></div>
+              <div class="archive-info">
+                <div class="archive-name">设计图纸档案</div>
+                <div class="archive-meta">43 份图纸 / 最后更新 2025-12-20</div>
+              </div>
+            </div>
+          </div>
+          <div class="mc-panel">
+            <div class="mc-panel-title">检测数据</div>
+            <div class="archive-item" onclick="showArchiveDetail('report')">
+              <div class="archive-icon" style="background:#eefae5;color:#3a7d0a;"><i class="fa-solid fa-file-alt"></i></div>
+              <div class="archive-info">
+                <div class="archive-name">定期检测报告</div>
+                <div class="archive-meta">36 份报告 / 最后更新 2026-03-20</div>
+              </div>
+            </div>
+            <div class="archive-item" onclick="showArchiveDetail('photo')">
+              <div class="archive-icon" style="background:#fff8eb;color:#a86b00;"><i class="fa-solid fa-camera"></i></div>
+              <div class="archive-info">
+                <div class="archive-name">现场照片库</div>
+                <div class="archive-meta">2,847 张照片 / 最后更新 2026-03-24</div>
+              </div>
+            </div>
+            <div class="archive-item" onclick="showArchiveDetail('sensor')">
+              <div class="archive-icon" style="background:#e5f5ff;color:#0068b5;"><i class="fa-solid fa-satellite-dish"></i></div>
+              <div class="archive-info">
+                <div class="archive-name">传感器监测数据</div>
+                <div class="archive-meta" style="color:#34c759;">实时采集中 / 12 组传感器在线</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mc-panel">
+          <div class="mc-panel-title">维护历史</div>
+          <table class="mc-tbl">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>内容</th>
+                <th>涉及支座</th>
+                <th>费用(万)</th>
+                <th>施工单位</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2025-11-20</td>
+                <td>盆式支座整体更换</td>
+                <td>ZZ-02L-01</td>
+                <td>17.8</td>
+                <td>江苏路桥养护有限公司</td>
+                <td><span style="color:#007aff;cursor:pointer;font-size:11px;" onclick="showHistoryDetail('2025-11-20')">详情</span></td>
+              </tr>
+              <tr>
+                <td>2025-09-05</td>
+                <td>全桥支座除锈防腐</td>
+                <td>全部 128 组</td>
+                <td>32.6</td>
+                <td>南京桥隧养护工程公司</td>
+                <td><span style="color:#007aff;cursor:pointer;font-size:11px;" onclick="showHistoryDetail('2025-09-05')">详情</span></td>
+              </tr>
+              <tr>
+                <td>2025-06-15</td>
+                <td>板式支座更换</td>
+                <td>ZZ-06R-03/04</td>
+                <td>5.2</td>
+                <td>江苏路桥养护有限公司</td>
+                <td><span style="color:#007aff;cursor:pointer;font-size:11px;" onclick="showHistoryDetail('2025-06-15')">详情</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mac-statusbar">
+    <div><i class="fa-solid fa-circle" style="color:#34c759;font-size:6px;margin-right:4px;"></i>档案数据库已连接 / 共 3,054 条记录</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-traffic-lights">
+        <div class="modal-traffic-light close" onclick="closeModal()"></div>
+        <div class="modal-traffic-light minimize"></div>
+        <div class="modal-traffic-light maximize"></div>
+      </div>
+      <span class="modal-title" id="modalTitle">弹窗标题</span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script>
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalFooter = document.getElementById('modalFooter');
+
+  function openModal(title, bodyHtml, footerHtml) {
+    modalTitle.textContent = title;
+    modalBody.innerHTML = bodyHtml;
+    modalFooter.innerHTML = footerHtml;
+    modalOverlay.classList.add('active');
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove('active');
+  }
+
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+
+  document.getElementById('btnUpload').addEventListener('click', () => {
+    openModal(
+      '上传档案',
+      `<div class="form-group">
+        <label class="form-label">档案类型</label>
+        <select class="form-select">
+          <option>检测报告</option>
+          <option>设计图纸</option>
+          <option>现场照片</option>
+          <option>施工记录</option>
+          <option>其他文档</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">上传文件</label>
+        <input type="text" class="form-input" placeholder="点击选择或拖拽文件至此处">
+      </div>
+      <div class="form-group">
+        <label class="form-label">关联支座</label>
+        <input type="text" class="form-input" placeholder="请输入支座编号（选填）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注说明</label>
+        <input type="text" class="form-input" placeholder="请输入档案描述">
+      </div>`,
+      `<button class="btn-secondary" onclick="closeModal()">取消</button>
+       <button class="btn-primary">上传</button>`
+    );
+  });
+
+  document.getElementById('btnNewArchive').addEventListener('click', () => {
+    openModal(
+      '新建档案条目',
+      `<div class="form-group">
+        <label class="form-label">档案类型</label>
+        <select class="form-select">
+          <option>支座基本信息</option>
+          <option>安装参数记录</option>
+          <option>维护记录</option>
+          <option>检测记录</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">支座编号</label>
+        <input type="text" class="form-input" placeholder="请输入支座编号">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">支座型号</label>
+          <input type="text" class="form-input" placeholder="如 GPZ(II)5.0SX">
+        </div>
+        <div class="form-group">
+          <label class="form-label">支座类型</label>
+          <select class="form-select">
+            <option>盆式支座</option>
+            <option>板式支座</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">所在墩位</label>
+        <input type="text" class="form-input" placeholder="如 1# 墩">
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <input type="text" class="form-input" placeholder="其他说明信息">
+      </div>`,
+      `<button class="btn-secondary" onclick="closeModal()">取消</button>
+       <button class="btn-primary">创建</button>`
+    );
+  });
+
+  function showArchiveDetail(type) {
+    const archiveData = {
+      'bearing': { name: '支座基本信息表', count: '128 条', update: '2026-03-15', type: '台账数据' },
+      'param': { name: '安装参数记录', count: '128 条', update: '2026-01-10', type: '技术参数' },
+      'drawing': { name: '设计图纸档案', count: '43 份', update: '2025-12-20', type: '图纸文档' },
+      'report': { name: '定期检测报告', count: '36 份', update: '2026-03-20', type: '检测报告' },
+      'photo': { name: '现场照片库', count: '2,847 张', update: '2026-03-24', type: '影像资料' },
+      'sensor': { name: '传感器监测数据', count: '12 组在线', update: '实时', type: '监测数据' }
+    };
+    const archive = archiveData[type] || archiveData['bearing'];
+    openModal(
+      '档案详情 - ' + archive.name,
+      `<div class="detail-item"><span class="detail-label">档案名称</span><span class="detail-value">${archive.name}</span></div>
+      <div class="detail-item"><span class="detail-label">档案类型</span><span class="detail-value">${archive.type}</span></div>
+      <div class="detail-item"><span class="detail-label">数据量</span><span class="detail-value">${archive.count}</span></div>
+      <div class="detail-item"><span class="detail-label">最后更新</span><span class="detail-value">${archive.update}</span></div>
+      <div class="detail-item"><span class="detail-label">存储位置</span><span class="detail-value">/archive/bridge_01/${type}/</span></div>`,
+      `<button class="btn-secondary" onclick="closeModal()">关闭</button>
+       <button class="btn-primary">导出数据</button>`
+    );
+  }
+
+  function showHistoryDetail(date) {
+    const historyData = {
+      '2025-11-20': { content: '盆式支座整体更换', bearing: 'ZZ-02L-01', cost: '17.8', company: '江苏路桥养护有限公司', result: '合格', desc: '原支座钢盆开裂，更换为GPZ(II)5.0SX新型盆式支座' },
+      '2025-09-05': { content: '全桥支座除锈防腐', bearing: '全部 128 组', cost: '32.6', company: '南京桥隧养护工程公司', result: '合格', desc: '对全桥128组支座进行除锈防腐处理，涂装防锈漆' },
+      '2025-06-15': { content: '板式支座更换', bearing: 'ZZ-06R-03/04', cost: '5.2', company: '江苏路桥养护有限公司', result: '合格', desc: '老化严重的板式支座更换为耐老化氯丁橡胶支座' }
+    };
+    const history = historyData[date] || historyData['2025-11-20'];
+    openModal(
+      '维护记录详情',
+      `<div class="detail-item"><span class="detail-label">维护日期</span><span class="detail-value">${date}</span></div>
+      <div class="detail-item"><span class="detail-label">维护内容</span><span class="detail-value">${history.content}</span></div>
+      <div class="detail-item"><span class="detail-label">涉及支座</span><span class="detail-value">${history.bearing}</span></div>
+      <div class="detail-item"><span class="detail-label">施工费用</span><span class="detail-value">${history.cost} 万元</span></div>
+      <div class="detail-item"><span class="detail-label">施工单位</span><span class="detail-value">${history.company}</span></div>
+      <div class="detail-item"><span class="detail-label">验收结果</span><span class="detail-value" style="color:#34c759;">${history.result}</span></div>
+      <div style="margin-top:8px;padding:8px;background:#f9f9f9;border-radius:5px;font-size:11px;color:#666;">
+        ${history.desc}
+      </div>`,
+      `<button class="btn-secondary" onclick="closeModal()">关闭</button>
+       <button class="btn-primary">查看报告</button>`
+    );
+  }
+</script>
+
+</body>
+</html>

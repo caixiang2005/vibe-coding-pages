@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人中心</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --gold: #C9A84C; --gold-dark: #A07830; --red: #C0392B; --bg: #FDF8F0; --text: #2C1810; --text2: #6B4C3B; --text3: #9C7B6B; }
+  body { font-family: 'Noto Sans SC', sans-serif; background: #E8E0D0; display: flex; justify-content: center; }
+  .phone-frame {
+    width: 100%; height: 100vh; background: var(--bg);
+    overflow: hidden; overflow-y: auto; display: flex; flex-direction: column;
+  }
+  .status-bar { background: linear-gradient(135deg,#8B1A1A,#C9A84C); color:white; padding:12px 24px 8px; display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+  .status-bar .time { font-weight:700; font-size:15px; }
+  .status-icons { display:flex; gap:6px; }
+
+  /* Profile header */
+  .profile-header { background: linear-gradient(135deg,#8B1A1A 0%,#C0392B 50%,#C9A84C 100%); padding:20px 20px 32px; position:relative; overflow:hidden; }
+  .profile-header::before { content:''; position:absolute; top:-40px; right:-40px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.06); }
+  .profile-header::after { content:''; position:absolute; bottom:-30px; left:-30px; width:100px; height:100px; border-radius:50%; background:rgba(201,168,76,0.15); }
+  .ph-top { display:flex; justify-content:flex-end; margin-bottom:16px; }
+  .setting-btn { width:36px; height:36px; background:rgba(255,255,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; cursor:pointer; border:1px solid rgba(255,255,255,0.2); text-decoration:none; }
+  .profile-info { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+  .avatar-wrap { position:relative; }
+  .avatar-img { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:3px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; color:white; font-size:28px; font-weight:700; font-family:'Noto Serif SC',serif; }
+  .level-badge { position:absolute; bottom:-2px; right:-4px; background:var(--gold); color:white; font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; border:2px solid white; }
+  .user-info .name { color:white; font-size:20px; font-weight:700; font-family:'Noto Serif SC',serif; }
+  .user-info .id { color:rgba(255,255,255,0.75); font-size:12px; margin-top:3px; }
+  .user-info .tags { display:flex; gap:6px; margin-top:8px; }
+  .user-tag { font-size:10px; padding:3px 10px; border-radius:12px; font-weight:600; }
+  .user-tag.gold { background:rgba(201,168,76,0.3); color:var(--gold-light,#E8CC7A); border:1px solid rgba(201,168,76,0.4); }
+  .user-tag.red { background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); }
+  
+  /* Stats row */
+  .profile-stats { display:flex; background:rgba(255,255,255,0.12); border-radius:16px; padding:14px 0; border:1px solid rgba(201,168,76,0.25); }
+  .ps-item { flex:1; text-align:center; position:relative; }
+  .ps-item:not(:last-child)::after { content:''; position:absolute; right:0; top:20%; height:60%; width:1px; background:rgba(255,255,255,0.2); }
+  .ps-item .v { color:white; font-size:20px; font-weight:700; font-family:'Noto Serif SC',serif; }
+  .ps-item .l { color:rgba(255,255,255,0.75); font-size:11px; margin-top:3px; }
+
+  /* Content */
+  .content { flex:1; overflow-y:auto; padding-bottom:80px; }
+  .content::-webkit-scrollbar { display:none; }
+
+  /* Progress card */
+  .prog-card { margin:16px 20px 0; background:white; border-radius:18px; padding:16px; box-shadow:0 4px 20px rgba(44,24,16,0.1); border:1px solid #F0E8D8; }
+  .pc-title { font-family:'Noto Serif SC',serif; font-size:15px; font-weight:700; color:var(--text); margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; }
+  .pc-title::after { display:none; }
+  .pc-title span { font-size:11px; color:var(--gold-dark); font-weight:400; font-family:'Noto Sans SC',sans-serif; }
+  .prog-bars { display:flex; flex-direction:column; gap:10px; }
+  .prog-row { }
+  .prog-info { display:flex; justify-content:space-between; margin-bottom:5px; }
+  .prog-label { font-size:12px; color:var(--text2); }
+  .prog-pct { font-size:12px; font-weight:600; color:var(--text2); }
+  .prog-bar { height:8px; background:#F0E8D8; border-radius:4px; overflow:hidden; }
+  .prog-fill { height:100%; border-radius:4px; }
+  .fill-red { background:linear-gradient(to right,var(--red),#E74C3C); }
+  .fill-gold { background:linear-gradient(to right,var(--gold),var(--gold-light,#E8CC7A)); }
+  .fill-blue { background:linear-gradient(to right,#2980B9,#3498DB); }
+  .fill-green { background:linear-gradient(to right,#27AE60,#2ECC71); }
+
+  /* Menu list */
+  .menu-section { margin:16px 20px 0; }
+  .menu-group-title { font-size:12px; color:var(--text3); font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; padding:0 4px; }
+  .menu-group { background:white; border-radius:18px; overflow:hidden; box-shadow:0 2px 10px rgba(44,24,16,0.06); border:1px solid #F0E8D8; }
+  .menu-item { display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer; text-decoration:none; border-bottom:1px solid #F8F2E8; transition:all 0.15s; }
+  .menu-item:last-child { border-bottom:none; }
+  .menu-item:active { background:#FEF9EE; }
+  .menu-icon { width:36px; height:36px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+  .menu-icon.red { background:#FFF0EE; color:var(--red); }
+  .menu-icon.gold { background:#FEF9EE; color:var(--gold-dark); }
+  .menu-icon.blue { background:#EEF8FF; color:#2980B9; }
+  .menu-icon.green { background:#EEFFF2; color:#27AE60; }
+  .menu-icon.purple { background:#F5EEFF; color:#8E44AD; }
+  .menu-icon.teal { background:#EEFFF9; color:#16A085; }
+  .menu-label { flex:1; font-size:14px; color:var(--text); font-weight:500; }
+  .menu-badge { background:var(--red); color:white; font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; margin-right:6px; }
+  .menu-arrow { color:#C8B8A8; font-size:14px; }
+  .menu-val { font-size:12px; color:var(--text3); margin-right:6px; }
+
+  /* Bottom nav */
+  .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width: 100%; background:white; border-top:1px solid #EDE0C8; display:flex; padding:8px 0 20px; box-shadow:0 -4px 20px rgba(44,24,16,0.08); z-index:100; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; text-decoration:none; padding:4px 0; }
+  .nav-item i { font-size:20px; color:#BDB0A0; }
+  .nav-item span { font-size:10px; color:#BDB0A0; font-weight:500; }
+  .nav-item.active i { color:var(--red); }
+  .nav-item.active span { color:var(--red); font-weight:700; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  
+
+  <div class="profile-header">
+    <div class="ph-top">
+      <a href="security.html" class="setting-btn"><i class="fa fa-gear"></i></a>
+    </div>
+    <div class="profile-info">
+      <div class="avatar-wrap">
+        <div class="avatar-img">冯</div>
+        <div class="level-badge">LV.3</div>
+      </div>
+      <div class="user-info">
+        <div class="name">冯龙</div>
+        <div class="id">ID: 20240823 · 舞蹈学习者</div>
+        <div class="tags">
+          <span class="user-tag gold"><i class="fa fa-star" style="font-size:9px"></i> 学习达人</span>
+          <span class="user-tag red"><i class="fa fa-fire" style="font-size:9px"></i> 连续7天</span>
+        </div>
+      </div>
+    </div>
+    <div class="profile-stats">
+      <div class="ps-item"><div class="v">23</div><div class="l">已学剧目</div></div>
+      <div class="ps-item"><div class="v">18</div><div class="l">收藏</div></div>
+      <div class="ps-item"><div class="v">12</div><div class="l">笔记</div></div>
+      <div class="ps-item"><div class="v">89%</div><div class="l">答题率</div></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Progress -->
+    <div class="prog-card">
+      <div class="pc-title" style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-family:'Noto Serif SC',serif; font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px;">
+          <span style="width:4px; height:16px; background:linear-gradient(to bottom,var(--red),var(--gold)); border-radius:2px; display:inline-block;"></span>
+          学习掌握度
+        </span>
+        <span style="font-size:11px; color:var(--gold-dark);">本学期</span>
+      </div>
+      <div class="prog-bars">
+        <div class="prog-row">
+          <div class="prog-info"><span class="prog-label">中国古典舞</span><span class="prog-pct" style="color:var(--red)">75%</span></div>
+          <div class="prog-bar"><div class="prog-fill fill-red" style="width:75%"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-info"><span class="prog-label">民族民间舞</span><span class="prog-pct" style="color:var(--gold-dark)">48%</span></div>
+          <div class="prog-bar"><div class="prog-fill fill-gold" style="width:48%"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-info"><span class="prog-label">芭蕾舞</span><span class="prog-pct" style="color:#2980B9">35%</span></div>
+          <div class="prog-bar"><div class="prog-fill fill-blue" style="width:35%"></div></div>
+        </div>
+        <div class="prog-row">
+          <div class="prog-info"><span class="prog-label">现代舞</span><span class="prog-pct" style="color:#27AE60">20%</span></div>
+          <div class="prog-bar"><div class="prog-fill fill-green" style="width:20%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu Groups -->
+    <div class="menu-section">
+      <div class="menu-group-title">我的内容</div>
+      <div class="menu-group">
+        <a href="study.html" class="menu-item">
+          <div class="menu-icon gold"><i class="fa-solid fa-graduation-cap"></i></div>
+          <div class="menu-label">我的学习计划</div>
+          <span class="menu-val">3个计划</span>
+          <i class="fa fa-chevron-right menu-arrow"></i>
+        </a>
+        <a href="collection.html" class="menu-item">
+          <div class="menu-icon red"><i class="fa-solid fa-heart"></i></div>
+          <div class="menu-label">我的收藏</div>
+          <span class="menu-val">18个</span>
+          <i class="fa fa-chevron-right menu-arrow"></i>
+        </a>
+        <a href="exam.html" class="menu-item">
+          <div class="menu-icon teal"><i class="fa-solid fa-clipboard-list"></i></div>
+          <div class="menu-label">练习记录</div>
+          <span class="menu-val">12次</span>
+          <i class="fa fa-chevron-right menu-arrow"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="menu-section" style="margin-top:12px; margin-bottom:8px;">
+      <div class="menu-group-title">账户与设置</div>
+      <div class="menu-group">
+        <a href="security.html" class="menu-item">
+          <div class="menu-icon gold"><i class="fa-solid fa-shield-halved"></i></div>
+          <div class="menu-label">账号安全</div>
+          <i class="fa fa-chevron-right menu-arrow"></i>
+        </a>
+        <a href="password.html" class="menu-item">
+          <div class="menu-icon blue"><i class="fa-solid fa-key"></i></div>
+          <div class="menu-label">修改密码</div>
+          <i class="fa fa-chevron-right menu-arrow"></i>
+        </a>
+        <a href="notifications.html" class="menu-item">
+          <div class="menu-icon red"><i class="fa-solid fa-bell"></i></div>
+          <div class="menu-label">消息通知</div>
+          <i class="fa fa-chevron-right menu-arrow"></i>
+        </a>
+        <a href="cache.html" class="menu-item">
+          <div class="menu-icon green"><i class="fa-solid fa-trash"></i></div>
+          <div class="menu-label">清除缓存</div>
+          <span class="menu-val">23.5MB</span>
+          <i class="fa fa-chevron-right menu-arrow"></i>
+        </a>
+        <a href="help.html" class="menu-item">
+          <div class="menu-icon purple"><i class="fa-solid fa-headset"></i></div>
+          <div class="menu-label">帮助与反馈</div>
+          <i class="fa fa-chevron-right menu-arrow"></i>
+        </a>
+        <a href="#" class="menu-item" onclick="logout()" style="border-bottom:none;">
+          <div class="menu-icon teal"><i class="fa-solid fa-right-from-bracket"></i></div>
+          <div class="menu-label" style="color:var(--red);">退出登录</div>
+          <i class="fa fa-chevron-right menu-arrow"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>首页</span></a>
+    <a href="repertoire.html" class="nav-item"><i class="fa-solid fa-film"></i><span>剧目</span></a>
+    <a href="study.html" class="nav-item"><i class="fa-solid fa-graduation-cap"></i><span>学习</span></a>
+    <a href="exam.html" class="nav-item"><i class="fa-solid fa-pen-to-square"></i><span>练习</span></a>
+    <a href="profile.html" class="nav-item active"><i class="fa-regular fa-circle-user"></i><span>我的</span></a>
+  </div>
+</div>
+
+<script>
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeIn 0.3s';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 1500);
+}
+
+function logout() {
+  if (confirm('确定要退出登录吗？')) {
+    showToast('已退出登录');
+  }
+}
+</script>
+<style>
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.8); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+.menu-toggle { margin-left: auto; }
+</style>
+</body>
+</html>

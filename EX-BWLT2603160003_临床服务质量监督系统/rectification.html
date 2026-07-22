@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>整改任务 - 临床服务质量监督系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "SimSun", sans-serif;
+        }
+
+        body {
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .window {
+            width: 1200px;
+            height: 720px;
+            max-width: 100%;
+            background: linear-gradient(180deg, #d4d4d8 0%, #c8c8cc 100%);
+            border: 1px solid #888;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title-bar {
+            background: linear-gradient(180deg, #4a5d80 0%, #3d4f6f 50%, #2d3e5c 100%);
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+            user-select: none;
+        }
+
+        .title-bar-text {
+            color: #fff;
+            font-size: 13px;
+            font-weight: normal;
+            padding-left: 6px;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+
+        .title-bar-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .title-bar-controls button {
+            width: 28px;
+            height: 20px;
+            border: none;
+            background: linear-gradient(180deg, #6b7fa3 0%, #5a6e8f 100%);
+            color: #fff;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title-bar-controls button:hover {
+            background: linear-gradient(180deg, #7b8fb3 0%, #6a7e9f 100%);
+        }
+
+        .title-bar-controls .close-btn:hover {
+            background: #c42b1c;
+        }
+
+        .btn-minimize::before {
+            content: "";
+            width: 10px;
+            height: 1px;
+            background: #fff;
+            display: block;
+        }
+
+        .btn-maximize::before {
+            content: "";
+            width: 10px;
+            height: 8px;
+            border: 1px solid #fff;
+            display: block;
+            background: transparent;
+        }
+
+        .btn-close::before {
+            content: "×";
+            font-size: 16px;
+            font-weight: normal;
+        }
+
+        .menu-bar {
+            background: linear-gradient(180deg, #e8e8ec 0%, #d8d8dc 100%);
+            border-bottom: 1px solid #a0a0a4;
+            padding: 2px 4px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .menu-item {
+            padding: 4px 12px;
+            font-size: 12px;
+            color: #1a1a4a;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: #b8c8e0;
+            border: 1px solid #8098c0;
+        }
+
+        .menu-item.active {
+            background: #b8c8e0;
+            border: 1px solid #8098c0;
+        }
+
+        .toolbar {
+            background: linear-gradient(180deg, #d0d4dc 0%, #b8bcc8 100%);
+            border-bottom: 1px solid #9098a4;
+            padding: 6px 8px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toolbar-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 12px;
+            background: linear-gradient(180deg, #e8ecf4 0%, #d0d4e0 100%);
+            border: 1px solid #9098a8;
+            cursor: pointer;
+            min-width: 60px;
+            transition: all 0.15s;
+        }
+
+        .toolbar-btn:hover {
+            background: linear-gradient(180deg, #f0f4fc 0%, #e0e4f0 100%);
+            border-color: #7080a0;
+        }
+
+        .toolbar-btn:active {
+            background: linear-gradient(180deg, #c0c4d0 0%, #b0b4c0 100%);
+            transform: translateY(1px);
+        }
+
+        .toolbar-btn i {
+            font-size: 18px;
+            color: #3a4a6a;
+            margin-bottom: 4px;
+        }
+
+        .toolbar-btn span {
+            font-size: 11px;
+            color: #2a3a5a;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            background: linear-gradient(180deg, #a0a4ac 0%, #888c94 100%);
+            margin: 0 4px;
+        }
+
+        .main-content {
+            display: flex;
+            background: #c8ccd4;
+            min-height: 560px;
+        }
+
+        .left-panel {
+            width: 160px;
+            background: linear-gradient(180deg, #d4d8e0 0%, #c0c4cc 100%);
+            border-right: 1px solid #9098a4;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .panel-header {
+            background: linear-gradient(90deg, #b8860b 0%, #daa520 100%);
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .nav-list {
+            background: #fff;
+            border: 1px solid #9098a4;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-list-item {
+            padding: 8px 10px;
+            font-size: 12px;
+            color: #1a2a4a;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+
+        .nav-list-item:hover {
+            background: #d0e0f0;
+        }
+
+        .nav-list-item.active {
+            background: #b8860b;
+            color: #fff;
+        }
+
+        .nav-list-item i {
+            color: #b8860b;
+            font-size: 14px;
+        }
+
+        .nav-list-item.active i {
+            color: #fff;
+        }
+
+        .nav-list-item .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 8px;
+        }
+
+        .right-panel {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .page-header {
+            background: linear-gradient(180deg, #e8ecf4 0%, #d8dce4 100%);
+            border: 1px solid #9098a4;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a2a4a;
+            flex: 1;
+        }
+
+        .page-info {
+            font-size: 12px;
+            color: #5a6a7a;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card {
+            background: linear-gradient(180deg, #f8f9fa 0%, #e8eaec 100%);
+            border: 1px solid #9098a4;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3a5a8a;
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: #5a6a7a;
+            margin-top: 4px;
+        }
+
+        .search-bar {
+            background: #e8eaec;
+            border: 1px solid #9098a4;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-bar label {
+            font-size: 12px;
+            color: #2a3a5a;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .search-bar input,
+        .search-bar select {
+            padding: 4px 8px;
+            border: 1px solid #9098a8;
+            font-size: 12px;
+            background: #fff;
+        }
+
+        .search-btn {
+            padding: 5px 16px;
+            background: linear-gradient(180deg, #5a7a9a 0%, #4a6a8a 100%);
+            color: #fff;
+            border: 1px solid #3a5a7a;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(180deg, #6a8aaa 0%, #5a7a9a 100%);
+        }
+
+        .data-table-container {
+            background: #fff;
+            border: 1px solid #9098a4;
+            flex: 1;
+            overflow: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th {
+            background: linear-gradient(180deg, #d0d8e4 0%, #b8c0d0 100%);
+            padding: 8px 10px;
+            text-align: left;
+            color: #1a2a4a;
+            border-bottom: 1px solid #9098a4;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e0e0e4;
+            color: #2a3a5a;
+        }
+
+        .data-table tr:hover {
+            background: #e8f0f8;
+        }
+
+        .data-table tr.selected {
+            background: #c0d0e8;
+        }
+
+        .data-table .action-link {
+            color: #4a6a9a;
+            cursor: pointer;
+            margin-right: 8px;
+            text-decoration: none;
+        }
+
+        .data-table .action-link:hover {
+            text-decoration: underline;
+        }
+
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 10px;
+            border-radius: 2px;
+        }
+
+        .status-tag.pending {
+            background: #fef3cd;
+            color: #856404;
+        }
+
+        .status-tag.processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-tag.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-tag.overdue {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-bar {
+            background: linear-gradient(180deg, #d8dce4 0%, #c8ccd4 100%);
+            border-top: 1px solid #fff;
+            padding: 4px 12px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #3a4a6a;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #d4d8e0;
+            border: 1px solid #888;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-title {
+            background: linear-gradient(180deg, #4a5d80 0%, #3d4f6f 50%, #2d3e5c 100%);
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0 4px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #c42b1c;
+        }
+
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            max-height: calc(85vh - 100px);
+            background: #e8eaec;
+        }
+
+        .modal-form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .modal-form-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .modal-form-group label {
+            font-size: 12px;
+            color: #2a3a5a;
+            min-width: 80px;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .modal-form-group input,
+        .modal-form-group select,
+        .modal-form-group textarea {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #9098a8;
+            font-size: 12px;
+            background: #fff;
+            border-radius: 4px;
+        }
+
+        .modal-form-group textarea {
+            height: 70px;
+            resize: vertical;
+        }
+
+        .modal-form-group.full {
+            flex-basis: 100%;
+        }
+
+        .required::after {
+            content: "*";
+            color: #c00;
+            margin-left: 2px;
+        }
+
+        .modal-footer {
+            padding: 12px 16px;
+            background: #c8ccd4;
+            border-top: 1px solid #a0a4ac;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            padding: 6px 24px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid #9098a8;
+            background: linear-gradient(180deg, #e8ecf4 0%, #d0d4e0 100%);
+            color: #2a3a5a;
+            border-radius: 4px;
+        }
+
+        .modal-btn:hover {
+            background: linear-gradient(180deg, #f0f4fc 0%, #e0e4f0 100%);
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(180deg, #5a7a9a 0%, #4a6a8a 100%);
+            color: #fff;
+            border-color: #3a5a7a;
+        }
+
+        .modal-btn.primary:hover {
+            background: linear-gradient(180deg, #6a8aaa 0%, #5a7a9a 100%);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 24px;
+            background: #4a6a3a;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+            z-index: 2000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .detail-section {
+            background: #fff;
+            border: 1px solid #9098a4;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .detail-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2a4a;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #c0c4cc;
+        }
+
+        .detail-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .detail-item {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #5a6a7a;
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .detail-value {
+            font-size: 12px;
+            color: #1a2a4a;
+            flex: 1;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e4;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5a7a9a, #4a6a9a);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <span class="title-bar-text">
+                <i class="fas fa-clipboard-check"></i> 临床服务质量监督系统
+            </span>
+            <div class="title-bar-controls">
+                <button class="btn-minimize" title="最小化"></button>
+                <button class="btn-maximize" title="最大化"></button>
+                <button class="btn-close close-btn" title="关闭" onclick="window.close()"></button>
+            </div>
+        </div>
+
+        <div class="menu-bar">
+            <div class="menu-item" onclick="location.href='index.html'"><i class="fas fa-home"></i> 首页</div>
+            <div class="menu-item" onclick="location.href='inspection.html'"><i class="fas fa-clipboard-check"></i> 质量检查</div>
+            <div class="menu-item" onclick="location.href='complaint.html'"><i class="fas fa-comment-medical"></i> 投诉管理</div>
+            <div class="menu-item active"><i class="fas fa-tasks"></i> 整改任务</div>
+            <div class="menu-item" onclick="location.href='performance.html'"><i class="fas fa-star-half-alt"></i> 绩效考核</div>
+            <div class="menu-item" onclick="location.href='statistics.html'"><i class="fas fa-chart-bar"></i> 数据统计</div>
+            <div class="menu-item" onclick="location.href='settings.html'"><i class="fas fa-cog"></i> 系统设置</div>
+        </div>
+
+        <div class="toolbar">
+            <button class="toolbar-btn" onclick="openModal('addModal')">
+                <i class="fas fa-plus-circle"></i>
+                <span>新建任务</span>
+            </button>
+            <button class="toolbar-btn" onclick="refreshData()">
+                <i class="fas fa-sync-alt"></i>
+                <span>刷新数据</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="updateProgress()">
+                <i class="fas fa-edit"></i>
+                <span>更新进度</span>
+            </button>
+            <button class="toolbar-btn" onclick="completeTask()">
+                <i class="fas fa-check-circle"></i>
+                <span>完成任务</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="exportData()">
+                <i class="fas fa-file-export"></i>
+                <span>导出数据</span>
+            </button>
+            <button class="toolbar-btn" onclick="printReport()">
+                <i class="fas fa-print"></i>
+                <span>打印报表</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="location.href='index.html'">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>返回首页</span>
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="panel-header">快速导航</div>
+                <div class="nav-list">
+                    <div class="nav-list-item active" onclick="filterByStatus('all', this)">
+                        <i class="fas fa-list"></i> 全部任务
+                    </div>
+                    <div class="nav-list-item" onclick="filterByStatus('pending', this)">
+                        <i class="fas fa-clock"></i> 待执行
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="nav-list-item" onclick="filterByStatus('processing', this)">
+                        <i class="fas fa-spinner"></i> 执行中
+                        <span class="badge">5</span>
+                    </div>
+                    <div class="nav-list-item" onclick="filterByStatus('completed', this)">
+                        <i class="fas fa-check-circle"></i> 已完成
+                    </div>
+                    <div class="nav-list-item" onclick="filterByStatus('overdue', this)">
+                        <i class="fas fa-exclamation-circle"></i> 已逾期
+                        <span class="badge">2</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="page-header">
+                    <i class="fas fa-tasks" style="font-size:20px;color:#b8860b;"></i>
+                    <div>
+                        <div class="page-title">整改任务管理</div>
+                        <div class="page-info">共 38 条整改任务</div>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="number">38</div>
+                        <div class="label">任务总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">3</div>
+                        <div class="label">待执行</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">5</div>
+                        <div class="label">执行中</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">28</div>
+                        <div class="label">已完成</div>
+                    </div>
+                </div>
+
+                <div class="search-bar">
+                    <label>责任科室:</label>
+                    <select id="searchDept">
+                        <option value="">全部科室</option>
+                        <option value="急诊科">急诊科</option>
+                        <option value="内科">内科</option>
+                        <option value="外科">外科</option>
+                        <option value="门诊部">门诊部</option>
+                    </select>
+                    <label>问题类型:</label>
+                    <select id="searchType">
+                        <option value="">全部类型</option>
+                        <option value="服务流程">服务流程</option>
+                        <option value="人员素质">人员素质</option>
+                        <option value="制度执行">制度执行</option>
+                        <option value="设备设施">设备设施</option>
+                    </select>
+                    <label>处理状态:</label>
+                    <select id="searchStatus">
+                        <option value="">全部状态</option>
+                        <option value="待执行">待执行</option>
+                        <option value="执行中">执行中</option>
+                        <option value="已完成">已完成</option>
+                    </select>
+                    <button class="search-btn" onclick="searchRecords()"><i class="fas fa-search"></i> 查询</button>
+                    <button class="search-btn" onclick="resetSearch()"><i class="fas fa-undo"></i> 重置</button>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:30px;"><input type="checkbox" onclick="selectAll(this)"></th>
+                                <th style="width:100px;">任务编号</th>
+                                <th style="width:80px;">责任科室</th>
+                                <th style="width:60px;">责任人</th>
+                                <th style="width:90px;">整改期限</th>
+                                <th style="width:70px;">问题类型</th>
+                                <th>问题描述</th>
+                                <th style="width:80px;">完成进度</th>
+                                <th style="width:70px;">状态</th>
+                                <th style="width:90px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>ZG2024032001</td>
+                                <td>急诊科</td>
+                                <td>张护士长</td>
+                                <td>2024-03-27</td>
+                                <td>服务流程</td>
+                                <td>优化分诊流程，减少患者等待时间</td>
+                                <td>
+                                    <div class="progress-bar"><div class="progress-fill" style="width:60%;"></div></div>
+                                    <span style="font-size:10px;color:#5a6a7a;">60%</span>
+                                </td>
+                                <td><span class="status-tag processing">执行中</span></td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('ZG2024032001')">查看</a>
+                                    <a href="javascript:void(0)" class="action-link" onclick="editRecord('ZG2024032001')">编辑</a>
+                                </td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>ZG2024031901</td>
+                                <td>门诊收费</td>
+                                <td>李主任</td>
+                                <td>2024-03-25</td>
+                                <td>服务流程</td>
+                                <td>规范收费清单，提高透明度</td>
+                                <td>
+                                    <div class="progress-bar"><div class="progress-fill" style="width:100%;"></div></div>
+                                    <span style="font-size:10px;color:#5a6a7a;">100%</span>
+                                </td>
+                                <td><span class="status-tag completed">已完成</span></td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('ZG2024031901')">查看</a>
+                                </td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>ZG2024031801</td>
+                                <td>内科病房</td>
+                                <td>王护士长</td>
+                                <td>2024-03-24</td>
+                                <td>制度执行</td>
+                                <td>完善交接班制度，确保信息完整</td>
+                                <td>
+                                    <div class="progress-bar"><div class="progress-fill" style="width:100%;"></div></div>
+                                    <span style="font-size:10px;color:#5a6a7a;">100%</span>
+                                </td>
+                                <td><span class="status-tag completed">已完成</span></td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('ZG2024031801')">查看</a>
+                                </td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>ZG2024031701</td>
+                                <td>检验科</td>
+                                <td>赵主任</td>
+                                <td>2024-03-26</td>
+                                <td>人员素质</td>
+                                <td>加强服务意识培训，改善服务态度</td>
+                                <td>
+                                    <div class="progress-bar"><div class="progress-fill" style="width:30%;"></div></div>
+                                    <span style="font-size:10px;color:#5a6a7a;">30%</span>
+                                </td>
+                                <td><span class="status-tag processing">执行中</span></td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('ZG2024031701')">查看</a>
+                                    <a href="javascript:void(0)" class="action-link" onclick="editRecord('ZG2024031701')">编辑</a>
+                                </td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>ZG2024031601</td>
+                                <td>影像科</td>
+                                <td>刘主任</td>
+                                <td>2024-03-22</td>
+                                <td>服务流程</td>
+                                <td>缩短CT检查预约时间</td>
+                                <td>
+                                    <div class="progress-bar"><div class="progress-fill" style="width:100%;"></div></div>
+                                    <span style="font-size:10px;color:#5a6a7a;">100%</span>
+                                </td>
+                                <td><span class="status-tag completed">已完成</span></td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('ZG2024031601')">查看</a>
+                                </td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>ZG2024031501</td>
+                                <td>药房</td>
+                                <td>周主任</td>
+                                <td>2024-03-28</td>
+                                <td>服务流程</td>
+                                <td>优化发药流程，提高工作效率</td>
+                                <td>
+                                    <div class="progress-bar"><div class="progress-fill" style="width:0%;"></div></div>
+                                    <span style="font-size:10px;color:#5a6a7a;">0%</span>
+                                </td>
+                                <td><span class="status-tag pending">待执行</span></td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('ZG2024031501')">查看</a>
+                                    <a href="javascript:void(0)" class="action-link" onclick="editRecord('ZG2024031501')">编辑</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span>当前用户: 王明华 (质量监督员) | 科室: 医务质控部</span>
+            <span id="clock"></span>
+        </div>
+    </div>
+
+    <!-- 新建任务弹窗 -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal">
+            <div class="modal-title">
+                <div class="modal-title-text"><i class="fas fa-plus-circle"></i> 创建整改任务</div>
+                <button class="modal-close" onclick="closeModal('addModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">任务编号</label>
+                        <input type="text" id="addCode" value="ZG2024032101" readonly style="background:#f0f0f0;">
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">创建日期</label>
+                        <input type="date" id="addDate" value="2024-03-21">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">关联检查号</label>
+                        <input type="text" id="addRef" placeholder="请输入关联检查编号">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>关联投诉号</label>
+                        <input type="text" id="addComplaint" placeholder="如有关联投诉请填写">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">责任科室</label>
+                        <select id="addDept">
+                            <option value="">请选择科室</option>
+                            <option value="急诊科">急诊科</option>
+                            <option value="内科病房">内科病房</option>
+                            <option value="外科病房">外科病房</option>
+                            <option value="门诊部">门诊部</option>
+                            <option value="检验科">检验科</option>
+                            <option value="影像科">影像科</option>
+                            <option value="药房">药房</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">责任人</label>
+                        <input type="text" id="addPerson" placeholder="请输入责任人姓名">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">整改期限</label>
+                        <input type="date" id="addDeadline" value="2024-03-28">
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">优先级</label>
+                        <select id="addPriority">
+                            <option value="普通">普通</option>
+                            <option value="重要">重要</option>
+                            <option value="紧急">紧急</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">问题类型</label>
+                        <select id="addType">
+                            <option value="">请选择类型</option>
+                            <option value="服务流程">服务流程</option>
+                            <option value="人员素质">人员素质</option>
+                            <option value="制度执行">制度执行</option>
+                            <option value="设备设施">设备设施</option>
+                            <option value="环境卫生">环境卫生</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>监督人员</label>
+                        <input type="text" id="addSupervisor" value="王明华">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label class="required">问题描述</label>
+                        <textarea id="addProblem" placeholder="请详细描述需要整改的问题"></textarea>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label class="required">整改要求</label>
+                        <textarea id="addRequirement" placeholder="请明确整改的具体要求和标准"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="saveTask()"><i class="fas fa-check"></i> 创建任务</button>
+                <button class="modal-btn" onclick="closeModal('addModal')"><i class="fas fa-times"></i> 取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情查看弹窗 -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal" style="max-width:750px;">
+            <div class="modal-title">
+                <div class="modal-title-text"><i class="fas fa-file-alt"></i> 任务详情</div>
+                <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <div class="detail-section-title">基本信息</div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">任务编号:</span>
+                            <span class="detail-value" id="detailCode">ZG2024032001</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">创建日期:</span>
+                            <span class="detail-value" id="detailDate">2024-03-20</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">责任科室:</span>
+                            <span class="detail-value" id="detailDept">急诊科</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">责任人:</span>
+                            <span class="detail-value" id="detailPerson">张护士长</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">整改期限:</span>
+                            <span class="detail-value" id="detailDeadline">2024-03-27</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">问题类型:</span>
+                            <span class="detail-value" id="detailType">服务流程</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">监督人员:</span>
+                            <span class="detail-value">王明华</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">完成进度:</span>
+                            <span class="detail-value">
+                                <div class="progress-bar" style="width:100px;display:inline-block;vertical-align:middle;"><div class="progress-fill" style="width:60%;"></div></div>
+                                60%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">问题描述</div>
+                    <div class="detail-row">
+                        <div class="detail-item" style="flex-basis:100%;">
+                            <span class="detail-value" id="detailProblem">急诊分诊等待时间超标，部分患者等待超过30分钟，高峰期分诊护士人手不足，患者积压严重。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">整改要求</div>
+                    <div class="detail-row">
+                        <div class="detail-item" style="flex-basis:100%;">
+                            <span class="detail-value" id="detailRequirement">1. 增派分诊护士，特别是高峰时段(8:00-12:00)；2. 优化分诊流程，提高分诊效率；3. 设置预检分诊区域，有效分流轻症患者。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">整改措施</div>
+                    <div class="detail-row">
+                        <div class="detail-item" style="flex-basis:100%;">
+                            <span class="detail-value">1. 已向人事部门申请增加2名分诊护士；2. 制定了新的分诊流程图；3. 已设置预检分诊台。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">处理状态</div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">当前状态:</span>
+                            <span class="detail-value"><span class="status-tag processing">执行中</span></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">剩余天数:</span>
+                            <span class="detail-value" style="color:#b8860b;">还剩7天</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="editRecord()"><i class="fas fa-edit"></i> 更新进度</button>
+                <button class="modal-btn" onclick="printDetail()"><i class="fas fa-print"></i> 打印详情</button>
+                <button class="modal-btn" onclick="closeModal('detailModal')"><i class="fas fa-times"></i> 关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 更新进度弹窗 -->
+    <div class="modal-overlay" id="updateModal">
+        <div class="modal">
+            <div class="modal-title">
+                <div class="modal-title-text"><i class="fas fa-edit"></i> 更新整改进度</div>
+                <button class="modal-close" onclick="closeModal('updateModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>任务编号</label>
+                        <input type="text" id="updateCode" value="ZG2024032001" readonly style="background:#f0f0f0;">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>更新日期</label>
+                        <input type="date" id="updateDate" value="2024-03-21">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">当前进度</label>
+                        <select id="updateProgress">
+                            <option value="0">0%</option>
+                            <option value="20">20%</option>
+                            <option value="40">40%</option>
+                            <option value="60" selected>60%</option>
+                            <option value="80">80%</option>
+                            <option value="100">100%</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">处理状态</label>
+                        <select id="updateStatus">
+                            <option value="待执行">待执行</option>
+                            <option value="执行中" selected>执行中</option>
+                            <option value="已完成">已完成</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label class="required">进度说明</label>
+                        <textarea id="updateDesc" placeholder="请描述当前整改进度情况"></textarea>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>下一步计划</label>
+                        <textarea id="updatePlan" placeholder="请描述下一步整改计划"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="submitUpdate()"><i class="fas fa-check"></i> 提交更新</button>
+                <button class="modal-btn" onclick="closeModal('updateModal')"><i class="fas fa-times"></i> 取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const toast = document.getElementById('toast');
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        function selectRow(row) {
+            document.querySelectorAll('.data-table tbody tr').forEach(function(tr) {
+                tr.classList.remove('selected');
+                tr.querySelector('input[type="checkbox"]').checked = false;
+            });
+            row.classList.add('selected');
+            row.querySelector('input[type="checkbox"]').checked = true;
+        }
+
+        function selectAll(checkbox) {
+            document.querySelectorAll('.data-table tbody input[type="checkbox"]').forEach(function(cb) {
+                cb.checked = checkbox.checked;
+                if (checkbox.checked) {
+                    cb.closest('tr').classList.add('selected');
+                } else {
+                    cb.closest('tr').classList.remove('selected');
+                }
+            });
+        }
+
+        function filterByStatus(status, element) {
+            document.querySelectorAll('.nav-list-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            showToast('已筛选: ' + (status === 'all' ? '全部任务' : status));
+        }
+
+        function viewDetail(id) {
+            openModal('detailModal');
+        }
+
+        function editRecord(id) {
+            closeModal('detailModal');
+            openModal('updateModal');
+        }
+
+        function saveTask() {
+            const dept = document.getElementById('addDept').value;
+            const person = document.getElementById('addPerson').value;
+            if (!dept || !person) {
+                showToast('请填写必填项');
+                return;
+            }
+            showToast('整改任务已创建');
+            closeModal('addModal');
+        }
+
+        function submitUpdate() {
+            showToast('进度已更新');
+            closeModal('updateModal');
+        }
+
+        function updateProgress() {
+            showToast('请选择要更新的任务');
+        }
+
+        function completeTask() {
+            showToast('请选择要完成的任务');
+        }
+
+        function printDetail() {
+            showToast('正在准备打印...');
+        }
+
+        function searchRecords() {
+            showToast('查询完成');
+        }
+
+        function resetSearch() {
+            document.getElementById('searchDept').value = '';
+            document.getElementById('searchType').value = '';
+            document.getElementById('searchStatus').value = '';
+            showToast('查询条件已重置');
+        }
+
+        function refreshData() {
+            showToast('数据已刷新');
+        }
+
+        function exportData() {
+            showToast('数据导出成功');
+        }
+
+        function printReport() {
+            showToast('正在准备打印...');
+        }
+
+        document.querySelectorAll('.nav-list-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.nav-list-item').forEach(function(i) {
+                    i.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>危机预警详情 - 学生心理档案综合管理系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{--primary:#2C6BAC;--primary-light:#4A8FD4;--primary-dark:#1A4F85;--accent:#5BB8A0;--accent2:#F0A500;--danger:#E05555;--warn:#E08A30;--bg:#F4F7FB;--sidebar-bg:#1C2D4A;--sidebar-text:#B8CCDF;--card-bg:#FFFFFF;--text-main:#1A2A3C;--text-sub:#5C7A96;--border:#DDE6F0;--shadow:0 2px 16px rgba(44,107,172,0.10);--shadow-lg:0 8px 32px rgba(44,107,172,0.16);--radius:14px;--radius-sm:8px;--font-serif:'Noto Serif SC',serif;--font-sans:'Noto Sans SC',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text-main);min-height:100vh;display:flex;overflow-x:hidden}
+.sidebar{width:240px;min-height:calc(100vh - 64px);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;left:0;top:64px;bottom:0;z-index:100;box-shadow:4px 0 24px rgba(0,0,0,0.15)}
+.sidebar-nav{flex:1;padding:16px 0;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--sidebar-text);text-decoration:none;font-size:13.5px;border-left:3px solid transparent;transition:all 0.2s;cursor:pointer}
+.nav-item i{width:20px;text-align:center;font-size:15px;opacity:.8}
+.nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;border-left-color:rgba(255,255,255,0.3)}
+.nav-item.active{background:rgba(44,107,172,0.25);color:#fff;border-left-color:var(--primary-light);font-weight:500}
+.nav-item.active i{opacity:1;color:var(--primary-light)}
+.nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08)}
+.user-info{display:flex;align-items:center;gap:10px}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4A8FD4,#5BB8A0);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;overflow:hidden}
+.user-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.user-name{font-size:13px;color:#fff;font-weight:500}
+.user-role{font-size:11px;color:var(--sidebar-text);opacity:.7}
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;padding-top:64px}
+.topbar{height:64px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px 0 10px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:110;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.topbar-brand{display:flex;align-items:center;gap:10px;font-family:var(--font-serif);font-size:18px;font-weight:700;color:var(--primary-dark);white-space:nowrap}
+.topbar-divider{width:1px;height:20px;background:var(--border)}
+.topbar-title{font-size:17px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:500;cursor:pointer;border:none;transition:all 0.2s;font-family:var(--font-sans);text-decoration:none}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(44,107,172,0.3)}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--border)}
+.btn-outline:hover{border-color:var(--primary);background:#F0F6FF}
+.btn-sm{padding:7px 14px;font-size:12.5px}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-green{background:var(--accent);color:#fff}
+.btn-orange{background:var(--accent2);color:#fff}
+.topbar-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all 0.2s}
+.topbar-btn:hover{background:var(--border);color:var(--primary)}
+.page-content{padding:28px;flex:1}
+
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:500}
+.tag-green{background:#E6F7F3;color:#2D9C84}.tag-orange{background:#FEF3E2;color:#C07B20}.tag-red{background:#FDEAEA;color:#C04040}.tag-blue{background:#E8F1FA;color:#2C6BAC}.tag-purple{background:#F0E8FE;color:#7040C0}
+
+.crisis-header{background:linear-gradient(135deg,#B91C1C,#E03E3E);border-radius:var(--radius);padding:28px;margin-bottom:20px;display:flex;align-items:center;gap:20px}
+.crisis-header .icon{width:64px;height:64px;background:rgba(255,255,255,0.15);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.crisis-header .icon i{font-size:28px;color:#fff}
+.crisis-header .text{flex:1}
+.crisis-header .text h2{color:#fff;font-size:22px;font-weight:700;font-family:var(--font-serif);margin-bottom:6px}
+.crisis-header .text p{color:rgba(255,255,255,0.85);font-size:14px}
+.crisis-header .level{background:rgba(255,255,255,0.2);padding:8px 16px;border-radius:20px;color:#fff;font-weight:600;font-size:14px}
+
+.info-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:20px}
+.card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow)}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-header h3{font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)}
+.card-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.card-body{padding:20px}
+
+.info-row{display:flex;padding:12px 0;border-bottom:1px solid #F0F5FA}
+.info-row:last-child{border-bottom:none}
+.info-label{width:100px;font-size:13px;color:var(--text-sub);flex-shrink:0}
+.info-value{font-size:14px;color:var(--text-main);font-weight:500}
+
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+.timeline-item{position:relative;margin-bottom:20px;padding-left:20px}
+.timeline-item::before{content:'';position:absolute;left:-16px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--primary);border:3px solid #fff;box-shadow:0 0 0 2px var(--primary)}
+.timeline-item.danger::before{background:var(--danger);box-shadow:0 0 0 2px var(--danger)}
+.timeline-item.warning::before{background:var(--accent2);box-shadow:0 0 0 2px var(--accent2)}
+.timeline-item.success::before{background:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.timeline-item .tl-title{font-size:14px;font-weight:600;color:var(--text-main)}
+.timeline-item .tl-desc{font-size:13px;color:var(--text-sub);margin-top:4px;line-height:1.5}
+.timeline-item .tl-meta{font-size:12px;color:var(--text-sub);margin-top:6px;display:flex;gap:12px}
+.timeline-item .tl-meta span{display:flex;align-items:center;gap:4px}
+
+.action-panel{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:24px}
+.action-panel h3{font-size:16px;font-weight:600;color:var(--text-main);font-family:var(--font-serif);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.action-btn{height:80px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
+.action-btn:hover{border-color:var(--primary);background:#F0F6FF;transform:translateY(-2px)}
+.action-btn i{font-size:24px;color:var(--primary)}
+.action-btn span{font-size:12.5px;color:var(--text-main);font-weight:500}
+.action-btn.danger{border-color:var(--danger);background:#FDEAEA}
+.action-btn.danger:hover{background:var(--danger);color:#fff}
+.action-btn.danger i{color:var(--danger)}
+.action-btn.danger:hover i{color:#fff}
+
+.note-area{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;color:var(--text-main);min-height:100px;resize:vertical;width:100%;font-family:var(--font-sans)}
+.note-area:focus{outline:none;border-color:var(--primary)}
+
+.full-width{grid-column:span 2}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.3);display:none;align-items:center;justify-content:center;z-index:1000}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-lg);width:100%;max-width:500px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:move}
+.modal-title{font-size:16px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)}
+.modal-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.2s}
+.modal-close:hover{background:var(--danger);color:#fff}
+.modal-body{padding:24px;overflow-y:auto;flex:1}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:13px;font-weight:500;color:var(--text-main);margin-bottom:8px}
+.form-input,.form-select,.form-textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;color:var(--text-main);font-family:var(--font-sans);transition:all 0.2s;outline:none;background:#fff}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,107,172,0.1)}
+.form-textarea{min-height:100px;resize:vertical}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-nav">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>系统总览</span></a>
+    <a href="student-files.html" class="nav-item"><i class="fa-solid fa-folder-open"></i><span>学生心理档案</span></a>
+    <a href="assessment.html" class="nav-item"><i class="fa-solid fa-clipboard-check"></i><span>心理测评管理</span></a>
+    <a href="counseling.html" class="nav-item"><i class="fa-solid fa-comments"></i><span>咨询预约管理</span><span class="nav-badge">5</span></a>
+    <a href="crisis.html" class="nav-item active"><i class="fa-solid fa-triangle-exclamation"></i><span>危机预警干预</span><span class="nav-badge">3</span></a>
+    <a href="group-activities.html" class="nav-item"><i class="fa-solid fa-people-group"></i><span>团体活动管理</span></a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar"><img src="https://i04piccdn.sogoucdn.com/e19a983de5cef917" alt="孙家祺"></div>
+      <div><div class="user-name">孙家祺</div><div class="user-role">管理员</div></div>
+    </div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-brand"><span>学生心理档案综合管理系统</span></div>
+    <div class="topbar-divider"></div>
+    <div>
+      <div class="topbar-title">危机预警详情</div>
+    </div>
+    <div class="topbar-right">
+      <a href="crisis.html" class="btn btn-outline btn-sm"><i class="fa-solid fa-arrow-left"></i> 返回列表</a>
+      <div style="position:relative">
+        <div class="icon-btn" onclick="toggleNotificationDropdown()"><i class="fa-regular fa-bell"></i><span class="dot"></span></div>
+        <div id="notificationDropdown" style="display:none;position:absolute;top:48px;right:0;width:360px;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(44,107,172,0.2);border:1px solid var(--border);z-index:1000;overflow:hidden">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between"><div style="font-size:14px;font-weight:600;color:var(--text-dark)">通知中心</div><span style="font-size:11px;color:var(--accent);cursor:pointer">全部已读</span></div>
+          <div style="max-height:320px;overflow-y:auto">
+            <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start;background:#FFF9F0" onclick="markAsRead(1)"><div style="width:36px;height:36px;border-radius:50%;background:#FDEAEA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-triangle-exclamation" style="color:#C04040;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">一级危机预警</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">林雨桐测评显示重度抑郁倾向，请立即处理</div><div style="font-size:11px;color:#999;margin-top:4px">10分钟前</div></div></div>
+            <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start;background:#F8FAFD" onclick="markAsRead(2)"><div style="width:36px;height:36px;border-radius:50%;background:#E8F1FA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-clipboard-check" style="color:#2C6BAC;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">测评任务完成</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">高一新生适应性测评已完成，523人已提交</div><div style="font-size:11px;color:#999;margin-top:4px">30分钟前</div></div></div>
+            <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start" onclick="markAsRead(3)"><div style="width:36px;height:36px;border-radius:50%;background:#E6F7F3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-calendar-check" style="color:#2D9C84;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">咨询预约提醒</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">张明轩的咨询预约将于明天10:00开始</div><div style="font-size:11px;color:#999;margin-top:4px">1小时前</div></div></div>
+            <div style="padding:12px 16px;display:flex;gap:12px;align-items:flex-start" onclick="markAsRead(4)"><div style="width:36px;height:36px;border-radius:50%;background:#FEF3E2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-clock" style="color:#C07B20;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">待处理预警</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">您有3条危机预警待处理，请及时跟进</div><div style="font-size:11px;color:#999;margin-top:4px">2小时前</div></div></div>
+          </div>
+          <div style="padding:10px 16px;border-top:1px solid var(--border);text-align:center"><span style="font-size:12px;color:var(--primary);cursor:pointer">查看全部通知</span></div>
+        </div>
+      </div>
+      <button class="topbar-btn" id="loginBtn" onclick="goToLogin()"><i class="fa-solid fa-right-to-bracket"></i></button>
+      <button class="topbar-btn" id="logoutBtn" onclick="logout()" style="display:none"><i class="fa-solid fa-sign-out-alt"></i></button>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="crisis-header">
+      <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="text">
+        <h2>林雨桐 — 危机预警处置</h2>
+        <p>高二(5)班 · 学号 20240205 · 女</p>
+      </div>
+      <div class="level"><i class="fa-solid fa-circle"></i> 一级危机</div>
+    </div>
+
+    <div class="info-cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#E8F1FA;color:#2C6BAC"><i class="fa-solid fa-user"></i></div>
+          <h3>学生基本信息</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">姓名</span><span class="info-value">林雨桐</span></div>
+          <div class="info-row"><span class="info-label">班级</span><span class="info-value">高二(5)班</span></div>
+          <div class="info-row"><span class="info-label">性别</span><span class="info-value">女</span></div>
+          <div class="info-row"><span class="info-label">联系电话</span><span class="info-value">138****5678</span></div>
+          <div class="info-row"><span class="info-label">家庭住址</span><span class="info-value">xx市xx区xx街道</span></div>
+          <div class="info-row"><span class="info-label">紧急联系人</span><span class="info-value">林先生（父亲）138****1234</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#FDEAEA;color:#C04040"><i class="fa-solid fa-clipboard-list"></i></div>
+          <h3>预警详情</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">预警等级</span><span class="info-value"><span class="tag tag-red">一级危机</span></span></div>
+          <div class="info-row"><span class="info-label">预警来源</span><span class="info-value">PHQ-9测评自动触发</span></div>
+          <div class="info-row"><span class="info-label">触发时间</span><span class="info-value">2024-11-20 14:30</span></div>
+          <div class="info-row"><span class="info-label">主要症状</span><span class="info-value">重度抑郁，自伤意念</span></div>
+          <div class="info-row"><span class="info-label">上报人</span><span class="info-value">系统自动</span></div>
+          <div class="info-row"><span class="info-label">当前状态</span><span class="info-value"><span class="tag tag-orange">处置中</span></span></div>
+        </div>
+      </div>
+
+      <div class="card full-width">
+        <div class="card-header">
+          <div class="card-icon" style="background:#E6F7F3;color:#2D9C84"><i class="fa-solid fa-list-ol"></i></div>
+          <h3>处置记录</h3>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            <div class="timeline-item danger">
+              <div class="tl-title">预警触发 — 系统自动</div>
+              <div class="tl-desc">PHQ-9评分22分（重度抑郁），学生表达有自伤意念</div>
+              <div class="tl-meta">
+                <span><i class="fa-regular fa-clock"></i> 2024-11-20 14:30</span>
+                <span><i class="fa-solid fa-robot"></i> 系统自动</span>
+              </div>
+            </div>
+            <div class="timeline-item danger">
+              <div class="tl-title">通知心理教师</div>
+              <div class="tl-desc">系统自动通知心理教师李老师、王老师</div>
+              <div class="tl-meta">
+                <span><i class="fa-regular fa-clock"></i> 2024-11-20 14:31</span>
+                <span><i class="fa-solid fa-bell"></i> 已发送通知</span>
+              </div>
+            </div>
+            <div class="timeline-item warning">
+              <div class="tl-title">辅导员介入</div>
+              <div class="tl-desc">辅导员王老师第一时间与学生进行谈话，了解具体情况</div>
+              <div class="tl-meta">
+                <span><i class="fa-regular fa-clock"></i> 2024-11-20 15:00</span>
+                <span><i class="fa-solid fa-user"></i> 王老师</span>
+              </div>
+            </div>
+            <div class="timeline-item warning">
+              <div class="tl-title">联系家长</div>
+              <div class="tl-desc">已联系家长林先生，告知学生情况，建议家长到校</div>
+              <div class="tl-meta">
+                <span><i class="fa-regular fa-clock"></i> 2024-11-20 15:30</span>
+                <span><i class="fa-solid fa-phone"></i> 已通话</span>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="tl-title">建立重点关注档案</div>
+              <div class="tl-desc">在学生档案中标记为危机关注状态，安排每周定期咨询</div>
+              <div class="tl-meta">
+                <span><i class="fa-regular fa-clock"></i> 2024-11-20 16:00</span>
+                <span><i class="fa-solid fa-user"></i> 李老师</span>
+              </div>
+            </div>
+            <div class="timeline-item success">
+              <div class="tl-title">首次危机干预完成</div>
+              <div class="tl-desc">学生情绪暂时稳定，签订安全承诺书，约定下次咨询时间</div>
+              <div class="tl-meta">
+                <span><i class="fa-regular fa-clock"></i> 2024-11-21 10:00</span>
+                <span><i class="fa-solid fa-user"></i> 李老师</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-panel">
+      <h3><i class="fa-solid fa-bolt"></i> 快速处置操作</h3>
+      <div class="action-grid">
+        <button class="action-btn danger" onclick="openInterventionModal()">
+          <i class="fa-solid fa-hand-holding-heart"></i>
+          <span>立即干预</span>
+        </button>
+        <button class="action-btn" onclick="openCallModal()">
+          <i class="fa-solid fa-phone"></i>
+          <span>联系家长</span>
+        </button>
+        <button class="action-btn" onclick="openCounselingModal()">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>安排咨询</span>
+        </button>
+      </div>
+      <h3><i class="fa-solid fa-pen"></i> 处置记录</h3>
+      <textarea class="note-area" placeholder="填写本次处置的详细情况..."></textarea>
+      <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:10px">
+        <button class="btn btn-outline">保存草稿</button>
+        <button class="btn btn-primary"><i class="fa-solid fa-check"></i> 提交记录</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="interventionModal">
+  <div class="modal">
+    <div class="modal-header" id="interventionModalHeader">
+      <div class="modal-title"><i class="fa-solid fa-hand-holding-heart"></i> 发起危机干预</div>
+      <button class="modal-close" onclick="closeModal('interventionModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">干预方式</label>
+        <select class="form-select">
+          <option>个体咨询</option>
+          <option>危机面谈</option>
+          <option>团体辅导</option>
+          <option>转介专业机构</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">干预教师</label>
+        <select class="form-select">
+          <option>李老师</option>
+          <option>王老师</option>
+          <option>周老师</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">预约时间</label>
+        <input type="datetime-local" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">干预目标</label>
+        <textarea class="form-textarea" placeholder="描述本次干预的主要目标..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('interventionModal')">取消</button>
+      <button class="btn btn-danger" onclick="submitIntervention()"><i class="fa-solid fa-check"></i> 确认干预</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="callModal">
+  <div class="modal">
+    <div class="modal-header" id="callModalHeader">
+      <div class="modal-title"><i class="fa-solid fa-phone"></i> 联系家长</div>
+      <button class="modal-close" onclick="closeModal('callModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">紧急联系人</label>
+        <input type="text" class="form-input" value="林先生（父亲）138****1234" disabled>
+      </div>
+      <div class="form-group">
+        <label class="form-label">通话内容摘要</label>
+        <textarea class="form-textarea" placeholder="记录与家长通话的主要内容..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">家长反馈</label>
+        <select class="form-select">
+          <option>家长表示重视，会加强关注</option>
+          <option>家长同意到校面谈</option>
+          <option>家长在外地，需远程沟通</option>
+          <option>其他情况</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('callModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveCallRecord()"><i class="fa-solid fa-save"></i> 保存记录</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function checkLoginStatus(){
+  const l=document.getElementById('loginBtn'),o=document.getElementById('logoutBtn');
+  sessionStorage.getItem('isLoggedIn')==='true'?(l.style.display='none',o.style.display='flex'):(l.style.display='flex',o.style.display='none')
+}
+function goToLogin(){window.location.href='login.html'}
+function logout(){
+  sessionStorage.removeItem('isLoggedIn');
+  sessionStorage.removeItem('userName');
+  sessionStorage.removeItem('userRole');
+  checkLoginStatus();
+}
+checkLoginStatus();
+
+function toggleNotificationDropdown(){const d=document.getElementById('notificationDropdown');d.style.display=d.style.display==='none'?'block':'none'}
+function markAsRead(id){alert('标记通知'+id+'为已读')}
+document.addEventListener('click',function(e){const d=document.getElementById('notificationDropdown');if(d&&!e.target.closest('.icon-btn')&&!e.target.closest('#notificationDropdown')){d.style.display='none'}});
+
+function openInterventionModal(){document.getElementById('interventionModal').classList.add('show');initDragModal('interventionModal','interventionModalHeader')}
+function openCallModal(){document.getElementById('callModal').classList.add('show');initDragModal('callModal','callModalHeader')}
+function openCounselingModal(){alert('将跳转到咨询预约页面')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function submitIntervention(){closeModal('interventionModal');alert('干预已安排')}
+function saveCallRecord(){closeModal('callModal');alert('通话记录已保存')}
+
+function initDragModal(modalId,headerId){
+  const modal=document.getElementById(modalId),header=document.getElementById(headerId);
+  let isDragging=false,startX,startY,initialX,initialY;
+  header.onmousedown=function(e){
+    isDragging=true;
+    startX=e.clientX;startY=e.clientY;
+    const rect=modal.getBoundingClientRect();
+    initialX=rect.left;initialY=rect.top;
+    header.style.cursor='grabbing';
+  };
+  document.onmousemove=function(e){
+    if(!isDragging)return;
+    const dx=e.clientX-startX,dy=e.clientY-startY;
+    modal.style.left=initialX+dx+'px';modal.style.top=initialY+dy+'px';
+    modal.style.transform='none';
+  };
+  document.onmouseup=function(){isDragging=false;header.style.cursor='move';};
+}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');}));
+</script>
+</body>
+</html>

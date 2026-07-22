@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>数据可视化 - 异常财务数据智能报警系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            min-height: 100vh;
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .main-content { margin-left: 260px; flex: 1; min-height: 100vh; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 2px;
+            color: #4b4b4b;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .nav-item:hover:not(.active) { background: rgba(0, 0, 0, 0.05); }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.12);
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .nav-item.active i { color: #2563eb; }
+
+        .traffic-lights { display: flex; gap: 8px; padding: 12px 16px; }
+
+        .light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: transform 0.1s; }
+        .light:hover { transform: scale(1.1); }
+        .light-red { background: #ff5f57; }
+        .light-yellow { background: #febc2e; }
+        .light-green { background: #28c840; }
+
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            transition: all 0.3s;
+        }
+
+        .chart-card:hover {
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #4b5563;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover { background: #e5e7eb; }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+            color: #6b7280;
+            border: none;
+        }
+
+        .tab-btn:hover { background: #f3f4f6; }
+        .tab-btn.active { background: #2563eb; color: white; }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: #f9fafb;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .legend-item:hover { background: #f3f4f6; }
+        .legend-item.active { background: #eff6ff; border: 1px solid #bfdbfe; }
+
+        .header-action { position: relative; }
+
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 360px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.25s ease;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .notification-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notification-header h4 { font-size: 14px; font-weight: 600; }
+
+        .notification-list { max-height: 400px; overflow-y: auto; }
+
+        .notification-item {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            padding: 14px 18px;
+            border-bottom: 1px solid #f9fafb;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover { background: #f9fafb; }
+        .notification-item:last-child { border-bottom: none; }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-content { flex: 1; min-width: 0; }
+
+        .notification-title { font-size: 13px; font-weight: 500; color: #1f2937; margin-bottom: 4px; }
+
+        .notification-desc { font-size: 12px; color: #6b7280; line-height: 1.4; }
+
+        .notification-time { font-size: 11px; color: #9ca3af; flex-shrink: 0; }
+
+        .notification-footer {
+            padding: 12px 18px;
+            border-top: 1px solid #f0f0f0;
+            text-align: center;
+        }
+
+        .notification-footer a {
+            font-size: 13px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .notification-footer a:hover { text-decoration: underline; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 480px;
+            max-height: 80vh;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-dots {
+            display: flex;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .modal-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .modal-dots span:nth-child(1) { background: #ff5f57; }
+        .modal-dots span:nth-child(2) { background: #febc2e; }
+        .modal-dots span:nth-child(3) { background: #28c840; }
+
+        .modal-dots:hover span { transform: scale(1.1); }
+
+        .modal-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            flex: 1;
+        }
+
+        .modal-body { padding: 24px; }
+
+        .format-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f9fafb;
+        }
+
+        .format-option:hover { border-color: #d1d5db; }
+
+        .format-option.selected {
+            background: #eff6ff;
+            border-color: #3b82f6;
+        }
+
+        .format-option input { display: none; }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="traffic-lights">
+            <div class="light light-red"></div>
+            <div class="light light-yellow"></div>
+            <div class="light light-green"></div>
+        </div>
+        <div class="px-4 mb-6">
+            <div class="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-black/5">
+                <div class="w-11 h-11 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center">
+                    <img src="static/bg.jpeg" alt="高子豪头像" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <div class="text-[11px] text-gray-400">当前账号</div>
+                    <div class="text-sm font-semibold">高子豪</div>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-3">
+            <div class="text-[10px] uppercase tracking-wider text-gray-400 font-bold px-3 mb-3">主菜单</div>
+            <a href="dashboard.html" class="nav-item">
+                <i class="fa-solid fa-grip text-base w-7"></i>
+                <span class="text-sm">控制面板</span>
+            </a>
+            <a href="alerts.html" class="nav-item">
+                <i class="fa-solid fa-triangle-exclamation text-base w-7"></i>
+                <span class="text-sm">异常中心</span>
+                <span class="ml-auto bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">12</span>
+            </a>
+            <a href="analysis.html" class="nav-item active">
+                <i class="fa-solid fa-chart-line text-base w-7"></i>
+                <span class="text-sm">数据可视化</span>
+            </a>
+            <a href="history.html" class="nav-item">
+                <i class="fa-solid fa-clock-rotate-left text-base w-7"></i>
+                <span class="text-sm">历史审计</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <i class="fa-solid fa-gear text-base w-7"></i>
+                <span class="text-sm">报警设置</span>
+            </a>
+        </nav>
+        <div class="mx-3 mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100/50">
+            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span class="text-[12px] font-bold">AI 实时监控中</span>
+            </div>
+            <div class="text-[11px] text-blue-400">上次扫描: 2026-03-21 09:30:15</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="h-16 border-b border-black/5 flex items-center justify-between px-8 bg-white/60 backdrop-blur-xl sticky top-0 z-50">
+            <div class="flex items-center gap-5">
+                <div class="flex gap-1">
+                    <button class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-black/5 transition-colors">
+                        <i class="fa-solid fa-chevron-left text-gray-400 text-xs"></i>
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-black/5 transition-colors">
+                        <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
+                    </button>
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold">数据可视化</h1>
+                    <p class="text-[11px] text-gray-400 mt-0.5">异常财务数据智能报警系统</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input class="bg-black/5 border-none rounded-lg py-2 pl-9 pr-4 text-xs w-64 focus:ring-2 focus:ring-blue-400 outline-none transition-all" placeholder="搜索流水、规则或档案..." type="text" />
+                </div>
+                <div class="header-action">
+                    <button class="w-9 h-9 flex items-center justify-center hover:bg-black/5 rounded-full relative transition-colors" onclick="toggleNotification()">
+                        <i class="fa-regular fa-bell text-gray-600 text-lg"></i>
+                        <div class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></div>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h4>通知中心</h4>
+                            <span class="text-xs text-blue-500 cursor-pointer" onclick="markAllRead()">全部已读</span>
+                        </div>
+                        <div class="notification-list">
+                            <div class="notification-item">
+                                <div class="notification-icon bg-red-50">
+                                    <i class="fa-solid fa-chart-bar text-red-500"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">图表数据已更新</div>
+                                    <div class="notification-desc">Q1季度异常分析图表已完成更新</div>
+                                </div>
+                                <div class="notification-time">刚刚</div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-icon bg-blue-50">
+                                    <i class="fa-solid fa-download text-blue-500"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">报告生成就绪</div>
+                                    <div class="notification-desc">您申请的月度报告已生成完毕</div>
+                                </div>
+                                <div class="notification-time">10分钟前</div>
+                            </div>
+                        </div>
+                        <div class="notification-footer">
+                            <a href="alerts.html">查看全部通知</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                    <button class="tab-btn active" onclick="switchTab(this, 'overview')">全维度概览</button>
+                    <button class="tab-btn" onclick="switchTab(this, 'trend')">趋势分析</button>
+                </div>
+                <div class="flex gap-3">
+                    <button class="btn-secondary" onclick="openModal('exportModal')">
+                        <i class="fa-solid fa-download mr-2"></i>导出报告
+                    </button>
+                    <button class="btn-primary">
+                        <i class="fa-solid fa-arrows-rotate mr-2"></i>刷新数据
+                    </button>
+                </div>
+            </div>
+
+            <div id="tabContent">
+                <div id="overviewContent" class="tab-panel active">
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div class="chart-card">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-sm font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-pie text-blue-500"></i>
+                                    异常分类占比
+                                </h3>
+                                <div class="flex gap-1">
+                                    <button class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors" onclick="refreshPie()">
+                                        <i class="fa-solid fa-rotate text-gray-400 text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="w-full h-[320px]" id="pieChart"></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-sm font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-bar text-green-500"></i>
+                                    部门异常分布
+                                </h3>
+                                <select class="text-xs bg-gray-100 border-none rounded-md px-3 py-1.5 outline-none cursor-pointer" onchange="updateBarChart(this.value === '按次数' ? 'count' : 'amount')">
+                                    <option>按次数</option>
+                                    <option>按金额</option>
+                                </select>
+                            </div>
+                            <div class="w-full h-[320px]" id="barChart"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-6 mb-6">
+                        <div class="chart-card">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-sm font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-coins text-amber-500"></i>
+                                    风险金额趋势
+                                </h3>
+                            </div>
+                            <div class="w-full h-[240px]" id="lineChart"></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-sm font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-scale-balanced text-purple-500"></i>
+                                    风险等级分布
+                                </h3>
+                            </div>
+                            <div class="w-full h-[240px]" id="radarChart"></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-building text-red-500"></i>
+                                    风险企业图谱
+                                </h3>
+                                <button class="text-xs text-blue-500 hover:text-blue-700" onclick="openModal('graphModal')">全屏</button>
+                            </div>
+                            <div class="w-full h-[200px] rounded-xl flex items-center justify-center overflow-hidden border border-gray-200" style="background-image: url('https://ts1.tc.mm.bing.net/th/id/OIP-C.UGfHq0xP-f50w8Ez4pOYlwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3'); background-size: cover; background-position: center;">
+                                <div class="text-center bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg">
+                                    <p class="text-sm text-gray-700 font-medium">关联企业风险图谱</p>
+                                    <p class="text-xs text-gray-500 mt-1">共发现 45 个关联节点</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 grid grid-cols-3 gap-2">
+                                <div class="legend-item text-center">
+                                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                    <span class="text-xs">高风险 12</span>
+                                </div>
+                                <div class="legend-item text-center">
+                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                    <span class="text-xs">中风险 28</span>
+                                </div>
+                                <div class="legend-item text-center">
+                                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                                    <span class="text-xs">低风险 45</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="flex items-center justify-between mb-5">
+                            <h3 class="text-sm font-semibold flex items-center gap-2">
+                                <i class="fa-solid fa-arrow-trend-up text-indigo-500"></i>
+                                月度异常趋势对比
+                            </h3>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                                    <span class="text-xs text-gray-500">异常次数</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                    <span class="text-xs text-gray-500">涉及金额(万)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-full h-[300px]" id="trendChart"></div>
+                    </div>
+                </div>
+
+                <div id="trendContent" class="tab-panel">
+                    <div class="chart-card mb-6">
+                        <div class="flex items-center justify-between mb-5">
+                            <h3 class="text-sm font-semibold flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-blue-500"></i>
+                                异常趋势深度分析
+                            </h3>
+                            <div class="flex gap-2">
+                                <select class="text-xs bg-gray-100 border-none rounded-md px-3 py-1.5 outline-none cursor-pointer">
+                                    <option>近30天</option>
+                                    <option>近90天</option>
+                                    <option>近半年</option>
+                                    <option>近一年</option>
+                                </select>
+                                <select class="text-xs bg-gray-100 border-none rounded-md px-3 py-1.5 outline-none cursor-pointer">
+                                    <option>按月份</option>
+                                    <option>按周</option>
+                                    <option>按天</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="w-full h-[400px]" id="trendDetailChart"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div class="chart-card">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-sm font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-area text-green-500"></i>
+                                    部门异常趋势对比
+                                </h3>
+                            </div>
+                            <div class="w-full h-[300px]" id="deptTrendChart"></div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-sm font-semibold flex items-center gap-2">
+                                    <i class="fa-solid fa-tags text-amber-500"></i>
+                                    异常类型趋势分布
+                                </h3>
+                            </div>
+                            <div class="w-full h-[300px]" id="typeTrendChart"></div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="flex items-center justify-between mb-5">
+                            <h3 class="text-sm font-semibold flex items-center gap-2">
+                                <i class="fa-solid fa-calendar text-purple-500"></i>
+                                关键指标时序分析
+                            </h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-100">
+                                        <th class="text-left py-3 px-4 text-gray-500 font-medium">月份</th>
+                                        <th class="text-right py-3 px-4 text-gray-500 font-medium">异常次数</th>
+                                        <th class="text-right py-3 px-4 text-gray-500 font-medium">涉及金额</th>
+                                        <th class="text-right py-3 px-4 text-gray-500 font-medium">环比变化</th>
+                                        <th class="text-right py-3 px-4 text-gray-500 font-medium">同比变化</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-medium">2026年3月</td>
+                                        <td class="text-right py-3 px-4">62</td>
+                                        <td class="text-right py-3 px-4 text-amber-600">¥28.5万</td>
+                                        <td class="text-right py-3 px-4 text-green-600">+29.2%</td>
+                                        <td class="text-right py-3 px-4 text-green-600">+18.5%</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-medium">2026年2月</td>
+                                        <td class="text-right py-3 px-4">48</td>
+                                        <td class="text-right py-3 px-4 text-amber-600">¥20.0万</td>
+                                        <td class="text-right py-3 px-4 text-red-600">-7.7%</td>
+                                        <td class="text-right py-3 px-4 text-green-600">+12.1%</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                        <td class="py-3 px-4 font-medium">2026年1月</td>
+                                        <td class="text-right py-3 px-4">35</td>
+                                        <td class="text-right py-3 px-4 text-amber-600">¥15.2万</td>
+                                        <td class="text-right py-3 px-4 text-gray-400">-</td>
+                                        <td class="text-right py-3 px-4 text-gray-400">-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-dots" onclick="closeModal('exportModal')">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <h3>导出数据报告</h3>
+                <button onclick="closeModal('exportModal')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa-solid fa-xmark text-gray-400"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-5">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">报告时间范围</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <select class="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none" id="exportStartMonth" onchange="updateExportPreview()">
+                            <option value="1">2026年1月</option>
+                            <option value="2">2026年2月</option>
+                            <option value="3" selected>2026年3月</option>
+                        </select>
+                        <select class="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none" id="exportEndMonth" onchange="updateExportPreview()">
+                            <option value="1">2026年1月</option>
+                            <option value="2">2026年2月</option>
+                            <option value="3" selected>2026年3月</option>
+                        </select>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500" id="exportPreview">已选择：2026年3月</div>
+                </div>
+                <div class="mb-5">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">报告类型</label>
+                    <div class="space-y-2" id="reportTypeList">
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                            <input type="checkbox" checked class="w-4 h-4 text-blue-600 rounded" data-type="comprehensive">
+                            <div>
+                                <div class="text-sm font-medium">综合分析报告</div>
+                                <div class="text-xs text-gray-400">包含所有图表和统计数据</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded" data-type="warning">
+                            <div>
+                                <div class="text-sm font-medium">风险预警明细</div>
+                                <div class="text-xs text-gray-400">按类型分类的详细预警列表</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded" data-type="department">
+                            <div>
+                                <div class="text-sm font-medium">部门风险排名</div>
+                                <div class="text-xs text-gray-400">各部门异常统计排名</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-5">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">导出格式</label>
+                    <div class="flex gap-3" id="formatOptions">
+                        <div class="format-option selected" onclick="selectFormat(this, 'pdf')">
+                            <input type="radio" name="format" value="pdf" checked>
+                            <i class="fa-solid fa-file-pdf text-red-500"></i>
+                            <span class="text-sm font-medium">PDF</span>
+                        </div>
+                        <div class="format-option" onclick="selectFormat(this, 'excel')">
+                            <input type="radio" name="format" value="excel">
+                            <i class="fa-solid fa-file-excel text-green-500"></i>
+                            <span class="text-sm font-medium">Excel</span>
+                        </div>
+                        <div class="format-option" onclick="selectFormat(this, 'word')">
+                            <input type="radio" name="format" value="word">
+                            <i class="fa-solid fa-file-word text-blue-500"></i>
+                            <span class="text-sm font-medium">Word</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-gray-100 flex gap-3">
+                <button class="btn-secondary flex-1" onclick="closeModal('exportModal')">取消</button>
+                <button class="btn-primary flex-1" onclick="exportData()">
+                    <i class="fa-solid fa-download mr-2"></i>确认导出
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="graphModal">
+        <div class="modal-content" style="width: 80%; max-width: 900px;">
+            <div class="modal-header">
+                <div class="modal-dots" onclick="closeModal('graphModal')">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <h3>关联企业风险权重图谱</h3>
+                <button onclick="closeModal('graphModal')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa-solid fa-xmark text-gray-400"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh;">
+                <div class="w-full h-[500px] rounded-xl flex items-center justify-center overflow-hidden border border-gray-300" style="background-image: url('https://ts1.tc.mm.bing.net/th/id/OIP-C.UGfHq0xP-f50w8Ez4pOYlwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3'); background-size: cover; background-position: center;">
+                    <div class="text-center bg-white/90 backdrop-blur-sm px-6 py-4 rounded-xl shadow-lg">
+                        <p class="text-lg text-gray-800 font-semibold">关联企业风险权重图谱</p>
+                        <p class="text-sm text-gray-500 mt-2">共发现 45 个关联节点，12 条风险传导链路</p>
+                        <p class="text-xs text-gray-400 mt-1">高风险路径 3 条，中风险路径 5 条，低风险路径 4 条</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pieChart, barChart, lineChart, radarChart, trendChart;
+
+        function initCharts() {
+            pieChart = echarts.init(document.getElementById('pieChart'));
+            pieChart.setOption({
+                tooltip: { trigger: 'item', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e5e7eb', textStyle: { color: '#374151' } },
+                legend: { bottom: '5%', left: 'center', itemWidth: 12, itemHeight: 12 },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 3 },
+                    label: { show: true, formatter: '{b}: {d}%', fontSize: 12 },
+                    data: [
+                        { value: 1048, name: '虚报冒领', itemStyle: { color: '#ef4444' } },
+                        { value: 735, name: '跨期入账', itemStyle: { color: '#f59e0b' } },
+                        { value: 580, name: '供应商违规', itemStyle: { color: '#3b82f6' } },
+                        { value: 484, name: '税收合规', itemStyle: { color: '#22c55e' } },
+                        { value: 300, name: '资金挪用', itemStyle: { color: '#a855f7' } }
+                    ]
+                }]
+            });
+
+            barChart = echarts.init(document.getElementById('barChart'));
+            barChart.setOption({
+                tooltip: { trigger: 'axis', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e5e7eb', textStyle: { color: '#374151' } },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+                xAxis: { type: 'category', data: ['市场部', '采购部', '物流部', '运维部', '人力资源'], axisLine: { lineStyle: { color: '#e5e7eb' } }, axisLabel: { fontSize: 12 } },
+                yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: '#f3f4f6' } }, axisLabel: { fontSize: 11 } },
+                series: [{
+                    type: 'bar',
+                    data: [12, 8, 5, 3, 2],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#ef4444' },
+                            { offset: 1, color: '#f87171' }
+                        ]),
+                        borderRadius: [6, 6, 0, 0]
+                    },
+                    barWidth: '50%'
+                }]
+            });
+
+            lineChart = echarts.init(document.getElementById('lineChart'));
+            lineChart.setOption({
+                tooltip: { trigger: 'axis', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e5e7eb', textStyle: { color: '#374151' } },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+                xAxis: { type: 'category', data: ['1月', '2月', '3月', '4月', '5月', '6月'], axisLine: { lineStyle: { color: '#e5e7eb' } } },
+                yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: '#f3f4f6' } } },
+                series: [{
+                    type: 'line',
+                    smooth: true,
+                    data: [42, 58, 35, 68, 45, 72],
+                    areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(245,158,11,0.3)' }, { offset: 1, color: 'rgba(245,158,11,0)' }]) },
+                    lineStyle: { color: '#f59e0b', width: 3 },
+                    itemStyle: { color: '#f59e0b' }
+                }]
+            });
+
+            radarChart = echarts.init(document.getElementById('radarChart'));
+            radarChart.setOption({
+                tooltip: {},
+                radar: {
+                    indicator: [
+                        { name: '资金安全', max: 100 },
+                        { name: '发票合规', max: 100 },
+                        { name: '供应商信用', max: 100 },
+                        { name: '跨境交易', max: 100 },
+                        { name: '税务合规', max: 100 }
+                    ],
+                    radius: '65%'
+                },
+                series: [{
+                    type: 'radar',
+                    data: [{ value: [85, 72, 68, 45, 90], name: '风险评分', areaStyle: { color: 'rgba(239,68,68,0.3)' }, lineStyle: { color: '#ef4444' }, itemStyle: { color: '#ef4444' } }]
+                }]
+            });
+
+            trendChart = echarts.init(document.getElementById('trendChart'));
+            trendChart.setOption({
+                tooltip: { trigger: 'axis', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e5e7eb', textStyle: { color: '#374151' } },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
+                legend: { top: '0', itemWidth: 16, itemHeight: 8 },
+                xAxis: { type: 'category', data: ['1月', '2月', '3月', '4月', '5月', '6月'], axisLine: { lineStyle: { color: '#e5e7eb' } } },
+                yAxis: [
+                    { type: 'value', name: '次数', splitLine: { lineStyle: { type: 'dashed', color: '#f3f4f6' } } },
+                    { type: 'value', name: '金额(万)', splitLine: { show: false } }
+                ],
+                series: [
+                    { name: '异常次数', type: 'bar', data: [28, 42, 35, 56, 48, 62], itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] }, barWidth: '30%' },
+                    { name: '涉及金额', type: 'line', yAxisIndex: 1, data: [12, 18, 15, 25, 20, 28], lineStyle: { color: '#f59e0b', width: 3 }, itemStyle: { color: '#f59e0b' } }
+                ]
+            });
+        }
+
+        function setTab(btn, tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            if (tab === 'overview') {
+                document.getElementById('overviewContent').classList.add('active');
+            } else if (tab === 'trend') {
+                document.getElementById('trendContent').classList.add('active');
+                setTimeout(() => { initTrendCharts(); }, 100);
+            } else if (tab === 'correlation') {
+                document.getElementById('correlationContent').classList.add('active');
+            }
+        }
+
+        function switchTab(btn, tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const allPanels = document.querySelectorAll('.tab-panel');
+            allPanels.forEach(p => p.style.display = 'none');
+
+            if (tab === 'overview') {
+                document.getElementById('overviewContent').style.display = 'block';
+            } else if (tab === 'trend') {
+                document.getElementById('trendContent').style.display = 'block';
+                setTimeout(() => { initTrendCharts(); }, 100);
+            } else if (tab === 'correlation') {
+                document.getElementById('correlationContent').style.display = 'block';
+            }
+        }
+
+        function initTrendCharts() {
+            const trendDetailChart = echarts.init(document.getElementById('trendDetailChart'));
+            if (trendDetailChart) {
+                trendDetailChart.setOption({
+                    tooltip: { trigger: 'axis' },
+                    legend: { data: ['异常次数', '涉及金额'], top: 0 },
+                    grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
+                    xAxis: {
+                        type: 'category',
+                        data: ['03-01', '03-05', '03-10', '03-15', '03-20', '03-25', '03-30'],
+                        axisLine: { lineStyle: { color: '#e5e7eb' } }
+                    },
+                    yAxis: [
+                        { type: 'value', name: '次数', splitLine: { lineStyle: { type: 'dashed' } } },
+                        { type: 'value', name: '金额(万)', splitLine: { show: false } }
+                    ],
+                    series: [
+                        { name: '异常次数', type: 'bar', data: [5, 8, 6, 12, 9, 11, 8], itemStyle: { color: '#3b82f6' } },
+                        { name: '涉及金额', type: 'line', yAxisIndex: 1, data: [2.5, 4.2, 3.8, 6.5, 5.2, 6.8, 4.5], lineStyle: { color: '#f59e0b', width: 3 }, itemStyle: { color: '#f59e0b' } }
+                    ]
+                });
+            }
+
+            const deptTrendChart = echarts.init(document.getElementById('deptTrendChart'));
+            if (deptTrendChart) {
+                deptTrendChart.setOption({
+                    tooltip: { trigger: 'axis' },
+                    legend: { data: ['市场部', '采购部', '物流部'], top: 0 },
+                    grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
+                    xAxis: { type: 'category', data: ['1月', '2月', '3月'], axisLine: { lineStyle: { color: '#e5e7eb' } } },
+                    yAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed' } } },
+                    series: [
+                        { name: '市场部', type: 'line', data: [8, 12, 15], smooth: true, itemStyle: { color: '#ef4444' } },
+                        { name: '采购部', type: 'line', data: [5, 6, 8], smooth: true, itemStyle: { color: '#f59e0b' } },
+                        { name: '物流部', type: 'line', data: [3, 4, 5], smooth: true, itemStyle: { color: '#22c55e' } }
+                    ]
+                });
+            }
+
+            const typeTrendChart = echarts.init(document.getElementById('typeTrendChart'));
+            if (typeTrendChart) {
+                typeTrendChart.setOption({
+                    tooltip: { trigger: 'item' },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        data: [
+                            { value: 335, name: '虚报冒领', itemStyle: { color: '#ef4444' } },
+                            { value: 234, name: '跨期入账', itemStyle: { color: '#f59e0b' } },
+                            { value: 154, name: '供应商违规', itemStyle: { color: '#3b82f6' } },
+                            { value: 89, name: '税收合规', itemStyle: { color: '#22c55e' } },
+                            { value: 65, name: '资金挪用', itemStyle: { color: '#a855f7' } }
+                        ]
+                    }]
+                });
+            }
+        }
+
+        function toggleNotification() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function markAllRead() {
+            const items = document.querySelectorAll('.notification-item');
+            items.forEach(item => { item.style.opacity = '0.6'; });
+            const badge = document.querySelector('.header-action .bg-red-500');
+            if (badge) badge.style.display = 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const trigger = document.querySelector('.header-action');
+            if (trigger && !trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        function openModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+
+        function refreshPie() {
+            if (pieChart) pieChart.resize();
+        }
+
+        function selectFormat(el, format) {
+            document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            el.querySelector('input').checked = true;
+        }
+
+        function updateExportPreview() {
+            const start = document.getElementById('exportStartMonth');
+            const end = document.getElementById('exportEndMonth');
+            const preview = document.getElementById('exportPreview');
+            const startVal = parseInt(start.value);
+            const endVal = parseInt(end.value);
+            const months = ['2026年1月', '2026年2月', '2026年3月'];
+
+            if (startVal === endVal) {
+                preview.textContent = '已选择：' + months[startVal - 1];
+            } else {
+                preview.textContent = '已选择：' + months[startVal - 1] + ' 至 ' + months[endVal - 1];
+            }
+
+            if (startVal > endVal) {
+                preview.textContent += ' (范围无效)';
+                preview.classList.add('text-red-500');
+            } else {
+                preview.classList.remove('text-red-500');
+            }
+        }
+
+        function exportData() {
+            const selectedTypes = [];
+            document.querySelectorAll('#reportTypeList input[type="checkbox"]:checked').forEach(cb => {
+                selectedTypes.push(cb.dataset.type);
+            });
+
+            if (selectedTypes.length === 0) {
+                alert('请至少选择一种报告类型');
+                return;
+            }
+
+            const format = document.querySelector('.format-option.selected input').value;
+            alert('报告正在生成中，格式：' + format.toUpperCase() + '，请在下载中心查看');
+            closeModal('exportModal');
+        }
+
+        function updateBarChart(type) {
+            const data = type === 'amount'
+                ? [156, 98, 67, 45, 28]
+                : [12, 8, 5, 3, 2];
+            barChart.setOption({
+                xAxis: { type: 'category', data: ['市场部', '采购部', '物流部', '运维部', '人力资源'], axisLine: { lineStyle: { color: '#e5e7eb' } }, axisLabel: { fontSize: 12 } },
+                series: [{ data: data }]
+            });
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+        });
+
+        window.addEventListener('resize', () => {
+            [pieChart, barChart, lineChart, radarChart, trendChart].forEach(chart => { if (chart) chart.resize(); });
+            const trendDetailChart = echarts.getInstanceByDom(document.getElementById('trendDetailChart'));
+            const deptTrendChart = echarts.getInstanceByDom(document.getElementById('deptTrendChart'));
+            const typeTrendChart = echarts.getInstanceByDom(document.getElementById('typeTrendChart'));
+            [trendDetailChart, deptTrendChart, typeTrendChart].forEach(chart => { if (chart) chart.resize(); });
+        });
+
+        window.onload = () => {
+            initCharts();
+            document.getElementById('trendContent').style.display = 'none';
+        };
+    </script>
+</body>
+</html>

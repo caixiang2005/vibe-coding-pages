@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>家电产品数字化设计与仿真分析软件</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #1e1e1e; --sidebar: #252526; --panel: #2d2d2d; --toolbar: #333;
+      --border: #3c3c3c; --t1: #e0e0e0; --t2: #999; --t3: #666;
+      --accent: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a;
+      --cyan: #64d2ff; --purple: #bf5af2;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpeg') no-repeat; background-size: cover;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; color: var(--t1); overflow: hidden;
+    }
+    .win {
+      width: 1320px; height: 820px; background: var(--bg); border-radius: 10px;
+      overflow: hidden; box-shadow: 0 0 0 .5px rgba(255,255,255,.08), 0 30px 80px rgba(0,0,0,.6);
+      display: flex; flex-direction: column;
+    }
+    .titlebar {
+      height: 38px; background: linear-gradient(180deg, #3a3a3a, #2d2d2d);
+      display: flex; align-items: center; padding: 0 13px; flex-shrink: 0;
+      border-bottom: 1px solid #1a1a1a; position: relative;
+    }
+    .dots { display: flex; gap: 8px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.15); }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .titlebar-t { position: absolute; left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: 500; color: var(--t2); white-space: nowrap; }
+    .main { display: flex; flex: 1; overflow: hidden; }
+    .side {
+      width: 220px; background: var(--sidebar); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+    }
+    .side::-webkit-scrollbar { width: 4px; }
+    .side::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 2px; }
+    .sh { padding: 14px 14px 6px; font-size: 10px; font-weight: 600; color: var(--t3); letter-spacing: 1px; text-transform: uppercase; }
+    .ss { padding: 0 6px 2px; }
+    .si {
+      display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 6px;
+      font-size: 12.5px; color: var(--t2); cursor: pointer; transition: all .15s; user-select: none;
+    }
+    .si:hover { background: rgba(255,255,255,.06); color: var(--t1); }
+    .si.active { background: rgba(10,132,255,.18); color: var(--accent); }
+    .si svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .7; }
+    .si.active svg { opacity: 1; }
+    .sdiv { height: 1px; background: var(--border); margin: 6px 14px; }
+    .sproj { padding: 12px 14px; border-top: 1px solid var(--border); margin-top: auto; }
+    .sproj-n { font-size: 11.5px; font-weight: 600; color: var(--t1); }
+    .sproj-d { font-size: 10.5px; color: var(--t3); margin-top: 1px; }
+    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .tb {
+      height: 42px; background: var(--toolbar); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 10px; gap: 2px; flex-shrink: 0;
+    }
+    .tg { display: flex; align-items: center; gap: 1px; }
+    .tg+.tg { margin-left: 6px; padding-left: 8px; border-left: 1px solid var(--border); }
+    .tbtn {
+      display: flex; align-items: center; gap: 4px; padding: 5px 9px; border-radius: 5px;
+      font-size: 11.5px; color: var(--t2); cursor: pointer; border: none;
+      background: none; transition: all .15s; white-space: nowrap; font-family: inherit;
+    }
+    .tbtn:hover { background: rgba(255,255,255,.07); color: var(--t1); }
+    .tbtn:active { transform: scale(0.97); }
+    .tbtn svg { width: 15px; height: 15px; }
+    .tsp { flex: 1; }
+    .vp-wrap { flex: 1; display: flex; overflow: hidden; }
+    .vp { flex: 1; position: relative; overflow: hidden; background: #161618; }
+    .sim-info {
+      position: absolute; top: 10px; left: 12px; display: flex; flex-direction: column; gap: 4px; z-index: 2;
+    }
+    .sim-tag {
+      font-size: 10px; color: var(--t3); background: rgba(0,0,0,.55); padding: 3px 8px;
+      border-radius: 4px; backdrop-filter: blur(4px);
+    }
+    .sim-body {
+      position: relative; width: 220px; height: 260px; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,.4);
+    }
+    .sim-marker { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 2; }
+    .sim-marker .sm-dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #fff; box-shadow: 0 0 6px rgba(0,0,0,.5); }
+    .sim-marker .sm-label { font-size: 8.5px; padding: 1px 5px; border-radius: 3px; background: rgba(0,0,0,.75); color: #fff; margin-top: 2px; white-space: nowrap; }
+    .legend-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+    .legend-bar { width: 260px; height: 10px; border-radius: 5px; }
+    .legend-labels { display: flex; justify-content: space-between; width: 260px; margin-top: 2px; }
+    .legend-labels span { font-size: 9px; color: var(--t3); }
+    .rp { width: 260px; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
+    .rp::-webkit-scrollbar { width: 5px; }
+    .rp::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 3px; }
+    .ps { padding: 13px 15px; border-bottom: 1px solid var(--border); }
+    .ps-t { font-size: 10.5px; font-weight: 600; color: var(--t3); letter-spacing: .4px; text-transform: uppercase; margin-bottom: 9px; }
+    .pr { display: flex; align-items: center; justify-content: space-between; padding: 3.5px 0; font-size: 12px; }
+    .pl { color: var(--t2); }
+    .pv { font-variant-numeric: tabular-nums; }
+    .pv-a { color: var(--accent); }
+    .pv-g { color: var(--green); }
+    .pv-o { color: var(--orange); }
+    .pv-r { color: var(--red); }
+    .pbar { height: 3px; background: rgba(255,255,255,.06); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+    .pfill { height: 100%; border-radius: 2px; }
+    .pill { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 8px; font-size: 9.5px; font-weight: 500; }
+    .pill-g { background: rgba(48,209,88,.12); color: var(--green); }
+    .pill-b { background: rgba(10,132,255,.12); color: var(--accent); }
+    .pill-o { background: rgba(255,159,10,.12); color: var(--orange); }
+    .bb { height: 26px; background: var(--toolbar); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 12px; gap: 16px; flex-shrink: 0; }
+    .bi { font-size: 10.5px; color: var(--t3); display: flex; align-items: center; gap: 4px; }
+    .bdot { width: 6px; height: 6px; border-radius: 50%; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all .25s ease; }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal { background: #2a2a2a; border-radius: 10px; border: 1px solid #3a3a3a; box-shadow: 0 20px 60px rgba(0,0,0,.5); min-width: 380px; max-width: 480px; transform: scale(0.9) translateY(-20px); transition: transform .25s ease; }
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-header { padding: 14px 16px; border-bottom: 1px solid #3a3a3a; display: flex; align-items: center; justify-content: center; position: relative; background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%); border-radius: 10px 10px 0 0; }
+    .modal-traffic-lights { position: absolute; left: 14px; display: flex; gap: 8px; }
+    .modal-traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .modal-traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .modal-traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .modal-traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+    .modal-title { color: #ddd; font-size: 14px; font-weight: 500; text-align: center; }
+    .modal-body { padding: 16px; }
+    .modal-footer { padding: 12px 16px; border-top: 1px solid #3a3a3a; display: flex; justify-content: flex-end; gap: 8px; }
+    .btn { padding: 7px 16px; border-radius: 5px; font-size: 12px; cursor: pointer; transition: all .15s; border: none; font-family: inherit; }
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: #3a3a3a; color: #aaa; }
+    .btn-secondary:hover { background: #444; color: #fff; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #1e90ff; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; color: #888; font-size: 11px; margin-bottom: 5px; }
+    .form-input { width: 100%; padding: 8px 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 5px; color: #ccc; font-size: 12px; font-family: inherit; }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-select { width: 100%; padding: 8px 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 5px; color: #ccc; font-size: 12px; cursor: pointer; font-family: inherit; }
+    .form-select:focus { outline: none; border-color: var(--accent); }
+    .param-list { max-height: 200px; overflow-y: auto; }
+    .param-item { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid #333; }
+    .param-item:last-child { border-bottom: none; }
+    .param-name { flex: 1; color: #aaa; font-size: 11.5px; }
+    .param-value { width: 70px; padding: 4px 6px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 3px; color: #ccc; font-size: 11px; text-align: center; }
+    .progress-container { padding: 15px; text-align: center; }
+    .progress-text { color: #888; font-size: 12px; margin-bottom: 12px; }
+    .progress-bar { height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--red)); border-radius: 3px; transition: width 0.3s; }
+    .progress-percent { color: var(--orange); font-size: 18px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="win">
+  <div class="titlebar">
+    <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="titlebar-t">家电产品数字化设计与仿真分析软件</div>
+  </div>
+
+  <div class="main">
+    <div class="side">
+      <div class="sh">导航菜单</div>
+      <div class="ss">
+        <div class="si" onclick="location.href='main.html'"><i class="fa-solid fa-house"></i>首页总览</div>
+        <div class="si" onclick="location.href='project_management.html'"><i class="fa-solid fa-folder"></i>项目管理</div>
+        <div class="si" onclick="location.href='product_design.html'"><i class="fa-solid fa-cube"></i>产品设计</div>
+      </div>
+      <div class="sdiv"></div>
+      <div class="sh">仿真分析</div>
+      <div class="ss">
+        <div class="si" onclick="location.href='structural_analysis.html'"><i class="fa-solid fa-cube"></i>结构分析</div>
+        <div class="si active"><i class="fa-solid fa-temperature-half"></i>热分析</div>
+        <div class="si" onclick="location.href='fluid_analysis.html'"><i class="fa-solid fa-wind"></i>流体分析</div>
+      </div>
+      <div class="sdiv"></div>
+      <div class="ss">
+        <div class="si" onclick="location.href='results_view.html'"><i class="fa-solid fa-chart-line"></i>结果查看</div>
+        <div class="si" onclick="location.href='report_generation.html'"><i class="fa-solid fa-file-lines"></i>报告生成</div>
+        <div class="si" onclick="location.href='parameters.html'"><i class="fa-solid fa-gear"></i>参数设置</div>
+      </div>
+      <div class="sproj">
+        <div class="sproj-n">WM-X600 滚筒洗衣机</div>
+        <div class="sproj-d">修改于 2026-03-23 10:15</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="tb">
+        <div class="tg">
+          <button class="tbtn" onclick="location.href='product_design.html'"><i class="fa-solid fa-arrow-left"></i>返回</button>
+        </div>
+        <div class="tg">
+          <button class="tbtn" id="btnParam"><i class="fa-solid fa-gear"></i>热参数</button>
+          <button class="tbtn" id="btnLoad"><i class="fa-solid fa-fire"></i>热载荷</button>
+        </div>
+        <div class="tg">
+          <button class="tbtn" id="btnRun" style="color:var(--orange);"><i class="fa-solid fa-play"></i>运行计算</button>
+        </div>
+        <div class="tsp"></div>
+        <button class="tbtn" onclick="location.href='results_view.html'"><i class="fa-solid fa-chart-line"></i>结果查看</button>
+      </div>
+
+      <div class="vp-wrap">
+        <div class="vp">
+          <div class="sim-info">
+            <span class="sim-tag">稳态热传导分析</span>
+            <span class="sim-tag">自然对流 h=10 W/(m²·K)，T∞=25°C</span>
+            <span class="sim-tag">热源：电机 120W / 加热管 1800W</span>
+          </div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <div style="position:relative;">
+                <div class="sim-body" id="thermalBody"></div>
+                <div class="sim-marker" style="top:32px;left:140px;">
+                  <div class="sm-dot" style="background:var(--green);"></div>
+                  <div class="sm-label">42.1°C 外壳</div>
+                </div>
+                <div class="sim-marker" style="top:95px;left:165px;">
+                  <div class="sm-dot" style="background:var(--orange);"></div>
+                  <div class="sm-label">56.7°C 加热管</div>
+                </div>
+                <div class="sim-marker" style="top:175px;left:75px;">
+                  <div class="sm-dot" style="background:var(--red);"></div>
+                  <div class="sm-label">78.3°C 电机绕组</div>
+                </div>
+                <div class="sim-marker" style="top:230px;left:155px;">
+                  <div class="sm-dot" style="background:#2d6bcf;"></div>
+                  <div class="sm-label">31.4°C 底座</div>
+                </div>
+              </div>
+              <div class="legend-row">
+                <span style="font-size:10px;color:var(--t3);">25°C</span>
+                <div class="legend-bar" style="background:linear-gradient(90deg,#1a3a8f,#2d6bcf,#30d158,#ffd60a,#ff9f0a,#ff453a);"></div>
+                <span style="font-size:10px;color:var(--t3);">78.3°C</span>
+              </div>
+              <div class="legend-labels"><span>低温区</span><span>过渡区</span><span>高温区</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rp">
+          <div class="ps">
+            <div class="ps-t">分析设置</div>
+            <div class="pr"><span class="pl">类型</span><span class="pv">稳态传热</span></div>
+            <div class="pr"><span class="pl">求解器</span><span class="pv pv-a">共轭梯度</span></div>
+            <div class="pr"><span class="pl">环境温度</span><span class="pv">25°C</span></div>
+            <div class="pr"><span class="pl">对流系数</span><span class="pv pv-a">10 W/(m²·K)</span></div>
+          </div>
+          <div class="ps">
+            <div class="ps-t">热源载荷</div>
+            <div class="pr"><span class="pl">驱动电机</span><span class="pv pv-r">120 W</span></div>
+            <div class="pr"><span class="pl">加热管</span><span class="pv pv-r">1800 W</span></div>
+            <div class="pr"><span class="pl">控制 PCB</span><span class="pv pv-o">8.5 W</span></div>
+            <div class="pr"><span class="pl">排水泵</span><span class="pv">12 W</span></div>
+          </div>
+          <div class="ps">
+            <div class="ps-t">结果 <span class="pill pill-g">收敛</span></div>
+            <div class="pr"><span class="pl">峰值温度</span><span class="pv pv-r">78.3°C</span></div>
+            <div class="pr"><span class="pl">位置</span><span class="pv">电机绕组</span></div>
+            <div class="pr"><span class="pl">外壳最高</span><span class="pv pv-g">42.1°C</span></div>
+            <div class="pr"><span class="pl">PCB 温升</span><span class="pv pv-o">ΔT 23.6°C</span></div>
+            <div class="pr"><span class="pl">安全余量</span><span class="pv pv-g">+16.7°C</span></div>
+            <div class="pbar"><div class="pfill" style="width:65%;background:linear-gradient(90deg,var(--green),var(--orange));"></div></div>
+            <div style="font-size:10px;color:var(--t3);margin-top:3px;">78.3 / 120°C 限值 = 65%</div>
+          </div>
+          <div class="ps">
+            <div class="ps-t">标准校验</div>
+            <div class="pr"><span class="pl">GB 4706.1 外壳</span><span class="pv pv-g">通过 ≤65°C</span></div>
+            <div class="pr"><span class="pl">IEC 60335 电机</span><span class="pv pv-g">通过 ≤120°C</span></div>
+            <div class="pr"><span class="pl">UL 温升限值</span><span class="pv pv-g">通过 ≤95°C</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bb">
+        <div class="bi"><span class="bdot" style="background:var(--green);"></span>计算完成</div>
+        <div class="bi">峰值温度: 78.3°C</div>
+        <div class="bi">安全余量: +16.7°C</div>
+        <div class="bi" style="margin-left:auto;">节点 523,840 · 迭代 156</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-traffic-lights">
+        <div class="modal-traffic-light close" onclick="closeModal()"></div>
+        <div class="modal-traffic-light minimize"></div>
+        <div class="modal-traffic-light maximize"></div>
+      </div>
+      <span class="modal-title" id="modalTitle">弹窗标题</span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script>
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalFooter = document.getElementById('modalFooter');
+
+  function openModal(title, bodyHtml, footerHtml) {
+    modalTitle.textContent = title;
+    modalBody.innerHTML = bodyHtml;
+    modalFooter.innerHTML = footerHtml;
+    modalOverlay.classList.add('active');
+  }
+  function closeModal() { modalOverlay.classList.remove('active'); }
+  modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+  document.getElementById('btnParam').addEventListener('click', () => {
+    openModal('热参数设置', '<div class="param-list"><div class="param-item"><span class="param-name">热导率 k (W/m·K)</span><input type="text" class="param-value" value="16.2"></div><div class="param-item"><span class="param-name">比热容 c (J/kg·K)</span><input type="text" class="param-value" value="500"></div><div class="param-item"><span class="param-name">密度 ρ (kg/m³)</span><input type="text" class="param-value" value="2700"></div><div class="param-item"><span class="param-name">对流系数 h (W/m²·K)</span><input type="text" class="param-value" value="10"></div></div>', '<button class="btn btn-secondary" onclick="closeModal()">重置</button><button class="btn btn-primary" onclick="closeModal()">保存</button>');
+  });
+
+  document.getElementById('btnLoad').addEventListener('click', () => {
+    openModal('热载荷设置', '<div class="form-group"><label class="form-label">热源类型</label><select class="form-select"><option>电机损耗</option><option>加热管功率</option><option>PCB 功耗</option><option>环境温度</option></select></div><div class="form-group"><label class="form-label">功率 / 温度值</label><input type="text" class="form-input" placeholder="输入数值"></div><div class="form-group"><label class="form-label">边界条件</label><select class="form-select"><option>自然对流</option><option>强制对流</option><option>绝热</option></select></div>', '<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">应用</button>');
+  });
+
+  document.getElementById('btnRun').addEventListener('click', () => {
+    let progress = 0;
+    openModal('运行热分析', '<div class="progress-container"><i class="fa-solid fa-temperature-half" style="font-size:32px;color:var(--orange);margin-bottom:12px;"></i><div class="progress-text">正在计算稳态温度场...</div><div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div><div class="progress-percent" id="progressPercent">0%</div></div>', '<button class="btn btn-secondary" id="btnCancel">取消</button>');
+    const interval = setInterval(() => {
+      progress += Math.random() * 12;
+      if (progress >= 100) { progress = 100; clearInterval(interval); document.getElementById('progressPercent').textContent = '100%'; document.getElementById('progressFill').style.width = '100%'; document.getElementById('btnCancel').textContent = '完成'; document.getElementById('btnCancel').onclick = closeModal; document.getElementById('btnCancel').classList.remove('btn-secondary'); document.getElementById('btnCancel').classList.add('btn-primary'); }
+      else { document.getElementById('progressPercent').textContent = Math.round(progress) + '%'; document.getElementById('progressFill').style.width = progress + '%'; }
+    }, 200);
+    document.getElementById('btnCancel').addEventListener('click', () => { clearInterval(interval); closeModal(); });
+  });
+
+  function genThermal() {
+    const el = document.getElementById('thermalBody');
+    const W = 44, H = 52;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const nx = x / W, ny = y / H;
+        const dMotor = Math.hypot(nx - .45, ny - .78);
+        const dHeater = Math.hypot(nx - .6, ny - .55);
+        const dPCB = Math.hypot(nx - .65, ny - .15);
+        let t = .08;
+        t += .92 * Math.exp(-dMotor * dMotor * 14);
+        t += .50 * Math.exp(-dHeater * dHeater * 20);
+        t += .30 * Math.exp(-dPCB * dPCB * 30);
+        t += (Math.random() - .5) * .04;
+        t = Math.max(0, Math.min(1, t));
+        ctx.fillStyle = heatCol(t);
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+    el.style.background = `url(${c.toDataURL()})`;
+    el.style.backgroundSize = 'cover';
+    el.style.filter = 'blur(2.5px) saturate(1.15)';
+  }
+  function heatCol(t) {
+    const S = [[0,26,58,143],[.2,45,107,207],[.4,48,209,88],[.6,255,214,10],[.8,255,159,10],[1,255,69,58]];
+    let i = 0; for (; i < S.length - 1; i++) if (t <= S[i + 1][0]) break;
+    const [t0,r0,g0,b0] = S[i], [t1,r1,g1,b1] = S[Math.min(i + 1, S.length - 1)];
+    const f = t1 === t0 ? 0 : (t - t0) / (t1 - t0);
+    return `rgb(${r0+(r1-r0)*f|0},${g0+(g1-g0)*f|0},${b0+(b1-b0)*f|0})`;
+  }
+  genThermal();
+</script>
+</body>
+</html>

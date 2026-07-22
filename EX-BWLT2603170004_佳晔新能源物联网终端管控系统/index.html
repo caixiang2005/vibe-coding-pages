@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佳晔新能源物联网终端管控系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "SimHei", sans-serif;
+            background: #0a1628;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Windows 10 风格标题栏 */
+        .title-bar {
+            height: 32px;
+            background: linear-gradient(180deg, #1a2a4a 0%, #0d1a30 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            border-bottom: 1px solid #1e3a5f;
+        }
+
+        .title-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title-bar-icon {
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            border-radius: 2px;
+        }
+
+        .title-bar-text {
+            font-size: 12px;
+            color: #a0c4e8;
+        }
+
+        .title-bar-controls {
+            display: flex;
+            height: 100%;
+        }
+
+        .title-bar-btn {
+            width: 46px;
+            height: 100%;
+            border: none;
+            background: transparent;
+            color: #a0c4e8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .title-bar-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .title-bar-btn.close:hover {
+            background: #e81123;
+            color: #fff;
+        }
+
+        .title-bar-btn svg {
+            width: 10px;
+            height: 10px;
+        }
+
+        .maximize-icon {
+            width: 10px;
+            height: 10px;
+            border: 1px solid #a0c4e8;
+            background: transparent;
+        }
+
+        .title-bar-btn:hover .maximize-icon {
+            border-color: #fff;
+        }
+
+        /* 主容器 */
+        .main-container {
+            height: calc(100vh - 32px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 导航栏 */
+        .nav-bar {
+            height: 50px;
+            background: linear-gradient(180deg, #0d2040 0%, #081830 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #1e4a7a;
+            position: relative;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-tab {
+            padding: 8px 20px;
+            background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%);
+            border: 1px solid #2a5a8a;
+            border-radius: 4px 4px 0 0;
+            color: #7ab8e0;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .nav-tab:hover {
+            background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%);
+            color: #9ad8ff;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%);
+            border-color: #00c8ff;
+            color: #fff;
+        }
+
+        .nav-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 6px 15px;
+            background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%);
+            border: 1px solid #2a5a8a;
+            border-radius: 4px;
+            color: #7ab8e0;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%);
+            border-color: #3a7aba;
+            color: #9ad8ff;
+        }
+
+        /* 内容区域 */
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 左侧面板 */
+        .left-panel {
+            width: 140px;
+            padding: 15px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-right: 1px solid #1e4a7a;
+        }
+
+        .zone-btn {
+            padding: 10px 12px;
+            background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%);
+            border: 1px solid #2a5a8a;
+            border-radius: 4px;
+            color: #7ab8e0;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .zone-btn:hover {
+            background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%);
+            border-color: #3a7aba;
+        }
+
+        .zone-btn.active {
+            background: linear-gradient(180deg, #006699 0%, #004466 100%);
+            border-color: #00aadd;
+            color: #fff;
+        }
+
+        .gateway-box {
+            margin-top: auto;
+            padding: 15px;
+            background: linear-gradient(180deg, #0d2545 0%, #081830 100%);
+            border: 1px solid #2a5a8a;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .gateway-icon {
+            font-size: 36px;
+            color: #00aadd;
+            margin-bottom: 8px;
+        }
+
+        .gateway-label {
+            font-size: 12px;
+            color: #7ab8e0;
+        }
+
+        .gateway-status {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #00ff88;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            padding: 15px;
+            overflow: auto;
+            background: 
+                linear-gradient(90deg, rgba(0,170,220,0.03) 1px, transparent 1px),
+                linear-gradient(rgba(0,170,220,0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* 设备网格 */
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        /* 设备卡片 */
+        .device-card {
+            background: linear-gradient(180deg, #0d2545 0%, #081830 100%);
+            border: 1px solid #1e4a7a;
+            border-radius: 6px;
+            padding: 12px;
+            position: relative;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .device-card:hover {
+            border-color: #00aadd;
+            box-shadow: 0 0 15px rgba(0,170,220,0.2);
+            transform: translateY(-2px);
+        }
+
+        .device-card.offline {
+            opacity: 0.6;
+        }
+
+        .device-card.fault {
+            border-color: #ff4444;
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1e4a7a;
+        }
+
+        .device-name {
+            font-size: 13px;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .device-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .device-action-btn {
+            padding: 3px 8px;
+            background: linear-gradient(180deg, #1a4a6a 0%, #0d3555 100%);
+            border: 1px solid #2a6a9a;
+            border-radius: 3px;
+            color: #7ab8e0;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .device-action-btn:hover {
+            background: linear-gradient(180deg, #2a5a7a 0%, #1a4565 100%);
+            color: #fff;
+        }
+
+        .device-action-btn.refresh {
+            color: #00dd88;
+            border-color: #00aa66;
+        }
+
+        .device-icon {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .device-icon i {
+            font-size: 40px;
+            color: #00aadd;
+        }
+
+        .device-card.fault .device-icon i {
+            color: #ff4444;
+        }
+
+        .device-card.offline .device-icon i {
+            color: #666;
+        }
+
+        .device-info {
+            font-size: 12px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed #1e3a5a;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #7a9ab8;
+        }
+
+        .info-value {
+            color: #fff;
+        }
+
+        .info-value.good {
+            color: #00ff88;
+        }
+
+        .info-value.warning {
+            color: #ffaa00;
+        }
+
+        .info-value.bad {
+            color: #ff4444;
+        }
+
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .status-tag.online {
+            background: rgba(0,255,136,0.2);
+            color: #00ff88;
+            border: 1px solid #00aa66;
+        }
+
+        .status-tag.offline {
+            background: rgba(102,102,102,0.2);
+            color: #999;
+            border: 1px solid #666;
+        }
+
+        .status-tag.running {
+            background: rgba(0,170,220,0.2);
+            color: #00d4ff;
+            border: 1px solid #00aadd;
+        }
+
+        .status-tag.standby {
+            background: rgba(255,170,0,0.2);
+            color: #ffaa00;
+            border: 1px solid #cc8800;
+        }
+
+        .status-tag.fault {
+            background: rgba(255,68,68,0.2);
+            color: #ff4444;
+            border: 1px solid #cc3333;
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: linear-gradient(180deg, #0d2545 0%, #081830 100%);
+            border: 1px solid #2a5a8a;
+            border-radius: 8px;
+            width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%);
+            border-bottom: 1px solid #2a5a8a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            color: #00d4ff;
+            font-weight: bold;
+            text-align: center;
+            flex: 1;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            background: transparent;
+            border: 1px solid #3a5a7a;
+            border-radius: 4px;
+            color: #7ab8e0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #e81123;
+            border-color: #e81123;
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: #7ab8e0;
+            margin-bottom: 6px;
+        }
+
+        .form-label .required {
+            color: #ff4444;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0a1628;
+            border: 1px solid #2a5a8a;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #00aadd;
+        }
+
+        .form-input::placeholder {
+            color: #4a6a8a;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0a1628;
+            border: 1px solid #2a5a8a;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #00aadd;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0a1628;
+            border: 1px solid #2a5a8a;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #00aadd;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%);
+            border-top: 1px solid #2a5a8a;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid;
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%);
+            border-color: #00c8ff;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(180deg, #00b8f6 0%, #0098d6 100%);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(180deg, #3a5a7a 0%, #2a4a6a 100%);
+            border-color: #4a7a9a;
+            color: #a0c4e8;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(180deg, #4a6a8a 0%, #3a5a7a 100%);
+            color: #fff;
+        }
+
+        /* 统计面板 */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(180deg, #0d2545 0%, #081830 100%);
+            border: 1px solid #1e4a7a;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #7a9ab8;
+        }
+
+        .stat-card.success .stat-value {
+            color: #00ff88;
+        }
+
+        .stat-card.warning .stat-value {
+            color: #ffaa00;
+        }
+
+        .stat-card.danger .stat-value {
+            color: #ff4444;
+        }
+
+        /* 告警列表 */
+        .alarm-list {
+            background: linear-gradient(180deg, #0d2545 0%, #081830 100%);
+            border: 1px solid #1e4a7a;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .alarm-header {
+            padding: 12px 15px;
+            background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%);
+            border-bottom: 1px solid #2a5a8a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alarm-title {
+            font-size: 14px;
+            color: #00d4ff;
+        }
+
+        .alarm-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #1e3a5a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .alarm-item:last-child {
+            border-bottom: none;
+        }
+
+        .alarm-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .alarm-level {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .alarm-level.high {
+            background: #ff4444;
+            box-shadow: 0 0 8px #ff4444;
+        }
+
+        .alarm-level.medium {
+            background: #ffaa00;
+            box-shadow: 0 0 8px #ffaa00;
+        }
+
+        .alarm-level.low {
+            background: #00aadd;
+            box-shadow: 0 0 8px #00aadd;
+        }
+
+        .alarm-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .alarm-text {
+            font-size: 13px;
+            color: #a0c4e8;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .alarm-time {
+            font-size: 11px;
+            color: #5a7a9a;
+        }
+
+        .alarm-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .alarm-action {
+            padding: 4px 10px;
+            background: linear-gradient(180deg, #1a4a6a 0%, #0d3555 100%);
+            border: 1px solid #2a6a9a;
+            border-radius: 3px;
+            color: #7ab8e0;
+            cursor: pointer;
+            font-size: 11px;
+            margin-right: 5px;
+        }
+
+        .alarm-action:hover {
+            background: linear-gradient(180deg, #2a5a7a 0%, #1a4565 100%);
+            color: #fff;
+        }
+
+        /* 图表占位 */
+        .chart-container {
+            background: linear-gradient(180deg, #0d2545 0%, #081830 100%);
+            border: 1px solid #1e4a7a;
+            border-radius: 6px;
+            padding: 15px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            color: #00d4ff;
+        }
+
+        .chart-area {
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            padding: 10px 0;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #00aadd 0%, #006699 100%);
+            border-radius: 3px 3px 0 0;
+            min-height: 20px;
+            position: relative;
+        }
+
+        .chart-bar:hover {
+            background: linear-gradient(180deg, #00ccff 0%, #0088bb 100%);
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a1628;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2a5a8a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a7aba;
+        }
+
+        /* 页面切换 */
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        /* 快捷菜单 */
+        .quick-menu {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quick-menu-item {
+            background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%);
+            border: 1px solid #2a5a8a;
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #fff;
+            display: block;
+        }
+
+        .quick-menu-item:hover {
+            background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%);
+            border-color: #00aadd;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,170,220,0.2);
+        }
+
+        .quick-menu-icon {
+            font-size: 32px;
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+
+        .quick-menu-title {
+            font-size: 14px;
+            color: #a0c4e8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Windows 10 风格标题栏 -->
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <div class="title-bar-icon"></div>
+            <span class="title-bar-text">佳晔新能源物联网终端管控系统</span>
+        </div>
+        <div class="title-bar-controls">
+            <button class="title-bar-btn minimize" onclick="minimizeWindow()">
+                <svg viewBox="0 0 10 10" fill="currentColor">
+                    <rect x="0" y="4.5" width="10" height="1"/>
+                </svg>
+            </button>
+            <button class="title-bar-btn maximize" onclick="maximizeWindow()">
+                <div class="maximize-icon"></div>
+            </button>
+            <button class="title-bar-btn close" onclick="closeWindow()">
+                <svg viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2">
+                    <line x1="0" y1="0" x2="10" y2="10"/>
+                    <line x1="10" y1="0" x2="0" y2="10"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+        <!-- 导航栏 -->
+        <div class="nav-bar">
+            <div class="nav-tabs">
+                <a href="index.html" class="nav-tab active">主界面</a>
+                <a href="device-registry.html" class="nav-tab">设备台账</a>
+                <a href="alarm-center.html" class="nav-tab">告警中心</a>
+                <a href="data-report.html" class="nav-tab">数据报表</a>
+                <a href="user-management.html" class="nav-tab">用户管理</a>
+                <a href="role-permission.html" class="nav-tab">角色权限</a>
+                <a href="system-log.html" class="nav-tab">系统日志</a>
+                <a href="system-setting.html" class="nav-tab">系统设置</a>
+            </div>
+            <div class="nav-right">
+                <button class="nav-btn" onclick="openAlarmModal()"><i class="fas fa-bell"></i> 告警管理</button>
+                <button class="nav-btn" onclick="openQueryModal()"><i class="fas fa-search"></i> 数据查询</button>
+                <button class="nav-btn" onclick="openSettingModal()"><i class="fas fa-cog"></i> 系统设置</button>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="content-area">
+            <!-- 左侧面板 -->
+            <div class="left-panel">
+                <button class="zone-btn active" onclick="selectZone(this, 'all')">全部设备</button>
+                <button class="zone-btn" onclick="selectZone(this, 'a')">A 区设备</button>
+                <button class="zone-btn" onclick="selectZone(this, 'b')">B 区设备</button>
+                <button class="zone-btn" onclick="selectZone(this, 'c')">C 区设备</button>
+                <div class="gateway-box">
+                    <div class="gateway-icon"><i class="fas fa-network-wired"></i></div>
+                    <div class="gateway-label">主通信网关</div>
+                    <div class="gateway-status"><i class="fas fa-circle" style="font-size:8px;margin-right:4px;"></i>运行正常</div>
+                </div>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="main-content">
+                <!-- 快捷菜单 -->
+                <div class="quick-menu">
+                    <a href="device-registry.html" class="quick-menu-item">
+                        <div class="quick-menu-icon"><i class="fas fa-server"></i></div>
+                        <div class="quick-menu-title">设备台账管理</div>
+                    </a>
+                    <a href="alarm-center.html" class="quick-menu-item">
+                        <div class="quick-menu-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="quick-menu-title">告警处理中心</div>
+                    </a>
+                    <a href="data-report.html" class="quick-menu-item">
+                        <div class="quick-menu-icon"><i class="fas fa-chart-line"></i></div>
+                        <div class="quick-menu-title">数据报表分析</div>
+                    </a>
+                    <a href="user-management.html" class="quick-menu-item">
+                        <div class="quick-menu-icon"><i class="fas fa-users"></i></div>
+                        <div class="quick-menu-title">用户权限管理</div>
+                    </a>
+                </div>
+
+                <!-- 统计面板 -->
+                <div class="stats-panel">
+                    <div class="stat-card">
+                        <div class="stat-value">48</div>
+                        <div class="stat-label">设备总数</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-value">42</div>
+                        <div class="stat-label">在线设备</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-value">4</div>
+                        <div class="stat-label">待机设备</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-value">2</div>
+                        <div class="stat-label">告警设备</div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px;">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <span class="chart-title">本月发电量统计 (kWh)</span>
+                        </div>
+                        <div class="chart-area">
+                            <div class="chart-bar" style="height:60%;" title="1 月：3200"></div>
+                            <div class="chart-bar" style="height:75%;" title="2 月：4100"></div>
+                            <div class="chart-bar" style="height:55%;" title="3 月：2900"></div>
+                            <div class="chart-bar" style="height:85%;" title="4 月：4650"></div>
+                            <div class="chart-bar" style="height:70%;" title="5 月：3800"></div>
+                            <div class="chart-bar" style="height:90%;" title="6 月：5100"></div>
+                            <div class="chart-bar" style="height:65%;" title="7 月：3500"></div>
+                            <div class="chart-bar" style="height:80%;" title="8 月：4350"></div>
+                            <div class="chart-bar" style="height:72%;" title="9 月：3900"></div>
+                            <div class="chart-bar" style="height:88%;" title="10 月：4800"></div>
+                            <div class="chart-bar" style="height:78%;" title="11 月：4200"></div>
+                            <div class="chart-bar" style="height:45%;" title="12 月：2400"></div>
+                        </div>
+                    </div>
+                    <div class="alarm-list">
+                        <div class="alarm-header">
+                            <span class="alarm-title">实时告警信息</span>
+                            <button class="nav-btn" style="padding:4px 10px;font-size:11px;" onclick="openAlarmModal()">查看全部</button>
+                        </div>
+                        <div class="alarm-item">
+                            <div class="alarm-left">
+                                <span class="alarm-level high"></span>
+                                <div class="alarm-content">
+                                    <div class="alarm-text">储能柜 A-03 电池温度过高 (68°C)</div>
+                                    <div class="alarm-time">2024-03-15 14:32:18</div>
+                                </div>
+                            </div>
+                            <div class="alarm-actions">
+                                <button class="alarm-action" onclick="handleAlarm(this)">处理</button>
+                            </div>
+                        </div>
+                        <div class="alarm-item">
+                            <div class="alarm-left">
+                                <span class="alarm-level medium"></span>
+                                <div class="alarm-content">
+                                    <div class="alarm-text">充电桩 B-07 通信异常</div>
+                                    <div class="alarm-time">2024-03-15 14:28:05</div>
+                                </div>
+                            </div>
+                            <div class="alarm-actions">
+                                <button class="alarm-action" onclick="handleAlarm(this)">处理</button>
+                            </div>
+                        </div>
+                        <div class="alarm-item">
+                            <div class="alarm-left">
+                                <span class="alarm-level low"></span>
+                                <div class="alarm-content">
+                                    <div class="alarm-text">光伏逆变器 C-12 效率偏低 (92.3%)</div>
+                                    <div class="alarm-time">2024-03-15 14:15:42</div>
+                                </div>
+                            </div>
+                            <div class="alarm-actions">
+                                <button class="alarm-action" onclick="handleAlarm(this)">处理</button>
+                            </div>
+                        </div>
+                        <div class="alarm-item">
+                            <div class="alarm-left">
+                                <span class="alarm-level medium"></span>
+                                <div class="alarm-content">
+                                    <div class="alarm-text">配电柜 PDU-02 负载率超过 85%</div>
+                                    <div class="alarm-time">2024-03-15 13:58:33</div>
+                                </div>
+                            </div>
+                            <div class="alarm-actions">
+                                <button class="alarm-action" onclick="handleAlarm(this)">处理</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 设备概览 -->
+                <h3 style="color:#00d4ff;margin-bottom:15px;font-size:16px;"><i class="fas fa-th-large"></i> 设备概览</h3>
+                <div class="device-grid">
+                    <div class="device-card" onclick="openDeviceModal('储能终端 A-01')">
+                        <div class="device-header">
+                            <span class="device-name">储能终端 A-01</span>
+                            <div class="device-actions">
+                                <button class="device-action-btn refresh" onclick="event.stopPropagation();refreshDevice(this)">刷新</button>
+                                <button class="device-action-btn" onclick="event.stopPropagation();openConfigModal('储能终端 A-01')">配置</button>
+                            </div>
+                        </div>
+                        <div class="device-icon"><i class="fas fa-battery-three-quarters"></i></div>
+                        <div class="device-info">
+                            <div class="info-row"><span class="info-label">功率</span><span class="info-value">125.6 kW</span></div>
+                            <div class="info-row"><span class="info-label">电量</span><span class="info-value">78.5%</span></div>
+                            <div class="info-row"><span class="info-label">状态</span><span class="status-tag running">运行中</span></div>
+                            <div class="info-row"><span class="info-label">通信</span><span class="status-tag online">在线</span></div>
+                        </div>
+                    </div>
+                    <div class="device-card" onclick="openDeviceModal('充电桩 B-05')">
+                        <div class="device-header">
+                            <span class="device-name">充电桩 B-05</span>
+                            <div class="device-actions">
+                                <button class="device-action-btn refresh" onclick="event.stopPropagation();refreshDevice(this)">刷新</button>
+                                <button class="device-action-btn" onclick="event.stopPropagation();openConfigModal('充电桩 B-05')">配置</button>
+                            </div>
+                        </div>
+                        <div class="device-icon"><i class="fas fa-charging-station"></i></div>
+                        <div class="device-info">
+                            <div class="info-row"><span class="info-label">功率</span><span class="info-value">60.0 kW</span></div>
+                            <div class="info-row"><span class="info-label">电压</span><span class="info-value">380 V</span></div>
+                            <div class="info-row"><span class="info-label">状态</span><span class="status-tag running">充电中</span></div>
+                            <div class="info-row"><span class="info-label">通信</span><span class="status-tag online">在线</span></div>
+                        </div>
+                    </div>
+                    <div class="device-card" onclick="openDeviceModal('光伏逆变器 C-08')">
+                        <div class="device-header">
+                            <span class="device-name">光伏逆变器 C-08</span>
+                            <div class="device-actions">
+                                <button class="device-action-btn refresh" onclick="event.stopPropagation();refreshDevice(this)">刷新</button>
+                                <button class="device-action-btn" onclick="event.stopPropagation();openConfigModal('光伏逆变器 C-08')">配置</button>
+                            </div>
+                        </div>
+                        <div class="device-icon"><i class="fas fa-solar-panel"></i></div>
+                        <div class="device-info">
+                            <div class="info-row"><span class="info-label">功率</span><span class="info-value">85.2 kW</span></div>
+                            <div class="info-row"><span class="info-label">效率</span><span class="info-value good">96.8%</span></div>
+                            <div class="info-row"><span class="info-label">状态</span><span class="status-tag running">发电中</span></div>
+                            <div class="info-row"><span class="info-label">通信</span><span class="status-tag online">在线</span></div>
+                        </div>
+                    </div>
+                    <div class="device-card fault" onclick="openDeviceModal('储能柜 A-03')">
+                        <div class="device-header">
+                            <span class="device-name">储能柜 A-03</span>
+                            <div class="device-actions">
+                                <button class="device-action-btn refresh" onclick="event.stopPropagation();refreshDevice(this)">刷新</button>
+                                <button class="device-action-btn" onclick="event.stopPropagation();openConfigModal('储能柜 A-03')">配置</button>
+                            </div>
+                        </div>
+                        <div class="device-icon"><i class="fas fa-battery-full"></i></div>
+                        <div class="device-info">
+                            <div class="info-row"><span class="info-label">功率</span><span class="info-value bad">0 kW</span></div>
+                            <div class="info-row"><span class="info-label">温度</span><span class="info-value bad">68°C</span></div>
+                            <div class="info-row"><span class="info-label">状态</span><span class="status-tag fault">故障</span></div>
+                            <div class="info-row"><span class="info-label">通信</span><span class="status-tag online">在线</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设备详情弹窗 -->
+    <div class="modal-overlay" id="deviceModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="deviceModalTitle">设备详情</span>
+                <button class="modal-close" onclick="closeModal('deviceModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">设备编号</label>
+                        <input type="text" class="form-input" id="deviceId" value="ESS-A-001" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">设备名称</label>
+                        <input type="text" class="form-input" id="deviceName" value="储能终端 A-01" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">设备类型</label>
+                        <input type="text" class="form-input" value="磷酸铁锂储能系统" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">额定容量</label>
+                        <input type="text" class="form-input" value="200 kWh" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">实时功率</label>
+                        <input type="text" class="form-input" value="125.6 kW" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">当前电量</label>
+                        <input type="text" class="form-input" value="78.5%" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">电池温度</label>
+                        <input type="text" class="form-input" value="42°C" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">环境温度</label>
+                        <input type="text" class="form-input" value="26°C" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">运行状态</label>
+                        <input type="text" class="form-input" value="放电中" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">通信状态</label>
+                        <input type="text" class="form-input" value="在线" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">安装位置</label>
+                        <input type="text" class="form-input" value="A 区储能站 1 号位" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">投运日期</label>
+                        <input type="text" class="form-input" value="2023-06-15" readonly>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">设备描述</label>
+                    <textarea class="form-textarea" readonly>该设备为一套 200kWh 磷酸铁锂储能系统，用于削峰填谷和应急供电，配备智能 BMS 电池管理系统。</textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('deviceModal')">关闭</button>
+                <button class="btn btn-primary" onclick="openControlModal()">远程控制</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设备配置弹窗 -->
+    <div class="modal-overlay" id="configModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">设备参数配置</span>
+                <button class="modal-close" onclick="closeModal('configModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">设备名称 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="configDeviceName" value="储能终端 A-01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属区域 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option value="a" selected>A 区</option>
+                            <option value="b">B 区</option>
+                            <option value="c">C 区</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">通信地址 <span class="required">*</span></label>
+                        <input type="text" class="form-input" value="192.168.1.101">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">通信端口 <span class="required">*</span></label>
+                        <input type="text" class="form-input" value="502">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">数据采集周期 (秒)</label>
+                        <select class="form-select">
+                            <option value="5">5 秒</option>
+                            <option value="10" selected>10 秒</option>
+                            <option value="30">30 秒</option>
+                            <option value="60">60 秒</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">通信超时 (秒)</label>
+                        <input type="number" class="form-input" value="30">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">温度上限告警 (°C)</label>
+                        <input type="number" class="form-input" value="55">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">温度下限告警 (°C)</label>
+                        <input type="number" class="form-input" value="5">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">电量低限告警 (%)</label>
+                        <input type="number" class="form-input" value="20">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">功率限制 (kW)</label>
+                        <input type="number" class="form-input" value="150">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">告警通知方式</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" checked><span>系统弹窗</span></label>
+                        <label class="checkbox-item"><input type="checkbox" checked><span>短信通知</span></label>
+                        <label class="checkbox-item"><input type="checkbox"><span>邮件通知</span></label>
+                        <label class="checkbox-item"><input type="checkbox"><span>微信推送</span></label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注说明</label>
+                    <textarea class="form-textarea" placeholder="请输入设备相关备注信息..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('configModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveConfig()">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 远程控制弹窗 -->
+    <div class="modal-overlay" id="controlModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">设备远程控制</span>
+                <button class="modal-close" onclick="closeModal('controlModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">目标设备</label>
+                        <input type="text" class="form-input" value="储能终端 A-01" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">当前状态</label>
+                        <input type="text" class="form-input" value="放电中" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">控制指令 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option value="">请选择控制指令</option>
+                            <option value="start">启动运行</option>
+                            <option value="stop">停止运行</option>
+                            <option value="charge">切换充电</option>
+                            <option value="discharge">切换放电</option>
+                            <option value="standby">进入待机</option>
+                            <option value="reset">系统复位</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">执行模式</label>
+                        <select class="form-select">
+                            <option value="immediate">立即执行</option>
+                            <option value="scheduled">定时执行</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">功率设定 (kW)</label>
+                        <input type="number" class="form-input" value="100" min="0" max="150">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">运行时长 (分钟)</label>
+                        <input type="number" class="form-input" value="60" min="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">充电截止 SOC (%)</label>
+                        <input type="number" class="form-input" value="95" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">放电截止 SOC (%)</label>
+                        <input type="number" class="form-input" value="15" min="0" max="100">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">操作确认码 <span class="required">*</span></label>
+                        <input type="password" class="form-input" placeholder="请输入操作确认码">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">优先级</label>
+                        <select class="form-select">
+                            <option value="normal" selected>普通</option>
+                            <option value="high">高</option>
+                            <option value="urgent">紧急</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">操作说明</label>
+                    <textarea class="form-textarea" placeholder="请输入本次操作的原因说明..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('controlModal')">取消</button>
+                <button class="btn btn-primary" onclick="executeControl()">执行控制</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 告警管理弹窗 -->
+    <div class="modal-overlay" id="alarmModal">
+        <div class="modal" style="width:800px;">
+            <div class="modal-header">
+                <span class="modal-title">告警管理</span>
+                <button class="modal-close" onclick="closeModal('alarmModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="搜索告警信息...">
+                    <select class="form-select" style="width:120px;">
+                        <option value="">全部级别</option>
+                        <option value="high">高级告警</option>
+                        <option value="medium">中级告警</option>
+                        <option value="low">低级告警</option>
+                    </select>
+                    <select class="form-select" style="width:120px;">
+                        <option value="">全部状态</option>
+                        <option value="unhandled">未处理</option>
+                        <option value="handling">处理中</option>
+                        <option value="handled">已处理</option>
+                    </select>
+                    <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">级别</th>
+                            <th>告警内容</th>
+                            <th style="width:120px;">设备名称</th>
+                            <th style="width:140px;">告警时间</th>
+                            <th style="width:80px;">状态</th>
+                            <th style="width:100px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="alarm-level high" style="display:inline-block;"></span></td>
+                            <td>电池温度过高 (68°C)，已触发过温保护</td>
+                            <td>储能柜 A-03</td>
+                            <td>2024-03-15 14:32</td>
+                            <td><span class="status-tag fault">未处理</span></td>
+                            <td><button class="table-btn" onclick="openAlarmHandleModal()">处理</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="alarm-level medium" style="display:inline-block;"></span></td>
+                            <td>设备通信异常，连续 3 次采集失败</td>
+                            <td>充电桩 B-07</td>
+                            <td>2024-03-15 14:28</td>
+                            <td><span class="status-tag fault">未处理</span></td>
+                            <td><button class="table-btn" onclick="openAlarmHandleModal()">处理</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="alarm-level medium" style="display:inline-block;"></span></td>
+                            <td>负载率超过 85% 阈值 (86.5%)</td>
+                            <td>配电柜 PDU-02</td>
+                            <td>2024-03-15 13:58</td>
+                            <td><span class="status-tag standby">处理中</span></td>
+                            <td><button class="table-btn">查看</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="alarm-level low" style="display:inline-block;"></span></td>
+                            <td>逆变器效率偏低 (92.3%)</td>
+                            <td>光伏逆变器 C-12</td>
+                            <td>2024-03-15 14:15</td>
+                            <td><span class="status-tag fault">未处理</span></td>
+                            <td><button class="table-btn" onclick="openAlarmHandleModal()">处理</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="alarm-level low" style="display:inline-block;"></span></td>
+                            <td>电池 SOC 低于 25% 警戒值</td>
+                            <td>储能终端 A-05</td>
+                            <td>2024-03-15 12:45</td>
+                            <td><span class="status-tag online">已处理</span></td>
+                            <td><button class="table-btn">查看</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button class="page-btn">上一页</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">下一页</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('alarmModal')">关闭</button>
+                <button class="btn btn-primary" onclick="exportAlarms()">导出告警</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 告警处理弹窗 -->
+    <div class="modal-overlay" id="alarmHandleModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">告警处理</span>
+                <button class="modal-close" onclick="closeModal('alarmHandleModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">告警设备</label>
+                        <input type="text" class="form-input" value="储能柜 A-03" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">告警级别</label>
+                        <input type="text" class="form-input" value="高级告警" readonly>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">告警内容</label>
+                    <input type="text" class="form-input" value="电池温度过高 (68°C)，已触发过温保护" readonly>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">告警时间</label>
+                        <input type="text" class="form-input" value="2024-03-15 14:32:18" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">处理人员 <span class="required">*</span></label>
+                        <input type="text" class="form-input" value="运维工程师" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">处理方式 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option value="">请选择处理方式</option>
+                            <option value="remote">远程处理</option>
+                            <option value="onsite">现场处理</option>
+                            <option value="ignore">忽略告警</option>
+                            <option value="escalate">上报处理</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">预计恢复时间</label>
+                        <input type="datetime-local" class="form-input">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">故障原因 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option value="">请选择故障原因</option>
+                            <option value="overload">设备过载</option>
+                            <option value="overheat">温度过高</option>
+                            <option value="comm">通信故障</option>
+                            <option value="power">供电异常</option>
+                            <option value="other">其他原因</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">是否派单</label>
+                        <select class="form-select">
+                            <option value="no">否</option>
+                            <option value="yes">是</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">处理措施 <span class="required">*</span></label>
+                    <textarea class="form-textarea" placeholder="请详细描述告警处理措施..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注说明</label>
+                    <textarea class="form-textarea" placeholder="其他需要说明的信息..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('alarmHandleModal')">取消</button>
+                <button class="btn btn-primary" onclick="submitAlarmHandle()">提交处理</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据查询弹窗 -->
+    <div class="modal-overlay" id="queryModal">
+        <div class="modal" style="width:700px;">
+            <div class="modal-header">
+                <span class="modal-title">数据查询</span>
+                <button class="modal-close" onclick="closeModal('queryModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">查询设备 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option value="">请选择设备</option>
+                            <option value="all">全部设备</option>
+                            <option value="storage">储能终端</option>
+                            <option value="charging">充电桩组</option>
+                            <option value="solar">光伏组件</option>
+                            <option value="power">配电设备</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">数据类型 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option value="">请选择类型</option>
+                            <option value="power">功率数据</option>
+                            <option value="energy">电量数据</option>
+                            <option value="temp">温度数据</option>
+                            <option value="status">状态数据</option>
+                            <option value="alarm">告警记录</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">开始时间 <span class="required">*</span></label>
+                        <input type="datetime-local" class="form-input" value="2024-03-15T00:00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">结束时间 <span class="required">*</span></label>
+                        <input type="datetime-local" class="form-input" value="2024-03-15T23:59">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">数据粒度</label>
+                        <select class="form-select">
+                            <option value="1min">1 分钟</option>
+                            <option value="5min" selected>5 分钟</option>
+                            <option value="15min">15 分钟</option>
+                            <option value="1hour">1 小时</option>
+                            <option value="1day">1 天</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">统计方式</label>
+                        <select class="form-select">
+                            <option value="avg" selected>平均值</option>
+                            <option value="max">最大值</option>
+                            <option value="min">最小值</option>
+                            <option value="sum">累计值</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">数据阈值 (上限)</label>
+                        <input type="number" class="form-input" placeholder="可选，筛选超过该值的数据">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">数据阈值 (下限)</label>
+                        <input type="number" class="form-input" placeholder="可选，筛选低于该值的数据">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">导出格式</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="radio" name="export" checked><span>Excel 格式</span></label>
+                        <label class="checkbox-item"><input type="radio" name="export"><span>CSV 格式</span></label>
+                        <label class="checkbox-item"><input type="radio" name="export"><span>PDF 报表</span></label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('queryModal')">取消</button>
+                <button class="btn btn-primary" onclick="executeQuery()">查询数据</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统设置弹窗 -->
+    <div class="modal-overlay" id="settingModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">系统设置</span>
+                <button class="modal-close" onclick="closeModal('settingModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">系统名称</label>
+                        <input type="text" class="form-input" value="佳晔新能源物联网终端管控系统">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">服务器地址</label>
+                        <input type="text" class="form-input" value="192.168.1.100">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">数据刷新间隔 (秒)</label>
+                        <select class="form-select">
+                            <option value="5">5 秒</option>
+                            <option value="10" selected>10 秒</option>
+                            <option value="30">30 秒</option>
+                            <option value="60">60 秒</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">数据保留周期 (天)</label>
+                        <input type="number" class="form-input" value="365">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">告警声音</label>
+                        <select class="form-select">
+                            <option value="on" selected>开启</option>
+                            <option value="off">关闭</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">告警弹窗</label>
+                        <select class="form-select">
+                            <option value="on" selected>开启</option>
+                            <option value="off">关闭</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">短信通知手机</label>
+                        <input type="text" class="form-input" value="138****6789">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邮件通知地址</label>
+                        <input type="email" class="form-input" value="admin@jiaye-energy.com">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">日志级别</label>
+                        <select class="form-select">
+                            <option value="error">错误</option>
+                            <option value="warn">警告</option>
+                            <option value="info" selected>信息</option>
+                            <option value="debug">调试</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">自动登出时间 (分钟)</label>
+                        <input type="number" class="form-input" value="30">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">功能开关</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item"><input type="checkbox" checked><span>远程控制</span></label>
+                        <label class="checkbox-item"><input type="checkbox" checked><span>数据导出</span></label>
+                        <label class="checkbox-item"><input type="checkbox" checked><span>告警推送</span></label>
+                        <label class="checkbox-item"><input type="checkbox"><span>调试模式</span></label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">系统备注</label>
+                    <textarea class="form-textarea" placeholder="系统相关备注信息..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('settingModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveSetting()">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面切换
+        function switchPage(page) {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.page === page) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            document.querySelectorAll('.page-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('page-' + page).classList.add('active');
+        }
+
+        // 区域选择
+        function selectZone(btn, zone) {
+            document.querySelectorAll('.zone-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            showMessage('已切换到' + btn.textContent);
+        }
+
+        // 弹窗控制
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        // 设备详情弹窗
+        function openDeviceModal(deviceName) {
+            document.getElementById('deviceModalTitle').textContent = deviceName + ' - 设备详情';
+            document.getElementById('deviceName').value = deviceName;
+            openModal('deviceModal');
+        }
+
+        // 设备配置弹窗
+        function openConfigModal(deviceName) {
+            document.getElementById('configDeviceName').value = deviceName;
+            openModal('configModal');
+        }
+
+        // 远程控制弹窗
+        function openControlModal() {
+            closeModal('deviceModal');
+            openModal('controlModal');
+        }
+
+        // 告警管理弹窗
+        function openAlarmModal() {
+            openModal('alarmModal');
+        }
+
+        // 告警处理弹窗
+        function openAlarmHandleModal() {
+            openModal('alarmHandleModal');
+        }
+
+        // 数据查询弹窗
+        function openQueryModal() {
+            openModal('queryModal');
+        }
+
+        // 系统设置弹窗
+        function openSettingModal() {
+            openModal('settingModal');
+        }
+
+        // 刷新设备数据
+        function refreshDevice(btn) {
+            btn.textContent = '刷新中';
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.textContent = '刷新';
+                btn.disabled = false;
+                showMessage('设备数据已刷新');
+            }, 1000);
+        }
+
+        // 处理告警
+        function handleAlarm(btn) {
+            openAlarmHandleModal();
+        }
+
+        // 保存配置
+        function saveConfig() {
+            showMessage('设备配置保存成功');
+            closeModal('configModal');
+        }
+
+        // 执行控制
+        function executeControl() {
+            showMessage('控制指令已下发');
+            closeModal('controlModal');
+        }
+
+        // 提交告警处理
+        function submitAlarmHandle() {
+            showMessage('告警处理提交成功');
+            closeModal('alarmHandleModal');
+        }
+
+        // 导出告警
+        function exportAlarms() {
+            showMessage('告警数据导出成功');
+        }
+
+        // 执行查询
+        function executeQuery() {
+            showMessage('数据查询完成');
+            closeModal('queryModal');
+        }
+
+        // 保存设置
+        function saveSetting() {
+            showMessage('系统设置保存成功');
+            closeModal('settingModal');
+        }
+
+        // 消息提示
+        function showMessage(text) {
+            var msg = document.createElement('div');
+            msg.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#00a8e6 0%,#0088c6 100%);color:#fff;padding:12px 30px;border-radius:4px;z-index:2000;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+            msg.textContent = text;
+            document.body.appendChild(msg);
+            setTimeout(() => {
+                msg.style.opacity = '0';
+                msg.style.transition = 'opacity 0.3s';
+                setTimeout(() => msg.remove(), 300);
+            }, 2000);
+        }
+
+        // Windows 标题栏按钮
+        function minimizeWindow() {
+            showMessage('窗口最小化');
+        }
+
+        function maximizeWindow() {
+            showMessage('窗口最大化');
+        }
+
+        function closeWindow() {
+            if (confirm('确定要关闭系统吗？')) {
+                showMessage('系统关闭中...');
+            }
+        }
+
+        // 点击遮罩关闭弹窗
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                }
+            });
+        });
+
+        // ESC 键关闭弹窗
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.show').forEach(modal => {
+                    modal.classList.remove('show');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

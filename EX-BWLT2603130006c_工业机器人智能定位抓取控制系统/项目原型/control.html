@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工业机器人智能定位抓取控制系统</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --mac-bg: #1a1a2e;
+      --window-bg: #1e1e2e;
+      --titlebar: #2a2a3e;
+      --sidebar-bg: #232336;
+      --card-bg: #2a2a40;
+      --card-border: #3a3a55;
+      --text-primary: #e0e0ec;
+      --text-secondary: #8888a8;
+      --text-dim: #5a5a78;
+      --accent-blue: #4a9eff;
+      --accent-green: #34d399;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #a78bfa;
+      --accent-cyan: #22d3ee;
+      --divider: #333350;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: url('./static/bg.jpg') no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .mac-window {
+      width: 1280px;
+      max-width: 96vw;
+      background: var(--window-bg);
+      border-radius: 12px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .title-bar {
+      height: 52px;
+      background: var(--titlebar);
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .traffic-lights { display: flex; gap: 8px; z-index: 2; }
+    .traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .title-bar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .toolbar {
+      height: 42px;
+      background: linear-gradient(180deg, #2a2a3e, #252538);
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 2px;
+    }
+
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      color: var(--text-secondary);
+      font-size: 11.5px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); }
+    .tool-btn:active { transform: scale(0.97); }
+    .tool-btn i { font-size: 12px; }
+    .tool-btn.primary { color: var(--accent-blue); }
+    .tool-btn.success { color: var(--accent-green); }
+    .tool-btn.danger { color: var(--accent-red); }
+
+    .tool-sep { width: 1px; height: 20px; background: var(--divider); margin: 0 6px; }
+    .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px 3px 6px;
+      background: rgba(74, 158, 255, 0.12);
+      border: 1px solid rgba(74, 158, 255, 0.25);
+      border-radius: 12px;
+      color: var(--accent-blue);
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .user-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+
+    .main-layout { display: flex; height: 620px; }
+    .sidebar { width: 200px; background: var(--sidebar-bg); border-right: 1px solid var(--divider); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { padding: 14px 14px 10px; color: var(--text-dim); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+    .nav-item {
+      padding: 7px 12px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 6px 2px;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--text-primary); }
+    .nav-item.active { background: rgba(74, 158, 255, 0.15); color: var(--accent-blue); }
+    .nav-item i { width: 14px; height: 14px; font-size: 13px; flex-shrink: 0; }
+
+    .sidebar-footer { margin-top: auto; padding: 12px 14px; border-top: 1px solid var(--divider); }
+    .robot-status { background: rgba(255, 255, 255, 0.03); border-radius: 6px; padding: 10px; }
+    .robot-label { color: var(--text-dim); font-size: 10px; margin-bottom: 4px; }
+    .robot-name { color: var(--text-primary); font-size: 11.5px; font-weight: 500; margin-bottom: 6px; }
+    .robot-meta { display: flex; gap: 12px; }
+    .robot-meta span { color: var(--text-dim); font-size: 10px; }
+
+    .content-area { flex: 1; overflow-y: auto; background: var(--window-bg); }
+    .content-body { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .card { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--card-border); overflow: hidden; }
+    .card-header { padding: 10px 14px; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; justify-content: space-between; }
+    .card-title { color: var(--text-primary); font-size: 12.5px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .card-title .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .card-body { padding: 14px; }
+
+    .control-card { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--card-border); padding: 14px; }
+    .control-card h4 { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+    .control-card h4 i { color: var(--accent-blue); font-size: 11px; }
+
+    .axis-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .axis-label { width: 24px; height: 24px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .axis-label.x-axis { background: rgba(74, 158, 255, 0.15); color: var(--accent-blue); }
+    .axis-label.y-axis { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); }
+    .axis-label.z-axis { background: rgba(167, 139, 250, 0.15); color: var(--accent-purple); }
+
+    .axis-slider { flex: 1; height: 4px; -webkit-appearance: none; background: var(--card-border); border-radius: 2px; outline: none; }
+    .axis-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent-blue); cursor: pointer; }
+
+    .axis-value { width: 80px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-primary); flex-shrink: 0; }
+
+    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .btn { padding: 6px 14px; border-radius: 5px; font-size: 12px; cursor: pointer; transition: all 0.15s; border: none; font-family: 'Noto Sans SC', sans-serif; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent-blue); color: #fff; }
+    .btn-primary:hover { background: #5aadff; }
+    .btn-secondary { background: var(--card-border); color: var(--text-secondary); }
+    .btn-secondary:hover { background: #444460; color: var(--text-primary); }
+    .btn-success { background: var(--accent-green); color: #0a2020; }
+    .btn-success:hover { background: #4fe3ad; }
+    .btn-danger { background: var(--accent-red); color: #fff; }
+    .btn-danger:hover { background: #f87171; }
+    .btn-outline { background: transparent; border: 1px solid var(--card-border); color: var(--text-secondary); }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.04); color: var(--text-primary); }
+
+    .speed-display { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(74, 158, 255, 0.08); border-radius: 8px; margin-bottom: 8px; }
+    .speed-num { font-size: 32px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-blue); }
+
+    .gripper-visual { display: flex; align-items: center; justify-content: center; gap: 4px; height: 60px; background: #1a1a2e; border-radius: 8px; margin: 10px 0; }
+    .gripper-finger { width: 8px; height: 35px; background: var(--card-border); border-radius: 3px; transition: all 0.3s; }
+    .gripper-finger.closed { width: 20px; }
+    .gripper-obj { width: 16px; height: 16px; background: var(--accent-orange); border-radius: 3px; }
+
+    .coord-btns { display: flex; gap: 6px; }
+    .coord-btn { flex: 1; padding: 8px; border-radius: 6px; font-size: 11px; border: 1px solid var(--card-border); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+    .coord-btn:hover { background: rgba(255, 255, 255, 0.04); }
+    .coord-btn.active { background: rgba(74, 158, 255, 0.15); color: var(--accent-blue); border-color: rgba(74, 158, 255, 0.3); }
+
+    .joint-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .joint-item { background: #1a1a2e; border-radius: 6px; padding: 10px; text-align: center; }
+    .joint-name { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+    .joint-value { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent-cyan); }
+    .joint-bar { height: 3px; background: var(--card-border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .joint-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+    .full-row { grid-column: 1 / -1; }
+
+    .status-bar { height: 26px; background: #222233; border-top: 1px solid var(--divider); display: flex; align-items: center; padding: 0 12px; gap: 16px; }
+    .status-item { color: var(--text-dim); font-size: 10.5px; display: flex; align-items: center; gap: 4px; }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-green); }
+    .status-right { margin-left: auto; display: flex; gap: 14px; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.65); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.25s ease; }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); min-width: 380px; max-width: 500px; transform: scale(0.9) translateY(-20px); transition: transform 0.25s ease; }
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-header { padding: 12px 16px; border-bottom: 1px solid var(--divider); display: flex; align-items: center; justify-content: center; position: relative; background: var(--titlebar); border-radius: 10px 10px 0 0; }
+    .modal-traffic-lights { position: absolute; left: 14px; display: flex; gap: 8px; }
+    .modal-traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .modal-traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .modal-traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .modal-traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+    .modal-title { color: var(--text-primary); font-size: 14px; font-weight: 500; text-align: center; }
+    .modal-body { padding: 16px; }
+    .modal-footer { padding: 12px 16px; border-top: 1px solid var(--divider); display: flex; justify-content: flex-end; gap: 8px; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; color: var(--text-dim); font-size: 11px; margin-bottom: 5px; }
+    .form-input { width: 100%; padding: 7px 10px; background: #1a1a2e; border: 1px solid var(--card-border); border-radius: 5px; color: var(--text-primary); font-size: 12px; transition: border-color 0.15s; }
+    .form-input:focus { outline: none; border-color: var(--accent-blue); }
+    .form-select { width: 100%; padding: 7px 10px; background: #1a1a2e; border: 1px solid var(--card-border); border-radius: 5px; color: var(--text-primary); font-size: 12px; cursor: pointer; }
+    .form-select:focus { outline: none; border-color: var(--accent-blue); }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+    .checkbox-group { display: flex; flex-direction: column; gap: 6px; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .checkbox-item input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent-blue); cursor: pointer; }
+    .checkbox-item span { color: var(--text-secondary); font-size: 12px; }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <span class="title-bar-text">工业机器人智能定位抓取控制系统</span>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool-btn success" id="btnEnable">
+        <i class="fa-solid fa-power"></i>
+        使能机器人
+      </button>
+      <button class="tool-btn danger" id="btnDisable">
+        <i class="fa-solid fa-power-off"></i>
+        关闭使能
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnJog">
+        <i class="fa-solid fa-arrows"></i>
+        点动控制
+      </button>
+      <button class="tool-btn" id="btnHome">
+        <i class="fa-solid fa-house"></i>
+        回原点
+      </button>
+      <button class="tool-btn" id="btnGripper">
+        <i class="fa-solid fa-hand"></i>
+        夹爪控制
+      </button>
+      <button class="tool-btn" id="btnSpeed">
+        <i class="fa-solid fa-gauge"></i>
+        速度设置
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnRecord">
+        <i class="fa-solid fa-circle"></i>
+        示教记录
+      </button>
+      <button class="tool-btn" id="btnPlayback">
+        <i class="fa-solid fa-play"></i>
+        路径回放
+      </button>
+      <div class="toolbar-right">
+        <div class="user-badge">
+          <img class="user-avatar" src="https://i02piccdn.sogoucdn.com/93b2fc982f88939f" alt="王晓岚头像">
+          王晓岚
+        </div>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">功能导航</div>
+        <nav>
+          <a class="nav-item" href="./main.html"><i class="fa-solid fa-house"></i>系统概览</a>
+          <a class="nav-item" href="./vision.html"><i class="fa-solid fa-eye"></i>视觉定位</a>
+          <a class="nav-item active" href="./control.html"><i class="fa-solid fa-gamepad"></i>运动控制</a>
+          <a class="nav-item" href="./task.html"><i class="fa-solid fa-list-check"></i>任务编排</a>
+          <a class="nav-item" href="./statistics.html"><i class="fa-solid fa-chart-bar"></i>数据统计</a>
+          <a class="nav-item" href="./alarm.html"><i class="fa-solid fa-bell"></i>报警管理</a>
+          <a class="nav-item" href="./maintenance.html"><i class="fa-solid fa-wrench"></i>维护管理</a>
+          <a class="nav-item" href="./log.html"><i class="fa-solid fa-file-lines"></i>运行日志</a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="robot-status">
+            <div class="robot-label">当前机器人</div>
+            <div class="robot-name">FANUC M-20iD/25</div>
+            <div class="robot-meta"><span>192.168.1.100</span><span>在线</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <div class="content-body">
+          <div class="control-card">
+            <h4><i class="fa-solid fa-arrows-up-down-left-right"></i>笛卡尔空间控制 (TCP)</h4>
+            <div class="axis-row">
+              <div class="axis-label x-axis">X</div>
+              <input type="range" class="axis-slider" min="-800" max="800" value="412" id="sliderX">
+              <span class="axis-value" id="xval">412.50 mm</span>
+            </div>
+            <div class="axis-row">
+              <div class="axis-label y-axis">Y</div>
+              <input type="range" class="axis-slider" min="-800" max="800" value="87" id="sliderY">
+              <span class="axis-value" id="yval">87.30 mm</span>
+            </div>
+            <div class="axis-row">
+              <div class="axis-label z-axis" style="background:rgba(167,139,250,0.15);color:var(--accent-purple)">Z</div>
+              <input type="range" class="axis-slider" min="-500" max="500" value="-156" id="sliderZ">
+              <span class="axis-value" id="zval">-156.80 mm</span>
+            </div>
+            <div class="axis-row">
+              <div class="axis-label" style="background:rgba(245,158,11,0.15);color:var(--accent-orange)">Rx</div>
+              <input type="range" class="axis-slider" min="-180" max="180" value="0" id="sliderRx">
+              <span class="axis-value" id="rxval">0.12 deg</span>
+            </div>
+            <div class="axis-row">
+              <div class="axis-label" style="background:rgba(52,211,153,0.15);color:var(--accent-green)">Ry</div>
+              <input type="range" class="axis-slider" min="-180" max="180" value="-1" id="sliderRy">
+              <span class="axis-value" id="ryval">-1.45 deg</span>
+            </div>
+            <div class="axis-row">
+              <div class="axis-label" style="background:rgba(34,211,238,0.15);color:var(--accent-cyan)">Rz</div>
+              <input type="range" class="axis-slider" min="-180" max="180" value="89" id="sliderRz">
+              <span class="axis-value" id="rzval">89.97 deg</span>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-primary" id="btnMovL">MovL 直线</button>
+              <button class="btn btn-outline" id="btnMovJ">MovJ 关节</button>
+              <button class="btn btn-outline" id="btnMovC">MovC 圆弧</button>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <h4><i class="fa-solid fa-gauge"></i>运行速度控制</h4>
+            <div class="speed-display">
+              <span class="speed-num" id="speedDisplay">120</span>
+              <div>
+                <div style="font-size:12px;color:var(--text-secondary)">mm/s</div>
+                <div style="font-size:10px;color:var(--text-dim)">最大 500 mm/s</div>
+              </div>
+            </div>
+            <input type="range" class="axis-slider" min="1" max="500" value="120" id="speedSlider" style="width:100%">
+
+            <h4 style="margin-top:20px"><i class="fa-solid fa-hand"></i>夹爪控制</h4>
+            <div class="gripper-visual" id="gripperVisual">
+              <div class="gripper-finger left" id="fingerLeft"></div>
+              <div class="gripper-obj"></div>
+              <div class="gripper-finger right" id="fingerRight"></div>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-success" id="btnGripClose">闭合</button>
+              <button class="btn btn-danger" id="btnGripOpen">松开</button>
+              <button class="btn btn-outline" id="btnGripForce">力控模式</button>
+            </div>
+
+            <h4 style="margin-top:20px"><i class="fa-solid fa-globe"></i>坐标系</h4>
+            <div class="coord-btns">
+              <button class="coord-btn active" id="coordWorld">世界坐标</button>
+              <button class="coord-btn" id="coordTool">工具坐标</button>
+              <button class="coord-btn" id="coordUser">用户坐标</button>
+            </div>
+          </div>
+
+          <div class="control-card full-row">
+            <h4><i class="fa-solid fa-bolt"></i>快捷操作</h4>
+            <div class="btn-group">
+              <button class="btn btn-primary" id="btnHomeAll"><i class="fa-solid fa-house" style="margin-right:4px"></i>回零位</button>
+              <button class="btn btn-outline" id="btnTeach"><i class="fa-solid fa-circle" style="margin-right:4px"></i>示教记录</button>
+              <button class="btn btn-outline" id="btnPathPlay"><i class="fa-solid fa-play" style="margin-right:4px"></i>路径回放</button>
+              <button class="btn btn-outline" id="btnCollision"><i class="fa-solid fa-shield" style="margin-right:4px"></i>碰撞检测</button>
+              <button class="btn btn-outline" id="btnSingular"><i class="fa-solid fa-exclamation" style="margin-right:4px"></i>奇异点规避</button>
+              <button class="btn btn-danger" id="btnEStop"><i class="fa-solid fa-octagon-xmark" style="margin-right:4px"></i>急停</button>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <h4><i class="fa-solid fa-robot"></i>关节角度</h4>
+            <div class="joint-grid">
+              <div class="joint-item">
+                <div class="joint-name">J1 基座</div>
+                <div class="joint-value">+45.20°</div>
+                <div class="joint-bar"><div class="joint-bar-fill" style="width:62%;background:var(--accent-blue)"></div></div>
+              </div>
+              <div class="joint-item">
+                <div class="joint-name">J2 肩部</div>
+                <div class="joint-value">-32.80°</div>
+                <div class="joint-bar"><div class="joint-bar-fill" style="width:48%;background:var(--accent-green)"></div></div>
+              </div>
+              <div class="joint-item">
+                <div class="joint-name">J3 肘部</div>
+                <div class="joint-value">+78.15°</div>
+                <div class="joint-bar"><div class="joint-bar-fill" style="width:81%;background:var(--accent-orange)"></div></div>
+              </div>
+              <div class="joint-item">
+                <div class="joint-name">J4 腕部</div>
+                <div class="joint-value">+12.60°</div>
+                <div class="joint-bar"><div class="joint-bar-fill" style="width:35%;background:var(--accent-purple)"></div></div>
+              </div>
+              <div class="joint-item">
+                <div class="joint-name">J5 腕部</div>
+                <div class="joint-value">-5.40°</div>
+                <div class="joint-bar"><div class="joint-bar-fill" style="width:22%;background:var(--accent-cyan)"></div></div>
+              </div>
+              <div class="joint-item">
+                <div class="joint-name">J6 法兰</div>
+                <div class="joint-value">+89.97°</div>
+                <div class="joint-bar"><div class="joint-bar-fill" style="width:75%;background:var(--accent-red)"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <h4><i class="fa-solid fa-info-circle"></i>当前位置信息</h4>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--card-border)">
+                <span style="color:var(--text-dim);font-size:11px">TCP位置</span>
+                <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--accent-cyan)">[412.5, 87.3, -156.8] mm</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--card-border)">
+                <span style="color:var(--text-dim);font-size:11px">TCP姿态</span>
+                <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--accent-orange)">[0.12, -1.45, 89.97] deg</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--card-border)">
+                <span style="color:var(--text-dim);font-size:11px">当前速度</span>
+                <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--accent-green)">120 mm/s</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--card-border)">
+                <span style="color:var(--text-dim);font-size:11px">负载重量</span>
+                <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-primary)">2.5 kg</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0">
+                <span style="color:var(--text-dim);font-size:11px">运动模式</span>
+                <span style="font-size:11px;color:var(--accent-blue)">在线控制</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-item"><span class="status-dot"></span>系统就绪</div>
+          <div class="status-item">机器人: 已使能</div>
+          <div class="status-item">坐标系: 世界坐标</div>
+          <div class="status-item">夹爪: 已闭合</div>
+          <div class="status-right">
+            <div class="status-item">FANUC M-20iD/25</div>
+            <div class="status-item">最后更新: 14:27:03</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() { modalOverlay.classList.remove('active'); }
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    document.getElementById('btnEnable').addEventListener('click', () => {
+      openModal('使能机器人', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-power" style="font-size:48px;color:var(--accent-green);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认使能机器人？</div><div style="color:var(--text-secondary);font-size:12px">机器人将进入可运动状态</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-success" onclick="closeModal()">使能</button>`);
+    });
+
+    document.getElementById('btnDisable').addEventListener('click', () => {
+      openModal('关闭使能', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-power-off" style="font-size:48px;color:var(--accent-red);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认关闭使能？</div><div style="color:var(--accent-red);font-size:12px">机器人将停止运动并锁定</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="closeModal()">确认</button>`);
+    });
+
+    document.getElementById('btnJog').addEventListener('click', () => {
+      openModal('点动控制', `<div class="form-group"><label class="form-label">点动轴</label><select class="form-select"><option>X轴</option><option>Y轴</option><option>Z轴</option><option>Rx轴</option><option>Ry轴</option><option>Rz轴</option><option>J1关节</option><option>J2关节</option><option>J3关节</option><option>J4关节</option><option>J5关节</option><option>J6关节</option></select></div><div class="form-row"><div class="form-group"><label class="form-label">步距</label><input type="text" class="form-input" value="10"></div><div class="form-group"><label class="form-label">单位</label><select class="form-select"><option>mm</option><option>deg</option></select></div></div><div class="checkbox-group" style="margin-top:8px"><label class="checkbox-item"><input type="checkbox" checked><span>连续点动模式</span></label></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">开始</button>`);
+    });
+
+    document.getElementById('btnHome').addEventListener('click', () => {
+      openModal('回原点', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-house" style="font-size:48px;color:var(--accent-blue);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认执行回原点操作？</div><div style="color:var(--text-secondary);font-size:12px">所有轴将运动到机械原点位置</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">执行</button>`);
+    });
+
+    document.getElementById('btnGripper').addEventListener('click', () => {
+      openModal('夹爪控制', `<div class="form-group"><label class="form-label">控制模式</label><select class="form-select"><option>位置模式</option><option>力控模式</option><option>速度模式</option></select></div><div class="form-row"><div class="form-group"><label class="form-label">开合度</label><input type="text" class="form-input" value="50"></div><div class="form-group"><label class="form-label">力阈值</label><input type="text" class="form-input" value="15"></div></div><div class="form-group"><label class="form-label">速度</label><input type="text" class="form-input" value="50" style="width:100%"></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-success" onclick="closeModal()">应用</button>`);
+    });
+
+    document.getElementById('btnSpeed').addEventListener('click', () => {
+      openModal('速度设置', `<div class="form-group"><label class="form-label">速度类型</label><select class="form-select"><option>TCP线速度</option><option>关节速度</option><option>姿态速度</option></select></div><div class="form-group"><label class="form-label">速度值 (mm/s)</label><input type="text" class="form-input" value="120"></div><div class="form-row"><div class="form-group"><label class="form-label">加速度</label><input type="text" class="form-input" value="1000"></div><div class="form-group"><label class="form-label">减速度</label><input type="text" class="form-input" value="800"></div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">应用</button>`);
+    });
+
+    document.getElementById('btnRecord').addEventListener('click', () => {
+      openModal('示教记录', `<div class="form-group"><label class="form-label">示教项目</label><input type="text" class="form-input" placeholder="请输入示教项目名称"></div><div class="form-group"><label class="form-label">记录模式</label><select class="form-select"><option>连续记录</option><option>关键点记录</option></select></div><div class="form-group"><label class="form-label">记录频率</label><select class="form-select"><option>10Hz</option><option selected>20Hz</option><option>50Hz</option></select></div><div class="checkbox-group" style="margin-top:8px"><label class="checkbox-item"><input type="checkbox" checked><span>记录关节角度</span></label><label class="checkbox-item"><input type="checkbox" checked><span>记录TCP位置</span></label></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-success" onclick="closeModal()">开始记录</button>`);
+    });
+
+    document.getElementById('btnPlayback').addEventListener('click', () => {
+      openModal('路径回放', `<div class="form-group"><label class="form-label">选择示教轨迹</label><select class="form-select"><option>示教轨迹-001</option><option>示教轨迹-002</option><option>示教轨迹-003</option></select></div><div style="padding:10px;background:rgba(74,158,255,0.1);border-radius:6px;margin-bottom:12px"><div style="font-size:11px;color:var(--accent-blue);margin-bottom:4px">轨迹信息</div><div style="font-size:10px;color:var(--text-secondary)">点数: 256 | 长度: 1.25m | 预计时间: 12s</div></div><div class="form-row"><div class="form-group"><label class="form-label">速度比例</label><input type="text" class="form-input" value="100"></div><div class="form-group"><label class="form-label">循环次数</label><input type="text" class="form-input" value="1"></div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">开始回放</button>`);
+    });
+
+    document.getElementById('btnGripClose').addEventListener('click', () => {
+      openModal('闭合夹爪', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-hand" style="font-size:48px;color:var(--accent-green);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认闭合夹爪？</div><div style="color:var(--text-secondary);font-size:12px">目标开合度: 0%</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-success" onclick="closeModal()">执行</button>`);
+    });
+
+    document.getElementById('btnGripOpen').addEventListener('click', () => {
+      openModal('松开夹爪', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-hand-open" style="font-size:48px;color:var(--accent-orange);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认松开夹爪？</div><div style="color:var(--text-secondary);font-size:12px">目标开合度: 100%</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">执行</button>`);
+    });
+
+    document.getElementById('btnGripForce').addEventListener('click', () => {
+      openModal('力控模式', `<div class="form-group"><label class="form-label">力控类型</label><select class="form-select"><option>恒力抓取</option><option>自适应抓取</option><option>位置+力混合</option></select></div><div class="form-row"><div class="form-group"><label class="form-label">目标力值</label><input type="text" class="form-input" value="15"></div><div class="form-group"><label class="form-label">单位</label><select class="form-select"><option>N</option><option>kgf</option></select></div></div><div class="form-group"><label class="form-label">灵敏度</label><input type="text" class="form-input" value="中"></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-success" onclick="closeModal()">启动</button>`);
+    });
+
+    document.getElementById('btnMovL').addEventListener('click', () => {
+      openModal('直线运动 MovL', `<div class="form-group"><label class="form-label">目标位置</label><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><input type="text" class="form-input" value="412.5" placeholder="X"><input type="text" class="form-input" value="87.3" placeholder="Y"><input type="text" class="form-input" value="-156.8" placeholder="Z"></div></div><div class="form-row"><div class="form-group"><label class="form-label">速度 mm/s</label><input type="text" class="form-input" value="120"></div><div class="form-group"><label class="form-label">加速度</label><input type="text" class="form-input" value="1000"></div></div><div class="checkbox-group" style="margin-top:8px"><label class="checkbox-item"><input type="checkbox" checked><span>碰撞检测启用</span></label><label class="checkbox-item"><input type="checkbox"><span>平滑过渡</span></label></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">执行</button>`);
+    });
+
+    document.getElementById('btnMovJ').addEventListener('click', () => {
+      openModal('关节运动 MovJ', `<div class="form-group"><label class="form-label">目标关节角度</label><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><input type="text" class="form-input" value="45.2" placeholder="J1"><input type="text" class="form-input" value="-32.8" placeholder="J2"><input type="text" class="form-input" value="78.1" placeholder="J3"></div></div><div class="form-group"><label class="form-label">速度 %</label><input type="text" class="form-input" value="50"></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">执行</button>`);
+    });
+
+    document.getElementById('btnMovC').addEventListener('click', () => {
+      openModal('圆弧运动 MovC', `<div class="form-group"><label class="form-label">经过点位置</label><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><input type="text" class="form-input" placeholder="X"><input type="text" class="form-input" placeholder="Y"><input type="text" class="form-input" placeholder="Z"></div></div><div class="form-group"><label class="form-label">终点位置</label><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><input type="text" class="form-input" placeholder="X"><input type="text" class="form-input" placeholder="Y"><input type="text" class="form-input" placeholder="Z"></div></div><div class="form-group"><label class="form-label">速度 mm/s</label><input type="text" class="form-input" value="80"></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">执行</button>`);
+    });
+
+    document.getElementById('btnHomeAll').addEventListener('click', () => {
+      openModal('回零位', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-house" style="font-size:48px;color:var(--accent-blue);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认执行回零位？</div><div style="color:var(--text-secondary);font-size:12px">机器人将运动到预设零位姿态</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">执行</button>`);
+    });
+
+    document.getElementById('btnTeach').addEventListener('click', () => {
+      openModal('示教记录', `<div class="form-group"><label class="form-label">示教项目</label><input type="text" class="form-input" placeholder="请输入示教项目名称"></div><div class="form-group"><label class="form-label">记录模式</label><select class="form-select"><option>连续记录</option><option>关键点记录</option></select></div><div class="checkbox-group" style="margin-top:8px"><label class="checkbox-item"><input type="checkbox" checked><span>记录关节角度</span></label><label class="checkbox-item"><input type="checkbox" checked><span>记录TCP位置</span></label></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-success" onclick="closeModal()">开始记录</button>`);
+    });
+
+    document.getElementById('btnPathPlay').addEventListener('click', () => {
+      openModal('路径回放', `<div class="form-group"><label class="form-label">选择示教轨迹</label><select class="form-select"><option>示教轨迹-001</option><option>示教轨迹-002</option></select></div><div class="form-row"><div class="form-group"><label class="form-label">速度比例</label><input type="text" class="form-input" value="100"></div><div class="form-group"><label class="form-label">循环次数</label><input type="text" class="form-input" value="1"></div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">开始回放</button>`);
+    });
+
+    document.getElementById('btnCollision').addEventListener('click', () => {
+      openModal('碰撞检测', `<div class="form-group"><label class="form-label">检测灵敏度</label><select class="form-select"><option>低</option><option selected>中</option><option>高</option></select></div><div class="form-group"><label class="form-label">碰撞力阈值 (N)</label><input type="text" class="form-input" value="50"></div><div class="checkbox-group" style="margin-top:8px"><label class="checkbox-item"><input type="checkbox" checked><span>碰撞后自动暂停</span></label><label class="checkbox-item"><input type="checkbox" checked><span>碰撞后自动回退</span></label></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">应用</button>`);
+    });
+
+    document.getElementById('btnSingular').addEventListener('click', () => {
+      openModal('奇异点规避', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-exclamation" style="font-size:48px;color:var(--accent-orange);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">奇异点规避功能</div><div style="color:var(--text-secondary);font-size:12px">启用后将自动规划规避奇异点的路径</div></div><div class="checkbox-group" style="margin-top:8px"><label class="checkbox-item"><input type="checkbox" checked><span>自动规避</span></label><label class="checkbox-item"><input type="checkbox" checked><span>接近奇异点时预警</span></label></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">启用</button>`);
+    });
+
+    document.getElementById('btnEStop').addEventListener('click', () => {
+      openModal('紧急停止', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-octagon-xmark" style="font-size:48px;color:var(--accent-red);margin-bottom:16px"></i><div style="color:var(--accent-red);font-size:14px;margin-bottom:8px;font-weight:600">警告：此操作将立即停止所有运动！</div><div style="color:var(--text-secondary);font-size:12px">请确认是否执行紧急停止</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="closeModal()">确认急停</button>`);
+    });
+
+    document.querySelectorAll('.coord-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.coord-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    document.getElementById('speedSlider').addEventListener('input', function() {
+      document.getElementById('speedDisplay').textContent = this.value;
+    });
+
+    document.getElementById('sliderX').addEventListener('input', function() { document.getElementById('xval').textContent = (this.value / 1).toFixed(2) + ' mm'; });
+    document.getElementById('sliderY').addEventListener('input', function() { document.getElementById('yval').textContent = (this.value / 1).toFixed(2) + ' mm'; });
+    document.getElementById('sliderZ').addEventListener('input', function() { document.getElementById('zval').textContent = (this.value / 1).toFixed(2) + ' mm'; });
+    document.getElementById('sliderRx').addEventListener('input', function() { document.getElementById('rxval').textContent = (this.value / 1).toFixed(2) + ' deg'; });
+    document.getElementById('sliderRy').addEventListener('input', function() { document.getElementById('ryval').textContent = (this.value / 1).toFixed(2) + ' deg'; });
+    document.getElementById('sliderRz').addEventListener('input', function() { document.getElementById('rzval').textContent = (this.value / 1).toFixed(2) + ' deg'; });
+  </script>
+</body>
+
+</html>

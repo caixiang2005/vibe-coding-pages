@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>结算处理 - 交易履约流程结算系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", "SimSun", sans-serif; }
+        body { background: #0078d4; height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .window { width: 100%; max-width: 1400px; height: 90vh; background: #f0f0f0; border: 1px solid #707070; box-shadow: 0 8px 32px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+        .title-bar { background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%); border-bottom: 1px solid #c0c0c0; display: flex; justify-content: space-between; align-items: center; padding: 0; height: 32px; user-select: none; }
+        .title-bar-left { display: flex; align-items: center; padding-left: 8px; gap: 8px; }
+        .title-bar-left i { color: #0078d4; font-size: 14px; }
+        .title-bar-left span { font-size: 12px; color: #333; }
+        .window-controls { display: flex; height: 100%; }
+        .window-controls button { width: 46px; height: 100%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
+        .window-controls button:hover { background: #e5e5e5; }
+        .window-controls .close-btn:hover { background: #e81123; }
+        .window-controls .close-btn:hover i { color: white; }
+        .window-controls i { font-size: 10px; color: #333; }
+        .toolbar { background: linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%); border-bottom: 1px solid #c0c0c0; display: flex; align-items: center; padding: 4px 8px; gap: 2px; flex-wrap: wrap; }
+        .toolbar-btn { width: 28px; height: 26px; border: 1px solid transparent; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 2px; }
+        .toolbar-btn:hover { background: #cce8ff; border-color: #99d1ff; }
+        .toolbar-btn i { font-size: 12px; color: #555; }
+        .toolbar-separator { width: 1px; height: 20px; background: #c0c0c0; margin: 0 4px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; background: #ffffff; overflow: hidden; }
+        .content-header { background: linear-gradient(180deg, #6b9dc8 0%, #5a8cb8 100%); color: white; padding: 8px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .info-panel { background: #f8f8f8; border-bottom: 1px solid #d0d0d0; padding: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px; }
+        .info-item { display: flex; gap: 8px; }
+        .info-label { color: #666; min-width: 80px; }
+        .info-value { color: #333; font-weight: 500; }
+        .action-bar { background: #f5f5f5; border-bottom: 1px solid #d0d0d0; padding: 8px 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .action-btn { padding: 5px 15px; border: 1px solid #ababab; background: linear-gradient(180deg, #f8f8f8 0%, #e8e8e8 100%); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .action-btn:hover { background: linear-gradient(180deg, #e5f3ff 0%, #cce8ff 100%); border-color: #99d1ff; }
+        .action-btn i { font-size: 11px; color: #555; }
+        .quick-filters { background: #f8f8f8; border-bottom: 1px solid #d0d0d0; padding: 8px 12px; display: flex; align-items: center; gap: 12px; font-size: 12px; }
+        .filter-group { display: flex; align-items: center; gap: 6px; }
+        .filter-group label { color: #555; }
+        .filter-group input, .filter-group select { padding: 4px 8px; border: 1px solid #ababab; font-size: 12px; }
+        .data-table-container { overflow: auto; flex: 1; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table th { background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%); border: 1px solid #c0c0c0; padding: 8px 6px; text-align: left; font-weight: normal; color: #333; white-space: nowrap; position: sticky; top: 0; }
+        .data-table td { border: 1px solid #d0d0d0; padding: 6px; background: #fff; }
+        .data-table tr:hover td { background: #e5f3ff; cursor: pointer; }
+        .data-table tr.selected td { background: #cce8ff; }
+        .status-pending { color: #d97706; }
+        .status-completed { color: #059669; }
+        .status-processing { color: #2563eb; }
+        .amount { text-align: right; font-family: "Consolas", monospace; }
+        .highlight-yellow { background: #fff9c4 !important; }
+        .log-panel { background: #fffde7; border-top: 3px solid #81d4fa; padding: 10px; font-size: 12px; max-height: 100px; overflow: auto; }
+        .log-title { background: #81d4fa; color: #333; padding: 4px 8px; margin: -10px -10px 10px -10px; font-weight: bold; }
+        .log-item { padding: 2px 0; color: #333; border-bottom: 1px dotted #e0e0e0; }
+        .status-bar { background: #f0f0f0; border-top: 1px solid #c0c0c0; padding: 4px 12px; font-size: 11px; color: #666; display: flex; justify-content: space-between; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #f0f0f0; border: 1px solid #707070; box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 700px; width: 95%; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-title-bar { background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%); border-bottom: 1px solid #c0c0c0; display: flex; justify-content: space-between; align-items: center; padding: 0; height: 32px; }
+        .modal-title-bar span { padding-left: 10px; font-size: 12px; color: #333; text-align: center; flex: 1; }
+        .modal-close { width: 46px; height: 100%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #e81123; }
+        .modal-close:hover i { color: white; }
+        .modal-close i { font-size: 10px; color: #333; }
+        .modal-content { padding: 20px; overflow: auto; flex: 1; }
+        .form-section { margin-bottom: 20px; }
+        .form-section-title { background: linear-gradient(180deg, #6b9dc8 0%, #5a8cb8 100%); color: white; padding: 6px 10px; font-size: 12px; font-weight: bold; margin-bottom: 12px; text-align: center; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group.full-width { grid-column: span 2; }
+        .form-group label { font-size: 12px; color: #333; text-align: right; }
+        .form-group label .required { color: #e53935; }
+        .form-group input, .form-group select, .form-group textarea { padding: 6px 8px; border: 1px solid #ababab; font-size: 12px; background: #fff; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #0078d4; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .modal-footer { background: #f0f0f0; border-top: 1px solid #c0c0c0; padding: 12px 20px; display: flex; justify-content: center; gap: 12px; }
+        .btn { padding: 6px 20px; border: 1px solid #ababab; background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%); font-size: 12px; cursor: pointer; min-width: 80px; }
+        .btn:hover { background: linear-gradient(180deg, #e8e8e8 0%, #d5d5d5 100%); }
+        .btn-primary { background: linear-gradient(180deg, #0078d4 0%, #006cbd 100%); color: white; border-color: #005a9e; }
+        .btn-primary:hover { background: linear-gradient(180deg, #006cbd 0%, #005a9e 100%); }
+        .btn-danger { background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%); color: white; border-color: #991b1b; }
+        .nav-links { display: flex; gap: 8px; margin-left: auto; }
+        .nav-link { padding: 4px 12px; background: rgba(255,255,255,0.1); border-radius: 3px; color: white; text-decoration: none; font-size: 11px; }
+        .nav-link:hover { background: rgba(255,255,255,0.2); }
+        .nav-link.active { background: rgba(255,255,255,0.3); }
+        ::-webkit-scrollbar { width: 16px; height: 16px; }
+        ::-webkit-scrollbar-track { background: #f0f0f0; }
+        ::-webkit-scrollbar-thumb { background: #c0c0c0; border: 3px solid #f0f0f0; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+        .message { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 25px; background: #4caf50; color: white; border-radius: 4px; font-size: 13px; z-index: 2000; display: none; }
+        .message.error { background: #f44336; }
+        .tab-nav { background: #e8e8e8; display: flex; padding: 4px 8px 0; gap: 2px; border-bottom: 1px solid #c0c0c0; }
+        .tab-btn { padding: 8px 20px; background: #d8d8d8; border: 1px solid #b0b0b0; border-bottom: none; cursor: pointer; font-size: 12px; color: #333; border-radius: 3px 3px 0 0; position: relative; top: 1px; }
+        .tab-btn:hover { background: #e5e5e5; }
+        .tab-btn.active { background: #ffffff; border-color: #c0c0c0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="title-bar-left">
+                <i class="fas fa-exchange-alt"></i>
+                <span>交易履约流程结算系统</span>
+            </div>
+            <div class="window-controls">
+                <button class="minimize-btn"><i class="fas fa-minus"></i></button>
+                <button class="maximize-btn"><div style="width:10px;height:10px;border:1px solid #333;background:transparent;"></div></button>
+                <button class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="toolbar">
+            <button class="toolbar-btn" title="创建结算单" onclick="showModal('settlement')"><i class="fas fa-file-invoice-dollar"></i></button>
+            <button class="toolbar-btn" title="结算审批" onclick="showModal('approve')"><i class="fas fa-check-double"></i></button>
+            <button class="toolbar-btn" title="付款申请" onclick="showModal('payment')"><i class="fas fa-money-check-alt"></i></button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" title="发票管理" onclick="showModal('invoice')"><i class="fas fa-file-invoice"></i></button>
+            <button class="toolbar-btn" title="费用核算" onclick="showModal('fee')"><i class="fas fa-calculator"></i></button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" title="刷新" onclick="refreshData()"><i class="fas fa-sync-alt"></i></button>
+            <button class="toolbar-btn" title="打印" onclick="printData()"><i class="fas fa-print"></i></button>
+            <button class="toolbar-btn" title="导出" onclick="exportData()"><i class="fas fa-file-export"></i></button>
+        </div>
+        <div class="tab-nav">
+            <button class="tab-btn" onclick="window.location.href='index.html'">合同登记</button>
+            <button class="tab-btn" onclick="window.location.href='fulfill.html'">履约跟踪</button>
+            <button class="tab-btn active">结算处理</button>
+            <button class="tab-btn" onclick="window.location.href='reconcile.html'">对账管理</button>
+            <button class="tab-btn" onclick="window.location.href='report.html'">报表统计</button>
+        </div>
+        <div class="main-content">
+            <div class="content-header">结算处理中心</div>
+            <div class="info-panel">
+                <div class="info-item"><span class="info-label">待结算单:</span><span class="info-value">15 笔</span></div>
+                <div class="info-item"><span class="info-label">待结算金额:</span><span class="info-value">2,458,600.00 元</span></div>
+                <div class="info-item"><span class="info-label">本月已结算:</span><span class="info-value">1,850,000.00 元</span></div>
+                <div class="info-item"><span class="info-label">待付款:</span><span class="info-value">6 笔</span></div>
+            </div>
+            <div class="action-bar">
+                <button class="action-btn" onclick="showModal('settlement')"><i class="fas fa-file-invoice-dollar"></i> 创建结算单</button>
+                <button class="action-btn" onclick="showModal('approve')"><i class="fas fa-check-double"></i> 结算审批</button>
+                <button class="action-btn" onclick="showModal('payment')"><i class="fas fa-money-check-alt"></i> 付款申请</button>
+                <button class="action-btn" onclick="showModal('invoice')"><i class="fas fa-file-invoice"></i> 发票管理</button>
+                <button class="action-btn" onclick="showModal('fee')"><i class="fas fa-calculator"></i> 费用核算</button>
+                <button class="action-btn" onclick="viewDetail()"><i class="fas fa-eye"></i> 查看详情</button>
+            </div>
+            <div class="quick-filters">
+                <div class="filter-group"><label>结算单号:</label><input type="text" placeholder="输入查询" style="width:120px;"></div>
+                <div class="filter-group"><label>结算日期:</label><input type="date"><span>至</span><input type="date"></div>
+                <div class="filter-group"><label>状态:</label><select><option>全部</option><option>待审批</option><option>已审批</option><option>已付款</option></select></div>
+                <button class="action-btn" style="margin-left:auto;" onclick="searchData()"><i class="fas fa-search"></i> 查询</button>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox"></th><th>结算单号</th><th>合同编号</th><th>供应商</th><th>结算类型</th><th>金额</th><th>税额</th><th>价税合计</th><th>币种</th><th>结算日期</th><th>状态</th></tr></thead>
+                    <tbody id="tableBody">
+                        <tr onclick="selectRow(this)" data-id="1"><td><input type="checkbox"></td><td>JS2024030001</td><td>HT2024030001</td><td>深圳市鑫达电子有限公司</td><td>货物采购</td><td class="amount">442,477.88</td><td class="amount">57,522.12</td><td class="amount">500,000.00</td><td>CNY</td><td>2024-03-22</td><td class="status-completed">已付款</td></tr>
+                        <tr onclick="selectRow(this)" data-id="2" class="highlight-yellow"><td><input type="checkbox"></td><td>JS2024030002</td><td>HT2024030001</td><td>深圳市鑫达电子有限公司</td><td>货物采购</td><td class="amount">265,486.73</td><td class="amount">34,513.27</td><td class="amount">300,000.00</td><td>CNY</td><td>2024-03-25</td><td class="status-pending">待审批</td></tr>
+                        <tr onclick="selectRow(this)" data-id="3"><td><input type="checkbox"></td><td>JS2024030003</td><td>HT2024030002</td><td>北京宏远机械科技有限公司</td><td>服务费用</td><td class="amount">226,415.09</td><td class="amount">13,584.91</td><td class="amount">240,000.00</td><td>CNY</td><td>2024-03-20</td><td class="status-completed">已审批</td></tr>
+                        <tr onclick="selectRow(this)" data-id="4"><td><input type="checkbox"></td><td>JS2024030004</td><td>HT2024030004</td><td>中远海运物流有限公司</td><td>物流费用</td><td class="amount">113,207.55</td><td class="amount">6,792.45</td><td class="amount">120,000.00</td><td>CNY</td><td>2024-03-25</td><td class="status-processing">审批中</td></tr>
+                        <tr onclick="selectRow(this)" data-id="5"><td><input type="checkbox"></td><td>JS2024030005</td><td>HT2024030005</td><td>杭州云智科技股份有限公司</td><td>软件开发</td><td class="amount">641,509.43</td><td class="amount">38,490.57</td><td class="amount">680,000.00</td><td>CNY</td><td>2024-03-18</td><td class="status-completed">已付款</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="log-panel"><div class="log-title">结算动态</div><div class="log-item">2024-03-26 08:45:22 结算单 JS2024030002 已提交审批流程</div><div class="log-item">2024-03-25 17:30:18 结算单 JS2024030004 财务主管审批通过</div></div>
+        </div>
+        <div class="status-bar"><span>共 5 条记录</span><span>当前用户: 李金栓</span></div>
+    </div>
+
+    <div class="modal-overlay" id="modal-settlement"><div class="modal"><div class="modal-title-bar"><span>创建结算单</span><button class="modal-close" onclick="closeModal('settlement')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="form-section"><div class="form-section-title">结算信息</div><div class="form-grid"><div class="form-group"><label>结算单号</label><input type="text" value="JS2024030006" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>结算日期</label><input type="date" value="2024-03-26"></div><div class="form-group"><label>合同编号 <span class="required">*</span></label><select><option>请选择合同</option><option>HT2024030001</option><option>HT2024030004</option></select></div><div class="form-group"><label>供应商</label><input type="text" placeholder="选择合同后自动填充" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>结算类型</label><select><option>货物采购</option><option>服务费用</option><option>物流费用</option><option>其他</option></select></div><div class="form-group"><label>金额 <span class="required">*</span></label><input type="number" placeholder="0.00"></div><div class="form-group"><label>税率</label><select><option>13%</option><option>6%</option><option>3%</option><option>0%</option></select></div><div class="form-group"><label>税额</label><input type="number" placeholder="自动计算" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>价税合计</label><input type="number" placeholder="自动计算" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>付款方式</label><select><option>银行转账</option><option>票据</option><option>现金</option></select></div><div class="form-group full-width"><label>结算说明</label><textarea placeholder="请输入结算说明"></textarea></div></div></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('settlement')">取消</button><button class="btn btn-primary" onclick="saveSettlement()">保存</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-approve"><div class="modal"><div class="modal-title-bar"><span>结算审批</span><button class="modal-close" onclick="closeModal('approve')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="form-section"><div class="form-section-title">审批信息</div><div class="form-grid"><div class="form-group"><label>结算单号</label><input type="text" value="JS2024030002" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>申请人</label><input type="text" value="李金栓" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>申请金额</label><input type="text" value="300,000.00" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>审批结果</label><select id="approveResult"><option value="">请选择</option><option value="pass">审批通过</option><option value="reject">审批驳回</option></select></div><div class="form-group"><label>审批人</label><input type="text" value="财务主管" readonly style="background:#e8e8e8;"></div><div class="form-group full-width"><label>审批意见</label><textarea id="approveComment" placeholder="请输入审批意见"></textarea></div></div></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('approve')">取消</button><button class="btn btn-primary" onclick="submitApprove()">提交</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-payment"><div class="modal"><div class="modal-title-bar"><span>付款申请</span><button class="modal-close" onclick="closeModal('payment')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="form-section"><div class="form-section-title">付款信息</div><div class="form-grid"><div class="form-group"><label>结算单号</label><select><option>JS2024030003</option><option>JS2024030004</option></select></div><div class="form-group"><label>付款金额</label><input type="text" value="240,000.00" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>收款单位</label><input type="text" value="北京宏远机械科技有限公司" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>开户银行</label><input type="text" placeholder="请输入开户银行"></div><div class="form-group"><label>银行账号</label><input type="text" placeholder="请输入银行账号"></div><div class="form-group"><label>付款方式</label><select><option>银行转账</option><option>承兑汇票</option><option>信用证</option></select></div><div class="form-group"><label>预计付款日</label><input type="date"></div><div class="form-group full-width"><label>付款用途</label><textarea placeholder="请输入付款用途"></textarea></div></div></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('payment')">取消</button><button class="btn btn-primary" onclick="submitPayment()">提交</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-invoice"><div class="modal"><div class="modal-title-bar"><span>发票管理</span><button class="modal-close" onclick="closeModal('invoice')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="form-section"><div class="form-section-title">发票信息</div><div class="form-grid"><div class="form-group"><label>发票号码</label><input type="text" placeholder="请输入发票号码"></div><div class="form-group"><label>发票类型</label><select><option>增值税专用发票</option><option>增值税普通发票</option></select></div><div class="form-group"><label>发票代码</label><input type="text" placeholder="请输入发票代码"></div><div class="form-group"><label>开票日期</label><input type="date" value="2024-03-26"></div><div class="form-group"><label>发票金额</label><input type="number" placeholder="0.00"></div><div class="form-group"><label>税额</label><input type="number" placeholder="0.00"></div><div class="form-group"><label>价税合计</label><input type="number" placeholder="0.00"></div><div class="form-group"><label>关联结算单</label><select><option>JS2024030003</option></select></div><div class="form-group full-width"><label>备注</label><textarea placeholder="请输入备注"></textarea></div></div></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('invoice')">取消</button><button class="btn btn-primary" onclick="saveInvoice()">保存</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-fee"><div class="modal"><div class="modal-title-bar"><span>费用核算</span><button class="modal-close" onclick="closeModal('fee')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="form-section"><div class="form-section-title">费用明细</div><div class="form-grid"><div class="form-group"><label>合同编号</label><select><option>请选择合同</option><option>HT2024030001</option></select></div><div class="form-group"><label>订单金额</label><input type="text" value="1,250,000.00" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>已结算金额</label><input type="text" value="500,000.00" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>本次结算金额</label><input type="number" placeholder="0.00"></div><div class="form-group"><label>服务费</label><input type="number" value="0.00"></div><div class="form-group"><label>税费</label><input type="number" placeholder="自动计算" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>其他费用</label><input type="number" value="0.00"></div><div class="form-group"><label>应付总额</label><input type="text" placeholder="自动计算" readonly style="background:#e8e8e8;"></div><div class="form-group full-width"><label>核算说明</label><textarea placeholder="请输入核算说明"></textarea></div></div></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('fee')">取消</button><button class="btn btn-primary" onclick="saveFee()">核算</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-detail"><div class="modal" style="max-width:800px;"><div class="modal-title-bar"><span>结算详情</span><button class="modal-close" onclick="closeModal('detail')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="form-section"><div class="form-section-title">结算信息</div><div class="form-grid"><div class="form-group"><label>结算单号</label><input type="text" value="JS2024030002" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>合同编号</label><input type="text" value="HT2024030001" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>供应商</label><input type="text" value="深圳市鑫达电子有限公司" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>结算类型</label><input type="text" value="货物采购" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>结算金额</label><input type="text" value="265,486.73" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>税额</label><input type="text" value="34,513.27" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>价税合计</label><input type="text" value="300,000.00" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>状态</label><input type="text" value="待审批" readonly style="background:#e8e8e8;"></div></div></div></div><div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('detail')">关闭</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-message"><div class="modal" style="max-width:400px;"><div class="modal-title-bar"><span id="msgTitle">提示</span><button class="modal-close" onclick="closeModal('message')"><i class="fas fa-times"></i></button></div><div class="modal-content" style="text-align:center;padding:30px;"><i id="msgIcon" class="fas fa-check-circle" style="font-size:48px;color:#4caf50;margin-bottom:15px;"></i><p id="msgText" style="font-size:14px;color:#333;"></p></div><div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('message')">确定</button></div></div></div>
+
+    <div class="message" id="toastMessage"></div>
+
+    <script>
+        let selectedRow = null;
+        function selectRow(row) {
+            document.querySelectorAll('.data-table tbody tr').forEach(r => r.classList.remove('selected'));
+            row.classList.add('selected');
+            selectedRow = row;
+        }
+        function switchTab(tab) {
+            window.location.href = tab + '.html';
+        }
+        function showModal(id) { document.getElementById('modal-' + id).classList.add('active'); }
+        function closeModal(id) { document.getElementById('modal-' + id).classList.remove('active'); }
+        function showMessage(title, text, isError) {
+            document.getElementById('msgTitle').textContent = title;
+            document.getElementById('msgText').textContent = text;
+            document.getElementById('msgIcon').className = isError ? 'fas fa-times-circle' : 'fas fa-check-circle';
+            document.getElementById('msgIcon').style.color = isError ? '#f44336' : '#4caf50';
+            showModal('message');
+        }
+        function showToast(text, isError) {
+            const toast = document.getElementById('toastMessage');
+            toast.textContent = text;
+            toast.className = isError ? 'message error' : 'message';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+        function saveSettlement() { showToast('结算单创建成功'); closeModal('settlement'); }
+        function submitApprove() { showToast('审批已提交'); closeModal('approve'); }
+        function submitPayment() { showToast('付款申请已提交'); closeModal('payment'); }
+        function saveInvoice() { showToast('发票信息已保存'); closeModal('invoice'); }
+        function saveFee() { showToast('费用核算完成'); closeModal('fee'); }
+        function viewDetail() { if (!selectedRow) { showToast('请先选择结算单', true); return; } showModal('detail'); }
+        function refreshData() { showToast('数据已刷新'); }
+        function printData() { showToast('正在准备打印...'); setTimeout(() => window.print(), 500); }
+        function exportData() { showToast('正在导出数据...'); }
+        function searchData() { showToast('查询完成'); }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(overlay.id.replace('modal-', '')); });
+        });
+    </script>
+</body>
+</html>

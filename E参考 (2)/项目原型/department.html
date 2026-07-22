@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>企业与工艺 - 能源产业排污治理措施整合优化平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; background: #f0f0f0; background-image: url('./static/bg.jpeg'); background-size: cover; }
+        .dark body { background: #121212; }
+        .mac-window { width: 1200px; height: 800px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.3); display: flex; flex-direction: column; overflow: hidden; }
+        .dark .mac-window { background: rgba(45, 45, 48, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
+        .sidebar { width: 240px; background: rgba(246, 246, 246, 0.6); border-right: 1px solid rgba(0, 0, 0, 0.1); padding-top: 50px; }
+        .dark .sidebar { background: rgba(30, 30, 30, 0.6); border-right: 1px solid rgba(255, 255, 255, 0.05); }
+        .title-bar { height: 52px; display: flex; align-items: center; padding: 0 16px; -webkit-app-region: drag; border-bottom: 1px solid rgba(0,0,0,0.06); }
+        .dark .title-bar { border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .nav-item { transition: all 0.2s ease; }
+        .nav-item:hover { background: rgba(0, 0, 0, 0.05); border-radius: 6px; }
+        .dark .nav-item:hover { background: rgba(255, 255, 255, 0.1); }
+        .active-nav { background: rgba(0, 122, 255, 0.1); color: #007AFF; border-radius: 6px; }
+        .dark .active-nav { background: rgba(10, 132, 255, 0.25); color: #0A84FF; }
+        .mac-btn { transition: all 0.2s; cursor: pointer; }
+        .mac-btn:active { transform: scale(0.96); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; z-index: 200; }
+        .modal-content { background: white; border-radius: 12px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25); overflow: hidden; }
+        .dark .modal-content { background: #2C2C2E; }
+        .modal-header { height: 40px; background: #F5F5F7; border-bottom: 1px solid #E5E5E7; display: flex; align-items: center; padding: 0 16px; cursor: move; justify-content: space-between; }
+        .dark .modal-header { background: #1C1C1E; border-bottom-color: #38383A; }
+        .tab-btn { transition: all 0.2s; border-bottom: 2px solid transparent; }
+        .tab-btn.active { border-bottom-color: #007AFF; color: #007AFF; }
+        .enterprise-card { transition: all 0.2s; }
+        .enterprise-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+    <div class="mac-window relative">
+        <div class="title-bar absolute top-0 left-0 w-full z-50">
+            <div class="flex items-center w-full">
+                <div class="flex items-center space-x-2 mr-3">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57]" onclick="window.location.href='main.html'"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840]"></div>
+                </div>
+                <div class="flex-1 flex justify-center">
+                    <span class="text-[14px] font-medium tracking-tight text-gray-600 dark:text-gray-300 whitespace-nowrap">能源产业排污治理措施整合优化平台</span>
+                </div>
+                <div class="flex items-center gap-2 ml-3 no-drag" style="width: 56px;">
+                    <button class="text-gray-500 hover:text-blue-500 w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-white/10" onclick="toggleDarkMode()">
+                        <i class="fa-solid fa-sun" id="dark-mode-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-1 overflow-hidden">
+            <nav class="sidebar flex flex-col px-3">
+                <div class="space-y-1 mb-8 mt-4">
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="main.html">
+                        <i class="fa-solid fa-chart-simple mr-3 w-4"></i>治理看板
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="assignment.html">
+                        <i class="fa-solid fa-sliders mr-3 w-4"></i>措施配置
+                        <span class="ml-auto w-[20px] h-[20px] bg-red-500 text-white text-center text-[10px] px-1.5 rounded-full">8</span>
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm active-nav" href="department.html">
+                        <i class="fa-solid fa-industry mr-3 w-4"></i>企业与工艺
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="history.html">
+                        <i class="fa-solid fa-clock-rotate-left mr-3 w-4"></i>历史监测
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="settings.html">
+                        <i class="fa-solid fa-gear mr-3 w-4"></i>系统设置
+                    </a>
+                </div>
+                <div class="mt-auto p-4 mb-4">
+                    <div class="flex items-center gap-3 bg-white/60 dark:bg-white/10 p-3 rounded-lg border border-black/5 dark:border-white/10">
+                        <div class="w-8 h-8 rounded-full overflow-hidden border border-white/40">
+                            <img alt="User Avatar" class="w-full h-full object-cover" src="https://i.pravatar.cc/150?img=68"/>
+                        </div>
+                        <div class="text-xs">
+                            <div class="font-semibold text-gray-700 dark:text-gray-200">王敏</div>
+                            <div class="text-gray-500 dark:text-gray-400">登录用户</div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <main class="flex-1 overflow-y-auto pt-[52px] bg-white dark:bg-[#1C1C1E]">
+                <div class="p-6">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold tracking-tight">企业与工艺</h2>
+                            <p class="text-sm text-gray-500">管理排污企业信息及生产工艺</p>
+                        </div>
+                        <button class="mac-btn px-3 py-1.5 bg-blue-500 text-white rounded-md text-xs font-medium shadow-sm hover:bg-blue-600" onclick="openModal('add-company-modal')">
+                            <i class="fa-solid fa-plus mr-1"></i>新增企业
+                        </button>
+                    </div>
+                    <div class="flex border-b border-gray-200 dark:border-white/10 mb-6">
+                        <button class="tab-btn active px-4 py-2 text-sm font-medium" onclick="switchTab(this, 'company')">企业列表</button>
+                        <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-500" onclick="switchTab(this, 'process')">工艺管理</button>
+                    </div>
+                    <div id="company-view">
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="enterprise-card p-4 bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm cursor-pointer" onclick="showCompanyDetail('华能电厂', '火电', '3000MW', 48, '98.5%', 12, 46)">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                        <i class="fa-solid fa-building text-blue-500"></i>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded">正常</span>
+                                </div>
+                                <h3 class="font-semibold text-sm mb-1">华能电厂</h3>
+                                <p class="text-xs text-gray-400 mb-3">火电 · 装机容量 3000MW</p>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-gray-400">监测点</span>
+                                    <span class="font-medium">48</span>
+                                </div>
+                                <div class="flex justify-between text-xs mt-1">
+                                    <span class="text-gray-400">达标率</span>
+                                    <span class="font-medium text-green-500">98.5%</span>
+                                </div>
+                            </div>
+                            <div class="enterprise-card p-4 bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm cursor-pointer" onclick="showCompanyDetail('中石化炼化', '石油化工', '1000万吨', 36, '89.2%', 8, 32)">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                                        <i class="fa-solid fa-industry text-orange-500"></i>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-yellow-100 text-yellow-600 text-xs rounded">警告</span>
+                                </div>
+                                <h3 class="font-semibold text-sm mb-1">中石化炼化</h3>
+                                <p class="text-xs text-gray-400 mb-3">石油化工 · 年加工 1000万吨</p>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-gray-400">监测点</span>
+                                    <span class="font-medium">36</span>
+                                </div>
+                                <div class="flex justify-between text-xs mt-1">
+                                    <span class="text-gray-400">达标率</span>
+                                    <span class="font-medium text-orange-500">89.2%</span>
+                                </div>
+                            </div>
+                            <div class="enterprise-card p-4 bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm cursor-pointer" onclick="showCompanyDetail('大唐煤业', '煤炭', '500万吨', 24, '95.8%', 6, 22)">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                                        <i class="fa-solid fa-mountain-sun text-green-500"></i>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded">正常</span>
+                                </div>
+                                <h3 class="font-semibold text-sm mb-1">大唐煤业</h3>
+                                <p class="text-xs text-gray-400 mb-3">煤炭 · 年产 500万吨</p>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-gray-400">监测点</span>
+                                    <span class="font-medium">24</span>
+                                </div>
+                                <div class="flex justify-between text-xs mt-1">
+                                    <span class="text-gray-400">达标率</span>
+                                    <span class="font-medium text-green-500">95.8%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="process-view" class="hidden">
+                        <div class="bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 dark:bg-white/5 text-xs text-gray-500">
+                                    <tr>
+                                        <th class="text-left px-4 py-3 font-medium">工艺名称</th>
+                                        <th class="text-left px-4 py-3 font-medium">所属企业</th>
+                                        <th class="text-left px-4 py-3 font-medium">工艺类型</th>
+                                        <th class="text-left px-4 py-3 font-medium">处理能力</th>
+                                        <th class="text-left px-4 py-3 font-medium">运行状态</th>
+                                        <th class="text-left px-4 py-3 font-medium">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <td class="px-4 py-3 font-medium">脱硫系统 #1</td>
+                                        <td class="px-4 py-3">华能电厂</td>
+                                        <td class="px-4 py-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded">烟气脱硫</span></td>
+                                        <td class="px-4 py-3">200万m³/h</td>
+                                        <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded">运行中</span></td>
+                                        <td class="px-4 py-3">
+                                            <button class="text-blue-500 hover:text-blue-700" onclick="showProcessDetail('脱硫系统 #1', '华能电厂', '烟气脱硫', '200万m³/h', '运行中')"><i class="fa-solid fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <td class="px-4 py-3 font-medium">除尘器 #2</td>
+                                        <td class="px-4 py-3">中石化炼化</td>
+                                        <td class="px-4 py-3"><span class="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs rounded">除尘</span></td>
+                                        <td class="px-4 py-3">150万m³/h</td>
+                                        <td class="px-4 py-3"><span class="px-2 py-0.5 bg-yellow-100 text-yellow-600 text-xs rounded">待检修</span></td>
+                                        <td class="px-4 py-3">
+                                            <button class="text-blue-500 hover:text-blue-700" onclick="showProcessDetail('除尘器 #2', '中石化炼化', '除尘', '150万m³/h', '待检修')"><i class="fa-solid fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <td class="px-4 py-3 font-medium">废水处理站</td>
+                                        <td class="px-4 py-3">大唐煤业</td>
+                                        <td class="px-4 py-3"><span class="px-2 py-0.5 bg-cyan-100 text-cyan-600 text-xs rounded">废水处理</span></td>
+                                        <td class="px-4 py-3">1000t/h</td>
+                                        <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded">运行中</span></td>
+                                        <td class="px-4 py-3">
+                                            <button class="text-blue-500 hover:text-blue-700" onclick="showProcessDetail('废水处理站', '大唐煤业', '废水处理', '1000t/h', '运行中')"><i class="fa-solid fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <div id="add-company-modal" class="modal-overlay hidden">
+            <div class="modal-content w-[500px]" id="add-company-modal-content">
+                <div class="modal-header" id="add-company-modal-header">
+                    <div class="flex items-center space-x-2" style="width: 60px;">
+                        <div class="w-3 h-3 rounded-full bg-[#FF5F57]" onclick="closeModal('add-company-modal')"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#28C840]"></div>
+                    </div>
+                    <span class="text-sm font-medium">新增企业</span>
+                    <div style="width: 60px;"></div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">企业名称</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入企业名称" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">所属行业</label>
+                        <select class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option>火电</option>
+                            <option>煤化工</option>
+                            <option>石油化工</option>
+                            <option>钢铁</option>
+                            <option>水泥</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">主要产品</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入主要产品或产能" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">联系人</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入联系人姓名" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">联系电话</label>
+                        <input type="tel" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入联系电话" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">企业地址</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入企业地址" />
+                    </div>
+                </div>
+                <div class="px-6 pb-6 flex justify-end gap-2">
+                    <button class="mac-btn px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/10" onclick="closeModal('add-company-modal')">取消</button>
+                    <button class="mac-btn px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600" onclick="submitCompany()">保存</button>
+                </div>
+            </div>
+        </div>
+        <div id="company-detail-modal" class="modal-overlay hidden">
+            <div class="modal-content w-[600px]" id="company-detail-modal-content">
+                <div class="modal-header" id="company-detail-modal-header">
+                    <div class="flex items-center space-x-2" style="width: 60px;">
+                        <div class="w-3 h-3 rounded-full bg-[#FF5F57]" onclick="closeModal('company-detail-modal')"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#28C840]"></div>
+                    </div>
+                    <span class="text-sm font-medium">企业详情</span>
+                    <div style="width: 60px;"></div>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-16 h-16 rounded-xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                            <i class="fa-solid fa-building text-2xl text-blue-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold">华能电厂</h3>
+                            <p class="text-sm text-gray-400">火电 · 装机容量 3000MW</p>
+                        </div>
+                        <span class="ml-auto px-3 py-1 bg-green-100 text-green-600 text-xs rounded-full">正常运营</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                            <div class="text-xs text-gray-400">监测点数量</div>
+                            <div class="text-lg font-bold">48</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                            <div class="text-xs text-gray-400">排放达标率</div>
+                            <div class="text-lg font-bold text-green-500">98.5%</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                            <div class="text-xs text-gray-400">配置措施</div>
+                            <div class="text-lg font-bold">12</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                            <div class="text-xs text-gray-400">在线设备</div>
+                            <div class="text-lg font-bold">46</div>
+                        </div>
+                    </div>
+                    <div class="h-48" id="company-chart"></div>
+                </div>
+                <div class="px-6 pb-6 flex justify-end gap-2">
+                    <button class="mac-btn px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/10" onclick="closeModal('company-detail-modal')">关闭</button>
+                    <button class="mac-btn px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600" onclick="editCompany()">编辑企业</button>
+                </div>
+            </div>
+        </div>
+        <div id="process-detail-modal" class="modal-overlay hidden">
+            <div class="modal-content w-[500px]" id="process-detail-modal-content">
+                <div class="modal-header" id="process-detail-modal-header">
+                    <div class="flex items-center space-x-2" style="width: 60px;">
+                        <div class="w-3 h-3 rounded-full bg-[#FF5F57]" onclick="closeModal('process-detail-modal')"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#28C840]"></div>
+                    </div>
+                    <span class="text-sm font-medium">工艺详情</span>
+                    <div style="width: 60px;"></div>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-14 h-14 rounded-xl bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                            <i class="fa-solid fa-gears text-purple-500 text-xl" id="process-icon"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold" id="process-name">工艺名称</h3>
+                            <p class="text-sm text-gray-400" id="process-company">所属企业</p>
+                        </div>
+                        <span class="ml-auto px-3 py-1 bg-green-100 text-green-600 text-xs rounded-full" id="process-status">运行中</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                            <div class="text-xs text-gray-400">工艺类型</div>
+                            <div class="text-sm font-medium" id="process-type">烟气脱硫</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                            <div class="text-xs text-gray-400">处理能力</div>
+                            <div class="text-sm font-medium" id="process-capacity">200万m³/h</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                            <div class="text-xs text-gray-400">今日处理量</div>
+                            <div class="text-sm font-medium">168万m³</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                            <div class="text-xs text-gray-400">效率</div>
+                            <div class="text-sm font-medium text-green-500">98.2%</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-2">运行参数</div>
+                        <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg text-xs space-y-1">
+                            <div class="flex justify-between"><span class="text-gray-400">入口温度</span><span>120°C</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">出口温度</span><span>45°C</span></div>
+                            <div class="flex justify-between"><span class="text-gray-400">浆液pH值</span><span>5.5</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 pb-6 flex justify-end gap-2">
+                    <button class="mac-btn px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/10" onclick="closeModal('process-detail-modal')">关闭</button>
+                    <button class="mac-btn px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600" onclick="editProcess()">编辑工艺</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-green-500 text-white text-sm shadow-lg hidden">保存成功！</div>
+    <script>
+        function switchTab(btn, view) {
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active', 'text-blue-500');
+                b.classList.add('text-gray-500');
+            });
+            btn.classList.add('active');
+            btn.classList.remove('text-gray-500');
+            if (view === 'company') {
+                document.getElementById('company-view').classList.remove('hidden');
+                document.getElementById('process-view').classList.add('hidden');
+            } else {
+                document.getElementById('company-view').classList.add('hidden');
+                document.getElementById('process-view').classList.remove('hidden');
+            }
+        }
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            enableDrag(id);
+            if (id === 'company-detail-modal') initCompanyChart();
+        }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        
+        function showCompanyDetail(name, industry, capacity, monitorPoints, compliance, measures, onlineDevices) {
+            document.querySelector('#company-detail-modal h3').textContent = name;
+            document.querySelector('#company-detail-modal p').textContent = industry + ' · ' + capacity;
+            
+            var statusEl = document.querySelector('#company-detail-modal .text-lg.font-bold');
+            statusEl.textContent = compliance;
+            if (compliance === '98.5%' || compliance === '95.8%') {
+                statusEl.className = 'text-lg font-bold text-green-500';
+                document.querySelector('#company-detail-modal .px-3').textContent = '正常运营';
+                document.querySelector('#company-detail-modal .px-3').className = 'ml-auto px-3 py-1 bg-green-100 text-green-600 text-xs rounded-full';
+            } else {
+                statusEl.className = 'text-lg font-bold text-orange-500';
+                document.querySelector('#company-detail-modal .px-3').textContent = '警告';
+                document.querySelector('#company-detail-modal .px-3').className = 'ml-auto px-3 py-1 bg-yellow-100 text-yellow-600 text-xs rounded-full';
+            }
+            
+            var stats = document.querySelectorAll('#company-detail-modal .p-3');
+            stats[0].querySelector('.text-lg').textContent = monitorPoints;
+            stats[1].querySelector('.text-lg').textContent = compliance;
+            stats[2].querySelector('.text-lg').textContent = measures;
+            stats[3].querySelector('.text-lg').textContent = onlineDevices;
+            
+            openModal('company-detail-modal');
+        }
+        
+        function editCompany() {
+            closeModal('company-detail-modal');
+            openModal('add-company-modal');
+            var title = document.querySelector('#add-company-modal-header .text-sm');
+            title.textContent = '编辑企业';
+            document.querySelector('#add-company-modal input[type="text"]').value = '华能电厂';
+        }
+        
+        function showProcessDetail(name, company, type, capacity, status) {
+            document.getElementById('process-name').textContent = name;
+            document.getElementById('process-company').textContent = company;
+            document.getElementById('process-type').textContent = type;
+            document.getElementById('process-capacity').textContent = capacity;
+            document.getElementById('process-status').textContent = status;
+            
+            var statusEl = document.getElementById('process-status');
+            if (status === '运行中') {
+                statusEl.className = 'ml-auto px-3 py-1 bg-green-100 text-green-600 text-xs rounded-full';
+            } else if (status === '待检修') {
+                statusEl.className = 'ml-auto px-3 py-1 bg-yellow-100 text-yellow-600 text-xs rounded-full';
+            }
+            
+            document.getElementById('process-detail-modal').classList.remove('hidden');
+            enableDrag('process-detail-modal');
+        }
+
+        function editProcess() {
+            var modal = document.getElementById('process-detail-modal-content');
+            var header = modal.querySelector('.text-sm.font-medium');
+            header.textContent = '编辑工艺';
+
+            var name = document.getElementById('process-name').textContent;
+            var company = document.getElementById('process-company').textContent;
+            var type = document.getElementById('process-type').textContent;
+            var capacity = document.getElementById('process-capacity').textContent;
+
+            var content = modal.querySelector('.p-6');
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">工艺名称</label>
+                        <input type="text" value="${name}" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" id="edit-process-name" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">所属企业</label>
+                        <select class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" id="edit-process-company">
+                            <option value="华能电厂" ${company === '华能电厂' ? 'selected' : ''}>华能电厂</option>
+                            <option value="中石化炼化" ${company === '中石化炼化' ? 'selected' : ''}>中石化炼化</option>
+                            <option value="大唐煤业" ${company === '大唐煤业' ? 'selected' : ''}>大唐煤业</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">工艺类型</label>
+                        <input type="text" value="${type}" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" id="edit-process-type" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">处理能力</label>
+                        <input type="text" value="${capacity}" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" id="edit-process-capacity" />
+                    </div>
+                </div>
+            `;
+
+            var footer = modal.querySelector('.px-6.pb-6');
+            footer.innerHTML = `
+                <button class="mac-btn px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/10" onclick="cancelEditProcess()">取消</button>
+                <button class="mac-btn px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600" onclick="saveProcess()">保存</button>
+            `;
+        }
+
+        function cancelEditProcess() {
+            var modal = document.getElementById('process-detail-modal-content');
+            var header = modal.querySelector('.text-sm.font-medium');
+            header.textContent = '工艺详情';
+
+            var content = modal.querySelector('.p-6');
+            content.innerHTML = `
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-14 h-14 rounded-xl bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                        <i class="fa-solid fa-gears text-purple-500 text-xl" id="process-icon"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold" id="process-name">${document.getElementById('edit-process-name').value}</h3>
+                        <p class="text-sm text-gray-400" id="process-company">${document.getElementById('edit-process-company').value}</p>
+                    </div>
+                    <span class="ml-auto px-3 py-1 bg-green-100 text-green-600 text-xs rounded-full" id="process-status">运行中</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                        <div class="text-xs text-gray-400">工艺类型</div>
+                        <div class="text-sm font-medium" id="process-type">${document.getElementById('edit-process-type').value}</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                        <div class="text-xs text-gray-400">处理能力</div>
+                        <div class="text-sm font-medium" id="process-capacity">${document.getElementById('edit-process-capacity').value}</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                        <div class="text-xs text-gray-400">今日处理量</div>
+                        <div class="text-sm font-medium">168万m³</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                        <div class="text-xs text-gray-400">效率</div>
+                        <div class="text-sm font-medium text-green-500">98.2%</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-400 mb-2">运行参数</div>
+                    <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg text-xs space-y-1">
+                        <div class="flex justify-between"><span class="text-gray-400">入口温度</span><span>120°C</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">出口温度</span><span>45°C</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">浆液pH值</span><span>5.5</span></div>
+                    </div>
+                </div>
+            `;
+
+            var footer = modal.querySelector('.px-6.pb-6');
+            footer.innerHTML = `
+                <button class="mac-btn px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/10" onclick="closeModal('process-detail-modal')">关闭</button>
+                <button class="mac-btn px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600" onclick="editProcess()">编辑工艺</button>
+            `;
+        }
+
+        function saveProcess() {
+            var newName = document.getElementById('edit-process-name').value;
+            var newCompany = document.getElementById('edit-process-company').value;
+            var newType = document.getElementById('edit-process-type').value;
+            var newCapacity = document.getElementById('edit-process-capacity').value;
+
+            document.getElementById('process-name').textContent = newName;
+            document.getElementById('process-company').textContent = newCompany;
+            document.getElementById('process-type').textContent = newType;
+            document.getElementById('process-capacity').textContent = newCapacity;
+
+            var modal = document.getElementById('process-detail-modal-content');
+            var header = modal.querySelector('.text-sm.font-medium');
+            header.textContent = '工艺详情';
+
+            var content = modal.querySelector('.p-6');
+            content.innerHTML = `
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-14 h-14 rounded-xl bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                        <i class="fa-solid fa-gears text-purple-500 text-xl" id="process-icon"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold" id="process-name">${newName}</h3>
+                        <p class="text-sm text-gray-400" id="process-company">${newCompany}</p>
+                    </div>
+                    <span class="ml-auto px-3 py-1 bg-green-100 text-green-600 text-xs rounded-full" id="process-status">运行中</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                        <div class="text-xs text-gray-400">工艺类型</div>
+                        <div class="text-sm font-medium" id="process-type">${newType}</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                        <div class="text-xs text-gray-400">处理能力</div>
+                        <div class="text-sm font-medium" id="process-capacity">${newCapacity}</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                        <div class="text-xs text-gray-400">今日处理量</div>
+                        <div class="text-sm font-medium">168万m³</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                        <div class="text-xs text-gray-400">效率</div>
+                        <div class="text-sm font-medium text-green-500">98.2%</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-400 mb-2">运行参数</div>
+                    <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-lg text-xs space-y-1">
+                        <div class="flex justify-between"><span class="text-gray-400">入口温度</span><span>120°C</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">出口温度</span><span>45°C</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">浆液pH值</span><span>5.5</span></div>
+                    </div>
+                </div>
+            `;
+
+            var footer = modal.querySelector('.px-6.pb-6');
+            footer.innerHTML = `
+                <button class="mac-btn px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/10" onclick="closeModal('process-detail-modal')">关闭</button>
+                <button class="mac-btn px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600" onclick="editProcess()">编辑工艺</button>
+            `;
+
+            var toast = document.getElementById('toast');
+            toast.textContent = '工艺信息已保存';
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2000);
+        }
+        
+        function submitCompany() {
+            closeModal('add-company-modal');
+            const toast = document.getElementById('toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2000);
+        }
+        function initCompanyChart() {
+            setTimeout(() => {
+                const macWindow = document.querySelector('.mac-window');
+                const isDark = macWindow.classList.contains('dark');
+                const textColor = isDark ? '#ffffff' : '#333333';
+                const chart = echarts.init(document.getElementById('company-chart'));
+                chart.setOption({
+                    tooltip: { trigger: 'axis' },
+                    xAxis: { type: 'category', data: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'], axisLabel: { color: textColor } },
+                    yAxis: { type: 'value', axisLabel: { color: textColor }, splitLine: { lineStyle: { opacity: 0.1 } } },
+                    series: [{
+                        name: '排放浓度',
+                        type: 'line',
+                        data: [45, 52, 38, 65, 42, 35],
+                        smooth: true,
+                        itemStyle: { color: '#007AFF' }
+                    }, {
+                        name: '排放限值',
+                        type: 'line',
+                        data: [50, 50, 50, 50, 50, 50],
+                        smooth: true,
+                        lineStyle: { type: 'dashed', color: '#FF3B30' },
+                        itemStyle: { color: '#FF3B30' }
+                    }]
+                });
+            }, 100);
+        }
+        function enableDrag(modalId) {
+            const modal = document.getElementById(modalId + '-content');
+            const header = document.getElementById(modalId + '-header');
+            let isDragging = false, startX, startY, initialLeft, initialTop;
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('w-3')) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = modal.getBoundingClientRect();
+                initialLeft = rect.left;
+                initialTop = rect.top;
+                modal.style.position = 'fixed';
+                modal.style.margin = '0';
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                modal.style.left = initialLeft + dx + 'px';
+                modal.style.top = initialTop + dy + 'px';
+            });
+            document.addEventListener('mouseup', function() { isDragging = false; });
+        }
+
+        function toggleDarkMode() {
+            var macWindow = document.querySelector('.mac-window');
+            macWindow.classList.toggle('dark');
+            var icon = document.getElementById('dark-mode-icon');
+            if (macWindow.classList.contains('dark')) {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('darkMode', 'false');
+            }
+        }
+
+        function initDarkMode() {
+            var macWindow = document.querySelector('.mac-window');
+            var icon = document.getElementById('dark-mode-icon');
+            var isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                macWindow.classList.add('dark');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initDarkMode);
+    </script>
+</body>
+</html>

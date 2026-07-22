@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水工结构渗漏趋势监测预警软件 - 系统主页</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "SimSun", sans-serif;
+        }
+
+        body {
+            background: #808080;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .window {
+            width: 1280px;
+            height: 800px;
+            background: #f0f0f0;
+            border: 1px solid #404040;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title-bar {
+            height: 32px;
+            background: linear-gradient(180deg, #1a3a5c 0%, #0d2137 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px 0 10px;
+            user-select: none;
+        }
+
+        .title-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .title-left i {
+            font-size: 14px;
+            color: #6cb2eb;
+        }
+
+        .title-user {
+            margin-left: 30px;
+            color: #a8c8e8;
+            font-size: 11px;
+        }
+
+        .window-controls {
+            display: flex;
+            height: 100%;
+        }
+
+        .win-btn {
+            width: 46px;
+            height: 100%;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .win-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .win-btn.close-btn:hover {
+            background: #e81123;
+        }
+
+        .min-icon {
+            width: 10px;
+            height: 1px;
+            background: #fff;
+        }
+
+        .max-icon {
+            width: 10px;
+            height: 10px;
+            border: 1px solid #fff;
+            background: transparent;
+        }
+
+        .close-icon {
+            position: relative;
+            width: 12px;
+            height: 12px;
+        }
+
+        .close-icon::before,
+        .close-icon::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 1px;
+            background: #fff;
+            top: 50%;
+            left: 50%;
+        }
+
+        .close-icon::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+        .close-icon::after {
+            transform: translate(-50%, -50%) rotate(-45deg);
+        }
+
+        .menu-bar {
+            height: 26px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #d0d0d0;
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+            font-size: 12px;
+        }
+
+        .menu-item {
+            padding: 4px 12px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background: #e5e5e5;
+        }
+
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
+            min-width: 180px;
+            z-index: 1000;
+        }
+
+        .menu-item:hover .menu-dropdown {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 6px 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dropdown-item:hover {
+            background: #0078d4;
+            color: #fff;
+        }
+
+        .dropdown-item i {
+            width: 14px;
+            font-size: 11px;
+        }
+
+        .menu-sep {
+            height: 1px;
+            background: #d0d0d0;
+            margin: 4px 0;
+        }
+
+        .toolbar {
+            height: 38px;
+            background: linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%);
+            border-bottom: 1px solid #b0b0b0;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            gap: 4px;
+        }
+
+        .tool-btn {
+            padding: 4px 10px;
+            border: 1px solid #b0b0b0;
+            background: linear-gradient(180deg, #fff 0%, #e8e8e8 100%);
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #333;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: linear-gradient(180deg, #e5f3ff 0%, #cce8ff 100%);
+            border-color: #0078d4;
+            transform: translateY(-1px);
+        }
+
+        .tool-btn:active {
+            transform: translateY(0);
+            background: #cce8ff;
+        }
+
+        .tool-btn i {
+            font-size: 12px;
+            color: #1a3a5c;
+        }
+
+        .tool-sep {
+            width: 1px;
+            height: 26px;
+            background: #c0c0c0;
+            margin: 0 6px;
+        }
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #d4d4d4;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 1px solid #a0a0a0;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            border-color: #0078d4;
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: #fff;
+        }
+
+        .stat-icon.blue { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .stat-icon.green { background: linear-gradient(135deg, #27ae60, #229954); }
+        .stat-icon.orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .stat-icon.red { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-num {
+            font-size: 30px;
+            font-weight: bold;
+            color: #1a3a5c;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .stat-trend {
+            font-size: 11px;
+            color: #27ae60;
+            margin-top: 3px;
+        }
+
+        .stat-trend.down {
+            color: #e74c3c;
+        }
+
+        .content-row {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+            margin-bottom: 10px;
+        }
+
+        .panel {
+            background: #fff;
+            border: 1px solid #808080;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-head {
+            height: 30px;
+            background: linear-gradient(180deg, #1a3a5c 0%, #0d2137 100%);
+            color: #fff;
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .panel-head i {
+            margin-right: 8px;
+        }
+
+        .panel-body {
+            flex: 1;
+            padding: 12px;
+            overflow: auto;
+        }
+
+        .chart-panel {
+            flex: 1.5;
+        }
+
+        .list-panel {
+            flex: 1;
+        }
+
+        .alert-list {
+            list-style: none;
+        }
+
+        .alert-item {
+            padding: 10px;
+            border-left: 3px solid #ccc;
+            margin-bottom: 8px;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .alert-item:hover {
+            background: #f0f0f0;
+            transform: translateX(3px);
+        }
+
+        .alert-item.level-red { border-left-color: #c0392b; }
+        .alert-item.level-orange { border-left-color: #e67e22; }
+        .alert-item.level-yellow { border-left-color: #f1c40f; }
+        .alert-item.level-blue { border-left-color: #3498db; }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .alert-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .alert-time {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .alert-content {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .alert-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 3px;
+            color: #fff;
+            margin-left: 6px;
+        }
+
+        .badge-red { background: #c0392b; }
+        .badge-orange { background: #e67e22; }
+        .badge-yellow { background: #f1c40f; color: #333; }
+        .badge-blue { background: #3498db; }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .quick-btn {
+            padding: 10px 8px;
+            border: 1px solid #a0a0a0;
+            background: linear-gradient(180deg, #fff 0%, #e8e8e8 100%);
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: linear-gradient(180deg, #e5f3ff 0%, #cce8ff 100%);
+            border-color: #0078d4;
+            transform: translateY(-2px);
+        }
+
+        .quick-btn i {
+            font-size: 18px;
+            color: #1a3a5c;
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .status-bar {
+            height: 26px;
+            background: #f0f0f0;
+            border-top: 1px solid #b0b0b0;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 11px;
+            color: #555;
+        }
+
+        .status-bar span {
+            margin-right: 30px;
+        }
+
+        .status-right {
+            margin-left: auto;
+        }
+
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a3a5c;
+            color: #fff;
+            padding: 10px 24px;
+            font-size: 12px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+            z-index: 3000;
+            display: none;
+        }
+
+        .toast.success { background: #27ae60; }
+        .toast.error { background: #c0392b; }
+        .toast.show { display: block; }
+
+        .modal-mask {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-mask.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #f0f0f0;
+            border: 1px solid #404040;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.4);
+            min-width: 520px;
+            max-width: 680px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-head {
+            height: 30px;
+            background: linear-gradient(180deg, #1a3a5c 0%, #0d2137 100%);
+            color: #fff;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #e81123;
+        }
+
+        .modal-content {
+            padding: 16px;
+            overflow-y: auto;
+            max-height: calc(85vh - 100px);
+        }
+
+        .modal-foot {
+            padding: 12px 16px;
+            background: #e0e0e0;
+            border-top: 1px solid #c0c0c0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-ok {
+            padding: 6px 22px;
+            font-size: 12px;
+            background: linear-gradient(180deg, #4a90d9 0%, #2d6aa0 100%);
+            color: #fff;
+            border: 1px solid #2d6aa0;
+            cursor: pointer;
+        }
+
+        .btn-ok:hover {
+            background: linear-gradient(180deg, #5a9fe9 0%, #3d7ab0 100%);
+        }
+
+        .btn-cancel {
+            padding: 6px 22px;
+            font-size: 12px;
+            background: linear-gradient(180deg, #f5f5f5 0%, #ddd 100%);
+            border: 1px solid #888;
+            cursor: pointer;
+        }
+
+        .btn-cancel:hover {
+            background: linear-gradient(180deg, #fff 0%, #eee 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="title-left">
+                <i class="fas fa-water"></i>
+                <span>水工结构渗漏趋势监测预警软件</span>
+                <span class="title-user">当前用户：李宁</span>
+            </div>
+            <div class="window-controls">
+                <button class="win-btn" title="最小化"><span class="min-icon"></span></button>
+                <button class="win-btn" title="最大化"><span class="max-icon"></span></button>
+                <button class="win-btn close-btn" title="关闭" onclick="exitApp()"><span class="close-icon"></span></button>
+            </div>
+        </div>
+
+        <div class="menu-bar">
+            <div class="menu-item">
+                <i class="fas fa-file"></i> 文件
+                <div class="menu-dropdown">
+                    <div class="dropdown-item" onclick="openModal('newProjectModal')"><i class="fas fa-plus"></i> 新建工程</div>
+                    <div class="dropdown-item" onclick="openModal('openProjectModal')"><i class="fas fa-folder-open"></i> 打开工程</div>
+                    <div class="menu-sep"></div>
+                    <div class="dropdown-item" onclick="toast('工程已保存','success')"><i class="fas fa-save"></i> 保存</div>
+                    <div class="dropdown-item" onclick="toast('工程另存为成功','success')"><i class="fas fa-save"></i> 另存为</div>
+                    <div class="menu-sep"></div>
+                    <div class="dropdown-item" onclick="exitApp()"><i class="fas fa-sign-out-alt"></i> 退出</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-edit"></i> 编辑
+                <div class="menu-dropdown">
+                    <div class="dropdown-item" onclick="toast('已撤销','')"><i class="fas fa-undo"></i> 撤销</div>
+                    <div class="dropdown-item" onclick="toast('已重做','')"><i class="fas fa-redo"></i> 重做</div>
+                    <div class="menu-sep"></div>
+                    <div class="dropdown-item" onclick="toast('已复制','')"><i class="fas fa-copy"></i> 复制</div>
+                    <div class="dropdown-item" onclick="toast('已粘贴','')"><i class="fas fa-paste"></i> 粘贴</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-chart-bar"></i> 视图
+                <div class="menu-dropdown">
+                    <div class="dropdown-item" onclick="location.href='dashboard.html'"><i class="fas fa-home"></i> 系统主页</div>
+                    <div class="dropdown-item" onclick="location.href='monitoring-points.html'"><i class="fas fa-map-marker-alt"></i> 监测点管理</div>
+                    <div class="dropdown-item" onclick="location.href='data-collection.html'"><i class="fas fa-database"></i> 数据采集</div>
+                    <div class="dropdown-item" onclick="location.href='alert-management.html'"><i class="fas fa-bell"></i> 预警管理</div>
+                    <div class="dropdown-item" onclick="location.href='trend-analysis.html'"><i class="fas fa-chart-line"></i> 趋势分析</div>
+                    <div class="menu-sep"></div>
+                    <div class="dropdown-item" onclick="location.href='report-management.html'"><i class="fas fa-file-alt"></i> 报表管理</div>
+                    <div class="dropdown-item" onclick="location.href='device-management.html'"><i class="fas fa-cogs"></i> 设备管理</div>
+                    <div class="dropdown-item" onclick="location.href='user-management.html'"><i class="fas fa-users"></i> 用户管理</div>
+                    <div class="dropdown-item" onclick="location.href='system-settings.html'"><i class="fas fa-cog"></i> 系统设置</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-tools"></i> 工具
+                <div class="menu-dropdown">
+                    <div class="dropdown-item" onclick="toast('数据已刷新','success')"><i class="fas fa-sync"></i> 刷新数据</div>
+                    <div class="dropdown-item" onclick="openModal('importModal')"><i class="fas fa-file-import"></i> 数据导入</div>
+                    <div class="dropdown-item" onclick="openModal('exportModal')"><i class="fas fa-file-export"></i> 数据导出</div>
+                    <div class="menu-sep"></div>
+                    <div class="dropdown-item" onclick="openModal('verifyModal')"><i class="fas fa-check-double"></i> 数据校验</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-question-circle"></i> 帮助
+                <div class="menu-dropdown">
+                    <div class="dropdown-item" onclick="openModal('helpModal')"><i class="fas fa-book"></i> 使用说明</div>
+                    <div class="dropdown-item" onclick="toast('已是最新版本','success')"><i class="fas fa-sync-alt"></i> 检查更新</div>
+                    <div class="menu-sep"></div>
+                    <div class="dropdown-item" onclick="openModal('aboutModal')"><i class="fas fa-info-circle"></i> 关于</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button class="tool-btn" onclick="location.href='monitoring-points.html'"><i class="fas fa-plus"></i>添加监测点</button>
+            <button class="tool-btn" onclick="location.href='data-collection.html'"><i class="fas fa-keyboard"></i>数据录入</button>
+            <span class="tool-sep"></span>
+            <button class="tool-btn" onclick="location.href='trend-analysis.html'"><i class="fas fa-chart-line"></i>趋势分析</button>
+            <button class="tool-btn" onclick="location.href='alert-management.html'"><i class="fas fa-exclamation-triangle"></i>预警记录</button>
+            <span class="tool-sep"></span>
+            <button class="tool-btn" onclick="openModal('alertSetModal')"><i class="fas fa-bell"></i>预警设置</button>
+            <button class="tool-btn" onclick="location.href='report-management.html'"><i class="fas fa-file-alt"></i>生成报告</button>
+        </div>
+
+        <div class="main-area">
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="location.href='monitoring-points.html'">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>监测点管理</span>
+                </button>
+                <button class="quick-btn" onclick="location.href='data-collection.html'">
+                    <i class="fas fa-keyboard"></i>
+                    <span>数据录入</span>
+                </button>
+                <button class="quick-btn" onclick="location.href='alert-management.html'">
+                    <i class="fas fa-bell"></i>
+                    <span>预警处置</span>
+                </button>
+                <button class="quick-btn" onclick="location.href='trend-analysis.html'">
+                    <i class="fas fa-chart-line"></i>
+                    <span>趋势分析</span>
+                </button>
+                <button class="quick-btn" onclick="location.href='report-management.html'">
+                    <i class="fas fa-file-alt"></i>
+                    <span>生成报告</span>
+                </button>
+                <button class="quick-btn" onclick="location.href='device-management.html'">
+                    <i class="fas fa-cogs"></i>
+                    <span>设备管理</span>
+                </button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="stat-card" onclick="location.href='monitoring-points.html'">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-num">52</div>
+                        <div class="stat-label">监测点总数</div>
+                        <div class="stat-trend"><i class="fas fa-arrow-up"></i> 较上月 +3</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" onclick="location.href='data-collection.html'">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-num">46</div>
+                        <div class="stat-label">正常运行</div>
+                        <div class="stat-trend"><i class="fas fa-arrow-up"></i> 运行率 88.5%</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" onclick="location.href='alert-management.html'">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-num" style="color:#e67e22">4</div>
+                        <div class="stat-label">黄色预警</div>
+                        <div class="stat-trend down"><i class="fas fa-arrow-down"></i> 较昨日 -2</div>
+                    </div>
+                </div>
+
+                <div class="stat-card" onclick="location.href='alert-management.html'">
+                    <div class="stat-icon red">
+                        <i class="fas fa-radiation"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-num" style="color:#c0392b">2</div>
+                        <div class="stat-label">红色预警</div>
+                        <div class="stat-trend down"><i class="fas fa-arrow-down"></i> 较昨日 -1</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-row" style="flex-direction:column;gap:12px;">
+                <!-- 第一行：渗流量和压力监测 -->
+                <div style="display:flex;gap:12px;flex:1;">
+                    <div class="panel chart-panel" style="flex:1;">
+                        <div class="panel-head">
+                            <span><i class="fas fa-tint"></i> 渗流量监测趋势图</span>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <select id="flowPointSelect" style="font-size:11px;padding:2px 6px;border:1px solid #ccc;border-radius:3px;cursor:pointer;" onchange="updateFlowChart()">
+                                    <option value="JC-FB-001">JC-FB-001 副坝廊道</option>
+                                    <option value="JC-ZB-003">JC-ZB-003 主坝右岸</option>
+                                    <option value="JC-XH-002">JC-XH-002 泄洪洞</option>
+                                </select>
+                                <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="refreshChart('flow')"><i class="fas fa-sync"></i> 刷新</span>
+                                <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="exportChartData('flow')"><i class="fas fa-download"></i> 导出</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <svg width="100%" height="100%" viewBox="0 0 300 200" id="flowChart">
+                                <defs>
+                                    <linearGradient id="flowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#3498db;stop-opacity:0.3" />
+                                        <stop offset="100%" style="stop-color:#3498db;stop-opacity:0.05" />
+                                    </linearGradient>
+                                </defs>
+                                <line x1="40" y1="170" x2="280" y2="170" stroke="#333" stroke-width="1"/>
+                                <line x1="40" y1="20" x2="40" y2="170" stroke="#333" stroke-width="1"/>
+                                <line x1="40" y1="57.5" x2="280" y2="57.5" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="95" x2="280" y2="95" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="132.5" x2="280" y2="132.5" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="40" x2="280" y2="40" stroke="#c0392b" stroke-width="1" stroke-dasharray="3"/>
+                                <polygon points="50,140 75,138 100,133 125,125 150,113 175,98 200,80 225,63 250,50 270,42 270,170 250,170 225,170 200,170 175,170 150,170 125,170 100,170 75,170 50,170" fill="url(#flowGradient)"/>
+                                <polyline points="50,140 75,138 100,133 125,125 150,113 175,98 200,80 225,63 250,50 270,42" fill="none" stroke="#3498db" stroke-width="2"/>
+                                <circle cx="50" cy="140" r="3" fill="#3498db"/>
+                                <circle cx="100" cy="133" r="3" fill="#3498db"/>
+                                <circle cx="150" cy="113" r="3" fill="#3498db"/>
+                                <circle cx="200" cy="80" r="3" fill="#f39c12"/>
+                                <circle cx="250" cy="50" r="3" fill="#e74c3c"/>
+                                <text x="35" y="30" font-size="8" text-anchor="end" fill="#666">10</text>
+                                <text x="35" y="67.5" font-size="8" text-anchor="end" fill="#666">7.5</text>
+                                <text x="35" y="105" font-size="8" text-anchor="end" fill="#666">5</text>
+                                <text x="35" y="142.5" font-size="8" text-anchor="end" fill="#666">2.5</text>
+                                <text x="35" y="175" font-size="8" text-anchor="end" fill="#666">0</text>
+                                <text x="50" y="188" font-size="8" text-anchor="middle" fill="#666">03-01</text>
+                                <text x="150" y="188" font-size="8" text-anchor="middle" fill="#666">03-08</text>
+                                <text x="250" y="188" font-size="8" text-anchor="middle" fill="#666">03-15</text>
+                                <text x="15" y="95" font-size="8" transform="rotate(-90,15,95)" fill="#666">L/min</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="panel chart-panel" style="flex:1;">
+                        <div class="panel-head">
+                            <span><i class="fas fa-compress-arrows-alt"></i> 水压力监测趋势图</span>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <select id="pressurePointSelect" style="font-size:11px;padding:2px 6px;border:1px solid #ccc;border-radius:3px;cursor:pointer;" onchange="updatePressureChart()">
+                                    <option value="JC-ZB-001">JC-ZB-001 主坝左岸</option>
+                                    <option value="JC-ZB-002">JC-ZB-002 主坝中部</option>
+                                    <option value="JC-FB-002">JC-FB-002 副坝右岸</option>
+                                </select>
+                                <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="refreshChart('pressure')"><i class="fas fa-sync"></i> 刷新</span>
+                                <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="exportChartData('pressure')"><i class="fas fa-download"></i> 导出</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <svg width="100%" height="100%" viewBox="0 0 300 200" id="pressureChart">
+                                <defs>
+                                    <linearGradient id="pressureGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#27ae60;stop-opacity:0.3" />
+                                        <stop offset="100%" style="stop-color:#27ae60;stop-opacity:0.05" />
+                                    </linearGradient>
+                                </defs>
+                                <line x1="40" y1="170" x2="280" y2="170" stroke="#333" stroke-width="1"/>
+                                <line x1="40" y1="20" x2="40" y2="170" stroke="#333" stroke-width="1"/>
+                                <line x1="40" y1="57.5" x2="280" y2="57.5" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="95" x2="280" y2="95" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="132.5" x2="280" y2="132.5" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="50" x2="280" y2="50" stroke="#e67e22" stroke-width="1" stroke-dasharray="3"/>
+                                <polygon points="50,130 75,128 100,125 125,120 150,113 175,105 200,95 225,83 250,70 270,60 270,170 250,170 225,170 200,170 175,170 150,170 125,170 100,170 75,170 50,170" fill="url(#pressureGradient)"/>
+                                <polyline points="50,130 75,128 100,125 125,120 150,113 175,105 200,95 225,83 250,70 270,60" fill="none" stroke="#27ae60" stroke-width="2"/>
+                                <circle cx="50" cy="130" r="3" fill="#27ae60"/>
+                                <circle cx="100" cy="125" r="3" fill="#27ae60"/>
+                                <circle cx="150" cy="113" r="3" fill="#27ae60"/>
+                                <circle cx="200" cy="95" r="3" fill="#f39c12"/>
+                                <circle cx="250" cy="70" r="3" fill="#e67e22"/>
+                                <text x="35" y="30" font-size="8" text-anchor="end" fill="#666">100</text>
+                                <text x="35" y="67.5" font-size="8" text-anchor="end" fill="#666">75</text>
+                                <text x="35" y="105" font-size="8" text-anchor="end" fill="#666">50</text>
+                                <text x="35" y="142.5" font-size="8" text-anchor="end" fill="#666">25</text>
+                                <text x="35" y="175" font-size="8" text-anchor="end" fill="#666">0</text>
+                                <text x="50" y="188" font-size="8" text-anchor="middle" fill="#666">03-01</text>
+                                <text x="150" y="188" font-size="8" text-anchor="middle" fill="#666">03-08</text>
+                                <text x="250" y="188" font-size="8" text-anchor="middle" fill="#666">03-15</text>
+                                <text x="15" y="95" font-size="8" transform="rotate(-90,15,95)" fill="#666">kPa</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第二行：水温和浊度监测 -->
+                <div style="display:flex;gap:12px;flex:1;">
+                    <div class="panel chart-panel" style="flex:1;">
+                        <div class="panel-head">
+                            <span><i class="fas fa-thermometer-half"></i> 水温监测趋势图</span>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <select id="tempPointSelect" style="font-size:11px;padding:2px 6px;border:1px solid #ccc;border-radius:3px;cursor:pointer;" onchange="updateTempChart()">
+                                    <option value="JC-ZB-002">JC-ZB-002 主坝中部</option>
+                                    <option value="JC-FB-003">JC-FB-003 副坝底部</option>
+                                    <option value="JC-XH-003">JC-XH-003 消力池</option>
+                                </select>
+                                <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="refreshChart('temp')"><i class="fas fa-sync"></i> 刷新</span>
+                                <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="exportChartData('temp')"><i class="fas fa-download"></i> 导出</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <svg width="100%" height="100%" viewBox="0 0 300 200" id="tempChart">
+                                <defs>
+                                    <linearGradient id="tempGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#e74c3c;stop-opacity:0.3" />
+                                        <stop offset="100%" style="stop-color:#e74c3c;stop-opacity:0.05" />
+                                    </linearGradient>
+                                </defs>
+                                <line x1="40" y1="170" x2="280" y2="170" stroke="#333" stroke-width="1"/>
+                                <line x1="40" y1="20" x2="40" y2="170" stroke="#333" stroke-width="1"/>
+                                <line x1="40" y1="57.5" x2="280" y2="57.5" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="95" x2="280" y2="95" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="132.5" x2="280" y2="132.5" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <polygon points="50,120 75,118 100,115 125,110 150,105 175,100 200,95 225,90 250,85 270,82 270,170 250,170 225,170 200,170 175,170 150,170 125,170 100,170 75,170 50,170" fill="url(#tempGradient)"/>
+                                <polyline points="50,120 75,118 100,115 125,110 150,105 175,100 200,95 225,90 250,85 270,82" fill="none" stroke="#e74c3c" stroke-width="2"/>
+                                <circle cx="50" cy="120" r="3" fill="#e74c3c"/>
+                                <circle cx="100" cy="115" r="3" fill="#e74c3c"/>
+                                <circle cx="150" cy="105" r="3" fill="#e74c3c"/>
+                                <circle cx="200" cy="95" r="3" fill="#e74c3c"/>
+                                <circle cx="250" cy="85" r="3" fill="#e74c3c"/>
+                                <text x="35" y="30" font-size="8" text-anchor="end" fill="#666">25</text>
+                                <text x="35" y="67.5" font-size="8" text-anchor="end" fill="#666">20</text>
+                                <text x="35" y="105" font-size="8" text-anchor="end" fill="#666">15</text>
+                                <text x="35" y="142.5" font-size="8" text-anchor="end" fill="#666">10</text>
+                                <text x="35" y="175" font-size="8" text-anchor="end" fill="#666">5</text>
+                                <text x="50" y="188" font-size="8" text-anchor="middle" fill="#666">03-01</text>
+                                <text x="150" y="188" font-size="8" text-anchor="middle" fill="#666">03-08</text>
+                                <text x="250" y="188" font-size="8" text-anchor="middle" fill="#666">03-15</text>
+                                <text x="15" y="95" font-size="8" transform="rotate(-90,15,95)" fill="#666">℃</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="panel chart-panel" style="flex:1;">
+                        <div class="panel-head">
+                            <span><i class="fas fa-eye"></i> 浊度监测趋势图</span>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <select id="turbidityPointSelect" style="font-size:11px;padding:2px 6px;border:1px solid #ccc;border-radius:3px;cursor:pointer;" onchange="updateTurbidityChart()">
+                                    <option value="JC-ZB-003">JC-ZB-003 主坝右岸</option>
+                                    <option value="JC-FB-001">JC-FB-001 副坝廊道</option>
+                                    <option value="JC-XH-001">JC-XH-001 进水口</option>
+                                </select>
+                                <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="refreshChart('turbidity')"><i class="fas fa-sync"></i> 刷新</span>
+                                <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="exportChartData('turbidity')"><i class="fas fa-download"></i> 导出</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <svg width="100%" height="100%" viewBox="0 0 300 200" id="turbidityChart">
+                                <defs>
+                                    <linearGradient id="turbidityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#f39c12;stop-opacity:0.3" />
+                                        <stop offset="100%" style="stop-color:#f39c12;stop-opacity:0.05" />
+                                    </linearGradient>
+                                </defs>
+                                <line x1="40" y1="170" x2="280" y2="170" stroke="#333" stroke-width="1"/>
+                                <line x1="40" y1="20" x2="40" y2="170" stroke="#333" stroke-width="1"/>
+                                <line x1="40" y1="57.5" x2="280" y2="57.5" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="95" x2="280" y2="95" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="132.5" x2="280" y2="132.5" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2"/>
+                                <line x1="40" y1="45" x2="280" y2="45" stroke="#c0392b" stroke-width="1" stroke-dasharray="3"/>
+                                <polygon points="50,140 75,138 100,135 125,130 150,125 175,118 200,110 225,100 250,88 270,78 270,170 250,170 225,170 200,170 175,170 150,170 125,170 100,170 75,170 50,170" fill="url(#turbidityGradient)"/>
+                                <polyline points="50,140 75,138 100,135 125,130 150,125 175,118 200,110 225,100 250,88 270,78" fill="none" stroke="#f39c12" stroke-width="2"/>
+                                <circle cx="50" cy="140" r="3" fill="#f39c12"/>
+                                <circle cx="100" cy="135" r="3" fill="#f39c12"/>
+                                <circle cx="150" cy="125" r="3" fill="#f39c12"/>
+                                <circle cx="200" cy="110" r="3" fill="#e67e22"/>
+                                <circle cx="250" cy="88" r="3" fill="#e74c3c"/>
+                                <text x="35" y="30" font-size="8" text-anchor="end" fill="#666">15</text>
+                                <text x="35" y="67.5" font-size="8" text-anchor="end" fill="#666">10</text>
+                                <text x="35" y="105" font-size="8" text-anchor="end" fill="#666">5</text>
+                                <text x="35" y="142.5" font-size="8" text-anchor="end" fill="#666">0</text>
+                                <text x="50" y="188" font-size="8" text-anchor="middle" fill="#666">03-01</text>
+                                <text x="150" y="188" font-size="8" text-anchor="middle" fill="#666">03-08</text>
+                                <text x="250" y="188" font-size="8" text-anchor="middle" fill="#666">03-15</text>
+                                <text x="15" y="95" font-size="8" transform="rotate(-90,15,95)" fill="#666">NTU</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-row" style="margin-top:0;">
+                <div class="panel list-panel" style="flex:1;">
+                    <div class="panel-head">
+                        <span><i class="fas fa-bell"></i> 最新预警信息</span>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <select id="alertLevelFilter" style="font-size:11px;padding:2px 6px;border:1px solid #ccc;border-radius:3px;cursor:pointer;" onchange="filterAlerts()">
+                                <option value="">全部等级</option>
+                                <option value="red">红色预警</option>
+                                <option value="orange">橙色预警</option>
+                                <option value="yellow">黄色预警</option>
+                                <option value="blue">蓝色预警</option>
+                            </select>
+                            <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="refreshAlerts()"><i class="fas fa-sync"></i> 刷新</span>
+                            <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="exportAlerts()"><i class="fas fa-download"></i> 导出</span>
+                            <span style="font-size:11px;font-weight:normal;cursor:pointer;" onclick="location.href='alert-management.html'"><i class="fas fa-external-link-alt"></i> 更多</span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <ul class="alert-list" id="alertList">
+                            <li class="alert-item level-red" onclick="handleAlert('YJ-2024-0156', 'JC-FB-001 副坝廊道排水孔', '红色', '渗流量超限：7.28 L/min > 阈值 5.50 L/min')">
+                                <div class="alert-header">
+                                    <span class="alert-title">JC-FB-001 副坝廊道排水孔 <span class="alert-badge badge-red">红色</span></span>
+                                    <span class="alert-time">07:32</span>
+                                </div>
+                                <div class="alert-content">渗流量超限：7.28 L/min > 阈值 5.50 L/min</div>
+                            </li>
+                            <li class="alert-item level-orange" onclick="handleAlert('YJ-2024-0155', 'JC-ZB-003 主坝右岸帷幕后', '橙色', '渗流量偏高：4.86 L/min > 阈值 4.50 L/min')">
+                                <div class="alert-header">
+                                    <span class="alert-title">JC-ZB-003 主坝右岸帷幕后 <span class="alert-badge badge-orange">橙色</span></span>
+                                    <span class="alert-time">06:45</span>
+                                </div>
+                                <div class="alert-content">渗流量偏高：4.86 L/min > 阈值 4.50 L/min</div>
+                            </li>
+                            <li class="alert-item level-yellow" onclick="handleAlert('YJ-2024-0154', 'JC-XH-002 泄洪洞闸室段', '黄色', '水压力偏高：68.4 kPa > 阈值 65.0 kPa')">
+                                <div class="alert-header">
+                                    <span class="alert-title">JC-XH-002 泄洪洞闸室段 <span class="alert-badge badge-yellow">黄色</span></span>
+                                    <span class="alert-time">昨日 22:18</span>
+                                </div>
+                                <div class="alert-content">水压力偏高：68.4 kPa > 阈值 65.0 kPa</div>
+                            </li>
+                            <li class="alert-item level-blue" onclick="handleAlert('YJ-2024-0153', 'JC-ZB-003 主坝右岸帷幕后', '蓝色', '浊度异常：7.6 NTU > 阈值 7.0 NTU')">
+                                <div class="alert-header">
+                                    <span class="alert-title">JC-ZB-003 主坝右岸帷幕后 <span class="alert-badge badge-blue">蓝色</span></span>
+                                    <span class="alert-time">昨日 16:35</span>
+                                </div>
+                                <div class="alert-content">浊度异常：7.6 NTU > 阈值 7.0 NTU</div>
+                            </li>
+                            <li class="alert-item level-yellow" onclick="handleAlert('YJ-2024-0152', 'JC-FB-001 副坝廊道排水孔', '黄色', '渗流量上升：5.85 L/min > 阈值 5.50 L/min')">
+                                <div class="alert-header">
+                                    <span class="alert-title">JC-FB-001 副坝廊道排水孔 <span class="alert-badge badge-yellow">黄色</span></span>
+                                    <span class="alert-time">昨日 11:22</span>
+                                </div>
+                                <div class="alert-content">渗流量上升：5.85 L/min > 阈值 5.50 L/min</div>
+                            </li>
+                            <li class="alert-item level-blue" onclick="handleAlert('YJ-2024-0151', 'JC-ZB-002 主坝中部基础', '蓝色', '水温异常：16.8℃ > 阈值 16.0℃')">
+                                <div class="alert-header">
+                                    <span class="alert-title">JC-ZB-002 主坝中部基础 <span class="alert-badge badge-blue">蓝色</span></span>
+                                    <span class="alert-time">昨日 09:15</span>
+                                </div>
+                                <div class="alert-content">水温异常：16.8℃ > 阈值 16.0℃</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span>工程：龙门水库大坝安全监测工程</span>
+            <span>监测点：52 个</span>
+            <span>预警中：6 条</span>
+            <span>数据采集：正常</span>
+            <span class="status-right">就绪</span>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        function toast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show ' + (type || '');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        function exitApp() {
+            if (confirm('确定要退出程序吗？')) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // 渗流量图表数据
+        const flowChartData = {
+            'JC-FB-001': { name: '副坝廊道排水孔', data: [1.85, 2.42, 3.15, 4.28, 5.36, 6.42, 7.28, 7.85, 8.12, 8.35], threshold: 5.50 },
+            'JC-ZB-003': { name: '主坝右岸帷幕后', data: [2.15, 2.68, 3.25, 3.82, 4.15, 4.56, 4.86, 5.12, 5.35, 5.58], threshold: 4.50 },
+            'JC-XH-002': { name: '泄洪洞闸室段', data: [1.52, 1.85, 2.25, 2.85, 3.42, 3.95, 4.52, 4.85, 5.12, 5.35], threshold: 4.00 }
+        };
+
+        // 水压力图表数据
+        const pressureChartData = {
+            'JC-ZB-001': { name: '主坝左岸', data: [45.2, 48.5, 52.3, 56.8, 61.2, 65.5, 68.4, 71.2, 73.8, 75.5], threshold: 70.0 },
+            'JC-ZB-002': { name: '主坝中部', data: [52.1, 55.8, 59.2, 62.5, 65.8, 68.2, 70.5, 72.8, 74.2, 75.8], threshold: 72.0 },
+            'JC-FB-002': { name: '副坝右岸', data: [38.5, 41.2, 44.8, 48.5, 52.1, 55.8, 58.2, 60.5, 62.8, 64.2], threshold: 65.0 }
+        };
+
+        // 水温图表数据
+        const tempChartData = {
+            'JC-ZB-002': { name: '主坝中部', data: [14.2, 14.5, 14.8, 15.2, 15.5, 15.8, 16.2, 16.5, 16.8, 17.2], threshold: 16.0 },
+            'JC-FB-003': { name: '副坝底部', data: [13.5, 13.8, 14.1, 14.5, 14.8, 15.2, 15.5, 15.8, 16.1, 16.5], threshold: 16.0 },
+            'JC-XH-003': { name: '消力池', data: [15.8, 16.2, 16.5, 16.8, 17.2, 17.5, 17.8, 18.2, 18.5, 18.8], threshold: 18.0 }
+        };
+
+        // 浊度图表数据
+        const turbidityChartData = {
+            'JC-ZB-003': { name: '主坝右岸', data: [3.2, 3.8, 4.5, 5.2, 5.8, 6.5, 7.2, 7.8, 8.5, 9.2], threshold: 7.0 },
+            'JC-FB-001': { name: '副坝廊道', data: [2.8, 3.2, 3.8, 4.5, 5.2, 5.8, 6.5, 7.2, 7.8, 8.2], threshold: 7.0 },
+            'JC-XH-001': { name: '进水口', data: [4.5, 5.2, 5.8, 6.5, 7.2, 7.8, 8.5, 9.2, 9.8, 10.5], threshold: 9.0 }
+        };
+
+        // 更新渗流量图表
+        function updateFlowChart() {
+            const point = document.getElementById('flowPointSelect').value;
+            const data = flowChartData[point];
+            toast(`已切换至 ${point} ${data.name}`, 'success');
+        }
+
+        // 更新水压力图表
+        function updatePressureChart() {
+            const point = document.getElementById('pressurePointSelect').value;
+            const data = pressureChartData[point];
+            toast(`已切换至 ${point} ${data.name}`, 'success');
+        }
+
+        // 更新水温图表
+        function updateTempChart() {
+            const point = document.getElementById('tempPointSelect').value;
+            const data = tempChartData[point];
+            toast(`已切换至 ${point} ${data.name}`, 'success');
+        }
+
+        // 更新浊度图表
+        function updateTurbidityChart() {
+            const point = document.getElementById('turbidityPointSelect').value;
+            const data = turbidityChartData[point];
+            toast(`已切换至 ${point} ${data.name}`, 'success');
+        }
+
+        // 刷新图表
+        function refreshChart(type) {
+            let svgId;
+            switch(type) {
+                case 'flow': svgId = 'flowChart'; break;
+                case 'pressure': svgId = 'pressureChart'; break;
+                case 'temp': svgId = 'tempChart'; break;
+                case 'turbidity': svgId = 'turbidityChart'; break;
+                default: svgId = 'flowChart';
+            }
+            const svg = document.getElementById(svgId);
+            svg.style.opacity = '0.5';
+            setTimeout(() => {
+                svg.style.opacity = '1';
+                toast(`${type === 'flow' ? '渗流量' : type === 'pressure' ? '水压力' : type === 'temp' ? '水温' : '浊度'}数据已刷新`, 'success');
+            }, 300);
+        }
+
+        // 导出图表数据
+        function exportChartData(type) {
+            let chartData, point, fileName;
+            switch(type) {
+                case 'flow':
+                    chartData = flowChartData;
+                    point = document.getElementById('flowPointSelect').value;
+                    fileName = `${point}_渗流量数据.csv`;
+                    break;
+                case 'pressure':
+                    chartData = pressureChartData;
+                    point = document.getElementById('pressurePointSelect').value;
+                    fileName = `${point}_水压力数据.csv`;
+                    break;
+                case 'temp':
+                    chartData = tempChartData;
+                    point = document.getElementById('tempPointSelect').value;
+                    fileName = `${point}_水温数据.csv`;
+                    break;
+                case 'turbidity':
+                    chartData = turbidityChartData;
+                    point = document.getElementById('turbidityPointSelect').value;
+                    fileName = `${point}_浊度数据.csv`;
+                    break;
+            }
+            const data = chartData[point];
+            const unit = type === 'flow' ? 'L/min' : type === 'pressure' ? 'kPa' : type === 'temp' ? '℃' : 'NTU';
+            const csvContent = '日期，' + (type === 'flow' ? '渗流量' : type === 'pressure' ? '水压力' : type === 'temp' ? '水温' : '浊度') + `(${unit})\n` + 
+                data.data.map((v, i) => `03-${String(i+1).padStart(2,'0')},${v}`).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+            toast('数据导出成功', 'success');
+        }
+
+        // 筛选预警
+        function filterAlerts() {
+            const level = document.getElementById('alertLevelFilter').value;
+            const items = document.querySelectorAll('.alert-item');
+            items.forEach(item => {
+                if (level === '' || item.classList.contains('level-' + level)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            toast(level ? `已筛选${level}预警` : '显示全部预警', '');
+        }
+
+        // 处理预警点击
+        function handleAlert(id, point, level, content) {
+            const modal = document.getElementById('alertDetailModal');
+            document.getElementById('alertDetailId').textContent = id;
+            document.getElementById('alertDetailPoint').textContent = point;
+            document.getElementById('alertDetailLevel').textContent = level + '预警';
+            document.getElementById('alertDetailLevel').className = 'alert-badge badge-' + (level === '红色' ? 'red' : level === '橙色' ? 'orange' : level === '黄色' ? 'yellow' : 'blue');
+            document.getElementById('alertDetailContent').textContent = content;
+            document.getElementById('alertDetailTime').textContent = new Date().toLocaleString('zh-CN');
+            openModal('alertDetailModal');
+        }
+
+        // 刷新图表
+        function refreshChart() {
+            const point = document.getElementById('chartPointSelect').value;
+            const svg = document.getElementById('mainChart');
+            svg.style.opacity = '0.5';
+            setTimeout(() => {
+                svg.style.opacity = '1';
+                toast('图表数据已刷新', 'success');
+            }, 300);
+        }
+
+        // 导出图表数据
+        function exportChartData() {
+            const point = document.getElementById('chartPointSelect').value;
+            const chartData = {
+                'JC-FB-001': { name: '副坝廊道排水孔', data: [1.85, 2.42, 3.15, 4.28, 5.36, 6.42, 7.28, 7.85, 8.12, 8.35] },
+                'JC-ZB-003': { name: '主坝右岸帷幕后', data: [2.15, 2.68, 3.25, 3.82, 4.15, 4.56, 4.86, 5.12, 5.35, 5.58] },
+                'JC-XH-002': { name: '泄洪洞闸室段', data: [1.52, 1.85, 2.25, 2.85, 3.42, 3.95, 4.52, 4.85, 5.12, 5.35] }
+            };
+            const data = chartData[point];
+            const csvContent = '日期，渗流量 (L/min)\n' + 
+                data.data.map((v, i) => `03-${String(i+1).padStart(2,'0')},${v}`).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${point}_渗流量数据.csv`;
+            link.click();
+            toast('数据导出成功', 'success');
+        }
+
+        // 刷新预警
+        function refreshAlerts() {
+            const list = document.getElementById('alertList');
+            list.style.opacity = '0.5';
+            setTimeout(() => {
+                list.style.opacity = '1';
+                toast('预警信息已刷新', 'success');
+            }, 300);
+        }
+
+        // 导出预警
+        function exportAlerts() {
+            const items = document.querySelectorAll('.alert-item');
+            let csvContent = '预警编号，监测点，等级，时间，内容\n';
+            items.forEach(item => {
+                if (item.style.display !== 'none') {
+                    const id = item.querySelector('.alert-title').textContent.split(' ')[0];
+                    const point = item.querySelector('.alert-title').textContent.replace(id, '').trim();
+                    const level = item.querySelector('.alert-badge').textContent;
+                    const time = item.querySelector('.alert-time').textContent;
+                    const content = item.querySelector('.alert-content').textContent;
+                    csvContent += `${id},${point},${level},${time},${content}\n`;
+                }
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = '预警信息导出.csv';
+            link.click();
+            toast('预警信息导出成功', 'success');
+        }
+
+        document.querySelectorAll('.modal-mask').forEach(m => {
+            m.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('show');
+            });
+        });
+    </script>
+
+    <!-- 预警处置弹窗 -->
+    <div class="modal-mask" id="handleModal">
+        <div class="modal-box" style="width:620px;">
+            <div class="modal-head">
+                <span>预警处置</span>
+                <button class="modal-close" onclick="closeModal('handleModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div style="padding:20px;text-align:center;color:#666;">
+                    <i class="fas fa-tasks" style="font-size:48px;color:#1a3a5c;margin-bottom:15px;"></i>
+                    <p>预警处置功能页面</p>
+                    <p style="font-size:12px;margin-top:10px;">请在预警管理页面进行详细操作</p>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="location.href='alert-management.html';closeModal('handleModal')">前往处置</button>
+                <button class="btn-cancel" onclick="closeModal('handleModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预警设置弹窗 -->
+    <div class="modal-mask" id="alertSetModal">
+        <div class="modal-box" style="width:580px;">
+            <div class="modal-head">
+                <span>预警阈值设置</span>
+                <button class="modal-close" onclick="closeModal('alertSetModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div style="padding:20px;text-align:center;color:#666;">
+                    <i class="fas fa-bell" style="font-size:48px;color:#1a3a5c;margin-bottom:15px;"></i>
+                    <p>预警设置功能页面</p>
+                    <p style="font-size:12px;margin-top:10px;">请在系统设置页面配置预警参数</p>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="location.href='system-settings.html';closeModal('alertSetModal')">前往设置</button>
+                <button class="btn-cancel" onclick="closeModal('alertSetModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据导入弹窗 -->
+    <div class="modal-mask" id="importModal">
+        <div class="modal-box" style="width:540px;">
+            <div class="modal-head">
+                <span>数据导入</span>
+                <button class="modal-close" onclick="closeModal('importModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div style="padding:20px;text-align:center;color:#666;">
+                    <i class="fas fa-file-import" style="font-size:48px;color:#1a3a5c;margin-bottom:15px;"></i>
+                    <p>数据导入功能页面</p>
+                    <p style="font-size:12px;margin-top:10px;">请在数据采集页面进行批量导入</p>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="location.href='data-collection.html';closeModal('importModal')">前往导入</button>
+                <button class="btn-cancel" onclick="closeModal('importModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据导出弹窗 -->
+    <div class="modal-mask" id="exportModal">
+        <div class="modal-box" style="width:540px;">
+            <div class="modal-head">
+                <span>数据导出</span>
+                <button class="modal-close" onclick="closeModal('exportModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div style="padding:20px;text-align:center;color:#666;">
+                    <i class="fas fa-file-export" style="font-size:48px;color:#1a3a5c;margin-bottom:15px;"></i>
+                    <p>数据导出功能页面</p>
+                    <p style="font-size:12px;margin-top:10px;">请在报表管理页面导出数据</p>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="location.href='report-management.html';closeModal('exportModal')">前往导出</button>
+                <button class="btn-cancel" onclick="closeModal('exportModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据校验弹窗 -->
+    <div class="modal-mask" id="verifyModal">
+        <div class="modal-box" style="width:540px;">
+            <div class="modal-head">
+                <span>数据校验</span>
+                <button class="modal-close" onclick="closeModal('verifyModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div style="padding:20px;text-align:center;color:#666;">
+                    <i class="fas fa-check-double" style="font-size:48px;color:#1a3a5c;margin-bottom:15px;"></i>
+                    <p>数据校验功能页面</p>
+                    <p style="font-size:12px;margin-top:10px;">请在数据采集页面进行数据校验</p>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="location.href='data-collection.html';closeModal('verifyModal')">前往校验</button>
+                <button class="btn-cancel" onclick="closeModal('verifyModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建工程弹窗 -->
+    <div class="modal-mask" id="newProjectModal">
+        <div class="modal-box" style="width:540px;">
+            <div class="modal-head">
+                <span>新建工程</span>
+                <button class="modal-close" onclick="closeModal('newProjectModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div style="padding:20px;text-align:center;color:#666;">
+                    <i class="fas fa-plus-circle" style="font-size:48px;color:#1a3a5c;margin-bottom:15px;"></i>
+                    <p>新建工程功能页面</p>
+                    <p style="font-size:12px;margin-top:10px;">请在系统设置页面创建新工程</p>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="location.href='system-settings.html';closeModal('newProjectModal')">前往创建</button>
+                <button class="btn-cancel" onclick="closeModal('newProjectModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 打开工程弹窗 -->
+    <div class="modal-mask" id="openProjectModal">
+        <div class="modal-box" style="width:580px;">
+            <div class="modal-head">
+                <span>打开工程</span>
+                <button class="modal-close" onclick="closeModal('openProjectModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div style="padding:20px;text-align:center;color:#666;">
+                    <i class="fas fa-folder-open" style="font-size:48px;color:#1a3a5c;margin-bottom:15px;"></i>
+                    <p>打开工程功能页面</p>
+                    <p style="font-size:12px;margin-top:10px;">请在系统设置页面选择工程</p>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="location.href='system-settings.html';closeModal('openProjectModal')">前往选择</button>
+                <button class="btn-cancel" onclick="closeModal('openProjectModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用说明弹窗 -->
+    <div class="modal-mask" id="helpModal">
+        <div class="modal-box" style="width:580px;">
+            <div class="modal-head">
+                <span>使用说明</span>
+                <button class="modal-close" onclick="closeModal('helpModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div style="padding:20px;text-align:center;color:#666;">
+                    <i class="fas fa-book-open" style="font-size:48px;color:#1a3a5c;margin-bottom:15px;"></i>
+                    <p>使用说明帮助文档</p>
+                    <p style="font-size:12px;margin-top:10px;">详细使用指南请参考用户手册</p>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-cancel" onclick="closeModal('helpModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 关于弹窗 -->
+    <div class="modal-mask" id="aboutModal">
+        <div class="modal-box" style="width:420px;">
+            <div class="modal-head">
+                <span>关于</span>
+                <button class="modal-close" onclick="closeModal('aboutModal')">×</button>
+            </div>
+            <div class="modal-content" style="text-align:center;padding:30px;">
+                <div style="font-size:16px;font-weight:bold;color:#1a3a5c;margin-bottom:20px;">
+                    水工结构渗漏趋势监测预警软件
+                </div>
+                <div style="font-size:12px;color:#666;line-height:2;">
+                    <p>适用于大坝、水库、渠道等水工结构的</p>
+                    <p>渗漏监测与预警管理</p>
+                </div>
+            </div>
+            <div class="modal-foot" style="justify-content:center;">
+                <button class="btn-cancel" onclick="closeModal('aboutModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预警详情弹窗 -->
+    <div class="modal-mask" id="alertDetailModal">
+        <div class="modal-box" style="width:580px;">
+            <div class="modal-head">
+                <span>预警详情</span>
+                <button class="modal-close" onclick="closeModal('alertDetailModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div style="padding:20px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px;">
+                        <div style="padding:12px;background:#f9f9f9;border:1px solid #e0e0e0;">
+                            <div style="font-size:11px;color:#666;margin-bottom:6px;">预警编号</div>
+                            <div style="font-size:14px;font-weight:bold;color:#1a3a5c;" id="alertDetailId">YJ-2024-0156</div>
+                        </div>
+                        <div style="padding:12px;background:#f9f9f9;border:1px solid #e0e0e0;">
+                            <div style="font-size:11px;color:#666;margin-bottom:6px;">预警等级</div>
+                            <div><span class="alert-badge badge-red" id="alertDetailLevel">红色预警</span></div>
+                        </div>
+                        <div style="padding:12px;background:#f9f9f9;border:1px solid #e0e0e0;grid-column:span 2;">
+                            <div style="font-size:11px;color:#666;margin-bottom:6px;">监测点</div>
+                            <div style="font-size:14px;font-weight:bold;color:#1a3a5c;" id="alertDetailPoint">JC-FB-001 副坝廊道排水孔</div>
+                        </div>
+                        <div style="padding:12px;background:#f9f9f9;border:1px solid #e0e0e0;">
+                            <div style="font-size:11px;color:#666;margin-bottom:6px;">触发时间</div>
+                            <div style="font-size:13px;color:#333;" id="alertDetailTime">2024-03-15 07:32:18</div>
+                        </div>
+                        <div style="padding:12px;background:#f9f9f9;border:1px solid #e0e0e0;">
+                            <div style="font-size:11px;color:#666;margin-bottom:6px;">触发值 / 阈值</div>
+                            <div style="font-size:14px;font-weight:bold;color:#c0392b;">7.28 / 5.50 L/min</div>
+                        </div>
+                    </div>
+                    <div style="padding:12px;background:#fadbd8;border:1px solid #e74c3c;border-radius:4px;margin-bottom:15px;">
+                        <div style="font-size:12px;color:#c0392b;"><i class="fas fa-exclamation-circle"></i> <strong>预警内容：</strong></div>
+                        <div style="font-size:13px;color:#333;margin-top:6px;" id="alertDetailContent">渗流量超限：7.28 L/min > 阈值 5.50 L/min</div>
+                    </div>
+                    <div style="padding:12px;background:#f9f9f9;border:1px solid #e0e0e0;">
+                        <div style="font-size:12px;font-weight:bold;color:#1a3a5c;margin-bottom:8px;">处置建议</div>
+                        <div style="font-size:12px;color:#666;line-height:1.6;">
+                            1. 立即安排人员现场巡查，检查排水孔是否堵塞<br>
+                            2. 检查监测设备是否正常工作<br>
+                            3. 加强该监测点的数据采集频率<br>
+                            4. 如持续超限，考虑采取工程措施
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="location.href='alert-management.html';closeModal('alertDetailModal')">前往处置</button>
+                <button class="btn-cancel" onclick="closeModal('alertDetailModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

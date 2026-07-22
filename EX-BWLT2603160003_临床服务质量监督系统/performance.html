@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绩效考核 - 临床服务质量监督系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "SimSun", sans-serif;
+        }
+
+        body {
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .window {
+            width: 1200px;
+            height: 720px;
+            max-width: 100%;
+            background: linear-gradient(180deg, #d4d4d8 0%, #c8c8cc 100%);
+            border: 1px solid #888;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title-bar {
+            background: linear-gradient(180deg, #4a5d80 0%, #3d4f6f 50%, #2d3e5c 100%);
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+            user-select: none;
+        }
+
+        .title-bar-text {
+            color: #fff;
+            font-size: 13px;
+            font-weight: normal;
+            padding-left: 6px;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+
+        .title-bar-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .title-bar-controls button {
+            width: 28px;
+            height: 20px;
+            border: none;
+            background: linear-gradient(180deg, #6b7fa3 0%, #5a6e8f 100%);
+            color: #fff;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title-bar-controls button:hover {
+            background: linear-gradient(180deg, #7b8fb3 0%, #6a7e9f 100%);
+        }
+
+        .title-bar-controls .close-btn:hover {
+            background: #c42b1c;
+        }
+
+        .btn-minimize::before {
+            content: "";
+            width: 10px;
+            height: 1px;
+            background: #fff;
+            display: block;
+        }
+
+        .btn-maximize::before {
+            content: "";
+            width: 10px;
+            height: 8px;
+            border: 1px solid #fff;
+            display: block;
+            background: transparent;
+        }
+
+        .btn-close::before {
+            content: "×";
+            font-size: 16px;
+            font-weight: normal;
+        }
+
+        .menu-bar {
+            background: linear-gradient(180deg, #e8e8ec 0%, #d8d8dc 100%);
+            border-bottom: 1px solid #a0a0a4;
+            padding: 2px 4px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .menu-item {
+            padding: 4px 12px;
+            font-size: 12px;
+            color: #1a1a4a;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: #b8c8e0;
+            border: 1px solid #8098c0;
+        }
+
+        .menu-item.active {
+            background: #b8c8e0;
+            border: 1px solid #8098c0;
+        }
+
+        .toolbar {
+            background: linear-gradient(180deg, #d0d4dc 0%, #b8bcc8 100%);
+            border-bottom: 1px solid #9098a4;
+            padding: 6px 8px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toolbar-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 12px;
+            background: linear-gradient(180deg, #e8ecf4 0%, #d0d4e0 100%);
+            border: 1px solid #9098a8;
+            cursor: pointer;
+            min-width: 60px;
+            transition: all 0.15s;
+        }
+
+        .toolbar-btn:hover {
+            background: linear-gradient(180deg, #f0f4fc 0%, #e0e4f0 100%);
+            border-color: #7080a0;
+        }
+
+        .toolbar-btn:active {
+            background: linear-gradient(180deg, #c0c4d0 0%, #b0b4c0 100%);
+            transform: translateY(1px);
+        }
+
+        .toolbar-btn i {
+            font-size: 18px;
+            color: #3a4a6a;
+            margin-bottom: 4px;
+        }
+
+        .toolbar-btn span {
+            font-size: 11px;
+            color: #2a3a5a;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            background: linear-gradient(180deg, #a0a4ac 0%, #888c94 100%);
+            margin: 0 4px;
+        }
+
+        .main-content {
+            display: flex;
+            background: #c8ccd4;
+            min-height: 560px;
+        }
+
+        .left-panel {
+            width: 160px;
+            background: linear-gradient(180deg, #d4d8e0 0%, #c0c4cc 100%);
+            border-right: 1px solid #9098a4;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .panel-header {
+            background: linear-gradient(90deg, #6b4a8b 0%, #7a5a9b 100%);
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .nav-list {
+            background: #fff;
+            border: 1px solid #9098a4;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-list-item {
+            padding: 8px 10px;
+            font-size: 12px;
+            color: #1a2a4a;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+
+        .nav-list-item:hover {
+            background: #d0e0f0;
+        }
+
+        .nav-list-item.active {
+            background: #6b4a8b;
+            color: #fff;
+        }
+
+        .nav-list-item i {
+            color: #6b4a8b;
+            font-size: 14px;
+        }
+
+        .nav-list-item.active i {
+            color: #fff;
+        }
+
+        .nav-list-item .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 8px;
+        }
+
+        .right-panel {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .page-header {
+            background: linear-gradient(180deg, #e8ecf4 0%, #d8dce4 100%);
+            border: 1px solid #9098a4;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a2a4a;
+            flex: 1;
+        }
+
+        .page-info {
+            font-size: 12px;
+            color: #5a6a7a;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card {
+            background: linear-gradient(180deg, #f8f9fa 0%, #e8eaec 100%);
+            border: 1px solid #9098a4;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3a5a8a;
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: #5a6a7a;
+            margin-top: 4px;
+        }
+
+        .search-bar {
+            background: #e8eaec;
+            border: 1px solid #9098a4;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-bar label {
+            font-size: 12px;
+            color: #2a3a5a;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .search-bar input,
+        .search-bar select {
+            padding: 4px 8px;
+            border: 1px solid #9098a8;
+            font-size: 12px;
+            background: #fff;
+        }
+
+        .search-btn {
+            padding: 5px 16px;
+            background: linear-gradient(180deg, #5a7a9a 0%, #4a6a8a 100%);
+            color: #fff;
+            border: 1px solid #3a5a7a;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(180deg, #6a8aaa 0%, #5a7a9a 100%);
+        }
+
+        .data-table-container {
+            background: #fff;
+            border: 1px solid #9098a4;
+            flex: 1;
+            overflow: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th {
+            background: linear-gradient(180deg, #d0d8e4 0%, #b8c0d0 100%);
+            padding: 8px 10px;
+            text-align: left;
+            color: #1a2a4a;
+            border-bottom: 1px solid #9098a4;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e0e0e4;
+            color: #2a3a5a;
+        }
+
+        .data-table tr:hover {
+            background: #e8f0f8;
+        }
+
+        .data-table tr.selected {
+            background: #c0d0e8;
+        }
+
+        .data-table .action-link {
+            color: #4a6a9a;
+            cursor: pointer;
+            margin-right: 8px;
+            text-decoration: none;
+        }
+
+        .data-table .action-link:hover {
+            text-decoration: underline;
+        }
+
+        .score-cell {
+            font-weight: 600;
+            color: #3a5a8a;
+        }
+
+        .score-excellent { color: #10b981; }
+        .score-good { color: #0EA5E9; }
+        .score-pass { color: #F59E0B; }
+        .score-fail { color: #EF4444; }
+
+        .status-bar {
+            background: linear-gradient(180deg, #d8dce4 0%, #c8ccd4 100%);
+            border-top: 1px solid #fff;
+            padding: 4px 12px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #3a4a6a;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #d4d8e0;
+            border: 1px solid #888;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-title {
+            background: linear-gradient(180deg, #4a5d80 0%, #3d4f6f 50%, #2d3e5c 100%);
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0 4px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #c42b1c;
+        }
+
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            max-height: calc(85vh - 100px);
+            background: #e8eaec;
+        }
+
+        .modal-form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .modal-form-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .modal-form-group label {
+            font-size: 12px;
+            color: #2a3a5a;
+            min-width: 80px;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .modal-form-group input,
+        .modal-form-group select,
+        .modal-form-group textarea {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #9098a8;
+            font-size: 12px;
+            background: #fff;
+            border-radius: 4px;
+        }
+
+        .modal-form-group textarea {
+            height: 70px;
+            resize: vertical;
+        }
+
+        .modal-form-group.full {
+            flex-basis: 100%;
+        }
+
+        .required::after {
+            content: "*";
+            color: #c00;
+            margin-left: 2px;
+        }
+
+        .modal-footer {
+            padding: 12px 16px;
+            background: #c8ccd4;
+            border-top: 1px solid #a0a4ac;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            padding: 6px 24px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid #9098a8;
+            background: linear-gradient(180deg, #e8ecf4 0%, #d0d4e0 100%);
+            color: #2a3a5a;
+            border-radius: 4px;
+        }
+
+        .modal-btn:hover {
+            background: linear-gradient(180deg, #f0f4fc 0%, #e0e4f0 100%);
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(180deg, #5a7a9a 0%, #4a6a8a 100%);
+            color: #fff;
+            border-color: #3a5a7a;
+        }
+
+        .modal-btn.primary:hover {
+            background: linear-gradient(180deg, #6a8aaa 0%, #5a7a9a 100%);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 24px;
+            background: #4a6a3a;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+            z-index: 2000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .detail-section {
+            background: #fff;
+            border: 1px solid #9098a4;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .detail-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2a4a;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #c0c4cc;
+        }
+
+        .detail-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .detail-item {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #5a6a7a;
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .detail-value {
+            font-size: 12px;
+            color: #1a2a4a;
+            flex: 1;
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .rating-stars i {
+            color: #d4a017;
+            font-size: 14px;
+        }
+
+        .rating-stars i.empty {
+            color: #c0c4cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <span class="title-bar-text">
+                <i class="fas fa-clipboard-check"></i> 临床服务质量监督系统
+            </span>
+            <div class="title-bar-controls">
+                <button class="btn-minimize" title="最小化"></button>
+                <button class="btn-maximize" title="最大化"></button>
+                <button class="btn-close close-btn" title="关闭" onclick="window.close()"></button>
+            </div>
+        </div>
+
+        <div class="menu-bar">
+            <div class="menu-item" onclick="location.href='index.html'"><i class="fas fa-home"></i> 首页</div>
+            <div class="menu-item" onclick="location.href='inspection.html'"><i class="fas fa-clipboard-check"></i> 质量检查</div>
+            <div class="menu-item" onclick="location.href='complaint.html'"><i class="fas fa-comment-medical"></i> 投诉管理</div>
+            <div class="menu-item" onclick="location.href='rectification.html'"><i class="fas fa-tasks"></i> 整改任务</div>
+            <div class="menu-item active"><i class="fas fa-star-half-alt"></i> 绩效考核</div>
+            <div class="menu-item" onclick="location.href='statistics.html'"><i class="fas fa-chart-bar"></i> 数据统计</div>
+            <div class="menu-item" onclick="location.href='settings.html'"><i class="fas fa-cog"></i> 系统设置</div>
+        </div>
+
+        <div class="toolbar">
+            <button class="toolbar-btn" onclick="openModal('addModal')">
+                <i class="fas fa-plus-circle"></i>
+                <span>新建评分</span>
+            </button>
+            <button class="toolbar-btn" onclick="refreshData()">
+                <i class="fas fa-sync-alt"></i>
+                <span>刷新数据</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="exportData()">
+                <i class="fas fa-file-export"></i>
+                <span>导出报表</span>
+            </button>
+            <button class="toolbar-btn" onclick="printReport()">
+                <i class="fas fa-print"></i>
+                <span>打印报表</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="location.href='index.html'">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>返回首页</span>
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="panel-header">考核周期</div>
+                <div class="nav-list">
+                    <div class="nav-list-item active" onclick="filterByPeriod('all', this)">
+                        <i class="fas fa-list"></i> 全部考核
+                    </div>
+                    <div class="nav-list-item" onclick="filterByPeriod('2024-03', this)">
+                        <i class="fas fa-calendar"></i> 2024年3月
+                    </div>
+                    <div class="nav-list-item" onclick="filterByPeriod('2024-02', this)">
+                        <i class="fas fa-calendar"></i> 2024年2月
+                    </div>
+                    <div class="nav-list-item" onclick="filterByPeriod('2024-01', this)">
+                        <i class="fas fa-calendar"></i> 2024年1月
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="page-header">
+                    <i class="fas fa-star-half-alt" style="font-size:20px;color:#6b4a8b;"></i>
+                    <div>
+                        <div class="page-title">科室服务质量绩效考核</div>
+                        <div class="page-info">共 45 条考核记录</div>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="number">45</div>
+                        <div class="label">考核总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">12</div>
+                        <div class="label">优秀科室</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">28</div>
+                        <div class="label">合格科室</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">5</div>
+                        <div class="label">待改进</div>
+                    </div>
+                </div>
+
+                <div class="search-bar">
+                    <label>被考核科室:</label>
+                    <select id="searchDept">
+                        <option value="">全部科室</option>
+                        <option value="急诊科">急诊科</option>
+                        <option value="内科病房">内科病房</option>
+                        <option value="外科病房">外科病房</option>
+                        <option value="门诊部">门诊部</option>
+                        <option value="检验科">检验科</option>
+                        <option value="影像科">影像科</option>
+                    </select>
+                    <label>考核周期:</label>
+                    <select id="searchPeriod">
+                        <option value="">全部周期</option>
+                        <option value="2024-03">2024年3月</option>
+                        <option value="2024-02">2024年2月</option>
+                        <option value="2024-01">2024年1月</option>
+                    </select>
+                    <label>考核等级:</label>
+                    <select id="searchLevel">
+                        <option value="">全部等级</option>
+                        <option value="优秀">优秀</option>
+                        <option value="良好">良好</option>
+                        <option value="合格">合格</option>
+                        <option value="待改进">待改进</option>
+                    </select>
+                    <button class="search-btn" onclick="searchRecords()"><i class="fas fa-search"></i> 查询</button>
+                    <button class="search-btn" onclick="resetSearch()"><i class="fas fa-undo"></i> 重置</button>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:30px;"><input type="checkbox" onclick="selectAll(this)"></th>
+                                <th style="width:100px;">考核编号</th>
+                                <th style="width:80px;">被考核科室</th>
+                                <th style="width:90px;">考核周期</th>
+                                <th style="width:60px;">服务态度</th>
+                                <th style="width:60px;">工作效率</th>
+                                <th style="width:60px;">制度执行</th>
+                                <th style="width:60px;">患者满意</th>
+                                <th style="width:60px;">整改落实</th>
+                                <th style="width:60px;">综合得分</th>
+                                <th style="width:70px;">考核等级</th>
+                                <th style="width:90px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>KH2024030001</td>
+                                <td>急诊科</td>
+                                <td>2024年3月</td>
+                                <td class="score-cell">16</td>
+                                <td class="score-cell">14</td>
+                                <td class="score-cell">12</td>
+                                <td class="score-cell">20</td>
+                                <td class="score-cell">10</td>
+                                <td class="score-cell score-pass">72分</td>
+                                <td class="score-cell">合格</td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('KH2024030001')">查看</a>
+                                    <a href="javascript:void(0)" class="action-link" onclick="editRecord('KH2024030001')">编辑</a>
+                                </td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>KH2024030002</td>
+                                <td>内科病房</td>
+                                <td>2024年3月</td>
+                                <td class="score-cell">18</td>
+                                <td class="score-cell">16</td>
+                                <td class="score-cell">15</td>
+                                <td class="score-cell">22</td>
+                                <td class="score-cell">12</td>
+                                <td class="score-cell score-excellent">83分</td>
+                                <td class="score-cell">优秀</td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('KH2024030002')">查看</a>
+                                    <a href="javascript:void(0)" class="action-link" onclick="editRecord('KH2024030002')">编辑</a>
+                                </td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>KH2024030003</td>
+                                <td>外科病房</td>
+                                <td>2024年3月</td>
+                                <td class="score-cell">19</td>
+                                <td class="score-cell">17</td>
+                                <td class="score-cell">16</td>
+                                <td class="score-cell">23</td>
+                                <td class="score-cell">14</td>
+                                <td class="score-cell score-excellent">89分</td>
+                                <td class="score-cell">优秀</td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('KH2024030003')">查看</a>
+                                    <a href="javascript:void(0)" class="action-link" onclick="editRecord('KH2024030003')">编辑</a>
+                                </td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>KH2024030004</td>
+                                <td>门诊部</td>
+                                <td>2024年3月</td>
+                                <td class="score-cell">14</td>
+                                <td class="score-cell">12</td>
+                                <td class="score-cell">12</td>
+                                <td class="score-cell">18</td>
+                                <td class="score-cell">10</td>
+                                <td class="score-cell score-pass">66分</td>
+                                <td class="score-cell">合格</td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('KH2024030004')">查看</a>
+                                    <a href="javascript:void(0)" class="action-link" onclick="editRecord('KH2024030004')">编辑</a>
+                                </td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>KH2024030005</td>
+                                <td>检验科</td>
+                                <td>2024年3月</td>
+                                <td class="score-cell">19</td>
+                                <td class="score-cell">18</td>
+                                <td class="score-cell">17</td>
+                                <td class="score-cell">24</td>
+                                <td class="score-cell">15</td>
+                                <td class="score-cell score-excellent">93分</td>
+                                <td class="score-cell">优秀</td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('KH2024030005')">查看</a>
+                                    <a href="javascript:void(0)" class="action-link" onclick="editRecord('KH2024030005')">编辑</a>
+                                </td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td><input type="checkbox"></td>
+                                <td>KH2024030006</td>
+                                <td>影像科</td>
+                                <td>2024年3月</td>
+                                <td class="score-cell">15</td>
+                                <td class="score-cell">14</td>
+                                <td class="score-cell">13</td>
+                                <td class="score-cell">20</td>
+                                <td class="score-cell">11</td>
+                                <td class="score-cell score-good">73分</td>
+                                <td class="score-cell">良好</td>
+                                <td>
+                                    <a href="javascript:void(0)" class="action-link" onclick="viewDetail('KH2024030006')">查看</a>
+                                    <a href="javascript:void(0)" class="action-link" onclick="editRecord('KH2024030006')">编辑</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span>当前用户: 王明华 (质量监督员) | 科室: 医务质控部</span>
+            <span id="clock"></span>
+        </div>
+    </div>
+
+    <!-- 新建评分弹窗 -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal">
+            <div class="modal-title">
+                <div class="modal-title-text"><i class="fas fa-plus-circle"></i> 新建绩效考核</div>
+                <button class="modal-close" onclick="closeModal('addModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">考核编号</label>
+                        <input type="text" id="addCode" value="KH2024030101" readonly style="background:#f0f0f0;">
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">考核周期</label>
+                        <select id="addPeriod">
+                            <option value="2024-03">2024年3月</option>
+                            <option value="2024-02">2024年2月</option>
+                            <option value="2024-01">2024年1月</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">被考核科室</label>
+                        <select id="addDept">
+                            <option value="">请选择科室</option>
+                            <option value="急诊科">急诊科</option>
+                            <option value="内科病房">内科病房</option>
+                            <option value="外科病房">外科病房</option>
+                            <option value="门诊部">门诊部</option>
+                            <option value="检验科">检验科</option>
+                            <option value="影像科">影像科</option>
+                            <option value="药房">药房</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>科室负责人</label>
+                        <input type="text" id="addLeader" placeholder="请输入负责人姓名">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">服务态度 (20分)</label>
+                        <select id="addScore1">
+                            <option value="20">优秀 (20分)</option>
+                            <option value="16">良好 (16分)</option>
+                            <option value="12">合格 (12分)</option>
+                            <option value="8">待改进 (8分)</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">工作效率 (20分)</label>
+                        <select id="addScore2">
+                            <option value="20">优秀 (20分)</option>
+                            <option value="16">良好 (16分)</option>
+                            <option value="12">合格 (12分)</option>
+                            <option value="8">待改进 (8分)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">制度执行 (20分)</label>
+                        <select id="addScore3">
+                            <option value="20">优秀 (20分)</option>
+                            <option value="16">良好 (16分)</option>
+                            <option value="12">合格 (12分)</option>
+                            <option value="8">待改进 (8分)</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">患者满意 (25分)</label>
+                        <select id="addScore4">
+                            <option value="25">优秀 (25分)</option>
+                            <option value="20">良好 (20分)</option>
+                            <option value="15">合格 (15分)</option>
+                            <option value="10">待改进 (10分)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">整改落实 (15分)</label>
+                        <select id="addScore5">
+                            <option value="15">优秀 (15分)</option>
+                            <option value="12">良好 (12分)</option>
+                            <option value="9">合格 (9分)</option>
+                            <option value="6">待改进 (6分)</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>综合得分</label>
+                        <input type="text" id="addTotal" value="系统自动计算" readonly style="background:#f0f0f0;">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>检查次数</label>
+                        <input type="text" id="addCheckCount" value="0" placeholder="本月检查次数">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>投诉次数</label>
+                        <input type="text" id="addComplaintCount" value="0" placeholder="本月投诉次数">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>考核评语</label>
+                        <textarea id="addComment" placeholder="请填写综合考核评语"></textarea>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>改进建议</label>
+                        <textarea id="addSuggestion" placeholder="请填写下阶段改进建议"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="savePerformance()"><i class="fas fa-check"></i> 提交评分</button>
+                <button class="modal-btn" onclick="closeModal('addModal')"><i class="fas fa-times"></i> 取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情查看弹窗 -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal" style="max-width:750px;">
+            <div class="modal-title">
+                <div class="modal-title-text"><i class="fas fa-file-alt"></i> 考核详情</div>
+                <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <div class="detail-section-title">基本信息</div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">考核编号:</span>
+                            <span class="detail-value" id="detailCode">KH2024030003</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">考核周期:</span>
+                            <span class="detail-value" id="detailPeriod">2024年3月</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">被考核科室:</span>
+                            <span class="detail-value" id="detailDept">外科病房</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">科室负责人:</span>
+                            <span class="detail-value" id="detailLeader">李主任</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">评分明细</div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">服务态度:</span>
+                            <span class="detail-value">
+                                <span class="rating-stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star empty"></i>
+                                </span>
+                                19分 (优秀)
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">工作效率:</span>
+                            <span class="detail-value">
+                                <span class="rating-stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star empty"></i>
+                                </span>
+                                17分 (优秀)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">制度执行:</span>
+                            <span class="detail-value">
+                                <span class="rating-stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star empty"></i>
+                                </span>
+                                16分 (优秀)
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">患者满意:</span>
+                            <span class="detail-value">
+                                <span class="rating-stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star empty"></i>
+                                </span>
+                                23分 (优秀)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="detail-label">整改落实:</span>
+                            <span class="detail-value">
+                                <span class="rating-stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star empty"></i>
+                                </span>
+                                14分 (优秀)
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">综合得分:</span>
+                            <span class="detail-value" style="font-size:16px;font-weight:bold;color:#10b981;">89分 (优秀)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">考核评语</div>
+                    <div class="detail-row">
+                        <div class="detail-item" style="flex-basis:100%;">
+                            <span class="detail-value">外科病房整体表现优秀，服务态度良好，工作效率高，制度执行规范，患者满意度高。望继续保持。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">改进建议</div>
+                    <div class="detail-row">
+                        <div class="detail-item" style="flex-basis:100%;">
+                            <span class="detail-value">1. 继续加强医患沟通培训；2. 进一步优化手术安排流程；3. 关注年轻护士的培养与发展。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="editRecord()"><i class="fas fa-edit"></i> 编辑评分</button>
+                <button class="modal-btn" onclick="printDetail()"><i class="fas fa-print"></i> 打印详情</button>
+                <button class="modal-btn" onclick="closeModal('detailModal')"><i class="fas fa-times"></i> 关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const toast = document.getElementById('toast');
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        function selectRow(row) {
+            document.querySelectorAll('.data-table tbody tr').forEach(function(tr) {
+                tr.classList.remove('selected');
+                tr.querySelector('input[type="checkbox"]').checked = false;
+            });
+            row.classList.add('selected');
+            row.querySelector('input[type="checkbox"]').checked = true;
+        }
+
+        function selectAll(checkbox) {
+            document.querySelectorAll('.data-table tbody input[type="checkbox"]').forEach(function(cb) {
+                cb.checked = checkbox.checked;
+                if (checkbox.checked) {
+                    cb.closest('tr').classList.add('selected');
+                } else {
+                    cb.closest('tr').classList.remove('selected');
+                }
+            });
+        }
+
+        function filterByPeriod(period, element) {
+            document.querySelectorAll('.nav-list-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            showToast('已筛选: ' + (period === 'all' ? '全部考核' : period + '年'));
+        }
+
+        function viewDetail(id) {
+            openModal('detailModal');
+        }
+
+        function editRecord(id) {
+            closeModal('detailModal');
+            openModal('addModal');
+        }
+
+        function savePerformance() {
+            const dept = document.getElementById('addDept').value;
+            if (!dept) {
+                showToast('请选择被考核科室');
+                return;
+            }
+            showToast('绩效考核已提交');
+            closeModal('addModal');
+        }
+
+        function printDetail() {
+            showToast('正在准备打印...');
+        }
+
+        function searchRecords() {
+            showToast('查询完成');
+        }
+
+        function resetSearch() {
+            document.getElementById('searchDept').value = '';
+            document.getElementById('searchPeriod').value = '';
+            document.getElementById('searchLevel').value = '';
+            showToast('查询条件已重置');
+        }
+
+        function refreshData() {
+            showToast('数据已刷新');
+        }
+
+        function exportData() {
+            showToast('报表导出成功');
+        }
+
+        function printReport() {
+            showToast('正在准备打印...');
+        }
+
+        document.querySelectorAll('.nav-list-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.nav-list-item').forEach(function(i) {
+                    i.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置 - 交易履约流程结算系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", "SimSun", sans-serif; }
+        body { background: #0078d4; height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .window { width: 100%; max-width: 900px; height: 90vh; background: #f0f0f0; border: 1px solid #707070; box-shadow: 0 8px 32px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+        .title-bar { background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%); border-bottom: 1px solid #c0c0c0; display: flex; justify-content: space-between; align-items: center; padding: 0; height: 32px; user-select: none; }
+        .title-bar-left { display: flex; align-items: center; padding-left: 8px; gap: 8px; }
+        .title-bar-left i { color: #0078d4; font-size: 14px; }
+        .title-bar-left span { font-size: 12px; color: #333; }
+        .window-controls { display: flex; height: 100%; }
+        .window-controls button { width: 46px; height: 100%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
+        .window-controls button:hover { background: #e5e5e5; }
+        .window-controls .close-btn:hover { background: #e81123; }
+        .window-controls .close-btn:hover i { color: white; }
+        .window-controls i { font-size: 10px; color: #333; }
+        .main-content { flex: 1; display: flex; flex-direction: column; background: #ffffff; overflow: hidden; }
+        .content-header { background: linear-gradient(180deg, #6b9dc8 0%, #5a8cb8 100%); color: white; padding: 8px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .settings-body { flex: 1; overflow: auto; padding: 20px; }
+        .settings-section { background: #fff; border: 1px solid #d0d0d0; margin-bottom: 15px; }
+        .settings-section-header { background: linear-gradient(180deg, #6b9dc8 0%, #5a8cb8 100%); color: white; padding: 8px 12px; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .settings-section-body { padding: 15px; }
+        .settings-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px dotted #e0e0e0; }
+        .settings-row:last-child { border-bottom: none; }
+        .settings-label { width: 150px; font-size: 12px; color: #333; display: flex; align-items: center; gap: 8px; }
+        .settings-label i { color: #0078d4; width: 20px; }
+        .settings-value { flex: 1; }
+        .settings-value input[type="text"], .settings-value input[type="password"], .settings-value select { padding: 6px 8px; border: 1px solid #ababab; font-size: 12px; width: 250px; }
+        .settings-value input:focus, .settings-value select:focus { outline: none; border-color: #0078d4; }
+        .settings-value input[type="checkbox"] { width: 16px; height: 16px; margin-right: 8px; }
+        .settings-value input[type="number"] { padding: 6px 8px; border: 1px solid #ababab; font-size: 12px; width: 100px; }
+        .settings-actions { display: flex; gap: 8px; margin-top: 15px; justify-content: center; }
+        .action-btn { padding: 6px 20px; border: 1px solid #ababab; background: linear-gradient(180deg, #f8f8f8 0%, #e8e8e8 100%); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .action-btn:hover { background: linear-gradient(180deg, #e5f3ff 0%, #cce8ff 100%); border-color: #99d1ff; }
+        .action-btn i { font-size: 11px; color: #555; }
+        .status-bar { background: #f0f0f0; border-top: 1px solid #c0c0c0; padding: 4px 12px; font-size: 11px; color: #666; display: flex; justify-content: space-between; }
+        .nav-links { display: flex; gap: 8px; margin-left: auto; }
+        .nav-link { padding: 4px 12px; background: rgba(255,255,255,0.1); border-radius: 3px; color: white; text-decoration: none; font-size: 11px; }
+        .nav-link:hover { background: rgba(255,255,255,0.2); }
+        ::-webkit-scrollbar { width: 16px; height: 16px; }
+        ::-webkit-scrollbar-track { background: #f0f0f0; }
+        ::-webkit-scrollbar-thumb { background: #c0c0c0; border: 3px solid #f0f0f0; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+        .message { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 25px; background: #4caf50; color: white; border-radius: 4px; font-size: 13px; z-index: 2000; display: none; }
+        .message.error { background: #f44336; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #f0f0f0; border: 1px solid #707070; box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 500px; width: 95%; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-title-bar { background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%); border-bottom: 1px solid #c0c0c0; display: flex; justify-content: space-between; align-items: center; padding: 0; height: 32px; }
+        .modal-title-bar span { padding-left: 10px; font-size: 12px; color: #333; text-align: center; flex: 1; }
+        .modal-close { width: 46px; height: 100%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #e81123; }
+        .modal-close:hover i { color: white; }
+        .modal-close i { font-size: 10px; color: #333; }
+        .modal-content { padding: 20px; overflow: auto; flex: 1; text-align: center; }
+        .modal-content i { font-size: 48px; color: #4caf50; margin-bottom: 15px; }
+        .modal-content p { font-size: 14px; color: #333; margin-bottom: 10px; }
+        .modal-footer { background: #f0f0f0; border-top: 1px solid #c0c0c0; padding: 12px 20px; display: flex; justify-content: center; gap: 12px; }
+        .btn { padding: 6px 20px; border: 1px solid #ababab; background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%); font-size: 12px; cursor: pointer; min-width: 80px; }
+        .btn:hover { background: linear-gradient(180deg, #e8e8e8 0%, #d5d5d5 100%); }
+        .btn-primary { background: linear-gradient(180deg, #0078d4 0%, #006cbd 100%); color: white; border-color: #005a9e; }
+        .btn-primary:hover { background: linear-gradient(180deg, #006cbd 0%, #005a9e 100%); }
+        .user-avatar { width: 60px; height: 60px; border-radius: 50%; background: #0078d4; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 10px; }
+        .user-info-display { text-align: center; margin-bottom: 15px; }
+        .user-info-display .user-name { font-size: 16px; font-weight: bold; color: #333; }
+        .user-info-display .user-role { font-size: 12px; color: #666; margin-top: 4px; }
+        .tab-nav { background: #e8e8e8; display: flex; padding: 4px 8px 0; gap: 2px; border-bottom: 1px solid #c0c0c0; }
+        .tab-btn { padding: 8px 20px; background: #d8d8d8; border: 1px solid #b0b0b0; border-bottom: none; cursor: pointer; font-size: 12px; color: #333; border-radius: 3px 3px 0 0; position: relative; top: 1px; }
+        .tab-btn:hover { background: #e5e5e5; }
+        .tab-btn.active { background: #ffffff; border-color: #c0c0c0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="title-bar-left">
+                <i class="fas fa-exchange-alt"></i>
+                <span>交易履约流程结算系统</span>
+            </div>
+            <div class="window-controls">
+                <button class="minimize-btn"><i class="fas fa-minus"></i></button>
+                <button class="maximize-btn"><div style="width:10px;height:10px;border:1px solid #333;background:transparent;"></div></button>
+                <button class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="tab-nav">
+            <button class="tab-btn" onclick="window.location.href='index.html'">合同登记</button>
+            <button class="tab-btn" onclick="window.location.href='fulfill.html'">履约跟踪</button>
+            <button class="tab-btn" onclick="window.location.href='settle.html'">结算处理</button>
+            <button class="tab-btn" onclick="window.location.href='reconcile.html'">对账管理</button>
+            <button class="tab-btn" onclick="window.location.href='report.html'">报表统计</button>
+        </div>
+        <div class="main-content">
+            <div class="content-header">系统设置</div>
+            <div class="settings-body">
+                <div class="settings-section">
+                    <div class="settings-section-header"><span><i class="fas fa-user"></i> 用户信息</span></div>
+                    <div class="settings-section-body">
+                        <div class="user-info-display">
+                            <div class="user-avatar"><i class="fas fa-user"></i></div>
+                            <div class="user-name">李金栓</div>
+                            <div class="user-role">系统管理员</div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-id-card"></i> 用户账号</div>
+                            <div class="settings-value"><input type="text" value="lijinshuan" readonly style="background:#e8e8e8;"></div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-building"></i> 所属部门</div>
+                            <div class="settings-value"><input type="text" value="华北区域结算中心" readonly style="background:#e8e8e8;"></div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-envelope"></i> 电子邮箱</div>
+                            <div class="settings-value"><input type="text" value="lijinshuan@company.com"></div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-phone"></i> 联系电话</div>
+                            <div class="settings-value"><input type="text" value="13800138000"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-section-header"><span><i class="fas fa-key"></i> 密码修改</span></div>
+                    <div class="settings-section-body">
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-lock"></i> 当前密码</div>
+                            <div class="settings-value"><input type="password" placeholder="请输入当前密码"></div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-lock"></i> 新密码</div>
+                            <div class="settings-value"><input type="password" placeholder="请输入新密码"></div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-lock"></i> 确认密码</div>
+                            <div class="settings-value"><input type="password" placeholder="请再次输入新密码"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-section-header"><span><i class="fas fa-cog"></i> 系统参数</span></div>
+                    <div class="settings-section-body">
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-clock"></i> 会话超时</div>
+                            <div class="settings-value"><select><option>30 分钟</option><option selected>60 分钟</option><option>120 分钟</option></select></div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-language"></i> 界面语言</div>
+                            <div class="settings-value"><select><option>简体中文</option><option>English</option></select></div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-calendar"></i> 日期格式</div>
+                            <div class="settings-value"><select><option>YYYY-MM-DD</option><option selected>YYYY/MM/DD</option></select></div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-coins"></i> 金额精度</div>
+                            <div class="settings-value"><select><option>0 位</option><option selected>2 位</option><option>4 位</option></select></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-section-header"><span><i class="fas fa-bell"></i> 消息通知</span></div>
+                    <div class="settings-section-body">
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-envelope-open"></i> 待办提醒</div>
+                            <div class="settings-value"><input type="checkbox" checked> 启用</div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-exclamation-triangle"></i> 逾期预警</div>
+                            <div class="settings-value"><input type="checkbox" checked> 启用</div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-comment"></i> 系统公告</div>
+                            <div class="settings-value"><input type="checkbox" checked> 启用</div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><i class="fas fa-desktop"></i> 桌面通知</div>
+                            <div class="settings-value"><input type="checkbox"> 启用</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-actions">
+                    <button class="action-btn" onclick="saveSettings()"><i class="fas fa-save"></i> 保存设置</button>
+                    <button class="action-btn" onclick="resetSettings()"><i class="fas fa-undo"></i> 重置</button>
+                    <button class="action-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
+                </div>
+            </div>
+        </div>
+        <div class="status-bar"><span>当前版本</span><span>当前用户: 李金栓</span></div>
+    </div>
+
+    <div class="modal-overlay" id="modal-message"><div class="modal"><div class="modal-title-bar"><span id="msgTitle">提示</span><button class="modal-close" onclick="closeModal('message')"><i class="fas fa-times"></i></button></div><div class="modal-content"><i id="msgIcon" class="fas fa-check-circle" style="font-size:48px;color:#4caf50;margin-bottom:15px;"></i><p id="msgText" style="font-size:14px;color:#333;"></p></div><div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('message')">确定</button></div></div></div>
+
+    <div class="message" id="toastMessage"></div>
+
+    <script>
+        function switchTab(tab) {
+            window.location.href = tab + '.html';
+        }
+        function showModal(id) { document.getElementById('modal-' + id).classList.add('active'); }
+        function closeModal(id) { document.getElementById('modal-' + id).classList.remove('active'); }
+        function showToast(text, isError) {
+            const toast = document.getElementById('toastMessage');
+            toast.textContent = text;
+            toast.className = isError ? 'message error' : 'message';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+        function showMessage(title, text, isError) {
+            document.getElementById('msgTitle').textContent = title;
+            document.getElementById('msgText').textContent = text;
+            document.getElementById('msgIcon').className = isError ? 'fas fa-times-circle' : 'fas fa-check-circle';
+            document.getElementById('msgIcon').style.color = isError ? '#f44336' : '#4caf50';
+            showModal('message');
+        }
+        function saveSettings() { showMessage('保存成功', '系统设置已保存', false); }
+        function resetSettings() { showMessage('重置成功', '系统设置已重置为默认值', false); }
+        function logout() { if (confirm('确定要退出登录吗？')) { showToast('正在退出...'); } }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(overlay.id.replace('modal-', '')); });
+        });
+    </script>
+</body>
+</html>

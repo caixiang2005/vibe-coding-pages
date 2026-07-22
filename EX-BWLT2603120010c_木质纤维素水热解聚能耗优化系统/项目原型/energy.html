@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>能耗优化分析 - 木质纤维素水热解聚能耗优化系统</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial;
+        }
+        .sidebar-item-active {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+        }
+        .sidebar-item:hover:not(.sidebar-item-active) {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+        }
+        .glass-card {
+            background: rgba(28, 28, 28, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .mac-traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .content-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .content-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        .btn-success {
+            background: #16a34a;
+            transition: all 0.2s;
+        }
+        .btn-success:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: modalIn 0.2s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .modal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .hover-lift {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+            transition: width 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-black">
+    <div id="modal-container"></div>
+    <div class="w-[1280px] max-w-[95vw] h-[900px] max-h-[90vh] flex overflow-hidden rounded-[24px] border border-white/10 bg-[#050505]">
+        <aside class="w-[240px] h-full flex flex-col p-4 bg-[#1e1e1e] border-r border-white/5">
+            <div class="flex gap-2 mb-8 px-2">
+                <div class="mac-traffic-light bg-[#ff5f56]"></div>
+                <div class="mac-traffic-light bg-[#ffbd2e]"></div>
+                <div class="mac-traffic-light bg-[#27c93f]"></div>
+            </div>
+            <div class="px-2 mb-4">
+                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest">核心任务</p>
+            </div>
+            <nav class="flex-1 space-y-1">
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="index.html">
+                    <i class="fa-solid fa-table-cells"></i>
+                    主控制面板
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="settings.html">
+                    <i class="fa-solid fa-gear"></i>
+                    工艺参数设置
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="monitor.html">
+                    <i class="fa-solid fa-chart-line"></i>
+                    实时监测仪表盘
+                </a>
+                <a class="sidebar-item sidebar-item-active flex items-center gap-3 px-3 py-2 text-[13px]" href="energy.html">
+                    <i class="fa-solid fa-leaf text-green-400"></i>
+                    能耗优化分析
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="data.html">
+                    <i class="fa-solid fa-database"></i>
+                    历史数据报表
+                </a>
+            </nav>
+            <div class="mt-auto p-3 glass-card rounded-xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full overflow-hidden">
+                        <img src="https://i01piccdn.sogoucdn.com/9f0c81ee016b30c7" alt="郑鹏" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium">郑鹏</p>
+                        <p class="text-[10px] text-gray-500">在线 (已授权)</p>
+                    </div>
+                    <a class="ml-auto text-gray-500 hover:text-red-400 transition-colors" href="login.html">
+                        <i class="fa-solid fa-door-open"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 h-full flex flex-col bg-[#121212] overflow-hidden">
+            <header class="h-16 flex items-center justify-between px-8 border-b border-white/5 bg-[#1e1e1e]/50">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-leaf text-green-500"></i>
+                    <span>木质纤维素水热解聚能耗优化系统</span>
+                </h2>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded-full text-xs">
+                        <span class="pulse-dot block w-2 h-2 bg-green-400 rounded-full"></span>
+                        能耗优化中
+                    </div>
+                    <div class="text-gray-400 text-sm" id="current-time"></div>
+                </div>
+            </header>
+            <div class="flex-1 p-6 overflow-y-auto content-scroll">
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="glass-card rounded-[16px] p-5 hover-lift">
+                        <div class="flex items-center justify-between mb-3">
+                            <i class="fa-solid fa-bolt text-yellow-400 text-xl"></i>
+                            <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded">今日</span>
+                        </div>
+                        <p class="text-2xl font-light">285.6</p>
+                        <p class="text-xs text-gray-500 mt-1">总能耗 (kWh)</p>
+                    </div>
+                    <div class="glass-card rounded-[16px] p-5 hover-lift">
+                        <div class="flex items-center justify-between mb-3">
+                            <i class="fa-solid fa-fire text-orange-400 text-xl"></i>
+                            <span class="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">较昨日</span>
+                        </div>
+                        <p class="text-2xl font-light text-green-400">-8.3%</p>
+                        <p class="text-xs text-gray-500 mt-1">能耗变化</p>
+                    </div>
+                    <div class="glass-card rounded-[16px] p-5 hover-lift">
+                        <div class="flex items-center justify-between mb-3">
+                            <i class="fa-solid fa-chart-simple text-cyan-400 text-xl"></i>
+                            <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded">效率</span>
+                        </div>
+                        <p class="text-2xl font-light text-cyan-400">3.42</p>
+                        <p class="text-xs text-gray-500 mt-1">COP 能效比</p>
+                    </div>
+                    <div class="glass-card rounded-[16px] p-5 hover-lift">
+                        <div class="flex items-center justify-between mb-3">
+                            <i class="fa-solid fa-coins text-emerald-400 text-xl"></i>
+                            <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded">预估</span>
+                        </div>
+                        <p class="text-2xl font-light">¥ 142.8</p>
+                        <p class="text-xs text-gray-500 mt-1">今日成本 (元)</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="glass-card rounded-[20px] p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-fire text-orange-400"></i>
+                                能量消耗分布
+                            </h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-400">加热反应器</span>
+                                    <span class="text-orange-400">42.5%</span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="progress-bar h-full rounded-full" style="width: 42.5%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-400">预热器</span>
+                                    <span class="text-yellow-400">23.8%</span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full" style="width: 23.8%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-400">进料泵</span>
+                                    <span class="text-blue-400">15.2%</span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full" style="width: 15.2%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-400">搅拌电机</span>
+                                    <span class="text-purple-400">10.5%</span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" style="width: 10.5%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-400">其他辅助</span>
+                                    <span class="text-gray-400">8.0%</span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-gray-600 to-gray-400 rounded-full" style="width: 8%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-[20px] p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-recycle text-green-400"></i>
+                                热量回收分析
+                            </h3>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="bg-white/5 rounded-xl p-4 text-center">
+                                <p class="text-xs text-gray-500 mb-1">热交换效率</p>
+                                <p class="text-2xl font-light text-green-400">78.5%</p>
+                            </div>
+                            <div class="bg-white/5 rounded-xl p-4 text-center">
+                                <p class="text-xs text-gray-500 mb-1">回收热量</p>
+                                <p class="text-2xl font-light text-cyan-400">156.2 kWh</p>
+                            </div>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-400">热回收利用率</span>
+                                <span class="text-green-400 text-sm">78.5%</span>
+                            </div>
+                            <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                <div class="progress-bar h-full rounded-full" style="width: 78.5%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-[20px] p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
+                            优化建议
+                        </h3>
+                        <button onclick="showModal('optimize-action')" class="btn-success px-4 py-1.5 rounded-lg text-xs">
+                            <i class="fa-solid fa-play mr-1"></i>应用优化
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-check-circle text-green-400"></i>
+                                <span class="font-medium text-sm">优化建议 #1</span>
+                            </div>
+                            <p class="text-xs text-gray-400">预热阶段温度可降低 5℃，预计节省 <span class="text-green-400 font-medium">12.3 kWh</span></p>
+                        </div>
+                        <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-lightbulb text-blue-400"></i>
+                                <span class="font-medium text-sm">优化建议 #2</span>
+                            </div>
+                            <p class="text-xs text-gray-400">反应器搅拌速率优化，预计提升转化率 <span class="text-blue-400 font-medium">2.1%</span></p>
+                        </div>
+                        <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-rocket text-purple-400"></i>
+                                <span class="font-medium text-sm">优化建议 #3</span>
+                            </div>
+                            <p class="text-xs text-gray-400">调整热交换器进出口温差，预计增加回收 <span class="text-purple-400 font-medium">8.5 kWh</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-[20px] p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-days text-cyan-400"></i>
+                            能耗历史对比
+                        </h3>
+                        <div class="flex gap-2">
+                            <button id="btn-week" onclick="switchHistoryView('week')" class="px-3 py-1 bg-blue-600 rounded text-xs">本周</button>
+                            <button id="btn-month" onclick="switchHistoryView('month')" class="px-3 py-1 bg-white/10 rounded text-xs">本月</button>
+                        </div>
+                    </div>
+                    <div id="history-chart" class="grid grid-cols-7 gap-2">
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-2">周一</p>
+                            <div class="h-24 bg-gradient-to-t from-green-700 to-green-500 rounded-t mx-auto w-full"></div>
+                            <p class="text-xs mt-2">268</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-2">周二</p>
+                            <div class="h-24 bg-gradient-to-t from-green-700 to-green-500 rounded-t mx-auto w-full" style="height: 80px"></div>
+                            <p class="text-xs mt-2">245</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-2">周三</p>
+                            <div class="h-24 bg-gradient-to-t from-green-700 to-green-500 rounded-t mx-auto w-full" style="height: 95px"></div>
+                            <p class="text-xs mt-2">292</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-2">周四</p>
+                            <div class="h-24 bg-gradient-to-t from-green-700 to-green-500 rounded-t mx-auto w-full" style="height: 70px"></div>
+                            <p class="text-xs mt-2">215</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-2">周五</p>
+                            <div class="h-24 bg-gradient-to-t from-green-700 to-green-500 rounded-t mx-auto w-full" style="height: 60px"></div>
+                            <p class="text-xs mt-2">185</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-2">周六</p>
+                            <div class="h-24 bg-gradient-to-t from-green-700 to-green-500 rounded-t mx-auto w-full" style="height: 50px"></div>
+                            <p class="text-xs mt-2">156</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-gray-500 mb-2">周日</p>
+                            <div class="h-24 bg-gradient-to-t from-orange-700 to-orange-500 rounded-t mx-auto w-full animate-pulse" style="height: 100px"></div>
+                            <p class="text-xs mt-2 text-orange-400">308</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).replace(/\//g, '.');
+            document.getElementById('current-time').textContent = timeStr;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        const historyData = {
+            week: [
+                { day: '周一', height: 268, color: 'from-green-700 to-green-500', textColor: '' },
+                { day: '周二', height: 80, color: 'from-green-700 to-green-500', textColor: '' },
+                { day: '周三', height: 95, color: 'from-green-700 to-green-500', textColor: '' },
+                { day: '周四', height: 70, color: 'from-green-700 to-green-500', textColor: '' },
+                { day: '周五', height: 60, color: 'from-green-700 to-green-500', textColor: '' },
+                { day: '周六', height: 50, color: 'from-green-700 to-green-500', textColor: '' },
+                { day: '周日', height: 100, color: 'from-orange-700 to-orange-500', textColor: 'text-orange-400', animate: true }
+            ],
+            month: [
+                { day: '1日', height: 320, color: 'from-blue-700 to-blue-500', textColor: '' },
+                { day: '5日', height: 285, color: 'from-green-700 to-green-500', textColor: '' },
+                { day: '10日', height: 95, color: 'from-green-700 to-green-500', textColor: '' },
+                { day: '15日', height: 75, color: 'from-green-700 to-green-500', textColor: '' },
+                { day: '20日', height: 110, color: 'from-yellow-700 to-yellow-500', textColor: '' },
+                { day: '25日', height: 55, color: 'from-green-700 to-green-500', textColor: '' },
+                { day: '30日', height: 120, color: 'from-orange-700 to-orange-500', textColor: 'text-orange-400', animate: true }
+            ]
+        };
+
+        function switchHistoryView(view) {
+            const btnWeek = document.getElementById('btn-week');
+            const btnMonth = document.getElementById('btn-month');
+            const chart = document.getElementById('history-chart');
+            
+            btnWeek.className = view === 'week' ? 'px-3 py-1 bg-blue-600 rounded text-xs' : 'px-3 py-1 bg-white/10 rounded text-xs';
+            btnMonth.className = view === 'month' ? 'px-3 py-1 bg-blue-600 rounded text-xs' : 'px-3 py-1 bg-white/10 rounded text-xs';
+            
+            const data = historyData[view];
+            chart.innerHTML = data.map(d => `
+                <div class="text-center">
+                    <p class="text-[10px] text-gray-500 mb-2">${d.day}</p>
+                    <div class="h-24 bg-gradient-to-t ${d.color} rounded-t mx-auto w-full ${d.animate ? 'animate-pulse' : ''}" style="height: ${d.height}px"></div>
+                    <p class="text-xs mt-2 ${d.textColor}">${d.height}</p>
+                </div>
+            `).join('');
+        }
+
+        function showModal(type) {
+            const container = document.getElementById('modal-container');
+            let content = '';
+            if (type === 'optimize-action') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[500px] max-w-[90vw] overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-wand-magic-sparkles text-green-400 mr-2"></i>应用优化方案</h3>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-400 text-sm mb-4">是否应用系统推荐的优化参数？</p>
+                            <div class="bg-green-500/10 rounded-lg p-4 text-sm space-y-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked class="w-4 h-4 rounded bg-white/10 border-gray-600 text-green-500">
+                                    <span class="text-green-400"><i class="fa-solid fa-check mr-1"></i>预热温度降低 5℃</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked class="w-4 h-4 rounded bg-white/10 border-gray-600 text-green-500">
+                                    <span class="text-green-400"><i class="fa-solid fa-check mr-1"></i>搅拌速率优化至 145 rpm</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked class="w-4 h-4 rounded bg-white/10 border-gray-600 text-green-500">
+                                    <span class="text-green-400"><i class="fa-solid fa-check mr-1"></i>热交换器温差调整</span>
+                                </label>
+                            </div>
+                            <div class="mt-4 p-3 bg-white/5 rounded-lg text-sm">
+                                <p class="text-gray-400">预计节能效果</p>
+                                <p class="text-green-400 text-lg font-medium">8.3% (约 23.7 kWh/天)</p>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex gap-3">
+                            <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"><i class="fa-solid fa-xmark mr-1"></i>取消</button>
+                            <button onclick="applyOptimize()" class="flex-1 btn-success px-4 py-2 rounded-lg"><i class="fa-solid fa-check mr-1"></i>确认应用</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'optimize-success') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[350px] max-w-[90vw] text-center overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium flex-1 pr-12">操作结果</h3>
+                        </div>
+                        <div class="p-8">
+                            <i class="fa-solid fa-circle-check text-5xl text-green-500 mb-4"></i>
+                            <h3 class="text-lg font-bold">优化已应用</h3>
+                            <p class="text-gray-400 mt-1 text-sm">系统参数已更新，预计节能 8.3%</p>
+                        </div>
+                    </div></div>`;
+                setTimeout(closeModal, 2000);
+            }
+            container.innerHTML = content;
+        }
+
+        function applyOptimize() {
+            console.log('应用优化方案');
+            showModal('optimize-success');
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modal-container').innerHTML = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

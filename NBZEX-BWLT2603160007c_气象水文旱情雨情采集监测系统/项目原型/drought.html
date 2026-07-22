@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>气象水文旱情雨情采集监测系统 - 旱情监测</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpg') center center no-repeat;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 30px;
+    }
+
+    .mac-window {
+      width: 1280px;
+      background: #1a1d23;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .titlebar {
+      height: 42px;
+      background: linear-gradient(180deg, #3a3d44 0%, #2d3038 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #1a1a1e;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .traffic-lights span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .tl-close {
+      background: #ff5f57;
+      border: 1px solid #e14640;
+    }
+
+    .tl-minimize {
+      background: #febc2e;
+      border: 1px solid #d4a123;
+    }
+
+    .tl-maximize {
+      background: #28c840;
+      border: 1px solid #1aab29;
+    }
+
+    .titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      color: #b0b3ba;
+      font-weight: 500;
+    }
+
+    .main-layout {
+      display: flex;
+      height: 720px;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #1f222a;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 16px 0;
+    }
+
+    .sidebar-header {
+      padding: 8px 20px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 12px;
+    }
+
+    .sidebar-header h3 {
+      font-size: 11px;
+      color: #5b8def;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-header p {
+      font-size: 10px;
+      color: #555a65;
+    }
+
+    .nav-group {
+      padding: 0 12px;
+      margin-bottom: 8px;
+    }
+
+    .nav-label {
+      font-size: 10px;
+      color: #484c56;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 8px 8px 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      color: #8a8f9c;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #c0c4ce;
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, #2d5dd4 0%, #3b6ce8 100%);
+      color: #fff;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(45, 93, 212, 0.3);
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      background: #14161c;
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 3px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .top-bar h1 {
+      font-size: 20px;
+      color: #e8eaf0;
+      font-weight: 600;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+    }
+
+    .toolbar-btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #a0a5b5;
+      cursor: pointer;
+    }
+
+    .toolbar-btn.primary {
+      background: #2d5dd4;
+      color: #fff;
+      border-color: #2d5dd4;
+    }
+
+    .drought-overview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .drought-card {
+      background: linear-gradient(145deg, #1e2130 0%, #1a1d28 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .drought-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .drought-card:nth-child(1)::before {
+      background: linear-gradient(90deg, #dc2626, #f87171);
+    }
+
+    .drought-card:nth-child(2)::before {
+      background: linear-gradient(90deg, #ea580c, #fb923c);
+    }
+
+    .drought-card:nth-child(3)::before {
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    .drought-card:nth-child(4)::before {
+      background: linear-gradient(90deg, #22c55e, #4ade80);
+    }
+
+    .drought-card-label {
+      font-size: 10px;
+      color: #5b6078;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .drought-card-value {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .drought-card:nth-child(1) .drought-card-value {
+      color: #f87171;
+    }
+
+    .drought-card:nth-child(2) .drought-card-value {
+      color: #fb923c;
+    }
+
+    .drought-card:nth-child(3) .drought-card-value {
+      color: #fbbf24;
+    }
+
+    .drought-card:nth-child(4) .drought-card-value {
+      color: #4ade80;
+    }
+
+    .drought-card-sub {
+      font-size: 10px;
+      color: #484c56;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .panel {
+      background: linear-gradient(145deg, #1e2130 0%, #1a1d28 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      color: #c0c4d0;
+      font-weight: 600;
+    }
+
+    .soil-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .soil-table th {
+      font-size: 10px;
+      color: #5b6078;
+      font-weight: 600;
+      text-align: left;
+      padding: 8px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      letter-spacing: 0.5px;
+    }
+
+    .soil-table td {
+      font-size: 12px;
+      color: #a0a5b5;
+      padding: 9px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .moisture-bar {
+      width: 80px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 3px;
+      display: inline-block;
+      vertical-align: middle;
+      overflow: hidden;
+      margin-right: 6px;
+    }
+
+    .moisture-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .drought-level-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .tag-severe {
+      background: rgba(220, 38, 38, 0.15);
+      color: #ef4444;
+    }
+
+    .tag-heavy {
+      background: rgba(234, 88, 12, 0.15);
+      color: #fb923c;
+    }
+
+    .tag-moderate {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+    }
+
+    .tag-light {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .tag-none {
+      background: rgba(34, 197, 94, 0.08);
+      color: #6ee7b7;
+    }
+
+    .index-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .index-item {
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      border-left: 3px solid;
+    }
+
+    .index-item:nth-child(1) {
+      border-color: #f59e0b;
+    }
+
+    .index-item:nth-child(2) {
+      border-color: #3b82f6;
+    }
+
+    .index-item:nth-child(3) {
+      border-color: #8b5cf6;
+    }
+
+    .index-item:nth-child(4) {
+      border-color: #ec4899;
+    }
+
+    .index-name {
+      font-size: 11px;
+      color: #8a8f9c;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .index-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .index-val {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .index-item:nth-child(1) .index-val {
+      color: #fbbf24;
+    }
+
+    .index-item:nth-child(2) .index-val {
+      color: #60a5fa;
+    }
+
+    .index-item:nth-child(3) .index-val {
+      color: #a78bfa;
+    }
+
+    .index-item:nth-child(4) .index-val {
+      color: #f472b6;
+    }
+
+    .index-desc {
+      font-size: 10px;
+      color: #5b6078;
+    }
+
+    .index-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .index-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .trend-chart {
+      position: relative;
+      height: 180px;
+    }
+
+    .trend-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 160px;
+      padding-top: 10px;
+    }
+
+    .trend-bar-pair {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .trend-bar {
+      width: 100%;
+      border-radius: 2px 2px 0 0;
+      min-height: 3px;
+    }
+
+    .trend-label {
+      font-size: 8px;
+      color: #484c56;
+      text-align: center;
+      padding-top: 4px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: #5b6078;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    .region-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .region-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 6px;
+    }
+
+    .region-rank {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .rank-1 {
+      background: rgba(220, 38, 38, 0.15);
+      color: #ef4444;
+    }
+
+    .rank-2 {
+      background: rgba(234, 88, 12, 0.15);
+      color: #fb923c;
+    }
+
+    .rank-3 {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+    }
+
+    .rank-4 {
+      background: rgba(59, 130, 246, 0.1);
+      color: #60a5fa;
+    }
+
+    .rank-5 {
+      background: rgba(59, 130, 246, 0.1);
+      color: #60a5fa;
+    }
+
+    .region-name {
+      flex: 1;
+      font-size: 12px;
+      color: #a0a5b5;
+    }
+
+    .region-index {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .region-area {
+      font-size: 10px;
+      color: #5b6078;
+      width: 80px;
+      text-align: right;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: #1e2130;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-header {
+      height: 42px;
+      background: linear-gradient(180deg, #3a3d44 0%, #2d3038 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #1a1a1e;
+    }
+
+    .modal-traffic-lights { display: flex; gap: 8px; }
+    .modal-traffic-lights span { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+    .modal-title {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      color: #b0b3ba;
+      font-weight: 500;
+    }
+
+    .modal-body { padding: 20px; }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .detail-item {
+      background: rgba(255, 255, 255, 0.02);
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .detail-label { font-size: 10px; color: #5b6078; margin-bottom: 4px; }
+
+    .detail-value { font-size: 13px; color: #c0c4d0; font-weight: 500; }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-label {
+      font-size: 11px;
+      color: #6b7080;
+      font-weight: 500;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #14161c;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #a0a5b5;
+      outline: none;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .form-input:focus, .form-select:focus { border-color: #2d5dd4; }
+
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #a0a5b5;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .modal-btn:hover { background: rgba(255, 255, 255, 0.08); color: #c0c4ce; }
+    .modal-btn.primary { background: #2d5dd4; color: #fff; border-color: #2d5dd4; }
+    .modal-btn.primary:hover { background: #3b6ce8; }
+
+    .export-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .export-option {
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .export-option:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: #2d5dd4;
+    }
+
+    .export-option-icon { font-size: 24px; margin-bottom: 8px; }
+
+    .export-option-name { font-size: 12px; color: #a0a5b5; }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .history-table th {
+      font-size: 10px;
+      color: #5b6078;
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .history-table td {
+      font-size: 12px;
+      color: #a0a5b5;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .soil-table tr { cursor: pointer; }
+    .soil-table tr:hover td { background: rgba(45, 93, 212, 0.1); }
+
+    .region-item { cursor: pointer; transition: all 0.15s; }
+    .region-item:hover { background: rgba(45, 93, 212, 0.1); }
+  </style>
+</head>
+
+<body>
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights"><span class="tl-close"></span><span class="tl-minimize"></span><span
+          class="tl-maximize"></span></div>
+      <div class="titlebar-text">气象水文旱情雨情采集监测系统</div>
+    </div>
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h3>监测中心</h3>
+          <p>水利部信息中心</p>
+        </div>
+        <div class="nav-group">
+          <div class="nav-item" onclick="window.location.href = 'dashboard.html'">
+            <span class="nav-icon">&#9632;</span> 综合总览
+          </div>
+          <div class="nav-item" onclick="window.location.href = 'warning.html'">
+            <span class="nav-icon">&#9733;</span> 预警管理
+          </div>
+          <div class="nav-item" onclick="window.location.href = 'stations.html'">
+            <span class="nav-icon">&#9881;</span> 站点管理
+          </div>
+          <div class="nav-item" onclick="window.location.href = 'report.html'">
+            <span class="nav-icon">&#9776;</span> 报表统计
+          </div>
+          <div class="nav-item" onclick="window.location.href = 'rainfall.html'">
+            <span class="nav-icon">&#9650;</span> 雨情监测
+          </div>
+          <div class="nav-item" onclick="window.location.href = 'water.html'">
+            <span class="nav-icon">&#9644;</span> 水情监测
+          </div>
+          <div class="nav-item active" onclick="window.location.href = 'drought.html'">
+            <span class="nav-icon">&#9673;</span> 旱情监测
+          </div>
+          <div class="nav-item" onclick="window.location.href = 'setting.html'">
+            <span class="nav-icon">&#9881;</span> 系统设置
+          </div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="top-bar">
+          <h1>旱情监测</h1>
+          <div class="toolbar">
+            <button class="toolbar-btn" onclick="showModal('historyAnalysisModal')">历史分析</button>
+            <button class="toolbar-btn" onclick="showModal('exportReportModal')">导出报告</button>
+            <button class="toolbar-btn primary" onclick="refreshData()">更新数据</button>
+          </div>
+        </div>
+        <div class="drought-overview">
+          <div class="drought-card">
+            <div class="drought-card-label">特旱面积</div>
+            <div class="drought-card-value">6,540</div>
+            <div class="drought-card-sub">km2 / 占比 3.2%</div>
+          </div>
+          <div class="drought-card">
+            <div class="drought-card-label">重旱面积</div>
+            <div class="drought-card-value">14,520</div>
+            <div class="drought-card-sub">km2 / 占比 7.1%</div>
+          </div>
+          <div class="drought-card">
+            <div class="drought-card-label">中旱面积</div>
+            <div class="drought-card-value">29,040</div>
+            <div class="drought-card-sub">km2 / 占比 14.2%</div>
+          </div>
+          <div class="drought-card">
+            <div class="drought-card-label">受旱耕地</div>
+            <div class="drought-card-value">82.6</div>
+            <div class="drought-card-sub">万亩 / 影响人口 34.8万</div>
+          </div>
+        </div>
+        <div class="main-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">土壤墒情监测站数据</div>
+            </div>
+            <table class="soil-table">
+              <thead>
+                <tr>
+                  <th>站名</th>
+                  <th>10cm含水量</th>
+                  <th>20cm含水量</th>
+                  <th>40cm含水量</th>
+                  <th>旱情等级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr onclick="showModal('soilDetailModal')">
+                  <td>渭南蒲城站</td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:18%;background:#ef4444"></div>
+                    </div>8.2%
+                  </td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:22%;background:#ef4444"></div>
+                    </div>10.4%
+                  </td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:28%;background:#fb923c"></div>
+                    </div>14.6%
+                  </td>
+                  <td><span class="drought-level-tag tag-severe">特旱</span></td>
+                </tr>
+                <tr onclick="showModal('soilDetailModal')">
+                  <td>延安富县站</td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:24%;background:#fb923c"></div>
+                    </div>12.1%
+                  </td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:30%;background:#fbbf24"></div>
+                    </div>15.8%
+                  </td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:36%;background:#fbbf24"></div>
+                    </div>18.2%
+                  </td>
+                  <td><span class="drought-level-tag tag-heavy">重旱</span></td>
+                </tr>
+                <tr onclick="showModal('soilDetailModal')">
+                  <td>咸阳礼泉站</td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:32%;background:#fbbf24"></div>
+                    </div>16.4%
+                  </td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:38%;background:#fbbf24"></div>
+                    </div>19.2%
+                  </td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:44%;background:#4ade80"></div>
+                    </div>22.8%
+                  </td>
+                  <td><span class="drought-level-tag tag-moderate">中旱</span></td>
+                </tr>
+                <tr onclick="showModal('soilDetailModal')">
+                  <td>铜川耀州站</td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:40%;background:#4ade80"></div>
+                    </div>20.6%
+                  </td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:48%;background:#4ade80"></div>
+                    </div>24.8%
+                  </td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:54%;background:#4ade80"></div>
+                    </div>28.2%
+                  </td>
+                  <td><span class="drought-level-tag tag-light">轻旱</span></td>
+                </tr>
+                <tr onclick="showModal('soilDetailModal')">
+                  <td>汉中城固站</td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:62%;background:#22c55e"></div>
+                    </div>32.4%
+                  </td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:68%;background:#22c55e"></div>
+                    </div>35.6%
+                  </td>
+                  <td>
+                    <div class="moisture-bar">
+                      <div class="moisture-fill" style="width:72%;background:#22c55e"></div>
+                    </div>38.4%
+                  </td>
+                  <td><span class="drought-level-tag tag-none">无旱</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">综合旱情指数</div>
+            </div>
+            <div class="index-panel">
+              <div class="index-item">
+                <div class="index-name">气象干旱指数 (MCI)</div>
+                <div class="index-value-row"><span class="index-val">-1.82</span><span class="index-desc">中度气象干旱</span>
+                </div>
+                <div class="index-bar">
+                  <div class="index-bar-fill" style="width:65%;background:#fbbf24"></div>
+                </div>
+              </div>
+              <div class="index-item">
+                <div class="index-name">标准化降水指数 (SPI)</div>
+                <div class="index-value-row"><span class="index-val">-1.24</span><span class="index-desc">轻度偏旱</span>
+                </div>
+                <div class="index-bar">
+                  <div class="index-bar-fill" style="width:48%;background:#60a5fa"></div>
+                </div>
+              </div>
+              <div class="index-item">
+                <div class="index-name">土壤湿度距平 (%)</div>
+                <div class="index-value-row"><span class="index-val">-28.4</span><span class="index-desc">明显偏低</span>
+                </div>
+                <div class="index-bar">
+                  <div class="index-bar-fill" style="width:72%;background:#a78bfa"></div>
+                </div>
+              </div>
+              <div class="index-item">
+                <div class="index-name">蒸散发距平 (mm)</div>
+                <div class="index-value-row"><span class="index-val">+42.6</span><span class="index-desc">偏高，加剧旱情</span>
+                </div>
+                <div class="index-bar">
+                  <div class="index-bar-fill" style="width:58%;background:#f472b6"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">月度旱情面积变化 (万km2)</div>
+            </div>
+            <div class="trend-bars">
+              <div class="trend-bar-pair">
+                <div class="trend-bar" style="height:22%;background:#fbbf24"></div>
+                <div class="trend-bar" style="height:8%;background:#ef4444"></div>
+                <div class="trend-label">10月</div>
+              </div>
+              <div class="trend-bar-pair">
+                <div class="trend-bar" style="height:28%;background:#fbbf24"></div>
+                <div class="trend-bar" style="height:12%;background:#ef4444"></div>
+                <div class="trend-label">11月</div>
+              </div>
+              <div class="trend-bar-pair">
+                <div class="trend-bar" style="height:35%;background:#fbbf24"></div>
+                <div class="trend-bar" style="height:16%;background:#ef4444"></div>
+                <div class="trend-label">12月</div>
+              </div>
+              <div class="trend-bar-pair">
+                <div class="trend-bar" style="height:48%;background:#fbbf24"></div>
+                <div class="trend-bar" style="height:22%;background:#ef4444"></div>
+                <div class="trend-label">1月</div>
+              </div>
+              <div class="trend-bar-pair">
+                <div class="trend-bar" style="height:58%;background:#fbbf24"></div>
+                <div class="trend-bar" style="height:28%;background:#ef4444"></div>
+                <div class="trend-label">2月</div>
+              </div>
+              <div class="trend-bar-pair">
+                <div class="trend-bar" style="height:42%;background:#fbbf24"></div>
+                <div class="trend-bar" style="height:18%;background:#ef4444"></div>
+                <div class="trend-label">3月</div>
+              </div>
+            </div>
+            <div class="legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background:#fbbf24"></div>中旱以上
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:#ef4444"></div>重旱以上
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">旱情严重地区排名</div>
+            </div>
+            <div class="region-list">
+              <div class="region-item" onclick="showModal('regionDetailModal')">
+                <span class="region-rank rank-1">1</span>
+                <span class="region-name">渭南市</span>
+                <span class="region-index" style="color:#ef4444">3.82</span>
+                <span class="region-area">4,280 km2</span>
+              </div>
+              <div class="region-item" onclick="showModal('regionDetailModal')">
+                <span class="region-rank rank-2">2</span>
+                <span class="region-name">延安市</span>
+                <span class="region-index" style="color:#fb923c">3.24</span>
+                <span class="region-area">3,860 km2</span>
+              </div>
+              <div class="region-item" onclick="showModal('regionDetailModal')">
+                <span class="region-rank rank-3">3</span>
+                <span class="region-name">咸阳市</span>
+                <span class="region-index" style="color:#fbbf24">2.76</span>
+                <span class="region-area">2,940 km2</span>
+              </div>
+              <div class="region-item" onclick="showModal('regionDetailModal')">
+                <span class="region-rank rank-4">4</span>
+                <span class="region-name">铜川市</span>
+                <span class="region-index" style="color:#60a5fa">2.18</span>
+                <span class="region-area">1,620 km2</span>
+              </div>
+              <div class="region-item" onclick="showModal('regionDetailModal')">
+                <span class="region-rank rank-5">5</span>
+                <span class="region-name">宝鸡市</span>
+                <span class="region-index" style="color:#60a5fa">1.84</span>
+                <span class="region-area">1,240 km2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="soilDetailModal">
+    <div class="modal" style="width:520px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">土壤墒情详情 - 渭南蒲城站</div>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">站号</div>
+            <div class="detail-value">61402500</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">所属区域</div>
+            <div class="detail-value">渭南市蒲城县</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">10cm含水量</div>
+            <div class="detail-value" style="color:#ef4444">8.2%</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">20cm含水量</div>
+            <div class="detail-value" style="color:#ef4444">10.4%</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">40cm含水量</div>
+            <div class="detail-value" style="color:#fb923c">14.6%</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">旱情等级</div>
+            <div class="detail-value"><span class="drought-level-tag tag-severe">特旱</span></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">经度</div>
+            <div class="detail-value">E 109.5°</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">纬度</div>
+            <div class="detail-value">N 34.9°</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">数据更新</div>
+            <div class="detail-value">2026-03-25 14:30</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">通讯状态</div>
+            <div class="detail-value" style="color:#22c55e">正常</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('soilDetailModal')">关闭</button>
+        <button class="modal-btn primary" onclick="closeModal('soilDetailModal');showModal('historyAnalysisModal')">历史分析</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="regionDetailModal">
+    <div class="modal" style="width:480px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">区域详情 - 渭南市</div>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">区域名称</div>
+            <div class="detail-value">渭南市</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">旱情指数</div>
+            <div class="detail-value" style="color:#ef4444">3.82</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">受灾面积</div>
+            <div class="detail-value">4,280 km²</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">占比</div>
+            <div class="detail-value">32.5%</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">特旱面积</div>
+            <div class="detail-value" style="color:#ef4444">1,420 km²</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">重旱面积</div>
+            <div class="detail-value" style="color:#fb923c">1,680 km²</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">中旱面积</div>
+            <div class="detail-value" style="color:#fbbf24">1,180 km²</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">受影响人口</div>
+            <div class="detail-value">12.8万人</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('regionDetailModal')">关闭</button>
+        <button class="modal-btn primary" onclick="closeModal('regionDetailModal')">查看详情</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="historyAnalysisModal">
+    <div class="modal" style="width:600px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">历史旱情分析</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-row" style="margin-bottom:16px">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">选择站点</label>
+            <select class="form-select">
+              <option>渭南蒲城站</option>
+              <option>延安富县站</option>
+              <option>咸阳礼泉站</option>
+              <option>铜川耀州站</option>
+              <option>汉中城固站</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">分析时段</label>
+            <select class="form-select">
+              <option>最近30天</option>
+              <option>最近90天</option>
+              <option>最近180天</option>
+              <option>近一年</option>
+            </select>
+          </div>
+        </div>
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>MCI指数</th>
+              <th>SPI指数</th>
+              <th>土壤湿度</th>
+              <th>旱情等级</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026-03-25</td>
+              <td style="color:#ef4444">-1.82</td>
+              <td style="color:#fb923c">-1.24</td>
+              <td style="color:#ef4444">8.2%</td>
+              <td><span class="drought-level-tag tag-severe">特旱</span></td>
+            </tr>
+            <tr>
+              <td>2026-03-20</td>
+              <td style="color:#fb923c">-1.56</td>
+              <td style="color:#fbbf24">-1.08</td>
+              <td style="color:#fb923c">10.8%</td>
+              <td><span class="drought-level-tag tag-heavy">重旱</span></td>
+            </tr>
+            <tr>
+              <td>2026-03-15</td>
+              <td style="color:#fbbf24">-1.32</td>
+              <td style="color:#fbbf24">-0.92</td>
+              <td style="color:#fbbf24">14.2%</td>
+              <td><span class="drought-level-tag tag-moderate">中旱</span></td>
+            </tr>
+            <tr>
+              <td>2026-03-10</td>
+              <td style="color:#fbbf24">-1.08</td>
+              <td style="color:#60a5fa">-0.68</td>
+              <td style="color:#fbbf24">16.8%</td>
+              <td><span class="drought-level-tag tag-moderate">中旱</span></td>
+            </tr>
+            <tr>
+              <td>2026-03-05</td>
+              <td style="color:#60a5fa">-0.72</td>
+              <td style="color:#22c55e">-0.32</td>
+              <td style="color:#4ade80">20.4%</td>
+              <td><span class="drought-level-tag tag-light">轻旱</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('historyAnalysisModal')">关闭</button>
+        <button class="modal-btn primary" onclick="closeModal('historyAnalysisModal');showModal('exportReportModal')">导出报告</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="exportReportModal">
+    <div class="modal" style="width:480px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">导出旱情报告</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">报告类型</label>
+          <select class="form-select">
+            <option>旱情周报</option>
+            <option>旱情月报</option>
+            <option>旱情季报</option>
+            <option>专题分析报告</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">开始日期</label>
+            <input type="date" class="form-input" value="2026-03-01">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">结束日期</label>
+            <input type="date" class="form-input" value="2026-03-25">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">区域范围</label>
+          <select class="form-select">
+            <option>全省</option>
+            <option>关中地区</option>
+            <option>陕北地区</option>
+            <option>陕南地区</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">导出格式</label>
+          <div class="export-options">
+            <div class="export-option" onclick="this.style.borderColor='#2d5dd4';this.style.background='rgba(45,93,212,0.1)'">
+              <div class="export-option-icon">&#128196;</div>
+              <div class="export-option-name">Word</div>
+            </div>
+            <div class="export-option" onclick="this.style.borderColor='#2d5dd4';this.style.background='rgba(45,93,212,0.1)'">
+              <div class="export-option-icon">&#128220;</div>
+              <div class="export-option-name">PDF</div>
+            </div>
+            <div class="export-option" onclick="this.style.borderColor='#2d5dd4';this.style.background='rgba(45,93,212,0.1)'">
+              <div class="export-option-icon">&#128196;</div>
+              <div class="export-option-name">Excel</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('exportReportModal')">取消</button>
+        <button class="modal-btn primary" onclick="closeModal('exportReportModal')">确认导出</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="successModal">
+    <div class="modal" style="width:320px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">操作成功</div>
+      </div>
+      <div class="modal-body" style="text-align:center;padding:30px 20px">
+        <div style="font-size:40px;margin-bottom:12px;color:#22c55e">&#10003;</div>
+        <p style="color:#a0a5b5;font-size:13px">旱情数据已成功更新</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center">
+        <button class="modal-btn primary" onclick="closeModal('successModal')">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function refreshData() {
+      showModal('successModal');
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SafeDrive Pro 2026 - 主校验台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --mac-bg-0: #0b0c0f;
+            --mac-bg-1: #0f1117;
+            --mac-surface: rgba(28, 28, 30, 0.72);
+            --mac-surface-strong: rgba(28, 28, 30, 0.86);
+            --mac-border: rgba(255, 255, 255, 0.10);
+            --mac-border-soft: rgba(255, 255, 255, 0.08);
+            --mac-text: rgba(255, 255, 255, 0.92);
+            --mac-text-dim: rgba(255, 255, 255, 0.68);
+            --mac-text-muted: rgba(255, 255, 255, 0.48);
+            --mac-blue: #0a84ff;
+            --mac-blue-dim: rgba(10, 132, 255, 0.22);
+            --mac-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+            --mac-window-radius: 18px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('./static/bg.jpeg');
+            color: var(--mac-text);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+
+        }
+
+        .liquid-glass {
+            background: var(--mac-surface);
+            backdrop-filter: saturate(180%) blur(26px);
+            -webkit-backdrop-filter: saturate(180%) blur(26px);
+            border: 1px solid var(--mac-border-soft);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+        }
+
+        .mac-desktop {
+            width: 100vw;
+            height: 100vh;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mac-window {
+            width: 1440px;
+            height: 900px;
+            border-radius: var(--mac-window-radius);
+            box-shadow: var(--mac-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            background: rgba(15, 17, 23, 0.35);
+        }
+
+        .mac-titlebar {
+            height: 52px;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--mac-surface-strong);
+            backdrop-filter: saturate(180%) blur(26px);
+            -webkit-backdrop-filter: saturate(180%) blur(26px);
+            border-bottom: 1px solid var(--mac-border-soft);
+            user-select: none;
+        }
+
+        .mac-traffic {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 4px;
+        }
+
+        .mac-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 9999px;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28) inset;
+        }
+
+        .mac-dot.red {
+            background: #ff5f57;
+        }
+
+        .mac-dot.yellow {
+            background: #febc2e;
+        }
+
+        .mac-dot.green {
+            background: #28c840;
+        }
+        .mac-dot.gray {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .mac-title {
+            flex: 1;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+        }
+
+        .sidebar-item.active {
+            background: var(--mac-blue-dim);
+            color: var(--mac-blue);
+            border-radius: 10px;
+            box-shadow: 0 0 0 1px rgba(10, 132, 255, 0.20) inset;
+        }
+
+        .control-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .control-btn:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 9999px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.18);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        #scene-map .maplibregl-control-container {
+            display: none;
+        }
+
+        @supports not ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+
+            .liquid-glass,
+            .mac-titlebar {
+                background: rgba(28, 28, 30, 0.92);
+            }
+        }
+    </style>
+</head>
+
+<body class="overflow-hidden">
+    <div class="mac-desktop">
+        <div class="mac-window">
+            <header class="mac-titlebar">
+                <div class="mac-traffic">
+                    <span class="mac-dot red"></span>
+                    <span class="mac-dot yellow"></span>
+                    <span class="mac-dot green"></span>
+                </div>
+                <div class="mac-title" style="text-align: center;">自动驾驶决策方案安全校验辅助软件</div>
+            </header>
+            <div class="flex h-[calc(100%-52px)] overflow-hidden">
+                <aside class="w-[280px] liquid-glass border-r border-white/10 flex flex-col p-4">
+                    <nav class="flex-1 space-y-1">
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="index.html">
+                            <span class="iconify mr-3 text-lg" data-icon="solar:widget-3-bold"></span>
+                            主校验台
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm text-white/55"
+                            href="data_analysis.html">
+                            <span class="iconify mr-3 text-lg" data-icon="solar:chart-square-bold"></span>
+                            数据分析
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm text-white/55" href="scenario_library.html">
+                            <span class="iconify mr-3 text-lg" data-icon="solar:folder-with-files-bold"></span>
+                            场景库
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm text-white/55" href="compliance_check.html">
+                            <span class="iconify mr-3 text-lg" data-icon="solar:layers-minimalistic-bold"></span>
+                            合规性检查
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm text-white/55" href="sotif_verification.html">
+                            <span class="iconify mr-3 text-lg" data-icon="solar:shield-warning-bold"></span>
+                            SOTIF 验证
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm text-white/55"
+                            href="system_settings.html">
+                            <span class="iconify mr-3 text-lg" data-icon="solar:settings-bold"></span>
+                            系统设置
+                        </a>
+                    </nav>
+                    <div class="mt-auto pt-4 border-t border-white/10 flex items-center gap-3 px-2">
+                        <div
+                            class="relative w-10 h-10 flex items-center justify-center font-bold text-white">
+                            <img class="w-full h-full object-cover rounded-full " alt="王一辰"
+                                src="https://i02piccdn.sogoucdn.com/40248540f6e11524" />
+                            <div
+                                class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black/50 rounded-full">
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-white/90">王一辰</span>
+                            <span class="text-[10px] text-white/55 leading-none">高级校验工程师</span>
+                        </div>
+                        <button class="ml-auto text-white/55 hover:text-white/85 transition-colors">
+                            <span class="iconify" data-icon="solar:logout-bold"></span>
+                        </button>
+                    </div>
+                </aside>
+                <main class="flex-1 flex flex-col relative">
+                    <div class="flex-1 relative overflow-hidden bg-black/40">
+                        <!-- 3D 仿真画面的占位 -->
+                        <div id="scene-map" class="absolute inset-0 z-0"></div>
+                        <img id="scene-fallback" alt="3D Autonomous Driving Simulation Environment with LIDAR Point Cloud"
+                            class="w-full h-full object-cover absolute inset-0 z-10"
+                            src="./static/map.png" />
+                        <div
+                            class="absolute top-6 left-6 right-6 z-20 flex justify-center md:left-[calc(1.5rem+15rem+1rem)] md:right-[calc(1.5rem+20rem+1rem)] pointer-events-none">
+                            <div
+                                class="liquid-glass px-3 py-2 rounded-full flex flex-wrap items-center justify-center gap-2 pointer-events-auto">
+                                <button id="btn-play"
+                                    class="control-btn px-3 py-1.5 rounded-full bg-blue-600 text-white text-xs font-semibold flex items-center gap-1.5">
+                                    <span class="iconify text-base" data-icon="mdi:play"></span>
+                                    <span id="btn-play-label">运行</span>
+                                </button>
+                                <button id="btn-step"
+                                    class="control-btn px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-xs font-semibold flex items-center gap-1.5">
+                                    <span class="iconify text-base" data-icon="mdi:step-forward"></span>
+                                    单步
+                                </button>
+                                <button id="btn-reset"
+                                    class="control-btn px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-xs font-semibold flex items-center gap-1.5">
+                                    <span class="iconify text-base" data-icon="mdi:restart"></span>
+                                    重置
+                                </button>
+                                <div class="hidden md:flex items-center gap-2 pl-2 border-l border-white/10">
+                                    <span class="text-[10px] text-white/50 font-semibold">速度</span>
+                                    <input id="sim-speed" type="range" min="0.25" max="4" step="0.25" value="1"
+                                        class="w-28 accent-blue-500">
+                                    <span id="sim-speed-label" class="text-[10px] text-white/70 font-mono w-10 text-right">1.00x</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 叠加在仿真上的 HUD 元素 -->
+                        <div class="absolute top-6 left-6 flex flex-col gap-4 z-10">
+                            <div class="liquid-glass p-4 rounded-xl w-60">
+                                <h3 class="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">校验任务控制
+                                    (Validation Run)
+                                </h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2 text-xs text-white/80">
+                                            <span class="w-2 h-2 rounded-full bg-green-500" id="run-indicator"></span>
+                                            <span id="run-state">READY</span>
+                                        </div>
+                                        <button id="btn-run-check"
+                                            class="control-btn px-3 py-1.5 rounded-full bg-blue-600/90 text-white text-xs font-semibold">
+                                            运行校验
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div class="bg-white/5 p-2 rounded-lg">
+                                            <div class="text-[10px] text-gray-500">检查项</div>
+                                            <div class="text-xs font-bold font-mono text-white/90" id="metric-check-count">12</div>
+                                        </div>
+                                        <div class="bg-white/5 p-2 rounded-lg">
+                                            <div class="text-[10px] text-gray-500">通过率</div>
+                                            <div class="text-xs font-bold font-mono text-green-400" id="metric-pass-rate">100%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="liquid-glass p-4 rounded-xl w-60">
+                                <h3 class="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">决策轨迹校验
+                                    (Decision Path)
+                                </h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-300">置信度指数</span>
+                                        <span class="text-green-400 font-mono" id="metric-confidence">98.2%</span>
+                                    </div>
+                                    <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                                        <div class="bg-green-500 h-full w-[98%]" id="metric-confidence-bar"></div>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-300">刹车距离压力</span>
+                                        <span class="text-yellow-400 font-mono" id="metric-brake">4.21m</span>
+                                    </div>
+                                    <div class="pt-2 border-t border-white/10 space-y-2">
+                                        <div class="flex items-center justify-between text-[11px]">
+                                            <span class="text-white/60">安全距离阈值</span>
+                                            <span class="text-white/80 font-mono" id="threshold-distance-label">1.5m</span>
+                                        </div>
+                                        <input id="threshold-distance" type="range" min="0.8" max="3.0" step="0.1"
+                                            value="1.5" class="w-full accent-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="liquid-glass p-4 rounded-xl w-60">
+                                <h3 class="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">传感器仿真状态
+                                </h3>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button data-sensor="lidar"
+                                        class="bg-white/5 p-2 rounded-lg text-center hover:bg-white/10 transition-colors">
+                                        <div class="text-[10px] text-gray-500">LiDAR</div>
+                                        <div class="text-xs font-bold text-blue-400" id="sensor-lidar">NORMAL</div>
+                                        <div class="text-[10px] text-white/45 mt-1" id="sensor-lidar-sub">点击禁用</div>
+                                    </button>
+                                    <button data-sensor="camera"
+                                        class="bg-white/5 p-2 rounded-lg text-center hover:bg-white/10 transition-colors">
+                                        <div class="text-[10px] text-gray-500">Camera</div>
+                                        <div class="text-xs font-bold text-blue-400" id="sensor-camera">READY</div>
+                                        <div class="text-[10px] text-white/45 mt-1" id="sensor-camera-sub">点击禁用</div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 右侧监控面板 -->
+                        <div class="absolute inset-y-6 right-6 w-80 flex flex-col gap-4 z-10">
+                            <div class="flex-1 liquid-glass rounded-2xl p-5 flex flex-col">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h2 class="text-sm font-bold">实时参数监控</h2>
+                                    <span class="iconify text-blue-500" data-icon="solar:pulse-bold"></span>
+                                </div>
+                                <div class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                                    <!-- 动态指标 -->
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-xs">
+                                            <span class="text-gray-400 font-medium">接管率 (Take-over Rate)</span>
+                                            <span class="text-white font-mono" id="metric-takeover">0.02 / 100km</span>
+                                        </div>
+                                        <div class="h-24 w-full" id="chart-takeover"></div>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div id="card-collision" class="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="iconify text-red-500" data-icon="solar:danger-bold"></span>
+                                                <span class="text-xs font-bold text-red-500">碰撞风险警告</span>
+                                                <span class="ml-auto text-[10px] text-white/50 font-mono" id="metric-risk-distance">1.2m</span>
+                                            </div>
+                                            <p class="text-[11px] text-gray-300" id="collision-text">右前侧交通流注入过于频繁，安全距离缩减至阈值以下 (1.2m)。</p>
+                                            <div class="mt-2 flex items-center gap-2">
+                                                <button id="btn-ack-risk"
+                                                    class="control-btn px-2.5 py-1 rounded-full bg-white/10 text-white/80 text-[11px] font-semibold">
+                                                    确认
+                                                </button>
+                                                <button id="btn-risk-detail"
+                                                    class="control-btn px-2.5 py-1 rounded-full bg-white/10 text-white/80 text-[11px] font-semibold">
+                                                    查看详情
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl" id="card-compliance">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="iconify text-blue-500"
+                                                    data-icon="solar:check-circle-bold"></span>
+                                                <span class="text-xs font-bold text-blue-500">合规性检查通过</span>
+                                                <button id="btn-compliance-report"
+                                                    class="ml-auto control-btn px-2.5 py-1 rounded-full bg-white/10 text-white/80 text-[11px] font-semibold">
+                                                    查看报告
+                                                </button>
+                                            </div>
+                                            <p class="text-[11px] text-gray-300">当前决策完全符合 GB44495-2024 中关于非典型障碍物避让的规定。
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="pt-4 border-t border-white/10">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h3 class="text-xs text-gray-500 uppercase font-semibold">事件时间线</h3>
+                                            <button id="btn-clear-events"
+                                                class="control-btn px-2.5 py-1 rounded-full bg-white/10 text-white/70 text-[11px] font-semibold">
+                                                清空
+                                            </button>
+                                        </div>
+                                        <div class="space-y-2" id="event-list"></div>
+                                    </div>
+                                    <div class="pt-4 border-t border-white/10">
+                                        <h3 class="text-xs text-gray-500 mb-3 uppercase font-semibold">交通流注入 (SUMO)</h3>
+                                        <div class="flex gap-2 flex-wrap">
+                                            <button data-inject="ambulance"
+                                                class="control-btn px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[10px] text-gray-300">
+                                                救护车 <span class="font-mono" id="inject-ambulance">x2</span>
+                                            </button>
+                                            <button data-inject="congestion"
+                                                class="control-btn px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[10px] text-gray-300">
+                                                拥堵等级: <span class="font-semibold" id="inject-congestion">高</span>
+                                            </button>
+                                            <button data-inject="crossing"
+                                                class="control-btn px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[10px] text-gray-300">
+                                                横穿行入 <span class="font-mono" id="inject-crossing">x5</span>
+                                            </button>
+                                            <button id="btn-inject-clear"
+                                                class="control-btn px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[10px] text-gray-300">
+                                                清空注入
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 底部状态栏 -->
+                    <footer
+                        class="h-8 liquid-glass flex items-center justify-between px-4 text-[10px] font-medium text-gray-500">
+                        <div class="flex items-center gap-4">
+                            <span>SIM TIME: <span class="font-mono text-white/70" id="metric-simtime">00:00:00.00</span></span>
+                            <span class="flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                <span class="font-mono text-white/70" id="metric-fps">0.0</span>
+                                FPS
+                            </span>
+                            <span>LAT/LON: <span class="font-mono text-white/70" id="metric-latlon">31.2304 / 121.4737</span></span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span id="metric-standard">GB/T 47025-2026 已加载</span>
+                            <span class="text-blue-500" id="metric-ready">系统就绪 2026-03-16</span>
+                        </div>
+                    </footer>
+                </main>
+            </div>
+        </div>
+    </div>
+    <div id="modal" class="fixed inset-0 hidden items-center justify-center z-50">
+        <div id="modal-backdrop" class="absolute inset-0 bg-black/55"></div>
+        <div class="relative w-[min(720px,calc(100vw-48px))] max-h-[min(560px,calc(100vh-48px))] liquid-glass rounded-2xl border border-white/10 overflow-hidden">
+            <div class="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-600/25 flex items-center justify-center">
+                    <span class="iconify text-blue-300 text-xl" data-icon="solar:document-text-bold"></span>
+                </div>
+                <div class="flex-1">
+                    <div class="text-sm font-semibold text-white/90" id="modal-title">详情</div>
+                    <div class="text-[11px] text-white/55" id="modal-subtitle">校验输出</div>
+                </div>
+                <button id="btn-modal-close" class="control-btn px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-xs font-semibold">关闭</button>
+            </div>
+            <div class="p-5 overflow-auto custom-scrollbar" id="modal-content"></div>
+        </div>
+    </div>
+    <script>
+        // 初始化简单的 ECharts
+        const chartDom = document.getElementById('chart-takeover');
+        const myChart = echarts.init(chartDom);
+        const option = {
+            grid: { top: 5, bottom: 5, left: 0, right: 0 },
+            xAxis: { type: 'category', show: false },
+            yAxis: { type: 'value', show: false },
+            series: [{
+                data: [150, 230, 224, 218, 135, 147, 260, 150, 220, 180],
+                type: 'line',
+                smooth: true,
+                symbol: 'none',
+                lineStyle: { color: '#3b82f6', width: 2 },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(59, 130, 246, 0.3)' },
+                        { offset: 1, color: 'rgba(59, 130, 246, 0)' }
+                    ])
+                }
+            }]
+        };
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+
+        const byId = (id) => document.getElementById(id);
+        const simState = {
+            running: false,
+            timeSec: 0,
+            speed: 1,
+            fps: 0,
+            lastTs: performance.now(),
+            confidence: 0.982,
+            brakePressureM: 4.21,
+            safetyDistanceM: 1.2,
+            thresholdDistanceM: 1.5,
+            takeoverPer100km: 0.02,
+            sensors: { lidar: true, camera: true },
+            inject: { ambulance: 2, crossing: 5, congestion: '高' },
+            events: [],
+            checks: { total: 12, passRate: 1 }
+        };
+
+        const takeoverSeries = option.series[0].data.slice();
+        const takeoverMaxPoints = 28;
+        const pushTakeover = (value) => {
+            takeoverSeries.push(value);
+            while (takeoverSeries.length > takeoverMaxPoints) takeoverSeries.shift();
+            myChart.setOption({ series: [{ data: takeoverSeries }] }, { lazyUpdate: true });
+        };
+
+        const formatSimTime = (seconds) => {
+            const ms = Math.floor((seconds % 1) * 100);
+            const total = Math.floor(seconds);
+            const s = total % 60;
+            const m = Math.floor(total / 60) % 60;
+            const h = Math.floor(total / 3600);
+            const pad2 = (n) => String(n).padStart(2, '0');
+            return `${pad2(h)}:${pad2(m)}:${pad2(s)}.${String(ms).padStart(2, '0')}`;
+        };
+
+        const addEvent = (level, title, detail) => {
+            const item = {
+                id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                ts: simState.timeSec,
+                level,
+                title,
+                detail
+            };
+            simState.events.unshift(item);
+            if (simState.events.length > 8) simState.events.pop();
+            renderEvents();
+        };
+
+        const renderEvents = () => {
+            const container = byId('event-list');
+            if (!container) return;
+            container.innerHTML = simState.events.map((e) => {
+                const color = e.level === 'danger' ? 'text-red-300' : e.level === 'info' ? 'text-blue-300' : 'text-white/80';
+                return `
+                    <button data-event-id="${e.id}" class="w-full text-left p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-semibold ${color}">${e.title}</span>
+                            <span class="text-[10px] text-white/45 font-mono">${formatSimTime(e.ts)}</span>
+                        </div>
+                        <div class="text-[11px] text-white/55 mt-1">${e.detail}</div>
+                    </button>
+                `;
+            }).join('');
+        };
+
+        const openModal = (title, subtitle, html) => {
+            byId('modal-title').textContent = title;
+            byId('modal-subtitle').textContent = subtitle;
+            byId('modal-content').innerHTML = html;
+            const modal = byId('modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+        const closeModal = () => {
+            const modal = byId('modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        byId('btn-modal-close')?.addEventListener('click', closeModal);
+        byId('modal-backdrop')?.addEventListener('click', closeModal);
+        
+        const openConfirmWindow = () => {
+            const prev = byId('confirm-window');
+            if (prev) prev.remove();
+            const win = document.createElement('div');
+            win.id = 'confirm-window';
+            win.className = 'fixed z-[60] liquid-glass rounded-2xl border border-white/10 overflow-hidden';
+            win.style.width = '360px';
+            const initLeft = Math.max(12, Math.floor((window.innerWidth - 360) / 2));
+            const initTop = Math.max(12, Math.floor(window.innerHeight * 0.18));
+            win.style.left = initLeft + 'px';
+            win.style.top = initTop + 'px';
+            win.style.boxShadow = 'var(--mac-shadow)';
+            win.innerHTML = `
+                <div class="mac-titlebar cursor-move select-none">
+                    <div class="mac-traffic">
+                        <span class="mac-dot red" id="confirm-close"></span>
+                        <span class="mac-dot yellow"></span>
+                        <span class="mac-dot green"></span>
+                    </div>
+                    <div class="mac-title" style="text-align: center;">风险确认</div>
+                    <div class="mac-traffic opacity-0 pointer-events-none">
+                        <span class="mac-dot"></span>
+                        <span class="mac-dot"></span>
+                        <span class="mac-dot"></span>
+                    </div>
+                </div>
+                <div class="p-4 space-y-3">
+                    <div class="text-sm font-semibold text-white/90">是否确认记录此次风险？</div>
+                    <div class="text-[12px] text-white/55">当前安全距离 ${simState.safetyDistanceM.toFixed(1)}m / 阈值 ${simState.thresholdDistanceM.toFixed(1)}m</div>
+                    <div class="pt-2 flex justify-end gap-2">
+                        <button id="confirm-cancel" class="control-btn px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-xs font-semibold">取消</button>
+                        <button id="confirm-ok" class="control-btn px-3 py-1.5 rounded-full bg-blue-600 text-white text-xs font-semibold">确认</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(win);
+            const handle = win.querySelector('.mac-titlebar');
+            let dragging = false;
+            let sx = 0, sy = 0, sl = 0, st = 0;
+            const onMouseMove = (e) => {
+                if (!dragging) return;
+                const nl = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, sl + e.clientX - sx));
+                const nt = Math.max(0, Math.min(window.innerHeight - win.offsetHeight, st + e.clientY - sy));
+                win.style.left = nl + 'px';
+                win.style.top = nt + 'px';
+            };
+            const onMouseUp = () => {
+                dragging = false;
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            };
+            handle.addEventListener('mousedown', (e) => {
+                dragging = true;
+                sx = e.clientX;
+                sy = e.clientY;
+                sl = parseInt(win.style.left) || 0;
+                st = parseInt(win.style.top) || 0;
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+            byId('confirm-close')?.addEventListener('click', () => win.remove());
+            byId('confirm-cancel')?.addEventListener('click', () => win.remove());
+            byId('confirm-ok')?.addEventListener('click', () => {
+                addEvent('info', '风险已确认', '已记录确认操作，可继续调整阈值或注入强度。');
+                win.remove();
+            });
+        };
+        
+        const openConfirm = (title, message, okLabel, onOk) => {
+            const prev = document.querySelector('.mac-confirm-window');
+            if (prev) prev.remove();
+            const win = document.createElement('div');
+            win.className = 'fixed z-[60] liquid-glass rounded-2xl border border-white/10 overflow-hidden mac-confirm-window';
+            win.style.width = '360px';
+            const initLeft = Math.max(12, Math.floor((window.innerWidth - 360) / 2));
+            const initTop = Math.max(12, Math.floor(window.innerHeight * 0.20));
+            win.style.left = initLeft + 'px';
+            win.style.top = initTop + 'px';
+            win.style.boxShadow = 'var(--mac-shadow)';
+            win.innerHTML = `
+                <div class="mac-titlebar cursor-move select-none">
+                    <div class="mac-traffic">
+                        <span class="mac-dot red" data-close="1"></span>
+                        <span class="mac-dot yellow"></span>
+                        <span class="mac-dot green"></span>
+                    </div>
+                    <div class="mac-title" style="text-align: center;">${title}</div>
+                    <div class="mac-traffic opacity-0 pointer-events-none">
+                        <span class="mac-dot"></span>
+                        <span class="mac-dot"></span>
+                        <span class="mac-dot"></span>
+                    </div>
+                </div>
+                <div class="p-4 space-y-3">
+                    <div class="text-sm font-semibold text-white/90">${message}</div>
+                    <div class="pt-2 flex justify-end gap-2">
+                        <button data-cancel="1" class="control-btn px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-xs font-semibold">取消</button>
+                        <button data-ok="1" class="control-btn px-3 py-1.5 rounded-full bg-blue-600 text-white text-xs font-semibold">${okLabel || '确定'}</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(win);
+            const handle = win.querySelector('.mac-titlebar');
+            let dragging = false;
+            let sx = 0, sy = 0, sl = 0, st = 0;
+            const onMouseMove = (e) => {
+                if (!dragging) return;
+                const nl = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, sl + e.clientX - sx));
+                const nt = Math.max(0, Math.min(window.innerHeight - win.offsetHeight, st + e.clientY - sy));
+                win.style.left = nl + 'px';
+                win.style.top = nt + 'px';
+            };
+            const onMouseUp = () => {
+                dragging = false;
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            };
+            handle.addEventListener('mousedown', (e) => {
+                dragging = true;
+                sx = e.clientX;
+                sy = e.clientY;
+                sl = parseInt(win.style.left) || 0;
+                st = parseInt(win.style.top) || 0;
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+            win.querySelector('[data-close]')?.addEventListener('click', () => win.remove());
+            win.querySelector('[data-cancel]')?.addEventListener('click', () => win.remove());
+            win.querySelector('[data-ok]')?.addEventListener('click', () => {
+                try { onOk && onOk(); } finally { win.remove(); }
+            });
+            return win;
+        };
+        
+        const openMacWindow = (title, subtitle, html) => {
+            const win = document.createElement('div');
+            win.className = 'fixed z-[60] liquid-glass rounded-2xl border border-white/10 overflow-hidden mac-floating-window';
+            const w = Math.min(720, Math.max(360, window.innerWidth - 48));
+            const h = Math.min(560, Math.max(200, window.innerHeight - 48));
+            win.style.width = w + 'px';
+            win.style.maxHeight = h + 'px';
+            const initLeft = Math.max(12, Math.floor((window.innerWidth - w) / 2));
+            const initTop = Math.max(12, Math.floor(window.innerHeight * 0.16));
+            win.style.left = initLeft + 'px';
+            win.style.top = initTop + 'px';
+            win.style.boxShadow = 'var(--mac-shadow)';
+            win.innerHTML = `
+                <div class="mac-titlebar cursor-move select-none">
+                    <div class="mac-traffic">
+                        <span class="mac-dot red" data-close="1"></span>
+                        <span class="mac-dot yellow"></span>
+                        <span class="mac-dot green"></span>
+                    </div>
+                    <div class="mac-title" style="text-align: center;">${title}</div>
+                    <div class="mac-traffic opacity-0 pointer-events-none">
+                        <span class="mac-dot"></span>
+                        <span class="mac-dot"></span>
+                        <span class="mac-dot"></span>
+                    </div>
+                </div>
+                <div class="p-5 overflow-auto custom-scrollbar">${html}</div>
+            `;
+            document.body.appendChild(win);
+            const handle = win.querySelector('.mac-titlebar');
+            let dragging = false;
+            let sx = 0, sy = 0, sl = 0, st = 0;
+            const onMouseMove = (e) => {
+                if (!dragging) return;
+                const nl = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, sl + e.clientX - sx));
+                const nt = Math.max(0, Math.min(window.innerHeight - win.offsetHeight, st + e.clientY - sy));
+                win.style.left = nl + 'px';
+                win.style.top = nt + 'px';
+            };
+            const onMouseUp = () => {
+                dragging = false;
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            };
+            handle.addEventListener('mousedown', (e) => {
+                dragging = true;
+                sx = e.clientX;
+                sy = e.clientY;
+                sl = parseInt(win.style.left) || 0;
+                st = parseInt(win.style.top) || 0;
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+            win.querySelector('[data-close]')?.addEventListener('click', () => win.remove());
+            return win;
+        };
+
+        const updateUi = (dtSec) => {
+            byId('metric-simtime').textContent = formatSimTime(simState.timeSec);
+            byId('metric-fps').textContent = simState.fps.toFixed(1);
+            byId('sim-speed-label').textContent = `${simState.speed.toFixed(2)}x`;
+            byId('threshold-distance-label').textContent = `${simState.thresholdDistanceM.toFixed(1)}m`;
+
+            const confPct = Math.round(simState.confidence * 1000) / 10;
+            byId('metric-confidence').textContent = `${confPct.toFixed(1)}%`;
+            byId('metric-confidence-bar').style.width = `${Math.min(100, Math.max(0, confPct))}%`;
+            byId('metric-brake').textContent = `${simState.brakePressureM.toFixed(2)}m`;
+            byId('metric-risk-distance').textContent = `${simState.safetyDistanceM.toFixed(1)}m`;
+
+            const isRisk = simState.safetyDistanceM < simState.thresholdDistanceM;
+            const collisionText = isRisk
+                ? `右前侧交通流注入导致安全距离低于阈值 (${simState.safetyDistanceM.toFixed(1)}m < ${simState.thresholdDistanceM.toFixed(1)}m)。`
+                : `当前安全距离满足阈值 (${simState.safetyDistanceM.toFixed(1)}m)。`;
+            byId('collision-text').textContent = collisionText;
+            const card = byId('card-collision');
+            card.classList.toggle('bg-red-500/10', isRisk);
+            card.classList.toggle('border-red-500/20', isRisk);
+            card.classList.toggle('bg-white/5', !isRisk);
+            card.classList.toggle('border-white/10', !isRisk);
+
+            const takeoverLabel = `${simState.takeoverPer100km.toFixed(2)} / 100km`;
+            byId('metric-takeover').textContent = takeoverLabel;
+
+            byId('metric-gpu').textContent = `${Math.round(60 + 25 * Math.sin(simState.timeSec * 0.35))}%`;
+            byId('metric-npu').textContent = `${Math.round(35 + 20 * Math.cos(simState.timeSec * 0.28))}%`;
+
+            byId('inject-ambulance').textContent = `x${simState.inject.ambulance}`;
+            byId('inject-crossing').textContent = `x${simState.inject.crossing}`;
+            byId('inject-congestion').textContent = simState.inject.congestion;
+
+            byId('sensor-lidar').textContent = simState.sensors.lidar ? 'NORMAL' : 'OFFLINE';
+            byId('sensor-lidar').className = `text-xs font-bold ${simState.sensors.lidar ? 'text-blue-400' : 'text-white/40'}`;
+            byId('sensor-lidar-sub').textContent = simState.sensors.lidar ? '点击禁用' : '点击启用';
+
+            byId('sensor-camera').textContent = simState.sensors.camera ? 'READY' : 'OFFLINE';
+            byId('sensor-camera').className = `text-xs font-bold ${simState.sensors.camera ? 'text-blue-400' : 'text-white/40'}`;
+            byId('sensor-camera-sub').textContent = simState.sensors.camera ? '点击禁用' : '点击启用';
+
+            byId('metric-check-count').textContent = String(simState.checks.total);
+            byId('metric-pass-rate').textContent = `${Math.round(simState.checks.passRate * 100)}%`;
+            byId('run-indicator').className = `w-2 h-2 rounded-full ${simState.running ? 'bg-green-500 animate-pulse' : 'bg-white/25'}`;
+            byId('run-state').textContent = simState.running ? 'RUNNING' : 'READY';
+
+            if (dtSec > 0 && simState.timeSec > 0) {
+                const base = 0.02;
+                const loadFactor = 0.02 * (simState.inject.ambulance + simState.inject.crossing / 3);
+                simState.takeoverPer100km = Math.max(0, base + loadFactor + 0.01 * Math.sin(simState.timeSec * 0.12));
+            }
+        };
+
+        let map = null;
+        let mapReady = false;
+        const route = [
+            [121.4678, 31.2294],
+            [121.4706, 31.2304],
+            [121.4733, 31.2313],
+            [121.4760, 31.2324],
+            [121.4786, 31.2331],
+            [121.4812, 31.2320],
+            [121.4828, 31.2307],
+            [121.4836, 31.2296],
+            [121.4821, 31.2282],
+            [121.4794, 31.2273],
+            [121.4766, 31.2278],
+            [121.4738, 31.2287],
+            [121.4713, 31.2294]
+        ];
+
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const interpolateRoute = (t01) => {
+            const n = route.length - 1;
+            const x = t01 * n;
+            const i = Math.min(n - 1, Math.max(0, Math.floor(x)));
+            const t = x - i;
+            const a = route[i];
+            const b = route[i + 1];
+            return [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
+        };
+
+        const makePointFeature = (coords, props = {}) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: coords }, properties: props });
+        const makeLineFeature = (coords) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords }, properties: {} });
+
+        const trafficSourceData = { type: 'FeatureCollection', features: [] };
+        const annotationsSourceData = { type: 'FeatureCollection', features: [] };
+
+        const refreshTraffic = () => {
+            const pts = [];
+            const seed = Math.floor(simState.timeSec / 5);
+            const rand = (k) => {
+                const x = Math.sin((seed + k) * 999.1) * 10000;
+                return x - Math.floor(x);
+            };
+            const base = interpolateRoute((simState.timeSec * 0.02) % 1);
+            const addNear = (count, kind, spread) => {
+                for (let i = 0; i < count; i++) {
+                    const dx = (rand(i * 3 + kind.length) - 0.5) * spread;
+                    const dy = (rand(i * 7 + kind.length * 2) - 0.5) * spread;
+                    pts.push(makePointFeature([base[0] + dx, base[1] + dy], { kind }));
+                }
+            };
+            addNear(simState.inject.ambulance, 'ambulance', 0.010);
+            addNear(simState.inject.crossing, 'crossing', 0.014);
+            if (simState.inject.congestion === '高') addNear(10, 'congestion', 0.020);
+            if (simState.inject.congestion === '中') addNear(6, 'congestion', 0.016);
+            if (simState.inject.congestion === '低') addNear(3, 'congestion', 0.012);
+            trafficSourceData.features = pts;
+            if (mapReady) map.getSource('traffic').setData(trafficSourceData);
+        };
+
+        const initMap = async () => {
+            try {
+                const mapContainer = byId('scene-map');
+                if (!mapContainer || !window.maplibregl) throw new Error('maplibre missing');
+                map = new maplibregl.Map({
+                    container: mapContainer,
+                    style: 'https://demotiles.maplibre.org/style.json',
+                    center: [121.4737, 31.2304],
+                    zoom: 13.4,
+                    pitch: 55,
+                    bearing: -20,
+                    attributionControl: false,
+                    preserveDrawingBuffer: true
+                });
+                map.on('load', () => {
+                    map.addSource('route', { type: 'geojson', data: makeLineFeature(route) });
+                    map.addLayer({
+                        id: 'route-line',
+                        type: 'line',
+                        source: 'route',
+                        paint: { 'line-color': '#0a84ff', 'line-width': 4, 'line-opacity': 0.85 }
+                    });
+
+                    map.addSource('vehicle', { type: 'geojson', data: makePointFeature(route[0], { role: 'ego' }) });
+                    map.addLayer({
+                        id: 'vehicle-point',
+                        type: 'circle',
+                        source: 'vehicle',
+                        paint: {
+                            'circle-radius': 7,
+                            'circle-color': '#30d158',
+                            'circle-stroke-color': 'rgba(0,0,0,0.6)',
+                            'circle-stroke-width': 2
+                        }
+                    });
+
+                    map.addSource('traffic', { type: 'geojson', data: trafficSourceData });
+                    map.addLayer({
+                        id: 'traffic-point',
+                        type: 'circle',
+                        source: 'traffic',
+                        paint: {
+                            'circle-radius': 5,
+                            'circle-color': [
+                                'match',
+                                ['get', 'kind'],
+                                'ambulance', '#ff453a',
+                                'crossing', '#ffd60a',
+                                'congestion', '#bf5af2',
+                                '#9ca3af'
+                            ],
+                            'circle-opacity': 0.9,
+                            'circle-stroke-color': 'rgba(0,0,0,0.5)',
+                            'circle-stroke-width': 1
+                        }
+                    });
+
+                    map.addSource('annotations', { type: 'geojson', data: annotationsSourceData });
+                    map.addLayer({
+                        id: 'annotations-point',
+                        type: 'circle',
+                        source: 'annotations',
+                        paint: {
+                            'circle-radius': 6,
+                            'circle-color': '#ffffff',
+                            'circle-opacity': 0.85,
+                            'circle-stroke-color': '#0a84ff',
+                            'circle-stroke-width': 2
+                        }
+                    });
+
+                    mapReady = true;
+                    refreshTraffic();
+                    addEvent('info', '场景加载', 'MapLibre 场景视图已启用，可缩放/旋转/点击添加标注。');
+                });
+
+                map.on('click', (evt) => {
+                    const coords = [evt.lngLat.lng, evt.lngLat.lat];
+                    const name = `标注 ${annotationsSourceData.features.length + 1}`;
+                    annotationsSourceData.features.unshift(makePointFeature(coords, { name }));
+                    if (annotationsSourceData.features.length > 10) annotationsSourceData.features.pop();
+                    if (mapReady) map.getSource('annotations').setData(annotationsSourceData);
+                    addEvent('info', '新增标注', `${name}: ${coords[1].toFixed(4)} / ${coords[0].toFixed(4)}`);
+                });
+            } catch (e) {
+                byId('scene-fallback')?.classList.remove('hidden');
+                addEvent('warn', '场景加载降级', '地图插件初始化失败，已切换到静态占位图。');
+            }
+        };
+
+        initMap();
+
+        const setRunning = (running) => {
+            simState.running = running;
+            const btn = byId('btn-play');
+            const icon = btn.querySelector('.iconify');
+            const label = byId('btn-play-label');
+            if (simState.running) {
+                btn.className = 'control-btn px-3 py-1.5 rounded-full bg-red-500/90 text-white text-xs font-semibold flex items-center gap-1.5';
+                icon.setAttribute('data-icon', 'mdi:pause');
+                label.textContent = '暂停';
+                addEvent('info', '仿真运行', '开始推进仿真时间并联动指标。');
+            } else {
+                btn.className = 'control-btn px-3 py-1.5 rounded-full bg-blue-600 text-white text-xs font-semibold flex items-center gap-1.5';
+                icon.setAttribute('data-icon', 'mdi:play');
+                label.textContent = '运行';
+                addEvent('info', '仿真暂停', '已暂停时间推进，可进行单步与注入调整。');
+            }
+        };
+
+        byId('btn-play')?.addEventListener('click', () => {
+            const running = simState.running;
+            openConfirm(running ? '暂停仿真' : '开始仿真', running ? '是否暂停当前仿真？' : '是否开始推进仿真？', running ? '暂停' : '开始', () => setRunning(!running));
+        });
+        byId('btn-step')?.addEventListener('click', () => {
+            openConfirm('单步推进', '是否进行单步推进？', '单步', () => {
+                simState.timeSec += 0.5;
+                addEvent('info', '单步推进', `推进到 ${formatSimTime(simState.timeSec)}`);
+                refreshTraffic();
+            });
+        });
+        byId('btn-reset')?.addEventListener('click', () => {
+            openConfirm('重置仿真', '是否重置仿真？将清空事件与标注。', '重置', () => {
+                simState.timeSec = 0;
+                simState.running = false;
+                simState.events = [];
+                takeoverSeries.splice(0, takeoverSeries.length, ...option.series[0].data.slice());
+                myChart.setOption({ series: [{ data: takeoverSeries }] }, { lazyUpdate: true });
+                annotationsSourceData.features = [];
+                if (mapReady) map.getSource('annotations').setData(annotationsSourceData);
+                setRunning(false);
+                refreshTraffic();
+                addEvent('info', '已重置', '仿真时间、事件与标注已重置。');
+            });
+        });
+
+        byId('sim-speed')?.addEventListener('input', (e) => {
+            simState.speed = Number(e.target.value || 1);
+            updateUi(0);
+        });
+
+        byId('threshold-distance')?.addEventListener('input', (e) => {
+            simState.thresholdDistanceM = Number(e.target.value || 1.5);
+            updateUi(0);
+        });
+
+        document.querySelectorAll('[data-sensor]')?.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const key = btn.getAttribute('data-sensor');
+                simState.sensors[key] = !simState.sensors[key];
+                addEvent('info', '传感器切换', `${key.toUpperCase()} 已${simState.sensors[key] ? '启用' : '禁用'}`);
+                updateUi(0);
+            });
+        });
+
+        document.querySelectorAll('[data-inject]')?.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const kind = btn.getAttribute('data-inject');
+                if (kind === 'ambulance') simState.inject.ambulance = Math.min(12, simState.inject.ambulance + 1);
+                if (kind === 'crossing') simState.inject.crossing = Math.min(24, simState.inject.crossing + 1);
+                if (kind === 'congestion') simState.inject.congestion = simState.inject.congestion === '高' ? '中' : simState.inject.congestion === '中' ? '低' : '高';
+                refreshTraffic();
+                addEvent('info', '交通流注入', `${kind} 参数已调整`);
+                updateUi(0);
+            });
+        });
+        byId('btn-inject-clear')?.addEventListener('click', () => {
+            simState.inject.ambulance = 0;
+            simState.inject.crossing = 0;
+            simState.inject.congestion = '低';
+            refreshTraffic();
+            addEvent('info', '交通流注入', '已清空交通流注入。');
+            updateUi(0);
+        });
+
+        byId('btn-clear-events')?.addEventListener('click', () => {
+            openConfirm('清空事件', '确定要清空事件时间线？此操作不可撤销。', '清空', () => {
+                simState.events = [];
+                renderEvents();
+                addEvent('info', '事件已清空', '事件时间线已被清空。');
+            });
+        });
+
+        byId('btn-risk-detail')?.addEventListener('click', () => {
+            const payload = {
+                type: 'collision_risk',
+                simTime: formatSimTime(simState.timeSec),
+                safetyDistanceM: Number(simState.safetyDistanceM.toFixed(2)),
+                thresholdDistanceM: Number(simState.thresholdDistanceM.toFixed(2)),
+                inject: simState.inject,
+                sensors: simState.sensors
+            };
+            openMacWindow('碰撞风险详情', '实时风险结构化输出', `<pre class="text-[12px] text-white/80 whitespace-pre-wrap font-mono bg-black/25 border border-white/10 rounded-xl p-4">${JSON.stringify(payload, null, 2)}</pre>`);
+        });
+        byId('btn-ack-risk')?.addEventListener('click', () => {
+            const msg = `是否确认记录此次风险？当前安全距离 ${simState.safetyDistanceM.toFixed(1)}m / 阈值 ${simState.thresholdDistanceM.toFixed(1)}m`;
+            openConfirm('风险确认', msg, '确认', () => addEvent('info', '风险已确认', '已记录确认操作，可继续调整阈值或注入强度。'));
+        });
+
+        byId('btn-compliance-report')?.addEventListener('click', () => {
+            const report = {
+                type: 'compliance',
+                standard: 'GB44495-2024',
+                simTime: formatSimTime(simState.timeSec),
+                result: 'PASS',
+                checks: [
+                    { id: 'GB44495-4.2.1', name: '非典型障碍物避让策略', status: 'PASS' },
+                    { id: 'GB44495-5.3.2', name: '最小安全距离约束', status: simState.safetyDistanceM < simState.thresholdDistanceM ? 'WARN' : 'PASS' },
+                    { id: 'GB44495-6.1.4', name: '换道/制动冲突判定', status: 'PASS' }
+                ]
+            };
+            openMacWindow('合规性报告', '可导出的校验结果 JSON', `<pre class="text-[12px] text-white/80 whitespace-pre-wrap font-mono bg-black/25 border border-white/10 rounded-xl p-4">${JSON.stringify(report, null, 2)}</pre>`);
+        });
+
+        byId('btn-run-check')?.addEventListener('click', () => {
+            openConfirm('运行校验', '是否执行校验并更新指标？', '运行校验', () => {
+                const total = 12 + Math.floor(Math.random() * 8);
+                const warn = simState.safetyDistanceM < simState.thresholdDistanceM ? 1 : 0;
+                const pass = Math.max(0, total - warn);
+                simState.checks.total = total;
+                simState.checks.passRate = pass / total;
+                addEvent('info', '校验执行', `完成 ${total} 项检查，通过 ${pass} 项。`);
+                updateUi(0);
+            });
+        });
+
+        byId('event-list')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-event-id]');
+            if (!btn) return;
+            const id = btn.getAttribute('data-event-id');
+            const item = simState.events.find((x) => x.id === id);
+            if (!item) return;
+            openModal('事件详情', item.title, `<div class="space-y-3">
+                <div class="text-[11px] text-white/55">时间</div>
+                <div class="text-[12px] font-mono text-white/80">${formatSimTime(item.ts)}</div>
+                <div class="text-[11px] text-white/55">内容</div>
+                <div class="text-[12px] text-white/80">${item.detail}</div>
+            </div>`);
+        });
+
+        const updateMapVehicle = () => {
+            if (!mapReady) return;
+            const t = (simState.timeSec * 0.02) % 1;
+            const coords = interpolateRoute(t);
+            map.getSource('vehicle').setData(makePointFeature(coords, { role: 'ego' }));
+            byId('metric-latlon').textContent = `${coords[1].toFixed(4)} / ${coords[0].toFixed(4)}`;
+        };
+
+        const tick = (ts) => {
+            const dt = Math.min(0.05, Math.max(0, (ts - simState.lastTs) / 1000));
+            simState.lastTs = ts;
+            simState.fps = simState.fps ? simState.fps * 0.9 + (dt > 0 ? 1 / dt : 0) * 0.1 : (dt > 0 ? 1 / dt : 0);
+            if (simState.running) simState.timeSec += dt * simState.speed;
+
+            simState.confidence = 0.90 + 0.10 * Math.sin(simState.timeSec * 0.35) - 0.01 * (simState.inject.crossing / 20);
+            simState.confidence = Math.min(0.999, Math.max(0.72, simState.confidence));
+            simState.brakePressureM = 3.4 + 1.2 * Math.abs(Math.sin(simState.timeSec * 0.22)) + 0.08 * simState.inject.ambulance;
+            simState.safetyDistanceM = 2.2 - 0.18 * simState.inject.ambulance - 0.05 * simState.inject.crossing + 0.25 * Math.sin(simState.timeSec * 0.4);
+            simState.safetyDistanceM = Math.max(0.4, simState.safetyDistanceM);
+
+            if (Math.floor(simState.timeSec) !== Math.floor(simState.timeSec - dt)) {
+                const chartValue = 160 + 60 * Math.sin(simState.timeSec * 0.25) + 20 * (simState.inject.ambulance / 6);
+                pushTakeover(Math.round(chartValue));
+                refreshTraffic();
+            }
+
+            const nowRisk = simState.safetyDistanceM < simState.thresholdDistanceM;
+            const prevRisk = simState._prevRisk || false;
+            if (nowRisk && !prevRisk) addEvent('danger', '碰撞风险上升', `安全距离 ${simState.safetyDistanceM.toFixed(1)}m 低于阈值 ${simState.thresholdDistanceM.toFixed(1)}m。`);
+            if (!nowRisk && prevRisk) addEvent('info', '碰撞风险解除', `安全距离恢复到 ${simState.safetyDistanceM.toFixed(1)}m。`);
+            simState._prevRisk = nowRisk;
+
+            updateUi(dt);
+            updateMapVehicle();
+            requestAnimationFrame(tick);
+        };
+        updateUi(0);
+        requestAnimationFrame(tick);
+    </script>
+</body>
+
+</html>

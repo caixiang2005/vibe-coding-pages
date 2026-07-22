@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>健康档案综合管理系统 - 居民档案</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f5f5f7;
+      --window-bg: #fff;
+      --sidebar-bg: #f0f0f2;
+      --text-primary: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --text-tertiary: #aeaeb2;
+      --accent: #0071e3;
+      --accent-light: #e8f2fd;
+      --green: #34c759;
+      --orange: #ff9500;
+      --red: #ff3b30;
+      --border: #d2d2d7;
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --window-shadow: 0 22px 70px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: url('./static/bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .mac-window {
+      width: 1200px;
+      height: 780px;
+      background: var(--window-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--window-shadow);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .titlebar {
+      height: 52px;
+      background: linear-gradient(180deg, #f6f6f6 0%, #e8e8e8 100%);
+      border-bottom: 1px solid #d0d0d0;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .tl-close {
+      background: #ff5f57;
+      border: 1px solid #e0443e;
+    }
+
+    .tl-minimize {
+      background: #febc2e;
+      border: 1px solid #dea123;
+    }
+
+    .tl-maximize {
+      background: #28c840;
+      border: 1px solid #1aab29;
+    }
+
+    .titlebar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .main-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      padding: 12px 8px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section {
+      margin-bottom: 20px;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .sidebar-item:active {
+      transform: scale(0.98);
+    }
+
+    .sidebar-item.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .sidebar-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--text-tertiary);
+    }
+
+    .sidebar-item.active .sidebar-icon {
+      color: #fff;
+    }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .content {
+      flex: 1;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .toolbar {
+      padding: 16px 24px;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .search-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 12px;
+      flex: 1;
+      max-width: 320px;
+    }
+
+    .search-field input {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 13px;
+      font-family: inherit;
+      width: 100%;
+      color: var(--text-primary);
+    }
+
+    .filter-btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover {
+      background: var(--bg);
+    }
+
+    .filter-btn:active {
+      transform: scale(0.97);
+    }
+
+    .filter-btn.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .btn-primary {
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .btn-primary:hover {
+      background: #005bb5;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    .table-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 24px 24px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+
+    .data-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 10px 12px;
+      border-bottom: 2px solid #e8e8ea;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+    }
+
+    .data-table td {
+      padding: 12px;
+      font-size: 13px;
+      color: var(--text-primary);
+      border-bottom: 1px solid #f0f0f2;
+      vertical-align: middle;
+    }
+
+    .data-table tr:hover td {
+      background: rgba(0, 113, 227, 0.03);
+    }
+
+    .avatar-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .avatar-m {
+      background: linear-gradient(135deg, #4a90d9, #357abd);
+    }
+
+    .avatar-f {
+      background: linear-gradient(135deg, #e87da0, #c75b83);
+    }
+
+    .name-text {
+      font-weight: 500;
+    }
+
+    .id-text {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 1px;
+    }
+
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-dot::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .status-active::before {
+      background: var(--green);
+    }
+
+    .status-active {
+      color: var(--green);
+    }
+
+    .status-inactive::before {
+      background: var(--text-tertiary);
+    }
+
+    .status-inactive {
+      color: var(--text-tertiary);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .tag-hyper {
+      background: #fce4e4;
+      color: var(--red);
+    }
+
+    .tag-diabetes {
+      background: #fff5e6;
+      color: var(--orange);
+    }
+
+    .tag-heart {
+      background: #f5eafa;
+      color: #af52de;
+    }
+
+    .tag-none {
+      background: #f0f0f2;
+      color: var(--text-tertiary);
+    }
+
+    .action-btn {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--accent);
+      cursor: pointer;
+      font-family: inherit;
+      margin-right: 4px;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover {
+      background: var(--accent-light);
+    }
+
+    .action-btn:active {
+      transform: scale(0.97);
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: #fff;
+      border-top: 1px solid #eee;
+      flex-shrink: 0;
+    }
+
+    .page-info {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .page-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .page-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 12px;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .page-btn:hover:not(.active) {
+      background: var(--bg);
+    }
+
+    .page-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      min-width: 450px;
+      max-width: 550px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+      overflow: hidden;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: linear-gradient(180deg, #f6f6f6, #e8e8e8);
+    }
+
+    .modal-traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #ff5f57;
+      border: 1px solid #e0443e;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #febc2e;
+      border: 1px solid #dea123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28c840;
+      border: 1px solid #1aab29;
+    }
+
+    .modal-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      background: #fafafa;
+    }
+
+    .btn {
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #f5f5f7;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .detail-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 auto 12px;
+    }
+
+    .detail-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .detail-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    .detail-grid {
+      margin-top: 16px;
+    }
+
+    .detail-row {
+      display: flex;
+      padding: 10px 0;
+      border-bottom: 1px solid #f5f5f7;
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      color: var(--text-secondary);
+      font-size: 13px;
+      width: 90px;
+      flex-shrink: 0;
+    }
+
+    .detail-value {
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .detail-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+
+    .detail-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <div class="traffic-light tl-close" onclick="window.close()"></div>
+        <div class="traffic-light tl-minimize"></div>
+        <div class="traffic-light tl-maximize"></div>
+      </div>
+      <span class="titlebar-text">健康档案综合管理系统</span>
+    </div>
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">导航</div>
+          <div class="sidebar-item" onclick="window.location.href = 'dashboard.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <rect x="2" y="2" width="7" height="7" rx="1.5" />
+              <rect x="11" y="2" width="7" height="7" rx="1.5" />
+              <rect x="2" y="11" width="7" height="7" rx="1.5" />
+              <rect x="11" y="11" width="7" height="7" rx="1.5" />
+            </svg>
+            工作台
+          </div>
+          <div class="sidebar-item active" onclick="window.location.href = 'resident_records.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 2a4 4 0 100 8 4 4 0 000-8zM3 18a7 7 0 0114 0H3z" />
+            </svg>
+            居民档案
+            <span class="sidebar-badge">12</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href = 'health_exam.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M9 2a1 1 0 00-1 1v1H5a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2h-3V3a1 1 0 00-1-1H9zm0 2h2v1H9V4zm-4 4h10v8H5V8z" />
+            </svg>
+            健康体检
+          </div>
+          <div class="sidebar-item" onclick="window.location.href = 'chronic_disease.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+            </svg>
+            慢病管理
+          </div>
+          <div class="sidebar-item" onclick="window.location.href = 'follow_up.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm1 4h8v2H6V7zm0 4h5v2H6v-2z" />
+            </svg>
+            随访记录
+            <span class="sidebar-badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href = 'statistics.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 5a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm0 5a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" />
+            </svg>
+            统计报表
+          </div>
+          <div class="sidebar-item" onclick="window.location.href = 'system_settings.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" />
+            </svg>
+            系统设置
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="toolbar">
+          <div class="search-field">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="#aeaeb2">
+              <path fill-rule="evenodd"
+                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" />
+            </svg>
+            <input type="text" placeholder="按姓名、身份证号、档案编号搜索..." id="searchInput">
+          </div>
+          <button class="filter-btn active" onclick="setFilter(this)">全部档案</button>
+          <button class="filter-btn" onclick="setFilter(this)">高血压</button>
+          <button class="filter-btn" onclick="setFilter(this)">糖尿病</button>
+          <button class="filter-btn" onclick="setFilter(this)">65岁以上</button>
+          <button class="filter-btn" onclick="setFilter(this)">儿童</button>
+          <div style="flex:1"></div>
+          <button class="filter-btn" onclick="openExportModal()">导出</button>
+          <button class="btn-primary" onclick="openNewRecordModal()">+ 新建档案</button>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>居民信息</th>
+                <th>性别 / 年龄</th>
+                <th>联系电话</th>
+                <th>家庭住址</th>
+                <th>慢病标签</th>
+                <th>档案状态</th>
+                <th>责任医生</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="avatar-cell" onclick="openViewModal('王秀兰', 'DA20260325001', '女', '68岁', '3201**********2847', '138****2847', '阳光花园3栋502', '高血压8年', '氨氯地平 5mg qd', '青霉素过敏', '张医生', '2026-03-25', '正常')">
+                    <div class="avatar avatar-f">王</div>
+                    <div>
+                      <div class="name-text">王秀兰</div>
+                      <div class="id-text">DA20260325001</div>
+                    </div>
+                  </div>
+                </td>
+                <td>女 / 68岁</td>
+                <td>138****2847</td>
+                <td>阳光花园3栋502</td>
+                <td><span class="tag tag-hyper">高血压</span></td>
+                <td><span class="status-dot status-active">正常</span></td>
+                <td>张医生</td>
+                <td><button class="action-btn" onclick="openViewModal('王秀兰', 'DA20260325001', '女', '68岁', '3201**********2847', '138****2847', '阳光花园3栋502', '高血压8年', '氨氯地平 5mg qd', '青霉素过敏', '张医生', '2026-03-25', '正常')">查看</button><button class="action-btn" onclick="openEditModal('王秀兰', 'DA20260325001', '女', '68岁', '3201**********2847', '138****2847', '阳光花园3栋502', '张医生')">编辑</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="avatar-cell" onclick="openViewModal('李建国', 'DA20240512003', '男', '72岁', '3201**********6512', '139****6512', '和平路128号', '高血压10年, 糖尿病5年', '缬沙坦80mg, 二甲双胍', '无', '刘医生', '2024-05-12', '正常')">
+                    <div class="avatar avatar-m">李</div>
+                    <div>
+                      <div class="name-text">李建国</div>
+                      <div class="id-text">DA20240512003</div>
+                    </div>
+                  </div>
+                </td>
+                <td>男 / 72岁</td>
+                <td>139****6512</td>
+                <td>和平路128号</td>
+                <td><span class="tag tag-hyper">高血压</span> <span class="tag tag-diabetes">糖尿病</span></td>
+                <td><span class="status-dot status-active">正常</span></td>
+                <td>刘医生</td>
+                <td><button class="action-btn" onclick="openViewModal('李建国', 'DA20240512003', '男', '72岁', '3201**********6512', '139****6512', '和平路128号', '高血压10年, 糖尿病5年', '缬沙坦80mg, 二甲双胍', '无', '刘医生', '2024-05-12', '正常')">查看</button><button class="action-btn" onclick="openEditModal('李建国', 'DA20240512003', '男', '72岁', '3201**********6512', '139****6512', '和平路128号', '刘医生')">编辑</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="avatar-cell" onclick="openViewModal('陈美华', 'DA20230814007', '女', '55岁', '3201**********1093', '136****1093', '翠苑小区A幢201', '糖尿病3年', '二甲双胍 0.5g bid', '无', '张医生', '2023-08-14', '正常')">
+                    <div class="avatar avatar-f">陈</div>
+                    <div>
+                      <div class="name-text">陈美华</div>
+                      <div class="id-text">DA20230814007</div>
+                    </div>
+                  </div>
+                </td>
+                <td>女 / 55岁</td>
+                <td>136****1093</td>
+                <td>翠苑小区A幢201</td>
+                <td><span class="tag tag-diabetes">糖尿病</span></td>
+                <td><span class="status-dot status-active">正常</span></td>
+                <td>张医生</td>
+                <td><button class="action-btn" onclick="openViewModal('陈美华', 'DA20230814007', '女', '55岁', '3201**********1093', '136****1093', '翠苑小区A幢201', '糖尿病3年', '二甲双胍 0.5g bid', '无', '张医生', '2023-08-14', '正常')">查看</button><button class="action-btn" onclick="openEditModal('陈美华', 'DA20230814007', '女', '55岁', '3201**********1093', '136****1093', '翠苑小区A幢201', '张医生')">编辑</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="avatar-cell" onclick="openViewModal('赵德明', 'DA20220103012', '男', '78岁', '3201**********8834', '137****8834', '文化路56号3单元', '冠心病5年, 高血压8年', '硝苯地平30mg, 阿司匹林', '无', '王医生', '2022-01-03', '正常')">
+                    <div class="avatar avatar-m">赵</div>
+                    <div>
+                      <div class="name-text">赵德明</div>
+                      <div class="id-text">DA20220103012</div>
+                    </div>
+                  </div>
+                </td>
+                <td>男 / 78岁</td>
+                <td>137****8834</td>
+                <td>文化路56号3单元</td>
+                <td><span class="tag tag-heart">冠心病</span> <span class="tag tag-hyper">高血压</span></td>
+                <td><span class="status-dot status-active">正常</span></td>
+                <td>王医生</td>
+                <td><button class="action-btn" onclick="openViewModal('赵德明', 'DA20220103012', '男', '78岁', '3201**********8834', '137****8834', '文化路56号3单元', '冠心病5年, 高血压8年', '硝苯地平30mg, 阿司匹林', '无', '王医生', '2022-01-03', '正常')">查看</button><button class="action-btn" onclick="openEditModal('赵德明', 'DA20220103012', '男', '78岁', '3201**********8834', '137****8834', '文化路56号3单元', '王医生')">编辑</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="avatar-cell" onclick="openViewModal('孙玉芬', 'DA20260324002', '女', '45岁', '3201**********4527', '158****4527', '锦绣苑7栋1601', '无', '无', '无', '张医生', '2026-03-24', '正常')">
+                    <div class="avatar avatar-f">孙</div>
+                    <div>
+                      <div class="name-text">孙玉芬</div>
+                      <div class="id-text">DA20260324002</div>
+                    </div>
+                  </div>
+                </td>
+                <td>女 / 45岁</td>
+                <td>158****4527</td>
+                <td>锦绣苑7栋1601</td>
+                <td><span class="tag tag-none">无</span></td>
+                <td><span class="status-dot status-active">正常</span></td>
+                <td>张医生</td>
+                <td><button class="action-btn" onclick="openViewModal('孙玉芬', 'DA20260324002', '女', '45岁', '3201**********4527', '158****4527', '锦绣苑7栋1601', '无', '无', '无', '张医生', '2026-03-24', '正常')">查看</button><button class="action-btn" onclick="openEditModal('孙玉芬', 'DA20260324002', '女', '45岁', '3201**********4527', '158****4527', '锦绣苑7栋1601', '张医生')">编辑</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="avatar-cell" onclick="openViewModal('周志强', 'DA20210917015', '男', '63岁', '3201**********7291', '133****7291', '建设南路89号', '高血压6年', '厄贝沙坦150mg', '无', '刘医生', '2021-09-17', '迁出')">
+                    <div class="avatar avatar-m">周</div>
+                    <div>
+                      <div class="name-text">周志强</div>
+                      <div class="id-text">DA20210917015</div>
+                    </div>
+                  </div>
+                </td>
+                <td>男 / 63岁</td>
+                <td>133****7291</td>
+                <td>建设南路89号</td>
+                <td><span class="tag tag-hyper">高血压</span></td>
+                <td><span class="status-dot status-inactive">迁出</span></td>
+                <td>刘医生</td>
+                <td><button class="action-btn" onclick="openViewModal('周志强', 'DA20210917015', '男', '63岁', '3201**********7291', '133****7291', '建设南路89号', '高血压6年', '厄贝沙坦150mg', '无', '刘医生', '2021-09-17', '迁出')">查看</button><button class="action-btn" onclick="openEditModal('周志强', 'DA20210917015', '男', '63岁', '3201**********7291', '133****7291', '建设南路89号', '刘医生')">编辑</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="avatar-cell" onclick="openViewModal('吴丽萍', 'DA20250601008', '女', '31岁', '3201**********3846', '150****3846', '星河湾5栋903', '无', '无', '无', '张医生', '2025-06-01', '正常')">
+                    <div class="avatar avatar-f">吴</div>
+                    <div>
+                      <div class="name-text">吴丽萍</div>
+                      <div class="id-text">DA20250601008</div>
+                    </div>
+                  </div>
+                </td>
+                <td>女 / 31岁</td>
+                <td>150****3846</td>
+                <td>星河湾5栋903</td>
+                <td><span class="tag tag-none">无</span></td>
+                <td><span class="status-dot status-active">正常</span></td>
+                <td>张医生</td>
+                <td><button class="action-btn" onclick="openViewModal('吴丽萍', 'DA20250601008', '女', '31岁', '3201**********3846', '150****3846', '星河湾5栋903', '无', '无', '无', '张医生', '2025-06-01', '正常')">查看</button><button class="action-btn" onclick="openEditModal('吴丽萍', 'DA20250601008', '女', '31岁', '3201**********3846', '150****3846', '星河湾5栋903', '张医生')">编辑</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="avatar-cell" onclick="openViewModal('黄国庆', 'DA20190305022', '男', '81岁', '3201**********5683', '135****5683', '幸福里2栋101', '糖尿病10年, 冠心病8年', '胰岛素, 丹参片', '无', '王医生', '2019-03-05', '正常')">
+                    <div class="avatar avatar-m">黄</div>
+                    <div>
+                      <div class="name-text">黄国庆</div>
+                      <div class="id-text">DA20190305022</div>
+                    </div>
+                  </div>
+                </td>
+                <td>男 / 81岁</td>
+                <td>135****5683</td>
+                <td>幸福里2栋101</td>
+                <td><span class="tag tag-diabetes">糖尿病</span> <span class="tag tag-heart">冠心病</span></td>
+                <td><span class="status-dot status-active">正常</span></td>
+                <td>王医生</td>
+                <td><button class="action-btn" onclick="openViewModal('黄国庆', 'DA20190305022', '男', '81岁', '3201**********5683', '135****5683', '幸福里2栋101', '糖尿病10年, 冠心病8年', '胰岛素, 丹参片', '无', '王医生', '2019-03-05', '正常')">查看</button><button class="action-btn" onclick="openEditModal('黄国庆', 'DA20190305022', '男', '81岁', '3201**********5683', '135****5683', '幸福里2栋101', '王医生')">编辑</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <div class="page-info">共 24,856 条记录，第 1/2,486 页</div>
+          <div class="page-btns">
+            <button class="page-btn">&#8249;</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn">4</button>
+            <button class="page-btn">5</button>
+            <button class="page-btn">&#8250;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    function setFilter(btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function openNewRecordModal() {
+      openModal('新建档案', `
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">姓名</label>
+            <input type="text" class="form-input" placeholder="请输入姓名">
+          </div>
+          <div class="form-group">
+            <label class="form-label">性别</label>
+            <select class="form-select">
+              <option>男</option>
+              <option>女</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">身份证号</label>
+          <input type="text" class="form-input" placeholder="请输入18位身份证号">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">出生日期</label>
+            <input type="date" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">联系电话</label>
+            <input type="text" class="form-input" placeholder="请输入手机号">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">家庭住址</label>
+          <input type="text" class="form-input" placeholder="请输入详细地址">
+        </div>
+        <div class="form-group">
+          <label class="form-label">既往史</label>
+          <input type="text" class="form-input" placeholder="请输入既往病史">
+        </div>
+        <div class="form-group">
+          <label class="form-label">责任医生</label>
+          <select class="form-select">
+            <option>张医生</option>
+            <option>刘医生</option>
+            <option>王医生</option>
+            <option>李医生</option>
+          </select>
+        </div>
+      `, '<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal();alert(\'档案创建成功！\')">创建</button>');
+    }
+
+    function openViewModal(name,档案号, 性别, 年龄, 身份证, 电话, 地址, 既往史, 用药, 过敏史, 医生, 日期, 状态) {
+      const isMale = 性别 === '男';
+      openModal('居民详情', `
+        <div style="text-align:center;">
+          <div class="detail-avatar" style="background:linear-gradient(135deg, ${isMale ? '#4a90d9, #357abd' : '#e87da0, #c75b83'})">${name.charAt(0)}</div>
+          <div class="detail-name">${name}</div>
+          <div class="detail-meta">档案号: ${档案号} | ${性别} / ${年龄}</div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-row">
+            <span class="detail-label">身份证号</span>
+            <span class="detail-value">${身份证}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">联系电话</span>
+            <span class="detail-value">${电话}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">家庭住址</span>
+            <span class="detail-value">${地址}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">既往史</span>
+            <span class="detail-value">${既往史}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">用药情况</span>
+            <span class="detail-value">${用药}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">过敏史</span>
+            <span class="detail-value">${过敏史}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">责任医生</span>
+            <span class="detail-value">${医生}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">建档日期</span>
+            <span class="detail-value">${日期}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">档案状态</span>
+            <span class="detail-value" style="color:${状态 === '正常' ? 'var(--green)' : 'var(--text-tertiary)'}">${状态}</span>
+          </div>
+        </div>
+      `, '<button class="btn btn-secondary" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="closeModal();window.location.href=\'health_exam.html\'">体检记录</button>');
+    }
+
+    function openEditModal(name,档案号, 性别, 年龄, 身份证, 电话, 地址, 医生) {
+      openModal('编辑档案', `
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">姓名</label>
+            <input type="text" class="form-input" value="${name}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">性别</label>
+            <select class="form-select">
+              <option ${性别 === '男' ? 'selected' : ''}>男</option>
+              <option ${性别 === '女' ? 'selected' : ''}>女</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">身份证号</label>
+          <input type="text" class="form-input" value="${身份证}">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">联系电话</label>
+            <input type="text" class="form-input" value="${电话}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">年龄</label>
+            <input type="text" class="form-input" value="${年龄.replace('岁', '')}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">家庭住址</label>
+          <input type="text" class="form-input" value="${地址}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">责任医生</label>
+          <select class="form-select">
+            <option ${医生 === '张医生' ? 'selected' : ''}>张医生</option>
+            <option ${医生 === '刘医生' ? 'selected' : ''}>刘医生</option>
+            <option ${医生 === '王医生' ? 'selected' : ''}>王医生</option>
+            <option ${医生 === '李医生' ? 'selected' : ''}>李医生</option>
+          </select>
+        </div>
+      `, '<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal();alert(\'档案更新成功！\')">保存</button>');
+    }
+
+    function openExportModal() {
+      openModal('导出档案', `
+        <div class="form-group">
+          <label class="form-label">导出格式</label>
+          <select class="form-select">
+            <option>Excel 表格 (.xlsx)</option>
+            <option>CSV 文本 (.csv)</option>
+            <option>PDF 文档 (.pdf)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">导出范围</label>
+          <select class="form-select">
+            <option>全部档案 (24,856条)</option>
+            <option>当前页 (8条)</option>
+            <option>已筛选结果</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">包含字段</label>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);cursor:pointer;">
+              <input type="checkbox" checked style="width:14px;height:14px;">基本信息
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);cursor:pointer;">
+              <input type="checkbox" checked style="width:14px;height:14px;">联系方式
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);cursor:pointer;">
+              <input type="checkbox" checked style="width:14px;height:14px;">健康信息
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);cursor:pointer;">
+              <input type="checkbox" style="width:14px;height:14px;">随访记录
+            </label>
+          </div>
+        </div>
+      `, '<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal();alert(\'导出任务已创建！\')">导出</button>');
+    }
+  </script>
+</body>
+
+</html>

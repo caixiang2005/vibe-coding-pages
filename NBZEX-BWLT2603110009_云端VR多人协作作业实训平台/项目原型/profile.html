@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>个人中心 - 云端VR多人协作作业实训平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        body { font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .mac-window { width: 1200px; height: 800px; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 20px; box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; position: relative; margin: 20px auto; }
+        .sidebar { width: 240px; background: rgba(255, 255, 255, 0.2); border-right: 1px solid rgba(255, 255, 255, 0.2); }
+        .glass-btn { transition: all 0.3s ease; }
+        .glass-btn:hover { background: rgba(255, 255, 255, 0.4); box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
+        .liquid-card { background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.4); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .liquid-card:hover { transform: translateY(-4px); background: rgba(255, 255, 255, 0.5); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 16px; padding: 0; min-width: 450px; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); cursor: move; }
+        .modal-header { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: white; padding: 16px 20px; border-radius: 16px 16px 0 0; display: flex; align-items: center; position: relative; }
+        .modal-body { padding: 24px; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: white; padding: 10px 24px; border-radius: 10px; font-weight: 600; transition: all 0.3s ease; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4); }
+        .btn-secondary { background: #f3f4f6; color: #6b7280; padding: 10px 24px; border-radius: 10px; font-weight: 600; transition: all 0.3s ease; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .input-field { width: 100%; padding: 12px 16px; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 10px; background: rgba(255, 255, 255, 0.8); transition: all 0.3s ease; }
+        .input-field:focus { outline: none; border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2); }
+        .avatar-upload { width: 100px; height: 100px; border-radius: 50%; border: 3px dashed #d1d5db; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; }
+        .avatar-upload:hover { border-color: #ec4899; background: rgba(236, 72, 153, 0.05); }
+        .stat-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="mac-window overflow-hidden">
+        <div class="h-10 flex items-center justify-between px-4 shrink-0">
+            <div class="flex space-x-2">
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FF5F56] shadow-inner"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FFBD2E] shadow-inner"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#27C93F] shadow-inner"></div>
+            </div>
+            <div class="text-xs font-semibold text-gray-600 flex items-center space-x-4">
+                <span class="flex items-center"><i class="fa-solid fa-cloud mr-1"></i> 云服务连接正常</span>
+                <span class="flex items-center"><i class="fa-solid fa-signal mr-1 text-green-600"></i> 延迟: 12ms</span>
+                <span>2026年3月21日 10:30</span>
+            </div>
+        </div>
+        <div class="flex-1 flex overflow-hidden">
+            <nav class="sidebar p-4 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center space-x-3 mb-10 px-2">
+                        <div class="w-10 h-10 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                            <i class="fa-solid fa-vr-cardboard w-6 h-6"></i>
+                        </div>
+                        <span class="text-sm font-bold text-gray-800 leading-tight">云端VR多人协作<br>作业实训平台</span>
+                    </div>
+                    <ul class="space-y-1">
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="index.html"><i class="fa-solid fa-house w-5"></i> <span>工作台</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="training.html"><i class="fa-solid fa-photo-film w-5"></i> <span>实训广场</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="resources.html"><i class="fa-solid fa-box-open w-5"></i> <span>资源仓库</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="admin.html"><i class="fa-solid fa-chart-line w-5"></i> <span>数据评估</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 bg-white/40 rounded-lg text-pink-600 font-medium" href="profile.html"><i class="fa-solid fa-user w-5"></i> <span>个人中心</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="messages.html"><i class="fa-solid fa-envelope w-5"></i> <span>消息中心</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="appointments.html"><i class="fa-solid fa-calendar w-5"></i> <span>预约管理</span></a></li>
+                    </ul>
+                </div>
+                <div class="px-2 pb-4">
+                    <div class="bg-white/30 rounded-xl p-3 flex items-center space-x-3">
+                        <img alt="User avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="https://i01piccdn.sogoucdn.com/b0d2f6ab67584bd8" />
+                        <div class="overflow-hidden">
+                            <p class="text-sm font-bold text-gray-800 truncate">张明远</p>
+                            <p class="text-[10px] text-gray-500">在线</p>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <main class="flex-1 p-8 overflow-y-auto bg-white/10">
+                <header class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-gray-800 mb-2">个人中心</h1>
+                        <p class="text-gray-500">管理您的个人信息和账户设置</p>
+                    </div>
+                    <button class="btn-primary flex items-center gap-2" onclick="openEditProfile()">
+                        <i class="fa-solid fa-pen"></i> 编辑资料
+                    </button>
+                </header>
+                <div class="grid grid-cols-3 gap-6 mb-8">
+                    <div class="liquid-card rounded-2xl p-6 text-center">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden border-4 border-pink-200">
+                            <img alt="User avatar" class="w-full h-full object-cover" src="https://i01piccdn.sogoucdn.com/b0d2f6ab67584bd8" />
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-lg">张明远</h3>
+                        <p class="text-gray-500 text-sm mb-3">ID: VR20240315001</p>
+                        <div class="flex justify-center gap-2">
+                            <span class="stat-badge bg-pink-100 text-pink-600"><i class="fa-solid fa-star mr-1"></i>高级学员</span>
+                        </div>
+                    </div>
+                    <div class="col-span-2 liquid-card rounded-2xl p-6">
+                        <div class="grid grid-cols-4 gap-6">
+                            <div class="text-center">
+                                <h4 class="text-2xl font-bold text-pink-600">128</h4>
+                                <p class="text-xs text-gray-500">学习时长(小时)</p>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="text-2xl font-bold text-blue-600">42</h4>
+                                <p class="text-xs text-gray-500">完成实训</p>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="text-2xl font-bold text-green-600">92.5</h4>
+                                <p class="text-xs text-gray-500">平均评分</p>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="text-2xl font-bold text-purple-600">15</h4>
+                                <p class="text-xs text-gray-500">获得成就</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="liquid-card rounded-2xl p-6">
+                        <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-user-circle mr-2 text-pink-500"></i>基本信息</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-white/30 rounded-xl">
+                                <span class="text-gray-500">昵称</span>
+                                <span class="font-medium text-gray-800">张明远</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-white/30 rounded-xl">
+                                <span class="text-gray-500">性别</span>
+                                <span class="font-medium text-gray-800">男</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-white/30 rounded-xl">
+                                <span class="text-gray-500">年龄</span>
+                                <span class="font-medium text-gray-800">24岁</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-white/30 rounded-xl">
+                                <span class="text-gray-500">所属机构</span>
+                                <span class="font-medium text-gray-800">华东理工大学</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="liquid-card rounded-2xl p-6">
+                        <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-shield-halved mr-2 text-green-500"></i>账户安全</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-white/30 rounded-xl">
+                                <span class="text-gray-500">绑定邮箱</span>
+                                <span class="font-medium text-gray-800">zhangmy@ecust.edu.cn</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-white/30 rounded-xl">
+                                <span class="text-gray-500">绑定手机</span>
+                                <span class="font-medium text-gray-800">138****6789</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-white/30 rounded-xl">
+                                <span class="text-gray-500">登录密码</span>
+                                <button class="text-pink-500 text-sm hover:underline" onclick="openChangePassword()">修改密码</button>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-white/30 rounded-xl">
+                                <span class="text-gray-500">两步验证</span>
+                                <span class="text-green-500 text-sm"><i class="fa-solid fa-check-circle mr-1"></i>已开启</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="liquid-card rounded-2xl p-6">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-gear mr-2 text-gray-500"></i>偏好设置</h3>
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="p-4 bg-white/30 rounded-xl text-center">
+                            <div class="w-12 h-12 mx-auto mb-2 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600"><i class="fa-solid fa-bell"></i></div>
+                            <h4 class="font-medium text-gray-800 text-sm mb-1">消息通知</h4>
+                            <label class="relative inline-flex items-center cursor-pointer justify-center">
+                                <input type="checkbox" class="sr-only peer" checked />
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                            </label>
+                        </div>
+                        <div class="p-4 bg-white/30 rounded-xl text-center">
+                            <div class="w-12 h-12 mx-auto mb-2 bg-green-100 rounded-xl flex items-center justify-center text-green-600"><i class="fa-solid fa-volume-high"></i></div>
+                            <h4 class="font-medium text-gray-800 text-sm mb-1">声音提示</h4>
+                            <label class="relative inline-flex items-center cursor-pointer justify-center">
+                                <input type="checkbox" class="sr-only peer" checked />
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                            </label>
+                        </div>
+                        <div class="p-4 bg-white/30 rounded-xl text-center">
+                            <div class="w-12 h-12 mx-auto mb-2 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600"><i class="fa-solid fa-envelope"></i></div>
+                            <h4 class="font-medium text-gray-800 text-sm mb-1">邮件推送</h4>
+                            <label class="relative inline-flex items-center cursor-pointer justify-center">
+                                <input type="checkbox" class="sr-only peer" />
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                            </label>
+                        </div>
+                        <div class="p-4 bg-white/30 rounded-xl text-center">
+                            <div class="w-12 h-12 mx-auto mb-2 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600"><i class="fa-solid fa-language"></i></div>
+                            <h4 class="font-medium text-gray-800 text-sm mb-1">语言</h4>
+                            <span class="text-sm text-gray-500">简体中文</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal-box" id="editProfileContent">
+            <div class="modal-header">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+                </div>
+                <span class="font-bold text-lg absolute left-1/2 -translate-x-1/2">编辑个人资料</span>
+                <button class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition ml-auto" onclick="closeEditProfile()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="flex justify-center mb-6">
+                    <div class="text-center">
+                        <div class="avatar-upload mx-auto mb-2">
+                            <img alt="Avatar" class="w-full h-full rounded-full object-cover" src="https://i01piccdn.sogoucdn.com/b0d2f6ab67584bd8" />
+                        </div>
+                        <button class="text-pink-500 text-sm hover:underline"><i class="fa-solid fa-camera mr-1"></i>更换头像</button>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">昵称</label>
+                    <input type="text" class="input-field" value="张明远" />
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">性别</label>
+                    <select class="input-field">
+                        <option>男</option>
+                        <option>女</option>
+                        <option>保密</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">年龄</label>
+                    <input type="number" class="input-field" value="24" />
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">所属机构</label>
+                    <input type="text" class="input-field" value="华东理工大学" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeEditProfile()">取消</button>
+                <button class="btn-primary" onclick="saveProfile()">保存</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="changePasswordModal">
+        <div class="modal-box" id="changePasswordContent">
+            <div class="modal-header">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+                </div>
+                <span class="font-bold text-lg absolute left-1/2 -translate-x-1/2">修改密码</span>
+                <button class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition ml-auto" onclick="closeChangePassword()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">当前密码</label>
+                    <input type="password" class="input-field" placeholder="请输入当前密码" />
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">新密码</label>
+                    <input type="password" class="input-field" placeholder="请输入新密码" />
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">确认新密码</label>
+                    <input type="password" class="input-field" placeholder="请再次输入新密码" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeChangePassword()">取消</button>
+                <button class="btn-primary" onclick="confirmChangePassword()">确认修改</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function openEditProfile() { document.getElementById('editProfileModal').classList.add('active'); }
+        function closeEditProfile() { document.getElementById('editProfileModal').classList.remove('active'); }
+        function saveProfile() { alert('个人资料已保存！'); closeEditProfile(); }
+        function openChangePassword() { document.getElementById('changePasswordModal').classList.add('active'); }
+        function closeChangePassword() { document.getElementById('changePasswordModal').classList.remove('active'); }
+        function confirmChangePassword() { alert('密码修改成功！'); closeChangePassword(); }
+        function makeDraggable(element) {
+            let isDragging = false, offsetX, offsetY;
+            const header = element.querySelector('.modal-header');
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.closest('button')) return;
+                isDragging = true;
+                offsetX = e.clientX - element.getBoundingClientRect().left;
+                offsetY = e.clientY - element.getBoundingClientRect().top;
+                element.style.transition = 'none';
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                element.style.left = (e.clientX - offsetX) + 'px';
+                element.style.top = (e.clientY - offsetY) + 'px';
+                element.style.transform = 'none';
+            });
+            document.addEventListener('mouseup', function() { isDragging = false; element.style.transition = ''; });
+        }
+        makeDraggable(document.getElementById('editProfileContent'));
+        makeDraggable(document.getElementById('changePasswordContent'));
+        document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); }));
+    </script>
+</body>
+</html>

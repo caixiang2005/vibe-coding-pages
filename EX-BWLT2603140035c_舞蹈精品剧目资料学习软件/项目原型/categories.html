@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国古典舞 - 分类浏览</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8CC7A;
+    --red: #C0392B;
+    --red-light: #E74C3C;
+    --bg: #FDF8F0;
+    --bg2: #F5EFE0;
+    --text: #2C1810;
+    --text2: #6B4C3B;
+    --text3: #9C7B6B;
+    --white: #FFFFFF;
+    --card-shadow: 0 4px 20px rgba(44,24,16,0.12);
+  }
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #E8E0D0;
+    display: flex; justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh; padding: 20px;
+  }
+  .phone-frame {
+    width: 100%; min-height: 852px;
+    background: var(--bg);
+    border-radius: 48px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.35), 0 0 0 10px #1a1a1a, 0 0 0 12px #333;
+    overflow: hidden;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .status-bar {
+    background: linear-gradient(135deg, #8B1A1A 0%, #C9A84C 100%);
+    color: white;
+    padding: 12px 24px 8px;
+    display: flex; justify-content: space-between;
+    align-items: center; font-size: 12px;
+  }
+  .status-bar .time { font-weight: 700; font-size: 15px; }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+
+  /* Hero Header for category */
+  .cat-hero {
+    position: relative;
+    height: 180px; overflow: hidden;
+  }
+  .cat-hero-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .cat-hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(139,26,26,0.5) 0%, rgba(44,24,16,0.85) 100%);
+    display: flex; flex-direction: column;
+    justify-content: flex-end; padding: 0 20px 20px;
+  }
+  .cat-back {
+    position: absolute;
+    top: 14px; left: 16px;
+    width: 34px; height: 34px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 15px;
+    text-decoration: none; border: none; cursor: pointer;
+  }
+  .cat-title-en {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .cat-title-zh {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px; font-weight: 700;
+    color: white; margin-bottom: 6px;
+  }
+  .cat-desc-row {
+    display: flex; gap: 16px; align-items: center;
+  }
+  .cat-stat {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; color: rgba(255,255,255,0.75);
+  }
+  .cat-stat i { color: var(--gold-light); font-size: 11px; }
+
+  /* Category selector */
+  .cat-selector {
+    background: white;
+    display: flex; overflow-x: auto;
+    scrollbar-width: none;
+    padding: 12px 16px;
+    gap: 8px;
+    border-bottom: 1px solid #EDE0C8;
+  }
+  .cat-selector::-webkit-scrollbar { display: none; }
+  .cat-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .cat-chip.active {
+    background: var(--red); color: white;
+  }
+  .cat-chip.inactive {
+    background: var(--bg2); color: var(--text2);
+  }
+  .cat-chip-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: currentColor; opacity: 0.5;
+  }
+
+  /* Filter & sort */
+  .filter-bar {
+    background: var(--bg);
+    padding: 10px 16px;
+    display: flex; align-items: center;
+    justify-content: space-between;
+  }
+  .count-label { font-size: 13px; color: var(--text3); }
+  .sort-group { display: flex; gap: 6px; }
+  .sort-btn {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; color: var(--text2);
+    background: white; border: 1px solid #E8D8C0;
+    border-radius: 14px; padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sort-btn:active { transform: scale(0.95); }
+  .sort-btn.active { color: var(--red); border-color: rgba(192,57,43,0.4); }
+
+  /* Content */
+  .content {
+    flex: 1; overflow-y: auto;
+    padding: 12px 16px 90px;
+    scrollbar-width: none;
+  }
+  .content::-webkit-scrollbar { display: none; }
+
+  /* Featured banner */
+  .featured-banner {
+    background: linear-gradient(135deg, rgba(139,26,26,0.07), rgba(201,168,76,0.12));
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 16px; overflow: hidden;
+    margin-bottom: 16px;
+    display: flex; height: 120px;
+    text-decoration: none;
+    position: relative;
+  }
+  .fb-img { width: 120px; object-fit: cover; display: block; }
+  .fb-content { flex: 1; padding: 14px; }
+  .fb-badge {
+    display: inline-block;
+    background: var(--red);
+    color: white; font-size: 10px;
+    padding: 2px 8px; border-radius: 8px;
+    margin-bottom: 6px;
+  }
+  .fb-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .fb-sub { font-size: 12px; color: var(--text3); }
+  .fb-arrow {
+    position: absolute; right: 12px; bottom: 12px;
+    width: 26px; height: 26px;
+    background: var(--red);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 10px;
+  }
+
+  /* Section title */
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--text);
+    margin: 4px 0 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    width: 4px; height: 18px;
+    background: var(--red); border-radius: 2px;
+  }
+
+  /* Repertoire list - full width cards */
+  .rep-list { display: flex; flex-direction: column; gap: 12px; }
+  .rep-card {
+    background: white;
+    border-radius: 16px;
+    display: flex; gap: 0;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    text-decoration: none;
+    transition: transform 0.2s;
+  }
+  .rep-card:active { transform: scale(0.98); }
+  .rep-img {
+    width: 100px; height: 110px;
+    object-fit: cover; flex-shrink: 0;
+  }
+  .rep-body { flex: 1; padding: 12px; }
+  .rep-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 5px; }
+  .rep-tag {
+    font-size: 10px; padding: 2px 7px;
+    border-radius: 8px;
+  }
+  .rep-tag.classical { background: rgba(201,168,76,0.15); color: #A07830; }
+  .rep-tag.folk { background: rgba(83,155,83,0.15); color: #2E7D32; }
+  .rep-tag.ballet { background: rgba(33,150,243,0.1); color: #1565C0; }
+  .rep-tag.modern { background: rgba(156,39,176,0.1); color: #6A1B9A; }
+  .rep-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px; font-weight: 700;
+    color: var(--text); margin-bottom: 3px;
+  }
+  .rep-artist { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+  .rep-bottom { display: flex; align-items: center; justify-content: space-between; }
+  .rep-rating {
+    display: flex; align-items: center; gap: 3px;
+    font-size: 12px; color: var(--gold);
+  }
+  .rep-rating span { color: var(--text2); font-weight: 600; }
+  .rep-progress-row {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .rep-prog-bar {
+    width: 60px; height: 4px;
+    background: var(--bg2); border-radius: 2px;
+    overflow: hidden;
+  }
+  .rep-prog-fill {
+    height: 100%; border-radius: 2px;
+    background: linear-gradient(90deg, var(--red), var(--gold));
+  }
+  .rep-prog-txt { font-size: 11px; color: var(--text3); }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%; background: white;
+    border-top: 1px solid #EDE0C8;
+    display: flex; padding: 8px 0 20px;
+    box-shadow: 0 -4px 20px rgba(44,24,16,0.08);
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    cursor: pointer; text-decoration: none; padding: 4px 0;
+    transition: all 0.2s;
+  }
+  .nav-item i { font-size: 20px; color: #BDB0A0; }
+  .nav-item span { font-size: 10px; color: #BDB0A0; font-weight: 500; }
+  .nav-item.active i { color: var(--red); }
+  .nav-item.active span { color: var(--red); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  
+
+  <!-- Hero -->
+  <div class="cat-hero">
+    <img class="cat-hero-img" src="https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&q=80" alt="中国古典舞">
+    <a href="repertoire.html" class="cat-back"><i class="fa fa-arrow-left"></i></a>
+    <div class="cat-hero-overlay">
+      <div class="cat-title-en">Chinese Classical Dance</div>
+      <div class="cat-title-zh">中国古典舞</div>
+      <div class="cat-desc-row">
+        <div class="cat-stat"><i class="fa fa-film"></i> 48部剧目</div>
+        <div class="cat-stat"><i class="fa fa-users"></i> 1.2万学习者</div>
+        <div class="cat-stat"><i class="fa fa-star"></i> 4.9分</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Selector -->
+  <div class="cat-selector">
+    <div class="cat-chip active" onclick="switchCat(this)">
+      <i class="fa fa-circle" style="font-size:6px; opacity:0.8"></i> 全部
+    </div>
+    <div class="cat-chip inactive" onclick="switchCat(this)">精选</div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <span class="count-label">共 48 部剧目</span>
+    <div class="sort-group">
+      <div class="sort-btn active" onclick="switchSort(this)">
+        <i class="fa fa-fire" style="color:var(--red)"></i> 推荐
+      </div>
+      <div class="sort-btn" onclick="switchSort(this)">
+        <i class="fa fa-star" style="color:var(--gold)"></i> 评分
+      </div>
+      <div class="sort-btn" onclick="switchSort(this)">
+        <i class="fa fa-clock"></i> 最新
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Featured -->
+    <a href="detail.html" class="featured-banner">
+      <img class="fb-img" src="https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=240&q=80" alt="雀之灵">
+      <div class="fb-content">
+        <span class="fb-badge">本周精选</span>
+        <div class="fb-title">雀之灵</div>
+        <div class="fb-sub">杨丽萍 · 傣族孔雀舞经典之作</div>
+      </div>
+      <div class="fb-arrow"><i class="fa fa-chevron-right"></i></div>
+    </a>
+
+    <div class="section-title">全部剧目</div>
+    <div class="rep-list">
+
+      <a href="detail.html" class="rep-card">
+        <img class="rep-img" src="https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=200&q=80" alt="雀之灵">
+        <div class="rep-body">
+          <div class="rep-tags">
+            <span class="rep-tag classical">古典舞</span>
+            <span class="rep-tag classical">傣族</span>
+          </div>
+          <div class="rep-title">雀之灵</div>
+          <div class="rep-artist">杨丽萍 · 1986年</div>
+          <div class="rep-bottom">
+            <div class="rep-rating">
+              <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+              <span>5.0</span>
+            </div>
+            <div class="rep-progress-row">
+              <div class="rep-prog-bar"><div class="rep-prog-fill" style="width:80%"></div></div>
+              <span class="rep-prog-txt">80%</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <a href="detail.html" class="rep-card">
+        <img class="rep-img" src="https://images.unsplash.com/photo-1546427660-eb346c344ba5?w=200&q=80" alt="洛神水赋">
+        <div class="rep-body">
+          <div class="rep-tags">
+            <span class="rep-tag classical">古典舞</span>
+            <span class="rep-tag modern">水下</span>
+          </div>
+          <div class="rep-title">洛神水赋</div>
+          <div class="rep-artist">河南卫视 · 2021年</div>
+          <div class="rep-bottom">
+            <div class="rep-rating">
+              <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-half-stroke"></i>
+              <span>4.8</span>
+            </div>
+            <div class="rep-progress-row">
+              <div class="rep-prog-bar"><div class="rep-prog-fill" style="width:55%"></div></div>
+              <span class="rep-prog-txt">55%</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <a href="detail.html" class="rep-card">
+        <img class="rep-img" src="https://ts1.tc.mm.bing.net/th/id/OIP-C.DwZNcNgU7fH0EYyz_U9JNwHaJg?w=300&h=400&c=1&ps=1&pid=ImgDetMain" alt="千手观音">
+        <div class="rep-body">
+          <div class="rep-tags">
+            <span class="rep-tag classical">古典舞</span>
+            <span class="rep-tag folk">佛教艺术</span>
+          </div>
+          <div class="rep-title">千手观音</div>
+          <div class="rep-artist">邰丽华 · 2005年</div>
+          <div class="rep-bottom">
+            <div class="rep-rating">
+              <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+              <span>4.9</span>
+            </div>
+            <div class="rep-progress-row">
+              <div class="rep-prog-bar"><div class="rep-prog-fill" style="width:100%"></div></div>
+              <span class="rep-prog-txt">已完成</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <a href="detail.html" class="rep-card">
+        <img class="rep-img" src="https://images.unsplash.com/photo-1561863463-a3f6bc5a23ad?w=200&q=80" alt="扇舞丹青">
+        <div class="rep-body">
+          <div class="rep-tags">
+            <span class="rep-tag classical">古典舞</span>
+          </div>
+          <div class="rep-title">扇舞丹青</div>
+          <div class="rep-artist">中央民族歌舞团</div>
+          <div class="rep-bottom">
+            <div class="rep-rating">
+              <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-half-stroke"></i>
+              <span>4.7</span>
+            </div>
+            <div class="rep-progress-row">
+              <div class="rep-prog-bar"><div class="rep-prog-fill" style="width:0%"></div></div>
+              <span class="rep-prog-txt">未开始</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <a href="detail.html" class="rep-card">
+        <img class="rep-img" src="https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?w=200&q=80" alt="飞天">
+        <div class="rep-body">
+          <div class="rep-tags">
+            <span class="rep-tag classical">古典舞</span>
+            <span class="rep-tag classical">敦煌风格</span>
+          </div>
+          <div class="rep-title">飞天</div>
+          <div class="rep-artist">甘肃歌舞剧院</div>
+          <div class="rep-bottom">
+            <div class="rep-rating">
+              <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+              <span>4.9</span>
+            </div>
+            <div class="rep-progress-row">
+              <div class="rep-prog-bar"><div class="rep-prog-fill" style="width:30%"></div></div>
+              <span class="rep-prog-txt">30%</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+    </div>
+    <div style="height:16px"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <i class="fa-solid fa-house"></i><span>首页</span>
+    </a>
+    <a href="repertoire.html" class="nav-item active">
+      <i class="fa-solid fa-film"></i><span>剧目</span>
+    </a>
+    <a href="study.html" class="nav-item">
+      <i class="fa-solid fa-graduation-cap"></i><span>学习</span>
+    </a>
+    <a href="exam.html" class="nav-item">
+      <i class="fa-solid fa-pen-to-square"></i><span>练习</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <i class="fa-regular fa-circle-user"></i><span>我的</span>
+    </a>
+  </div>
+</div>
+
+<script>
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeIn 0.3s';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 1500);
+}
+
+function switchCat(el) {
+  document.querySelectorAll('.cat-chip').forEach(c => {
+    c.classList.remove('active');
+    c.classList.add('inactive');
+  });
+  el.classList.remove('inactive');
+  el.classList.add('active');
+  showToast('已切换分类');
+}
+
+function switchSort(el) {
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+<style>
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.8); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+</style>
+</body>
+</html>

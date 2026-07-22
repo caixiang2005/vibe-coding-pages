@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>合同管理中心 - 水利工程合同流程规范管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            background-image: radial-gradient(circle at 50% 50%, rgba(0, 122, 255, 0.05) 0%, rgba(245, 245, 247, 1) 100%);
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .mac-window {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.15), 0 30px 60px -30px rgba(0, 0, 0, 0.2);
+        }
+        .sidebar-item.active {
+            background-color: rgba(0, 122, 255, 0.1);
+            color: #007aff;
+        }
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+        }
+        .modal-header {
+            background: linear-gradient(to bottom, #f8f8f8, #eeeeee);
+            border-bottom: 1px solid #dcdcdc;
+        }
+        .modal-traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: transform 0.1s ease;
+        }
+        .modal-traffic-light:hover {
+            transform: scale(1.1);
+        }
+        .btn-primary {
+            background: #007aff;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover { background: #0066dd; transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0) scale(0.98); }
+        .btn-secondary {
+            background: white;
+            border: 1px solid #e5e5e7;
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:hover { background: #f5f5f7; }
+        .btn-secondary:active { transform: scale(0.98); }
+        .btn-danger {
+            background: #ff3b30;
+            transition: all 0.2s ease;
+        }
+        .btn-danger:hover { background: #e63429; }
+        .btn-danger:active { transform: scale(0.98); }
+        .filter-btn {
+            transition: all 0.2s ease;
+        }
+        .filter-btn.active {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .table-row {
+            transition: all 0.15s ease;
+        }
+        .table-row:hover {
+            background-color: rgba(0, 122, 255, 0.05);
+        }
+        .action-link {
+            transition: color 0.15s ease;
+        }
+        .action-link:hover { color: #0056b3; text-decoration: underline; }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.4);
+        }
+        .confirm-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="mac-window w-[1280px] h-[832px] rounded-xl flex overflow-hidden">
+        <aside class="w-64 border-r border-gray-200/50 flex flex-col pt-4">
+            <div class="px-5 flex space-x-2 mb-8">
+                <div class="traffic-light bg-[#ff5f57]"></div>
+                <div class="traffic-light bg-[#febc2e]"></div>
+                <div class="traffic-light bg-[#28c840]"></div>
+            </div>
+            <div class="px-5 mb-6 flex items-center space-x-3">
+                <img class="w-10 h-10 rounded-full object-cover" src="https://i01piccdn.sogoucdn.com/6de4845d273e3386" alt="文丹头像" />
+                <div>
+                    <div class="text-sm font-semibold text-gray-800">文丹</div>
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">业务办理员</div>
+                </div>
+            </div>
+            <nav class="flex-1 px-3 space-y-0.5 overflow-y-auto custom-scrollbar">
+                <div class="px-3 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">主菜单</div>
+                <a href="main.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-black/5">
+                    <i class="fa-solid fa-gauge-high mr-3 text-base"></i> 控制台
+                </a>
+                <a href="contracts.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg active">
+                    <i class="fa-solid fa-file-contract mr-3 text-base"></i> 合同管理
+                </a>
+                <a href="approvals.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-black/5">
+                    <i class="fa-solid fa-clipboard-check mr-3 text-base"></i> 流程审批
+                    <span class="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">4</span>
+                </a>
+                <a href="regulations.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-black/5">
+                    <i class="fa-solid fa-shield-halved mr-3 text-base"></i> 规范管理
+                </a>
+                <a href="reports.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-black/5">
+                    <i class="fa-solid fa-chart-pie mr-3 text-base"></i> 报表统计
+                </a>
+                <a href="settings.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-black/5">
+                    <i class="fa-solid fa-gears mr-3 text-base"></i> 系统设置
+                </a>
+            </nav>
+            <div class="p-4 border-t border-gray-200/50">
+                <button class="flex items-center text-xs text-gray-500 hover:text-red-500 transition-colors" onclick="location.reload()">
+                    <i class="fa-solid fa-right-from-bracket mr-2"></i> 退出登录
+                </button>
+            </div>
+        </aside>
+        <main class="flex-1 flex flex-col bg-white/40">
+            <header class="h-14 border-b border-gray-200/50 flex items-center justify-between px-6 bg-white/30">
+                <h2 class="text-lg font-semibold text-gray-800">水利工程合同流程规范管理系统</h2>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input class="pl-9 pr-4 py-1.5 bg-gray-200/50 rounded-md text-xs w-64 border-transparent focus:bg-white transition-colors" placeholder="全局搜索合同、流程、法律法规..." type="text" />
+                    </div>
+                    <button id="notificationBtn" class="w-8 h-8 rounded-full hover:bg-gray-200 flex items-center justify-center relative transition-colors">
+                        <i class="fa-regular fa-bell text-gray-600"></i>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    </button>
+                    <div id="notificationDropdown" class="hidden absolute right-6 top-14 w-80 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                            <span class="text-sm font-semibold text-gray-800">通知中心</span>
+                            <button onclick="clearAllNotifications()" class="text-xs text-blue-500 hover:text-blue-600">全部标为已读</button>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto custom-scrollbar">
+                            <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-exclamation text-red-500 text-xs"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-sm text-gray-800 font-medium">合同到期预警</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">「南水北调施工合同-2026」将于30天后到期</div>
+                                        <div class="text-[10px] text-gray-400 mt-1">10分钟前</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-sm text-gray-800 font-medium">审批通过</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">「设备采购合同-2026」已通过最终审批</div>
+                                        <div class="text-[10px] text-gray-400 mt-1">30分钟前</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-clock text-orange-500 text-xs"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-sm text-gray-800 font-medium">待处理审批</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">您有4项审批流程待处理</div>
+                                        <div class="text-[10px] text-gray-400 mt-1">1小时前</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-upload text-blue-500 text-xs"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-sm text-gray-800 font-medium">文件上传成功</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">「监理实施细则」已成功上传到规范库</div>
+                                        <div class="text-[10px] text-gray-400 mt-1">2小时前</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
+                            <a href="approvals.html" class="block text-center text-xs text-blue-500 hover:text-blue-600 py-1">查看全部通知</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div class="flex space-x-2">
+                            <button onclick="openModal('createModal')" class="btn-primary px-4 py-1.5 text-white rounded-md text-sm font-medium flex items-center">
+                                <i class="fa-solid fa-plus mr-2"></i>新建合同
+                            </button>
+                            <button onclick="openModal('importModal')" class="btn-secondary px-4 py-1.5 text-gray-600 rounded-md text-sm hover:bg-gray-50 flex items-center">
+                                <i class="fa-solid fa-upload mr-2"></i>批量导入
+                            </button>
+                        </div>
+                        <div class="flex bg-gray-200/50 p-1 rounded-lg">
+                            <button class="filter-btn px-3 py-1 text-xs font-medium rounded active" onclick="filterContracts('all')">全部</button>
+                            <button class="filter-btn px-3 py-1 text-xs font-medium text-gray-500 rounded" onclick="filterContracts('executing')">执行中</button>
+                            <button class="filter-btn px-3 py-1 text-xs font-medium text-gray-500 rounded" onclick="filterContracts('approving')">审批中</button>
+                            <button class="filter-btn px-3 py-1 text-xs font-medium text-gray-500 rounded" onclick="filterContracts('completed')">已结项</button>
+                        </div>
+                    </div>
+                    <div class="glass-card overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50/50 text-xs font-bold text-gray-500 uppercase border-b border-gray-200/50">
+                                <tr>
+                                    <th class="px-6 py-4">项目编号</th>
+                                    <th class="px-6 py-4">合同名称</th>
+                                    <th class="px-6 py-4">合同类别</th>
+                                    <th class="px-6 py-4">签署金额</th>
+                                    <th class="px-6 py-4">当前状态</th>
+                                    <th class="px-6 py-4 text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-gray-100" id="contractTableBody">
+                                <tr class="table-row" data-status="executing">
+                                    <td class="px-6 py-4 font-mono text-xs">SLGD-2026-001</td>
+                                    <td class="px-6 py-4 font-medium">东河水利枢纽主体工程施工合同</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px]">施工类</span></td>
+                                    <td class="px-6 py-4 font-semibold text-gray-700">￥4,500,000.00</td>
+                                    <td class="px-6 py-4"><span class="flex items-center text-green-600 text-xs"><span class="status-dot bg-green-500"></span>执行中</span></td>
+                                    <td class="px-6 py-4 text-right flex space-x-3 justify-end">
+                                        <button onclick="showContractDetail('SLGD-2026-001')" class="action-link text-blue-600">详情</button>
+                                        <button onclick="openModal('editModal')" class="action-link text-blue-600">编辑</button>
+                                        <button onclick="confirmAction('终止', 'SLGD-2026-001')" class="action-link text-red-500">终止</button>
+                                    </td>
+                                </tr>
+                                <tr class="table-row" data-status="approving">
+                                    <td class="px-6 py-4 font-mono text-xs">SLGD-2026-002</td>
+                                    <td class="px-6 py-4 font-medium">大坝沉降位移自动化观测系统采购</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-0.5 bg-purple-50 text-purple-600 rounded text-[10px]">采购类</span></td>
+                                    <td class="px-6 py-4 font-semibold text-gray-700">￥820,000.00</td>
+                                    <td class="px-6 py-4"><span class="flex items-center text-orange-500 text-xs"><span class="status-dot bg-orange-500"></span>审批中</span></td>
+                                    <td class="px-6 py-4 text-right flex space-x-3 justify-end">
+                                        <button onclick="showContractDetail('SLGD-2026-002')" class="action-link text-blue-600">详情</button>
+                                        <button onclick="openModal('editModal')" class="action-link text-blue-600">编辑</button>
+                                        <button onclick="confirmAction('终止', 'SLGD-2026-002')" class="action-link text-red-500">终止</button>
+                                    </td>
+                                </tr>
+                                <tr class="table-row" data-status="warning">
+                                    <td class="px-6 py-4 font-mono text-xs">SLGD-2026-005</td>
+                                    <td class="px-6 py-4 font-medium">河道生态修复初步设计咨询服务</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px]">咨询类</span></td>
+                                    <td class="px-6 py-4 font-semibold text-gray-700">￥260,000.00</td>
+                                    <td class="px-6 py-4"><span class="flex items-center text-red-500 text-xs"><span class="status-dot bg-red-500"></span>规范预警</span></td>
+                                    <td class="px-6 py-4 text-right flex space-x-3 justify-end">
+                                        <button onclick="showContractDetail('SLGD-2026-005')" class="action-link text-blue-600">详情</button>
+                                        <button onclick="openModal('editModal')" class="action-link text-blue-600">编辑</button>
+                                        <button onclick="confirmAction('处理', 'SLGD-2026-005')" class="action-link text-red-500">处理</button>
+                                    </td>
+                                </tr>
+                                <tr class="table-row" data-status="executing">
+                                    <td class="px-6 py-4 font-mono text-xs">SLGD-2026-008</td>
+                                    <td class="px-6 py-4 font-medium">江堤路基加固工程监理项目</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px]">监理类</span></td>
+                                    <td class="px-6 py-4 font-semibold text-gray-700">￥1,120,000.00</td>
+                                    <td class="px-6 py-4"><span class="flex items-center text-green-600 text-xs"><span class="status-dot bg-green-500"></span>执行中</span></td>
+                                    <td class="px-6 py-4 text-right flex space-x-3 justify-end">
+                                        <button onclick="showContractDetail('SLGD-2026-008')" class="action-link text-blue-600">详情</button>
+                                        <button onclick="openModal('editModal')" class="action-link text-blue-600">编辑</button>
+                                        <button onclick="confirmAction('终止', 'SLGD-2026-008')" class="action-link text-red-500">终止</button>
+                                    </td>
+                                </tr>
+                                <tr class="table-row" data-status="completed">
+                                    <td class="px-6 py-4 font-mono text-xs">SLGD-2026-012</td>
+                                    <td class="px-6 py-4 font-medium">枢纽电站泄洪闸门金属结构采购</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-0.5 bg-purple-50 text-purple-600 rounded text-[10px]">采购类</span></td>
+                                    <td class="px-6 py-4 font-semibold text-gray-700">￥3,890,000.00</td>
+                                    <td class="px-6 py-4"><span class="flex items-center text-gray-400 text-xs"><span class="status-dot bg-gray-400"></span>已归档</span></td>
+                                    <td class="px-6 py-4 text-right flex space-x-3 justify-end">
+                                        <button onclick="showContractDetail('SLGD-2026-012')" class="action-link text-blue-600">详情</button>
+                                        <button onclick="openModal('editModal')" class="action-link text-blue-600">编辑</button>
+                                        <button onclick="confirmAction('终止', 'SLGD-2026-012')" class="action-link text-red-500">终止</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <footer class="h-10 border-t border-gray-200/50 flex items-center justify-between px-6 bg-white/30 text-xs">
+                <div class="flex items-center gap-4 text-gray-600">
+                    <span class="font-medium text-gray-700">签署金额合计：￥10,590,000.00</span>
+                    <span class="text-gray-300">|</span>
+                    <span class="flex items-center"><span class="status-dot bg-green-500 mr-1.5"></span>执行中 2</span>
+                    <span class="flex items-center"><span class="status-dot bg-orange-500 mr-1.5"></span>审批中 1</span>
+                    <span class="flex items-center"><span class="status-dot bg-red-500 mr-1.5"></span>预警 1</span>
+                    <span class="flex items-center"><span class="status-dot bg-gray-400 mr-1.5"></span>归档 1</span>
+                </div>
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider">水利工程合同流程规范管理系统</div>
+            </footer>
+        </main>
+    </div>
+
+    <div id="createModal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-[600px] max-h-[90vh] overflow-hidden">
+            <div class="modal-header px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="modal-traffic-light bg-[#ff5f57]"></div>
+                    <div class="modal-traffic-light bg-[#febc2e]"></div>
+                    <div class="modal-traffic-light bg-[#28c840]"></div>
+                </div>
+                <h3 class="text-sm font-semibold text-gray-800 absolute left-1/2 -translate-x-1/2">新建合同</h3>
+                <button onclick="closeModal('createModal')" class="w-6 h-6 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors ml-auto">
+                    <i class="fa-solid fa-xmark text-gray-500 text-xs"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">项目编号</label>
+                        <input id="create-project-no" class="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm" type="text" value="SLGD-2026-013" readonly />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">合同类别</label>
+                        <select id="create-category" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm">
+                            <option value="">请选择类别</option>
+                            <option value="施工类">施工类</option>
+                            <option value="监理类">监理类</option>
+                            <option value="设计类">设计类</option>
+                            <option value="采购类">采购类</option>
+                            <option value="咨询类">咨询类</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">合同名称</label>
+                    <input id="create-name" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="text" placeholder="请输入合同名称" />
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">签约金额（元）</label>
+                        <input id="create-amount" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="number" placeholder="0.00" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">签订日期</label>
+                        <input id="create-date" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="date" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">甲方单位</label>
+                    <input id="create-party-a" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="text" placeholder="请输入甲方单位名称" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">乙方单位</label>
+                    <input id="create-party-b" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="text" placeholder="请输入乙方单位名称" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">合同工期</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input id="create-start" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="date" />
+                        <input id="create-end" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="date" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">备注说明</label>
+                    <textarea id="create-remark" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm h-20 resize-none" placeholder="请输入备注说明"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeModal('createModal')" class="btn-secondary px-4 py-2 text-gray-600 rounded-lg text-sm">取消</button>
+                <button onclick="submitNewContract()" class="btn-primary px-4 py-2 text-white rounded-lg text-sm"><i class="fa-solid fa-check mr-2"></i>确认创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="importModal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-[500px] overflow-hidden">
+            <div class="modal-header px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="modal-traffic-light bg-[#ff5f57]"></div>
+                    <div class="modal-traffic-light bg-[#febc2e]"></div>
+                    <div class="modal-traffic-light bg-[#28c840]"></div>
+                </div>
+                <h3 class="text-sm font-semibold text-gray-800 absolute left-1/2 -translate-x-1/2">批量导入合同</h3>
+                <button onclick="closeModal('importModal')" class="w-6 h-6 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors ml-auto">
+                    <i class="fa-solid fa-xmark text-gray-500 text-xs"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div id="importDropZone" class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-blue-400 transition-colors cursor-pointer" ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)" onclick="document.getElementById('fileInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-sm text-gray-600 mb-2">点击或拖拽文件到此处上传</p>
+                    <p class="text-xs text-gray-400">支持 .xlsx/.xls 格式</p>
+                    <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls" onchange="handleFileSelect(this)" />
+                </div>
+                <div id="selectedFileInfo" class="hidden mt-4 p-3 bg-green-50 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-file-excel text-green-600 mr-2"></i>
+                            <span id="selectedFileName" class="text-sm text-green-700"></span>
+                        </div>
+                        <button onclick="removeSelectedFile()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p class="text-xs text-gray-500"><i class="fa-solid fa-circle-info mr-1"></i>请先下载导入模板，按要求填写后再上传</p>
+                    <button onclick="downloadTemplate()" class="text-xs text-blue-600 hover:underline mt-1"><i class="fa-solid fa-download mr-1"></i>下载导入模板</button>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeModal('importModal')" class="btn-secondary px-4 py-2 text-gray-600 rounded-lg text-sm">取消</button>
+                <button onclick="startImport()" class="btn-primary px-4 py-2 text-white rounded-lg text-sm"><i class="fa-solid fa-upload mr-2"></i>开始导入</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailModal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-[700px] max-h-[90vh] overflow-hidden">
+            <div class="modal-header px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="modal-traffic-light bg-[#ff5f57]"></div>
+                    <div class="modal-traffic-light bg-[#febc2e]"></div>
+                    <div class="modal-traffic-light bg-[#28c840]"></div>
+                </div>
+                <h3 class="text-sm font-semibold text-gray-800 absolute left-1/2 -translate-x-1/2">合同详情</h3>
+                <button onclick="closeModal('detailModal')" class="w-6 h-6 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors ml-auto">
+                    <i class="fa-solid fa-xmark text-gray-500 text-xs"></i>
+                </button>
+            </div>
+            <div class="p-6 max-h-[60vh] overflow-y-auto">
+                <div id="detailContent"></div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeModal('detailModal')" class="btn-secondary px-4 py-2 text-gray-600 rounded-lg text-sm">关闭</button>
+                <button onclick="printContract()" class="btn-primary px-4 py-2 text-white rounded-lg text-sm"><i class="fa-solid fa-print mr-2"></i>打印合同</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-[600px] max-h-[90vh] overflow-hidden">
+            <div class="modal-header px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="modal-traffic-light bg-[#ff5f57]"></div>
+                    <div class="modal-traffic-light bg-[#febc2e]"></div>
+                    <div class="modal-traffic-light bg-[#28c840]"></div>
+                </div>
+                <h3 class="text-sm font-semibold text-gray-800 absolute left-1/2 -translate-x-1/2">编辑合同</h3>
+                <button onclick="closeModal('editModal')" class="w-6 h-6 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors ml-auto">
+                    <i class="fa-solid fa-xmark text-gray-500 text-xs"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">项目编号</label>
+                        <input id="edit-project-no" class="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm" type="text" readonly />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">合同类别</label>
+                        <select id="edit-category" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm">
+                            <option value="施工类">施工类</option>
+                            <option value="监理类">监理类</option>
+                            <option value="设计类">设计类</option>
+                            <option value="采购类">采购类</option>
+                            <option value="咨询类">咨询类</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">合同名称</label>
+                    <input id="edit-name" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="text" />
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">签约金额（元）</label>
+                        <input id="edit-amount" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="number" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">签订日期</label>
+                        <input id="edit-date" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="date" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">甲方单位</label>
+                    <input id="edit-party-a" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="text" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">乙方单位</label>
+                    <input id="edit-party-b" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm" type="text" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">备注说明</label>
+                    <textarea id="edit-remark" class="w-full px-3 py-2 border border-gray-200 rounded-md text-sm h-20 resize-none"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeModal('editModal')" class="btn-secondary px-4 py-2 text-gray-600 rounded-lg text-sm">取消</button>
+                <button onclick="saveEdit()" class="btn-primary px-4 py-2 text-white rounded-lg text-sm"><i class="fa-solid fa-check mr-2"></i>保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-[400px] overflow-hidden">
+            <div class="modal-header px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="modal-traffic-light bg-[#ff5f57]"></div>
+                    <div class="modal-traffic-light bg-[#febc2e]"></div>
+                    <div class="modal-traffic-light bg-[#28c840]"></div>
+                </div>
+                <h3 id="confirmTitle" class="text-sm font-semibold text-gray-800 absolute left-1/2 -translate-x-1/2">确认操作</h3>
+                <button onclick="closeModal('confirmModal')" class="w-6 h-6 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors ml-auto">
+                    <i class="fa-solid fa-xmark text-gray-500 text-xs"></i>
+                </button>
+            </div>
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-triangle-exclamation text-orange-500 text-2xl"></i>
+                </div>
+                <p id="confirmMessage" class="text-gray-700 mb-2"></p>
+                <p id="confirmDetail" class="text-xs text-gray-500"></p>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeModal('confirmModal')" class="btn-secondary px-4 py-2 text-gray-600 rounded-lg text-sm">取消</button>
+                <button id="confirmBtn" onclick="executeConfirm()" class="btn-danger px-4 py-2 text-white rounded-lg text-sm">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg hidden z-[100] flex items-center">
+        <i id="toastIcon" class="fa-solid fa-check mr-3"></i>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let confirmCallback = null;
+        let currentEditRow = null;
+
+        const contractData = {
+            'SLGD-2026-001': {
+                name: '东河水利枢纽主体工程施工合同',
+                category: '施工类',
+                amount: '4,500,000.00',
+                partyA: '东河流域管理局',
+                partyB: '华东建设工程有限公司',
+                date: '2026-01-15',
+                status: '执行中',
+                startDate: '2026-01-20',
+                endDate: '2027-12-31',
+                paidAmount: '1,850,000.00',
+                overview: '东河水利枢纽主体工程位于东河流域上游，是一座以防洪、供水为主的大型水利工程。本次合同主要包括大坝主体混凝土浇筑、溢洪道施工、发电机组安装等主体工程内容。工程总投资约4.5亿元，计划工期24个月。'
+            },
+            'SLGD-2026-002': {
+                name: '大坝沉降位移自动化观测系统采购',
+                category: '采购类',
+                amount: '820,000.00',
+                partyA: '东河流域管理局',
+                partyB: '北京测绘仪器有限公司',
+                date: '2026-02-10',
+                status: '审批中',
+                startDate: '2026-03-01',
+                endDate: '2026-06-30',
+                paidAmount: '0.00',
+                overview: '采购大坝沉降位移自动化观测系统一套，包括传感器、数据采集仪、通信模块及监控软件平台。'
+            },
+            'SLGD-2026-005': {
+                name: '河道生态修复初步设计咨询服务',
+                category: '咨询类',
+                amount: '260,000.00',
+                partyA: '东河流域管理局',
+                partyB: '华东勘察设计研究院',
+                date: '2025-11-20',
+                status: '规范预警',
+                startDate: '2025-12-01',
+                endDate: '2026-05-31',
+                paidAmount: '260,000.00',
+                overview: '提供河道生态修复工程初步设计咨询服务，包括现场勘察、方案设计及投资估算。'
+            },
+            'SLGD-2026-008': {
+                name: '江堤路基加固工程监理项目',
+                category: '监理类',
+                amount: '1,120,000.00',
+                partyA: '东河流域管理局',
+                partyB: '江河监理咨询有限公司',
+                date: '2026-01-08',
+                status: '执行中',
+                startDate: '2026-02-01',
+                endDate: '2026-12-31',
+                paidAmount: '560,000.00',
+                overview: '江堤路基加固工程施工监理服务，包括质量控制、进度管理、安全监督等全过程监理工作。'
+            },
+            'SLGD-2026-012': {
+                name: '枢纽电站泄洪闸门金属结构采购',
+                category: '采购类',
+                amount: '3,890,000.00',
+                partyA: '东河流域管理局',
+                partyB: '华东金属结构制造有限公司',
+                date: '2025-06-15',
+                status: '已归档',
+                startDate: '2025-07-01',
+                endDate: '2025-12-31',
+                paidAmount: '3,890,000.00',
+                overview: '枢纽电站泄洪闸门金属结构制作及安装，包括4扇弧形闸门及启闭设备。'
+            }
+        };
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+
+        document.querySelectorAll('.modal-traffic-light').forEach(light => {
+            light.addEventListener('click', function() {
+                const modal = this.closest('.modal-overlay');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+
+        function filterContracts(type) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-500');
+            });
+            event.target.classList.add('active');
+            event.target.classList.remove('text-gray-500');
+
+            const rows = document.querySelectorAll('#contractTableBody tr');
+            rows.forEach(row => {
+                if (type === 'all' || row.dataset.status === type) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function showContractDetail(id) {
+            const data = contractData[id];
+            if (!data) return;
+
+            const statusClass = data.status === '执行中' ? 'text-green-600' : data.status === '审批中' ? 'text-orange-500' : data.status === '规范预警' ? 'text-red-500' : 'text-gray-400';
+            const statusBg = data.status === '执行中' ? 'bg-green-50' : data.status === '审批中' ? 'bg-orange-50' : data.status === '规范预警' ? 'bg-red-50' : 'bg-gray-50';
+
+            document.getElementById('detailContent').innerHTML = `
+                <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+                    <div class="col-span-2 pb-3 border-b border-gray-100">
+                        <h4 class="text-xl font-semibold text-gray-800">${data.name}</h4>
+                        <p class="text-xs text-gray-400 mt-1">项目编号：${id}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 mb-1">合同类别</p>
+                        <p class="text-sm font-medium"><span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px]">${data.category}</span></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 mb-1">签署金额</p>
+                        <p class="text-sm font-semibold text-gray-800">￥${data.amount}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 mb-1">甲方单位</p>
+                        <p class="text-sm text-gray-700">${data.partyA}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 mb-1">乙方单位</p>
+                        <p class="text-sm text-gray-700">${data.partyB}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 mb-1">签订日期</p>
+                        <p class="text-sm text-gray-700">${data.date}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 mb-1">当前状态</p>
+                        <p class="text-sm ${statusClass} flex items-center"><span class="status-dot bg-current"></span>${data.status}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 mb-1">合同工期</p>
+                        <p class="text-sm text-gray-700">${data.startDate} 至 ${data.endDate}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 mb-1">已支付金额</p>
+                        <p class="text-sm text-gray-700">￥${data.paidAmount}</p>
+                    </div>
+                    <div class="col-span-2 pt-3 border-t border-gray-100">
+                        <p class="text-xs text-gray-400 mb-2">项目概述</p>
+                        <p class="text-sm text-gray-700 leading-relaxed">${data.overview}</p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-xs text-gray-400 mb-2">合规检查</p>
+                        <div class="space-y-2">
+                            <div class="flex items-center p-2 bg-green-50 rounded">
+                                <i class="fa-solid fa-check-circle text-green-500 mr-2"></i>
+                                <span class="text-xs text-green-700">合同主体资质已核验</span>
+                            </div>
+                            <div class="flex items-center p-2 bg-green-50 rounded">
+                                <i class="fa-solid fa-check-circle text-green-500 mr-2"></i>
+                                <span class="text-xs text-green-700">付款条款符合《水利资金管理办法》</span>
+                            </div>
+                            <div class="flex items-center p-2 bg-green-50 rounded">
+                                <i class="fa-solid fa-check-circle text-green-500 mr-2"></i>
+                                <span class="text-xs text-green-700">使用2026版标准合同文本</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            openModal('detailModal');
+        }
+
+        function submitNewContract() {
+            const name = document.getElementById('create-name').value;
+            const category = document.getElementById('create-category').value;
+            const amount = document.getElementById('create-amount').value;
+            const date = document.getElementById('create-date').value;
+            const partyA = document.getElementById('create-party-a').value;
+            const partyB = document.getElementById('create-party-b').value;
+
+            if (!name || !category || !amount || !date || !partyA || !partyB) {
+                showToast('请填写所有必填项', 'error');
+                return;
+            }
+
+            closeModal('createModal');
+            showToast('合同创建成功！', 'success');
+            clearCreateForm();
+        }
+
+        function clearCreateForm() {
+            document.getElementById('create-name').value = '';
+            document.getElementById('create-category').value = '';
+            document.getElementById('create-amount').value = '';
+            document.getElementById('create-date').value = '';
+            document.getElementById('create-party-a').value = '';
+            document.getElementById('create-party-b').value = '';
+            document.getElementById('create-remark').value = '';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+        }
+
+        function handleFileDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processSelectedFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(input) {
+            if (input.files.length > 0) {
+                processSelectedFile(input.files[0]);
+            }
+        }
+
+        function processSelectedFile(file) {
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                showToast('请选择 Excel 文件', 'error');
+                return;
+            }
+            selectedFile = file;
+            document.getElementById('selectedFileName').textContent = file.name;
+            document.getElementById('selectedFileInfo').classList.remove('hidden');
+        }
+
+        function removeSelectedFile() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('selectedFileInfo').classList.add('hidden');
+        }
+
+        function downloadTemplate() {
+            showToast('正在下载导入模板...', 'success');
+        }
+
+        function startImport() {
+            if (!selectedFile) {
+                showToast('请先选择要导入的文件', 'error');
+                return;
+            }
+            closeModal('importModal');
+            showToast('导入成功！共导入 5 条合同记录', 'success');
+            removeSelectedFile();
+        }
+
+        function confirmAction(action, contractId) {
+            document.getElementById('confirmTitle').textContent = action + '确认';
+            document.getElementById('confirmMessage').textContent = `确定要${action}该合同吗？`;
+            document.getElementById('confirmDetail').textContent = `项目编号：${contractId}`;
+
+            const btnClass = action === '终止' ? 'btn-danger' : 'btn-primary';
+            const btnIcon = action === '终止' ? 'fa-solid fa-trash mr-2' : 'fa-solid fa-check mr-2';
+
+            document.getElementById('confirmBtn').className = `${btnClass} px-4 py-2 text-white rounded-lg text-sm`;
+            document.getElementById('confirmBtn').innerHTML = `<i class="${btnIcon}"></i>确认${action}`;
+
+            confirmCallback = () => {
+                showToast(`合同 ${action}成功！`, 'success');
+            };
+
+            openModal('confirmModal');
+        }
+
+        function executeConfirm() {
+            closeModal('confirmModal');
+            if (confirmCallback) {
+                confirmCallback();
+                confirmCallback = null;
+            }
+        }
+
+        function printContract() {
+            showToast('正在准备打印...', 'success');
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+
+            msg.textContent = message;
+            if (type === 'success') {
+                icon.className = 'fa-solid fa-check mr-3';
+                toast.classList.remove('bg-red-600');
+                toast.classList.add('bg-gray-800');
+            } else {
+                icon.className = 'fa-solid fa-xmark mr-3';
+                toast.classList.remove('bg-gray-800');
+                toast.classList.add('bg-red-600');
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+
+        if (notificationBtn && notificationDropdown) {
+            notificationBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                notificationDropdown.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!notificationDropdown.contains(e.target) && !notificationBtn.contains(e.target)) {
+                    notificationDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        function clearAllNotifications() {
+            const badge = notificationBtn.querySelector('span');
+            if (badge) badge.remove();
+            showToast('已全部标为已读', 'success');
+            notificationDropdown.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

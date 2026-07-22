@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>信用风险 - 金融市场风险监测数据研判分析软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--mac-title:#e8e6e3;--mac-title-inactive:#f6f6f6;--sidebar-bg:#1e1e2e;--sidebar-text:#a6adc8;--sidebar-active:rgba(137,180,250,.12);--sidebar-active-text:#89b4fa;--content-bg:#11111b;--content-bg-2:#181825;--card-bg:#1e1e2e;--card-border:rgba(255,255,255,.04);--text-primary:#cdd6f4;--text-secondary:#6c7086;--text-dim:#45475a;--accent-blue:#89b4fa;--accent-green:#a6e3a1;--accent-red:#f38ba8;--accent-yellow:#f9e2af;--accent-mauve:#cba6f7;--accent-peach:#fab387;--accent-teal:#94e2d5;--shadow-heavy:0 30px 80px rgba(0,0,0,.6),0 0 1px rgba(255,255,255,.05);--radius:10px}
+    body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a12;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;color:var(--text-primary)}
+    .desktop-bg{position:fixed;inset:0;background:linear-gradient(135deg,#0c0c1d 0%,#1a1a2e 40%,#16213e 70%,#0f3460 100%);z-index:0}
+    .desktop-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 20%,rgba(137,180,250,.04) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(203,166,247,.03) 0%,transparent 50%)}
+    .mac-window{position:relative;z-index:1;width:1280px;max-width:96vw;height:820px;max-height:90vh;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-heavy);display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.06)}
+    .title-bar{height:52px;min-height:52px;background:linear-gradient(180deg,#2a2a3c 0%,#232336 100%);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid rgba(0,0,0,.4);-webkit-app-region:drag;position:relative}
+    .traffic-lights{display:flex;gap:8px;z-index:2}
+    .traffic-light{width:12px;height:12px;border-radius:50%;position:relative}
+    .traffic-light.close{background:#ec6a5e;border:1px solid #d14f44}
+    .traffic-light.minimize{background:#f4be4f;border:1px solid #d69e2e}
+    .traffic-light.maximize{background:#61c554;border:1px solid #4da83f}
+    .title-bar-text{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;font-weight:500;color:#a0a0b8;letter-spacing:.3px;white-space:nowrap}
+    .title-bar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);padding:4px 12px 4px 8px;border-radius:6px;font-size:12px;color:var(--text-secondary)}
+    .user-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent-blue),var(--accent-mauve));display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:10px;color:#fff;font-weight:600}
+    .main-body{flex:1;display:flex;overflow:hidden;background:var(--content-bg)}
+    .sidebar{width:220px;min-width:220px;background:var(--sidebar-bg);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;padding:12px 0;overflow-y:auto}
+    .sidebar-section{padding:0 12px;margin-bottom:4px}
+    .sidebar-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);padding:12px 12px 6px}
+    .sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--sidebar-text);transition:all .15s;position:relative;margin-bottom:1px}
+    .sidebar-item:hover{background:rgba(255,255,255,.04);color:var(--text-primary)}
+    .sidebar-item.active{background:var(--sidebar-active);color:var(--sidebar-active-text)}
+    .sidebar-item .icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:13px;opacity:.7}
+    .sidebar-item.active .icon{opacity:1}
+    .sidebar-item .badge{margin-left:auto;background:var(--accent-red);color:#11111b;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+    .sidebar-status{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.04)}
+    .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px}
+    .status-dot.online{background:var(--accent-green);box-shadow:0 0 6px rgba(166,227,161,.4)}
+    .status-text{font-size:11px;color:var(--text-secondary)}
+    .content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .content-header{display:flex;flex-direction:column;gap:12px;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.03);background:var(--content-bg-2)}
+    .content-title{font-size:18px;font-weight:600;color:var(--text-primary);letter-spacing:-.2px}
+    .content-subtitle{font-size:12px;color:var(--text-secondary);margin-top:2px}
+    .header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;width:100%}
+    .btn{padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+    .btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary)}
+    .btn.primary{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.2);color:var(--accent-blue)}
+    .btn.primary:hover{background:rgba(137,180,250,.25)}
+    .btn.warning{background:rgba(243,139,168,.15);border-color:rgba(243,139,168,.2);color:var(--accent-red)}
+    .btn.warning:hover{background:rgba(243,139,168,.25)}
+    .btn.info{background:rgba(137,180,250,.12);border-color:rgba(137,180,250,.18);color:var(--accent-blue)}
+    .btn.info:hover{background:rgba(137,180,250,.22)}
+    .time-display{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim)}
+    .content-scroll{flex:1;overflow-y:auto;padding:20px 24px}
+    .content-scroll::-webkit-scrollbar{width:6px}
+    .content-scroll::-webkit-scrollbar-track{background:transparent}
+    .content-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+    .kpi-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:16px 18px}
+    .kpi-label{font-size:11px;color:var(--text-secondary);margin-bottom:8px;letter-spacing:.3px}
+    .kpi-value{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;letter-spacing:-1px}
+    .kpi-sub{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px}
+    .kpi-change{font-family:'JetBrains Mono',monospace;font-weight:500}
+    .kpi-change.up{color:var(--accent-red)}
+    .kpi-change.down{color:var(--accent-green)}
+    .kpi-change.neutral{color:var(--accent-yellow)}
+    .kpi-desc{color:var(--text-dim)}
+    .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:18px;overflow:hidden}
+    .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .card-title{font-size:13px;font-weight:600;color:var(--text-primary)}
+    .card-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500}
+    .tag-warn{background:rgba(243,139,168,.12);color:var(--accent-red)}
+    .tag-safe{background:rgba(166,227,161,.12);color:var(--accent-green)}
+    .tag-info{background:rgba(137,180,250,.12);color:var(--accent-blue)}
+    .data-table{width:100%;border-collapse:collapse;font-size:12px}
+    .data-table th{text-align:left;padding:8px 10px;color:var(--text-dim);font-weight:500;font-size:11px;letter-spacing:.3px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .data-table td{padding:10px 10px;color:var(--text-secondary);border-bottom:1px solid rgba(255,255,255,.02);font-family:'JetBrains Mono',monospace;font-size:11px}
+    .data-table tr:hover td{background:rgba(255,255,255,.015)}
+    .data-table .name-col{font-family:'Noto Sans SC',sans-serif;color:var(--text-primary);font-weight:500}
+    .risk-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+    .risk-high{background:rgba(243,139,168,.15);color:var(--accent-red)}
+    .risk-mid{background:rgba(249,226,175,.15);color:var(--accent-yellow)}
+    .risk-low{background:rgba(166,227,161,.12);color:var(--accent-green)}
+    .filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    .search-input{flex:1;padding:6px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:var(--text-primary);font-size:12px;font-family:inherit}
+    .search-input::placeholder{color:var(--text-dim)}
+    .search-input:focus{outline:none;border-color:rgba(137,180,250,.3)}
+    .filter-select{padding:6px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:var(--text-secondary);font-size:12px;font-family:inherit;cursor:pointer}
+    .filter-select:focus{outline:none;border-color:rgba(137,180,250,.3)}
+    .credit-row{cursor:pointer;transition:background .15s}
+    .credit-row:hover td{background:rgba(137,180,250,.08)!important}
+    .rating-filter{display:flex;gap:6px;margin-bottom:8px}
+    .rating-chip{padding:3px 10px;font-size:10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:var(--text-secondary);cursor:pointer;transition:all .15s}
+    .rating-chip:hover{background:rgba(255,255,255,.08)}
+    .rating-chip.active{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.3);color:var(--accent-blue)}
+    .credit-action-btn{padding:4px 10px;font-size:10px;border-radius:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-secondary);cursor:pointer}
+    .credit-action-btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary)}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .kpi-card,.card{animation:fadeIn .4s ease both}
+    .kpi-card:nth-child(2){animation-delay:.05s}
+    .kpi-card:nth-child(3){animation-delay:.1s}
+    .kpi-card:nth-child(4){animation-delay:.15s}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s ease}
+    .modal-content{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;width:400px;max-width:90vw;overflow:hidden}
+    .modal-header{display:flex;align-items:center;justify-content:center;padding:16px 20px;background:var(--content-bg-2);border-bottom:1px solid rgba(255,255,255,.05);position:relative}
+    .modal-header .traffic-lights{display:flex;gap:8px;position:absolute;left:20px;top:50%;transform:translateY(-50%)}
+    .modal-header .traffic-light{width:12px;height:12px;border-radius:50%;cursor:pointer}
+    .modal-header .traffic-light.close{background:#ff5f57}
+    .modal-header .traffic-light.minimize{background:#febc2e}
+    .modal-header .traffic-light.maximize{background:#28c840}
+    .modal-title{font-size:14px;font-weight:600;color:var(--text-primary)}
+    .modal-body{padding:24px 20px}
+    .modal-body p{font-size:13px;color:var(--text-secondary);margin-bottom:16px}
+    .report-progress{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:12px}
+    .progress-fill{height:100%;background:var(--accent-blue);border-radius:3px;width:0;transition:width .4s ease}
+    .report-status{font-size:11px;color:var(--text-dim)}
+    .report-success{text-align:center;padding:20px 0}
+    .success-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:rgba(166,227,161,.15);color:var(--accent-green);border-radius:50%;font-size:24px;margin-bottom:16px}
+    .report-filename{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);margin:8px 0 20px}
+    .toast-notification{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 20px;font-size:13px;color:var(--text-primary);z-index:1001;transition:transform .3s ease;display:flex;align-items:center;gap:10px}
+    .toast-notification.show{transform:translateX(-50%) translateY(0)}
+    .toast-notification.success{border-left:3px solid var(--accent-green)}
+    .toast-notification.warning{border-left:3px solid var(--accent-yellow)}
+    .toast-notification.error{border-left:3px solid var(--accent-red)}
+  </style>
+</head>
+<body>
+  <div class="desktop-bg"></div>
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <div class="title-bar-text">金融市场风险监测数据研判分析软件</div>
+      <div class="title-bar-right">
+        <div class="time-display" id="clock"></div>
+        <div class="user-badge">
+          <div class="user-avatar">鲍</div>
+          <span>鲍姝帆</span>
+        </div>
+      </div>
+    </div>
+    <div class="main-body">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">软件功能</div>
+          <div class="sidebar-item" onclick="location.href='dashboard.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            风险总览
+          </div>
+          <div class="sidebar-item" onclick="location.href='market.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+            市场监测
+          </div>
+          <div class="sidebar-item active">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            信用风险
+            <span class="badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="location.href='liquidity.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
+            流动性分析
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="location.href='stress.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            压力测试
+          </div>
+          <div class="sidebar-item" onclick="location.href='var.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span>
+            VaR模型
+          </div>
+          <div class="sidebar-item" onclick="location.href='correlation.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+            关联分析
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="location.href='system.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+            系统设置
+          </div>
+        </div>
+        <div class="sidebar-status">
+          <span class="status-dot online"></span>
+          <span class="status-text">数据源连接正常 · 延迟 12ms</span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="content-header">
+          <div>
+            <div class="content-title">信用风险</div>
+            <div class="content-subtitle">信用债市场风险监测与违约预警 · 数据更新于 <span id="updateTime"></span></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn" onclick="showCreditConfig()">信用配置</button>
+            <button class="btn" onclick="showAddCredit()">新增主体</button>
+            <button class="btn" onclick="showBatchImport()">批量导入</button>
+            <button class="btn" onclick="showRatingMigration()">评级迁徙</button>
+            <button class="btn" onclick="showPDAnalysis()">PD 分析</button>
+            <button class="btn" onclick="showCreditCurve()">收益率曲线</button>
+            <button class="btn" onclick="showSpreadAnalysis()">利差分析</button>
+            <button class="btn warning" onclick="pushCreditAlert()"><i class="fas fa-bell"></i> 一键预警推送</button>
+            <button class="btn" onclick="showCreditHistory()"><i class="fas fa-history"></i> 历史数据回溯</button>
+            <button class="btn" onclick="showCreditBenchmark()"><i class="fas fa-chart-line"></i> 信用基准对比</button>
+            <button class="btn" onclick="exportData()">导出数据</button>
+            <button class="btn primary" onclick="generateReport()">生成报告</button>
+          </div>
+        </div>
+        <div class="content-scroll">
+          <div style="background:linear-gradient(135deg,rgba(243,139,168,.15),rgba(137,180,250,.12));border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid rgba(243,139,168,.25);">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+              <div>
+                <div style="font-size:16px;color:var(--text-primary);font-weight:600;margin-bottom:6px;"><i class="fas fa-lightbulb" style="color:var(--accent-yellow);margin-right:8px;"></i>点击试试新增的功能演示</div>
+                <div style="font-size:12px;color:var(--text-secondary);">下面是几个新增的一键功能按钮</div>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn warning" onclick="pushCreditAlert()" style="padding:10px 20px;font-size:13px;box-shadow:0 4px 20px rgba(243,139,168,.3);">
+                  <i class="fas fa-bell"></i> 一键预警推送
+                </button>
+                <button class="btn primary" onclick="showCreditHistory()" style="padding:10px 20px;font-size:13px;box-shadow:0 4px 20px rgba(137,180,250,.3);">
+                  <i class="fas fa-history"></i> 历史数据回溯
+                </button>
+                <button class="btn" onclick="showCreditBenchmark()" style="padding:10px 20px;font-size:13px;background:rgba(166,227,161,.15);border-color:rgba(166,227,161,.25);color:var(--accent-green);">
+                  <i class="fas fa-chart-line"></i> 信用基准对比
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-card" onclick="showCreditKpiDetail('信用利差(AA)','186bp','信用利差是AA级企业债收益率与同期限国债收益率之差，反映市场对信用风险的定价。利差越大表示市场对信用风险越担忧。186bp处于近一年92%分位，偏高。')">
+              <div class="kpi-label">信用利差(AA) <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-red)">186bp</div>
+              <div class="kpi-sub"><span class="kpi-change up">+22bp</span><span class="kpi-desc">近一年P92分位</span></div>
+            </div>
+            <div class="kpi-card" onclick="showCreditKpiDetail('违约预警主体','7','违约预警主体是指根据信用风险模型测算，违约概率超过2%或出现负面舆情的发债主体。点击可查看预警原因详情和历史违约记录。')">
+              <div class="kpi-label">违约预警主体 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-red)">7</div>
+              <div class="kpi-sub"><span class="kpi-change up">+2</span><span class="kpi-desc">新增：恒泰信托、鑫融资管</span></div>
+            </div>
+            <div class="kpi-card" onclick="showCreditKpiDetail('到期偿还压力(30D)','2,847亿','未来30天内信用债到期偿还总额，包括国债、地方债、企业债等。城投占比41%为最高，反映地方政府融资平台再融资压力较大。')">
+              <div class="kpi-label">到期偿还压力(30D) <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-peach)">2,847亿</div>
+              <div class="kpi-sub"><span class="kpi-change neutral">环比+12%</span><span class="kpi-desc">城投占比 41%</span></div>
+            </div>
+            <div class="kpi-card" onclick="showCreditKpiDetail('净融资额(本周)','-312亿','信用债市场本周发行总额减去到期偿还总额的净值。负值表示市场处于净偿还状态，反映机构在收缩信用风险敞口。连续三周净偿还需警惕。')">
+              <div class="kpi-label">净融资额(本周) <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-blue)">-312亿</div>
+              <div class="kpi-sub"><span class="kpi-change up">净偿还</span><span class="kpi-desc">连续第三周</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">高风险主体清单</span><span class="card-tag tag-warn">违约概率 > 2%</span></div>
+            <div class="filter-bar">
+              <input type="text" class="search-input" id="creditSearch" placeholder="搜索主体名称..." oninput="filterCreditTable()">
+              <select class="filter-select" id="creditFilter" onchange="filterCreditTable()">
+                <option value="all">全部状态</option>
+                <option value="high">仅预警</option>
+                <option value="mid">仅观察</option>
+              </select>
+              <button class="credit-action-btn" onclick="exportCreditList()">导出清单</button>
+              <button class="credit-action-btn" onclick="showCreditAnalysis()">信用分析</button>
+            </div>
+            <div class="rating-filter">
+              <span style="font-size:10px;color:var(--text-dim);margin-right:4px;align-self:center;">评级筛选:</span>
+              <div class="rating-chip active" onclick="filterByRating(this,'all')">全部</div>
+              <div class="rating-chip" onclick="filterByRating(this,'AAA')">AAA</div>
+              <div class="rating-chip" onclick="filterByRating(this,'AA')">AA</div>
+              <div class="rating-chip" onclick="filterByRating(this,'A')">A</div>
+              <div class="rating-chip" onclick="filterByRating(this,'BBB')">BBB</div>
+              <div class="rating-chip" onclick="filterByRating(this,'high')">高风险(AA以下)</div>
+            </div>
+            <table class="data-table">
+              <thead><tr><th onclick="sortCreditTable(0)">主体名称 ↕</th><th onclick="sortCreditTable(1)">行业 ↕</th><th onclick="sortCreditTable(2)">评级 ↕</th><th onclick="sortCreditTable(3)">利差(bp) ↕</th><th onclick="sortCreditTable(4)">违约概率 ↕</th><th>CDS报价</th><th onclick="sortCreditTable(6)">状态 ↕</th><th>操作</th></tr></thead>
+              <tbody id="creditTableBody">
+                <tr class="credit-row" onclick="showCreditDetail('恒泰信托有限公司','信托','A','342bp','3.7%','285bp','高','负面舆情','持续恶化')"><td class="name-col">恒泰信托有限公司</td><td>信托</td><td>A</td><td>342</td><td>3.7%</td><td>285bp</td><td><span class="risk-badge risk-high">预警</span></td><td><button class="trend-btn" onclick="event.stopPropagation();followCredit('恒泰信托有限公司')" style="padding:2px 6px;font-size:9px;">关注</button></td></tr>
+                <tr class="credit-row" onclick="showCreditDetail('鑫融资产管理','资管','A+','278bp','2.9%','234bp','高','流动性紧张','关注')"><td class="name-col">鑫融资产管理</td><td>资管</td><td>A+</td><td>278</td><td>2.9%</td><td>234bp</td><td><span class="risk-badge risk-high">预警</span></td><td><button class="trend-btn" onclick="event.stopPropagation();followCredit('鑫融资产管理')" style="padding:2px 6px;font-size:9px;">关注</button></td></tr>
+                <tr class="credit-row" onclick="showCreditDetail('中汇金融租赁','租赁','AA-','245bp','2.6%','201bp','高','再融资困难','观察')"><td class="name-col">中汇金融租赁</td><td>租赁</td><td>AA-</td><td>245</td><td>2.6%</td><td>201bp</td><td><span class="risk-badge risk-high">预警</span></td><td><button class="trend-btn" onclick="event.stopPropagation();followCredit('中汇金融租赁')" style="padding:2px 6px;font-size:9px;">关注</button></td></tr>
+                <tr class="credit-row" onclick="showCreditDetail('宏运城投发展','城投','AA','218bp','2.4%','187bp','中','城投管控','边际恶化')"><td class="name-col">宏运城投发展</td><td>城投</td><td>AA</td><td>218</td><td>2.4%</td><td>187bp</td><td><span class="risk-badge risk-mid">观察</span></td><td><button class="trend-btn" onclick="event.stopPropagation();followCredit('宏运城投发展')" style="padding:2px 6px;font-size:9px;">关注</button></td></tr>
+                <tr class="credit-row" onclick="showCreditDetail('海天地产集团','地产','A+','312bp','3.2%','267bp','高','房产销售下滑','持续恶化')"><td class="name-col">海天地产集团</td><td>地产</td><td>A+</td><td>312</td><td>3.2%</td><td>267bp</td><td><span class="risk-badge risk-high">预警</span></td><td><button class="trend-btn" onclick="event.stopPropagation();followCredit('海天地产集团')" style="padding:2px 6px;font-size:9px;">关注</button></td></tr>
+                <tr class="credit-row" onclick="showCreditDetail('中诚实业控股','制造','AA-','198bp','2.1%','168bp','中','出口需求下降','稳定')"><td class="name-col">中诚实业控股</td><td>制造</td><td>AA-</td><td>198</td><td>2.1%</td><td>168bp</td><td><span class="risk-badge risk-mid">观察</span></td><td><button class="trend-btn" onclick="event.stopPropagation();followCredit('中诚实业控股')" style="padding:2px 6px;font-size:9px;">关注</button></td></tr>
+                <tr class="credit-row" onclick="showCreditDetail('润德能源科技','能源','A','267bp','2.8%','225bp','高','大宗商品波动','关注')"><td class="name-col">润德能源科技</td><td>能源</td><td>A</td><td>267</td><td>2.8%</td><td>225bp</td><td><span class="risk-badge risk-high">预警</span></td><td><button class="trend-btn" onclick="event.stopPropagation();followCredit('润德能源科技')" style="padding:2px 6px;font-size:9px;">关注</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function updateClock(){
+      const now=new Date();
+      const h=String(now.getHours()).padStart(2,'0');
+      const m=String(now.getMinutes()).padStart(2,'0');
+      const s=String(now.getSeconds()).padStart(2,'0');
+      document.getElementById('clock').textContent=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${h}:${m}:${s}`;
+      document.getElementById('updateTime').textContent=`${h}:${m}`;
+    }
+    updateClock();
+    setInterval(updateClock,1000);
+
+    let creditSortCol=0,creditSortAsc=true;
+    function sortCreditTable(col){
+      creditSortAsc=col===creditSortCol?!creditSortAsc:true;
+      creditSortCol=col;
+      const tbody=document.getElementById('creditTableBody');
+      const rows=Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a,b)=>{
+        const aText=a.cells[col].textContent.trim();
+        const bText=b.cells[col].textContent.trim();
+        const aNum=parseFloat(aText.replace(/[^0-9.-]/g,''));
+        const bNum=parseFloat(bText.replace(/[^0-9.-]/g,''));
+        if(!isNaN(aNum)&&!isNaN(bNum))return creditSortAsc?aNum-bNum:bNum-aNum;
+        return creditSortAsc?aText.localeCompare(bText):bText.localeCompare(aText);
+      });
+      rows.forEach(row=>tbody.appendChild(row));
+    }
+
+    function filterCreditTable(){
+      const search=document.getElementById('creditSearch').value.toLowerCase();
+      const filter=document.getElementById('creditFilter').value;
+      const tbody=document.getElementById('creditTableBody');
+      const rows=tbody.querySelectorAll('tr');
+      let visibleCount=0;
+      rows.forEach(row=>{
+        const name=row.cells[0].textContent.toLowerCase();
+        const riskBadge=row.cells[6].querySelector('.risk-badge');
+        const riskClass=riskBadge.classList.contains('risk-high')?'high':riskBadge.classList.contains('risk-mid')?'mid':'low';
+        const matchName=name.includes(search);
+        const matchFilter=filter==='all'||riskClass===filter;
+        row.style.display=matchName&&matchFilter?'':'none';
+        if(matchName&&matchFilter)visibleCount++;
+      });
+      const tag=document.querySelector('.card-tag');
+      if(tag)tag.textContent='共 '+visibleCount+' 条';
+    }
+
+    function filterByRating(el,rating){
+      el.closest('.rating-filter').querySelectorAll('.rating-chip').forEach(c=>c.classList.remove('active'));
+      el.classList.add('active');
+      const tbody=document.getElementById('creditTableBody');
+      const rows=tbody.querySelectorAll('tr');
+      rows.forEach(row=>{
+        const ratingText=row.cells[2].textContent;
+        if(rating==='all'){row.style.display='';return;}
+        if(rating==='high'){row.style.display=(ratingText==='A'||ratingText==='A+')?'':'none';return;}
+        row.style.display=ratingText.includes(rating)?'':'none';
+      });
+      showToast('已筛选'+rating+'评级','success');
+    }
+
+    function showCreditDetail(name,industry,rating,spread,defaultProb,cds,level,reason,trend){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      const levelColor=level==='高'?'var(--accent-red)':level==='中'?'var(--accent-yellow)':'var(--accent-green)';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">主体详情</span></div><div class="modal-body" style="padding:20px"><p style="color:var(--text-primary);font-size:14px;margin-bottom:12px">${name}</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px"><div style="font-size:10px;color:var(--text-secondary)">行业</div><div style="font-size:13px;color:var(--text-primary)">${industry}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px"><div style="font-size:10px;color:var(--text-secondary)">主体评级</div><div style="font-size:13px;color:var(--text-primary)">${rating}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px"><div style="font-size:10px;color:var(--text-secondary)">利差</div><div style="font-size:13px;color:var(--accent-peach)">${spread}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px"><div style="font-size:10px;color:var(--text-secondary)">违约概率</div><div style="font-size:13px;color:${levelColor}">${defaultProb}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px"><div style="font-size:10px;color:var(--text-secondary)">CDS报价</div><div style="font-size:13px;color:var(--text-primary)">${cds}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px"><div style="font-size:10px;color:var(--text-secondary)">风险等级</div><div style="font-size:13px;color:${levelColor}">${level}</div></div></div><div style="background:rgba(255,255,255,.03);padding:12px;border-radius:6px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:var(--text-secondary)">风险驱动因素</span><span style="font-size:12px;color:var(--text-primary)">${reason}</span></div><div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:var(--text-secondary)">当前趋势</span><span style="font-size:12px;color:${trend.includes('恶化')?'var(--accent-red)':trend.includes('关注')?'var(--accent-yellow)':'var(--accent-green)'}">${trend}</span></div></div><div style="display:flex;gap:8px;margin-top:12px"><button class="btn" onclick="viewCreditHistory('${name}')" style="flex:1">查看历史</button><button class="btn" onclick="viewBondInfo('${name}')" style="flex:1">查看债券</button><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="flex:1">确定</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function viewCreditHistory(name){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">${name} - 信用历史</span></div><div class="modal-body" style="padding:20px"><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">近6个月信用评级与利差变化</p><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><table style="width:100%;font-size:11px;"><tr style="border-bottom:1px solid rgba(255,255,255,.05)"><td style="padding:6px;color:var(--text-dim)">2024/09</td><td style="padding:6px;color:var(--text-primary)">AA+</td><td style="padding:6px;color:var(--accent-yellow)">178bp</td></tr><tr style="border-bottom:1px solid rgba(255,255,255,.05)"><td style="padding:6px;color:var(--text-dim)">2024/10</td><td style="padding:6px;color:var(--text-primary)">AA+</td><td style="padding:6px;color:var(--accent-yellow)">195bp</td></tr><tr style="border-bottom:1px solid rgba(255,255,255,.05)"><td style="padding:6px;color:var(--text-dim)">2024/11</td><td style="padding:6px;color:var(--text-primary)">AA</td><td style="padding:6px;color:var(--accent-peach)">225bp</td></tr><tr style="border-bottom:1px solid rgba(255,255,255,.05)"><td style="padding:6px;color:var(--text-dim)">2024/12</td><td style="padding:6px;color:var(--text-primary)">AA</td><td style="padding:6px;color:var(--accent-peach)">256bp</td></tr><tr><td style="padding:6px;color:var(--text-primary)">2025/01</td><td style="padding:6px;color:var(--accent-red)">A+</td><td style="padding:6px;color:var(--accent-red)">278bp</td></tr></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function viewBondInfo(name){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">${name} - 存续债券</span></div><div class="modal-body" style="padding:20px"><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">该主体在银行间市场存续的债券</p><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><table style="width:100%;font-size:11px;"><tr style="border-bottom:1px solid rgba(255,255,255,.05)"><td style="padding:6px;color:var(--text-primary)">22恒泰信托PPN001</td><td style="padding:6px;color:var(--text-secondary)">5亿</td><td style="padding:6px;color:var(--accent-yellow)">2025/08</td></tr><tr style="border-bottom:1px solid rgba(255,255,255,.05)"><td style="padding:6px;color:var(--text-primary)">22恒泰信托CP002</td><td style="padding:6px;color:var(--text-secondary)">8亿</td><td style="padding:6px;color:var(--accent-red)">2025/03</td></tr><tr><td style="padding:6px;color:var(--text-primary)">23恒泰信托MTN001</td><td style="padding:6px;color:var(--text-secondary)">10亿</td><td style="padding:6px;color:var(--accent-green)">2026/02</td></tr></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function exportCreditList(){
+      const tbody=document.getElementById('creditTableBody');
+      const visibleRows=Array.from(tbody.querySelectorAll('tr')).filter(r=>r.style.display!=='none');
+      if(visibleRows.length===0){showToast('无数据可导出','warning');return;}
+      let csv='\uFEFF主体名称,行业,主体评级,利差(bp),违约概率,CDS报价,状态\n';
+      visibleRows.forEach(row=>{
+        const cells=Array.from(row.cells).map(c=>'"'+c.textContent.trim().replace(/"/g,'""')+'"');
+        csv+=cells.join(',')+'\n';
+      });
+      const now=new Date();
+      const filename='credit_list_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.csv';
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename;link.click();
+      URL.revokeObjectURL(link.href);
+      showToast('信用清单已导出: '+filename,'success');
+    }
+
+    function showCreditAnalysis(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">信用风险分析报告</span></div><div class="modal-body" style="padding:20px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;"><div style="background:rgba(243,139,168,.08);padding:12px;border-radius:8px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">高风险主体</div><div style="font-size:24px;color:var(--accent-red);font-family:'JetBrains Mono'">5</div><div style="font-size:10px;color:var(--text-dim)">违约概率>2%</div></div><div style="background:rgba(249,226,175,.08);padding:12px;border-radius:8px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">观察名单</div><div style="font-size:24px;color:var(--accent-yellow);font-family:'JetBrains Mono'">2</div><div style="font-size:10px;color:var(--text-dim)">违约概率1-2%</div></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;">行业分布</div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:11px;color:var(--text-secondary)">信托/资管</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-red)">42.8%</span></div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:11px;color:var(--text-secondary)">城投</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-yellow)">28.6%</span></div><div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-secondary)">地产</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-peach)">14.3%</span></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showCreditKpiDetail(name,value,description){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">指标说明</span></div><div class="modal-body" style="padding:20px"><div style="text-align:center;margin-bottom:16px;"><div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${name}</div><div style="font-size:28px;font-family:'JetBrains Mono';color:var(--accent-blue);font-weight:600">${value}</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:16px;"><p style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${description}</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:16px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function exportData(){
+      const tables=document.querySelectorAll('.data-table');
+      if(tables.length===0){showToast('当前页面暂无数据可导出','warning');return;}
+      let csv='\uFEFF';
+      tables.forEach((table,idx)=>{if(idx>0)csv+='\n\n';table.querySelectorAll('tr').forEach(row=>{const cells=row.querySelectorAll('th,td');const rowData=[];cells.forEach(cell=>{rowData.push('"'+cell.textContent.trim().replace(/"/g,'""')+'"');});csv+=rowData.join(',')+'\n';});});
+      const now=new Date();const filename='credit_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.csv';
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename;link.click();URL.revokeObjectURL(link.href);
+      showToast('数据已导出: '+filename,'success');
+    }
+    function generateReport(){showReportModal('信用风险');}
+    function showReportModal(panelName){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML='<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">生成报告</span></div><div class="modal-body"><p>正在为 "<strong>'+panelName+'</strong>" 生成分析报告...</p><div class="report-progress"><div class="progress-bar"><div class="progress-fill"></div></div></div><p class="report-status">正在提取数据...</p></div></div>';
+      document.body.appendChild(modal);
+      setTimeout(()=>{const progressFill=modal.querySelector('.progress-fill');const reportStatus=modal.querySelector('.report-status');let progress=0;const stages=['正在提取数据...','正在生成图表...','正在计算指标...','正在生成报告...','报告生成完成'];const interval=setInterval(()=>{progress+=20;progressFill.style.width=progress+'%';if(progress<=100)reportStatus.textContent=stages[Math.floor(progress/25)];if(progress>=100){clearInterval(interval);setTimeout(()=>{modal.querySelector('.modal-body').innerHTML='<div class="report-success"><span class="success-icon">✓</span><p>报告生成成功！</p><p class="report-filename">'+panelName+'_报告_'+new Date().toLocaleDateString()+'.pdf</p><button class="btn primary" onclick="this.closest(\'.modal-overlay\').remove()">确定</button></div>';},300);}},400);},100);
+    }
+    function showToast(message,type){const existing=document.querySelector('.toast-notification');if(existing)existing.remove();const toast=document.createElement('div');toast.className='toast-notification '+type;toast.innerHTML='<span>'+message+'</span>';document.body.appendChild(toast);setTimeout(()=>toast.classList.add('show'),10);setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),300);},3000);}
+
+    function followCredit(name){
+      showToast(name+' 已添加到我的关注','success');
+    }
+
+    function exportCreditList(){
+      let csv = '\uFEFF主体名称,行业,评级,利差(bp),违约概率,CDS报价,状态\n';
+      document.querySelectorAll('#creditTableBody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        csv += cells[0].textContent + ',' + cells[1].textContent + ',' + cells[2].textContent + ',' + cells[3].textContent + ',' + cells[4].textContent + ',' + cells[5].textContent + ',' + cells[6].textContent + '\n';
+      });
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'credit_list.csv';
+      link.click();
+      showToast('信用主体清单已导出','success');
+    }
+
+    function showCreditAnalysis(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">信用分析报告</span></div><div class="modal-body" style="padding:20px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;"><div style="background:rgba(243,139,168,.08);padding:14px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">高风险主体数量</div><div style="font-size:28px;font-family:'JetBrains Mono';color:var(--accent-red);font-weight:600;">5</div></div><div style="background:rgba(249,226,175,.08);padding:14px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">平均利差</div><div style="font-size:28px;font-family:'JetBrains Mono';color:var(--accent-yellow);font-weight:600;">237bp</div></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">行业分布</div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">信托</span><span style="font-family:'JetBrains Mono';color:var(--accent-red)">2家</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">城投</span><span style="font-family:'JetBrains Mono';color:var(--accent-yellow)">1家</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">地产</span><span style="font-family:'JetBrains Mono';color:var(--accent-peach)">1家</span></div><div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-secondary);">其他</span><span style="font-family:'JetBrains Mono';color:var(--text-primary)">3家</span></div></div><div style="display:flex;gap:8px;"><button class="btn" onclick="downloadCreditReport()" style="flex:1;">下载报告</button><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">关闭</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function downloadCreditReport(){
+      showToast('信用分析报告下载中...','success');
+    }
+
+    function showAddCredit(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">新增信用主体</span></div><div class="modal-body" style="padding:20px;"><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">请输入新增信用主体信息</p><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">主体名称</label><input type="text" style="width:100%;padding:8px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;" placeholder="请输入主体名称"></div><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">所属行业</label><select style="width:100%;padding:8px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"><option>请选择行业</option><option>信托</option><option>资管</option><option>租赁</option><option>城投</option><option>地产</option><option>制造</option></select></div><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">主体评级</label><select style="width:100%;padding:8px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"><option>请选择评级</option><option>AAA</option><option>AA+</option><option>AA</option><option>AA-</option><option>A+</option><option>A</option></select></div><div><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">信用利差(bp)</label><input type="number" style="width:100%;padding:8px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;" placeholder="请输入利差"></div></div><div style="display:flex;gap:8px;"><button class="btn" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">取消</button><button class="btn primary" onclick="confirmAddCredit()" style="flex:1;">确认添加</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showBatchImport(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">批量导入信用主体</span></div><div class="modal-body" style="padding:20px;text-align:center;"><p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">支持Excel格式批量导入信用主体数据</p><div style="background:rgba(137,180,250,.1);border:2px dashed rgba(137,180,250,.3);border-radius:12px;padding:30px;margin-bottom:16px;cursor:pointer;" onclick="this.querySelector('input').click()"><input type="file" accept=".xlsx,.xls,.csv" style="display:none;"><div style="font-size:32px;margin-bottom:10px;">📁</div><div style="font-size:13px;color:var(--text-primary);margin-bottom:4px;">点击选择文件</div><div style="font-size:11px;color:var(--text-dim);">或拖拽文件到此处</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;text-align:left;"><div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">导入模板说明:</div><div style="font-size:11px;color:var(--text-secondary);line-height:1.6;">• 主体名称(必填)<br>• 所属行业<br>• 主体评级<br>• 信用利差(bp)<br>• 违约概率(%)</div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">下载模板</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function confirmAddCredit(){
+      showToast('新信用主体已添加','success');
+    }
+
+    function showCreditConfig(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">信用风险配置</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">监测指标配置</div><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">信用利差</label><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">评级迁徙</label><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">违约概率</label><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">行业集中度</label></div><div style="display:flex;gap:8px;"><button class="btn" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">取消</button><button class="btn primary" onclick="saveCreditConfig()" style="flex:1;">保存配置</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function saveCreditConfig(){
+      showToast('信用风险配置已保存','success');
+    }
+
+    function showRatingMigration(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:600px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">评级迁徙矩阵</span></div><div class="modal-body" style="padding:16px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">2025 年 Q1→2025 年 Q2 评级迁徙情况</div><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>期初\\期末</th><th>AAA</th><th>AA+</th><th>AA</th><th>AA-</th><th>A+</th><th>违约</th></tr></thead><tbody><tr><td class="name-col">AAA</td><td style="color:var(--accent-blue)">92%</td><td style="color:var(--text-secondary)">5%</td><td style="color:var(--text-secondary)">2%</td><td style="color:var(--text-secondary)">1%</td><td style="color:var(--text-secondary)">0%</td><td style="color:var(--accent-red)">0%</td></tr><tr><td class="name-col">AA+</td><td style="color:var(--accent-blue)">8%</td><td style="color:var(--text-secondary)">78%</td><td style="color:var(--text-secondary)">10%</td><td style="color:var(--text-secondary)">3%</td><td style="color:var(--text-secondary)">1%</td><td style="color:var(--accent-red)">0%</td></tr><tr><td class="name-col">AA</td><td style="color:var(--accent-blue)">2%</td><td style="color:var(--accent-blue)">12%</td><td style="color:var(--text-secondary)">68%</td><td style="color:var(--text-secondary)">12%</td><td style="color:var(--text-secondary)">5%</td><td style="color:var(--accent-red)">1%</td></tr><tr><td class="name-col">AA-</td><td style="color:var(--accent-blue)">1%</td><td style="color:var(--accent-blue)">3%</td><td style="color:var(--accent-blue)">15%</td><td style="color:var(--text-secondary)">62%</td><td style="color:var(--text-secondary)">15%</td><td style="color:var(--accent-yellow)">4%</td></tr></tbody></table></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-top:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:6px;font-weight:500;">迁徙分析</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">本期评级迁徙整体平稳，AA 及以上等级主体保持稳定，AA-等级存在一定下行压力，需关注潜在违约风险。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showPDAnalysis(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">违约概率 (PD) 分析</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">各评级平均违约概率</div><table class="data-table"><thead><tr><th>评级</th><th>1 年 PD</th><th>3 年 PD</th><th>5 年 PD</th></tr></thead><tbody><tr><td class="name-col">AAA</td><td style="color:var(--accent-blue)">0.05%</td><td style="color:var(--accent-blue)">0.18%</td><td style="color:var(--accent-blue)">0.42%</td></tr><tr><td class="name-col">AA+</td><td style="color:var(--accent-blue)">0.12%</td><td style="color:var(--accent-blue)">0.35%</td><td style="color:var(--accent-blue)">0.78%</td></tr><tr><td class="name-col">AA</td><td style="color:var(--accent-yellow)">0.38%</td><td style="color:var(--accent-yellow)">1.05%</td><td style="color:var(--accent-yellow)">2.15%</td></tr><tr><td class="name-col">AA-</td><td style="color:var(--accent-red)">0.95%</td><td style="color:var(--accent-red)">2.68%</td><td style="color:var(--accent-red)">5.42%</td></tr></tbody></table></div><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">风险提示</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">低评级主体违约概率显著上升，建议加强对 AA-及以下评级主体的信用风险监测。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    document.querySelectorAll('.toggle-switch').forEach(function(sw){sw.addEventListener('click',function(){this.classList.toggle('active');});});
+
+    function showCreditCurve(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:600px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">信用收益率曲线</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">AAA 级企业债收益率曲线</div><div style="height:150px;display:flex;align-items:flex-end;gap:8px;padding:10px 0;"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:40%;background:linear-gradient(to top,var(--accent-blue),rgba(137,180,250,.3));border-radius:3px 3px 0 0;"></div><div style="font-size:9px;color:var(--text-dim);">1Y</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:55%;background:linear-gradient(to top,var(--accent-blue),rgba(137,180,250,.3));border-radius:3px 3px 0 0;"></div><div style="font-size:9px;color:var(--text-dim);">3Y</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:68%;background:linear-gradient(to top,var(--accent-yellow),rgba(249,226,175,.3));border-radius:3px 3px 0 0;"></div><div style="font-size:9px;color:var(--text-dim);">5Y</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:78%;background:linear-gradient(to top,var(--accent-yellow),rgba(249,226,175,.3));border-radius:3px 3px 0 0;"></div><div style="font-size:9px;color:var(--text-dim);">7Y</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:85%;background:linear-gradient(to top,var(--accent-red),rgba(243,139,168,.3));border-radius:3px 3px 0 0;"></div><div style="font-size:9px;color:var(--text-dim);">10Y</div></div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;"><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">期限利差 (10Y-1Y)</div><div style="font-size:18px;font-family:'JetBrains Mono';color:var(--accent-yellow)">68bp</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">信用利差 (AAA)</div><div style="font-size:18px;font-family:'JetBrains Mono';color:var(--accent-blue)">85bp</div></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showSpreadAnalysis(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">信用利差分析</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">各评级信用利差 (bp)</div><table class="data-table"><thead><tr><th>评级</th><th>利差</th><th>较上日</th><th>较上周</th></tr></thead><tbody><tr><td class="name-col">AAA</td><td style="color:var(--accent-blue)">85</td><td style="color:var(--accent-green)">-3</td><td style="color:var(--accent-green)">-8</td></tr><tr><td class="name-col">AA+</td><td style="color:var(--accent-blue)">125</td><td style="color:var(--accent-yellow)">+2</td><td style="color:var(--accent-yellow)">+5</td></tr><tr><td class="name-col">AA</td><td style="color:var(--accent-yellow)">168</td><td style="color:var(--accent-red)">+8</td><td style="color:var(--accent-red)">+15</td></tr><tr><td class="name-col">AA-</td><td style="color:var(--accent-red)">245</td><td style="color:var(--accent-red)">+12</td><td style="color:var(--accent-red)">+28</td></tr></tbody></table></div><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">利差分析</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">低评级信用利差持续走阔，市场对信用风险偏好下降。AA-及以下评级主体融资成本显著上升。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function pushCreditAlert(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-bell" style="color:var(--accent-red);margin-right:8px;"></i>信用风险预警推送</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;"><i class="fas fa-check-circle" style="color:var(--accent-green);margin-right:8px;"></i>预警推送已发送</div><div style="font-size:11px;color:var(--text-secondary);">共推送 12 条预警信息至 8 个相关人员</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">推送详情</div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">推送方式</span><span style="font-family:'JetBrains Mono';color:var(--text-primary)">短信 + 邮件 + APP</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">预警等级</span><span style="font-family:'JetBrains Mono';color:var(--accent-red)">高风险 (3 条)</span></div><div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-secondary);">推送时间</span><span style="font-family:'JetBrains Mono';color:var(--text-primary)">${new Date().toLocaleString()}</span></div></div><div style="display:flex;gap:8px;"><button class="btn" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">关闭</button><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">查看详情</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showCreditHistory(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:600px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-history" style="color:var(--accent-blue);margin-right:8px;"></i>信用风险历史数据回溯</span></div><div class="modal-body" style="padding:20px;"><div style="display:flex;gap:8px;margin-bottom:12px;"><select style="flex:1;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"><option>最近 30 天</option><option>最近 90 天</option><option>最近 180 天</option><option>最近 1 年</option></select><select style="flex:1;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"><option>全部主体</option><option>AAA 级</option><option>AA+ 级</option><option>AA 级</option></select></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">信用风险指数走势</div><div style="height:80px;display:flex;align-items:flex-end;gap:3px;padding:8px 0;"><div style="flex:1;height:45%;background:rgba(137,180,250,.4);border-radius:2px 2px 0 0;"></div><div style="flex:1;height:50%;background:rgba(137,180,250,.4);border-radius:2px 2px 0 0;"></div><div style="flex:1;height:42%;background:rgba(137,180,250,.4);border-radius:2px 2px 0 0;"></div><div style="flex:1;height:58%;background:rgba(249,226,175,.4);border-radius:2px 2px 0 0;"></div><div style="flex:1;height:55%;background:rgba(249,226,175,.4);border-radius:2px 2px 0 0;"></div><div style="flex:1;height:68%;background:rgba(243,139,168,.4);border-radius:2px 2px 0 0;"></div><div style="flex:1;height:72%;background:rgba(243,139,168,.5);border-radius:2px 2px 0 0;"></div><div style="flex:1;height:65%;background:rgba(243,139,168,.4);border-radius:2px 2px 0 0;"></div></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">历史统计</div><table class="data-table"><thead><tr><th>指标</th><th>最大值</th><th>最小值</th><th>平均值</th></tr></thead><tbody><tr><td class="name-col">信用风险指数</td><td>72.5</td><td>58.2</td><td>64.8</td></tr><tr><td class="name-col">违约主体数</td><td>5</td><td>0</td><td>1.8</td></tr><tr><td class="name-col">平均违约概率</td><td>1.85%</td><td>0.92%</td><td>1.35%</td></tr></tbody></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showCreditBenchmark(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-chart-line" style="color:var(--accent-green);margin-right:8px;"></i>信用基准对比分析</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(137,180,250,.08);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">与行业基准对比</div><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;"><div style="flex:1;height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;"><div style="width:85%;height:100%;background:linear-gradient(to right,var(--accent-blue),var(--accent-green));border-radius:4px;"></div></div><span style="font-size:14px;font-family:'JetBrains Mono';color:var(--accent-green);font-weight:600;">优于基准</span></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">分项对比</div><table class="data-table"><thead><tr><th>指标</th><th>本机构</th><th>行业基准</th><th>差异</th></tr></thead><tbody><tr><td class="name-col">信用风险指数</td><td style="color:var(--accent-green)">62.5</td><td>68.5</td><td style="color:var(--accent-green)">-6.0</td></tr><tr><td class="name-col">违约率</td><td style="color:var(--accent-green)">0.85%</td><td>1.25%</td><td style="color:var(--accent-green)">-0.40%</td></tr><tr><td class="name-col">拨备覆盖率</td><td style="color:var(--accent-yellow)">185%</td><td>180%</td><td style="color:var(--accent-green)">+5%</td></tr></tbody></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+  </script>
+</body>
+</html>

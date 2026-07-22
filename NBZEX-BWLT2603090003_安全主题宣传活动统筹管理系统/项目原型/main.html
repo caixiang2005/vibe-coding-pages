@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>安全主题宣传活动统筹管理系统 - macOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --mac-accent: #0A84FF;
+            --mac-text: #1C1C1E;
+            --mac-text-secondary: rgba(60, 60, 67, 0.78);
+            --mac-separator: rgba(60, 60, 67, 0.18);
+            --mac-desktop: radial-gradient(1200px 700px at 20% 10%, rgba(10, 132, 255, 0.14), rgba(10, 132, 255, 0) 55%),
+                radial-gradient(1000px 650px at 80% 0%, rgba(255, 159, 10, 0.12), rgba(255, 159, 10, 0) 55%),
+                linear-gradient(180deg, #F5F5F7 0%, #EFEFF4 100%);
+            --mac-window-bg: rgba(255, 255, 255, 0.7);
+            --mac-titlebar-bg: rgba(250, 250, 252, 0.65);
+            --mac-sidebar-bg: rgba(246, 246, 248, 0.7);
+            --mac-content-bg: #F2F2F7;
+            --mac-shadow: 0 28px 80px rgba(0, 0, 0, 0.18);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--mac-text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow: hidden;
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .mac-blur {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .mac-window {
+            background: var(--mac-window-bg);
+            border: 1px solid var(--mac-separator);
+            border-radius: 18px;
+            box-shadow: var(--mac-shadow);
+        }
+
+        .mac-titlebar {
+            background: var(--mac-titlebar-bg);
+            backdrop-filter: blur(22px) saturate(1.6);
+            -webkit-backdrop-filter: blur(22px) saturate(1.6);
+            border-bottom: 1px solid var(--mac-separator);
+        }
+
+        .mac-sidebar {
+            background: var(--mac-sidebar-bg);
+            backdrop-filter: blur(22px) saturate(1.5);
+            -webkit-backdrop-filter: blur(22px) saturate(1.5);
+            border-right: 1px solid var(--mac-separator);
+        }
+
+        .mac-content-toolbar {
+            background: rgba(250, 250, 252, 0.72);
+            backdrop-filter: blur(20px) saturate(1.6);
+            -webkit-backdrop-filter: blur(20px) saturate(1.6);
+            border-bottom: 1px solid var(--mac-separator);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.04);
+        }
+
+        .traffic-lights {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+        }
+
+        .traffic-light-red {
+            background: #FF5F57;
+        }
+
+        .traffic-light-yellow {
+            background: #FEBC2E;
+        }
+
+        .traffic-light-green {
+            background: #28C840;
+        }
+
+        .sidebar-item-active {
+            background: rgba(10, 132, 255, 0.14);
+            background: color-mix(in srgb, var(--mac-accent) 14%, transparent);
+            color: var(--mac-accent);
+            font-weight: 600;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #D1D1D6;
+            border-radius: 10px;
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mac-modal {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 16px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+            min-width: 400px;
+            max-width: 600px;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+
+        .modal-overlay.active .mac-modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-titlebar {
+            background: rgba(246, 246, 248, 0.8);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--mac-separator);
+            position: relative;
+        }
+
+        .modal-titlebar .traffic-lights {
+            position: absolute;
+            left: 16px;
+        }
+
+        .modal-content {
+            padding: 24px;
+        }
+
+        .btn-primary {
+            background: var(--mac-accent);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #0077ED;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(120, 120, 128, 0.12);
+            color: var(--mac-text);
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(120, 120, 128, 0.2);
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn-blue {
+            background: rgba(10, 132, 255, 0.1);
+            color: #0A84FF;
+        }
+
+        .action-btn-blue:hover {
+            background: rgba(10, 132, 255, 0.2);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: rgba(120, 120, 128, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #34C759;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #FF3B30;
+            color: white;
+            font-size: 10px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            min-width: 320px;
+            padding: 0;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.hidden {
+            display: none;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+
+<body class="h-screen">
+    <div class="h-full w-full flex items-center justify-center p-6">
+        <div class="mac-window w-full max-w-[1320px] h-[900px] flex flex-col overflow-hidden">
+            <header class="mac-titlebar h-14 relative flex items-center justify-center px-4 md:px-6">
+                <div class="traffic-lights absolute left-4 md:left-6">
+                    <div class="traffic-light traffic-light-red"></div>
+                    <div class="traffic-light traffic-light-yellow"></div>
+                    <div class="traffic-light traffic-light-green"></div>
+                </div>
+                <div class="text-[13px] font-semibold tracking-tight text-[color:var(--mac-text)]">安全主题宣传活动统筹管理系统</div>
+            </header>
+            <div class="flex flex-1 min-h-0">
+                <aside class="mac-sidebar w-64 flex flex-col min-h-0 pt-4">
+                    <div class="px-6 mb-6">
+                        <h1 class="text-sm font-bold tracking-tight leading-tight">
+                            功能菜单
+                        </h1>
+                    </div>
+                    <nav class="flex-1 px-3 space-y-1">
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm rounded-lg transition-all sidebar-item-active"
+                            href="main.html" id="nav-dashboard">
+                            <i class="fas fa-th-large mr-3 text-lg"></i>
+                            工作台
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all"
+                            href="activities.html" id="nav-activities">
+                            <i class="fas fa-calendar-alt mr-3 text-lg"></i>
+                            活动中心
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all"
+                            href="tasks.html" id="nav-tasks">
+                            <i class="fas fa-tasks mr-3 text-lg"></i>
+                            任务管理
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all"
+                            href="resources.html" id="nav-resources">
+                            <i class="fas fa-folder-open mr-3 text-lg"></i>
+                            资源管理
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all"
+                            href="reports.html" id="nav-reports">
+                            <i class="fas fa-chart-bar mr-3 text-lg"></i>
+                            报表统计
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all"
+                            href="knowledge.html" id="nav-knowledge">
+                            <i class="fas fa-book-open mr-3 text-lg"></i>
+                            知识库
+                        </a>
+                    </nav>
+                    <div class="p-4 border-t border-[color:var(--mac-separator)]">
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all"
+                            href="settings.html" id="nav-settings">
+                            <i class="fas fa-cog mr-3 text-lg"></i>
+                            系统设置
+                        </a>
+                    </div>
+                </aside>
+                <main class="flex-1 flex flex-col min-h-0 bg-[color:var(--mac-content-bg)] overflow-hidden">
+                    <div class="mac-content-toolbar flex items-center justify-between gap-4 px-6 md:px-8 py-3">
+                        <div class="hidden md:flex items-center text-[13px] font-semibold text-[color:var(--mac-text)]">
+                            <span id="content-title">工作台</span>
+                        </div>
+                        <div class="flex items-center gap-3 min-w-[280px] justify-end">
+                            <span class="hidden lg:block text-[12px] font-medium text-[color:var(--mac-text-secondary)]">2026年3月18日 · 星期三</span>
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                                    style="font-size: 12px;"></i>
+                                <input
+                                    class="bg-white/60 border border-[color:var(--mac-separator)] rounded-lg py-1.5 pl-10 pr-4 text-xs w-56 focus:ring-2 focus:ring-[color:var(--mac-accent)] outline-none"
+                                    placeholder="搜索活动、任务或文案..." type="text" onkeyup="handleGlobalSearch(event)" />
+                            </div>
+                            <div class="relative">
+                                <button class="relative text-[color:var(--mac-text-secondary)] hover:text-[color:var(--mac-accent)]" onclick="toggleNotificationDropdown()">
+                                    <i class="fas fa-bell" style="font-size: 18px;"></i>
+                                    <span class="notification-badge">3</span>
+                                </button>
+                                <div id="notification-dropdown" class="dropdown-menu hidden">
+                                    <div class="p-3 border-b border-gray-100">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-semibold text-sm">通知中心</span>
+                                            <span class="text-xs text-blue-500 cursor-pointer">全部已读</span>
+                                        </div>
+                                    </div>
+                                    <div class="max-h-80 overflow-y-auto">
+                                        <div class="dropdown-item" onclick="showNotificationDetail('任务即将到期', '审核安全生产月海报 - 今天 18:00')">
+                                            <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                                            <div class="flex-1">
+                                                <p class="text-sm">任务即将到期</p>
+                                                <p class="text-xs text-gray-400">审核安全生产月海报</p>
+                                            </div>
+                                            <span class="text-xs text-gray-400">10分钟前</span>
+                                        </div>
+                                        <div class="dropdown-item" onclick="showNotificationDetail('活动进度更新', '全员网络信息安全周周答已进入第三阶段')">
+                                            <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                                            <div class="flex-1">
+                                                <p class="text-sm">活动进度更新</p>
+                                                <p class="text-xs text-gray-400">全员网络信息安全周周答</p>
+                                            </div>
+                                            <span class="text-xs text-gray-400">1小时前</span>
+                                        </div>
+                                        <div class="dropdown-item" onclick="showNotificationDetail('任务已完成', '确定安全周启动仪式地点')">
+                                            <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                            <div class="flex-1">
+                                                <p class="text-sm">任务已完成</p>
+                                                <p class="text-xs text-gray-400">确定安全周启动仪式地点</p>
+                                            </div>
+                                            <span class="text-xs text-gray-400">昨天</span>
+                                        </div>
+                                        <div class="dropdown-item" onclick="showNotificationDetail('新任务提醒', '预订宣传手册印刷供应商')">
+                                            <div class="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                                            <div class="flex-1">
+                                                <p class="text-sm">新任务提醒</p>
+                                                <p class="text-xs text-gray-400">预订宣传手册印刷供应商</p>
+                                            </div>
+                                            <span class="text-xs text-gray-400">2天前</span>
+                                        </div>
+                                    </div>
+                                    <div class="p-2 border-t border-gray-100">
+                                        <button class="w-full text-center text-xs text-blue-500 py-2 hover:bg-gray-50 rounded" onclick="switchPage('tasks'); closeNotificationDropdown()">
+                                            查看全部任务
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="flex items-center gap-2 text-sm text-[color:var(--mac-text-secondary)] hover:text-[color:var(--mac-accent)]" onclick="switchPage('settings')">
+                                <img alt="Avatar" class="w-7 h-7 rounded-full border border-gray-200" src="https://modao.cc/agent-py/media/generated_images/2026-03-18/683bf32533a4427d824573f8fb99b81d.jpg" />
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar" id="content-area">
+            <!-- Dashboard Page (Default) -->
+            <section class="space-y-8 animate-in fade-in duration-500" id="page-dashboard">
+                        <div class="flex items-end justify-between">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900">下午好，晓星</h2>
+                                <p class="text-gray-500 mt-1">今天你有 4 个紧急任务需要处理，以及 2 个活动即将到期。</p>
+                            </div>
+                        </div>
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                <i class="fas fa-running text-xl"></i>
+                            </div>
+                            <span class="text-green-500 text-xs font-medium flex items-center">
+                                <i class="fas fa-arrow-up mr-1" style="font-size: 10px;"></i> +12%
+                            </span>
+                        </div>
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">进行中活动</h3>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">14</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                                <i class="fas fa-clock text-xl"></i>
+                            </div>
+                            <span class="text-orange-500 text-xs font-medium flex items-center">
+                                4项待办
+                            </span>
+                        </div>
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">我的待办任务</h3>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">28</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-green-50 text-green-600 rounded-lg">
+                                <i class="fas fa-users text-xl"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">覆盖宣传人次</h3>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">128.4k</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                                <i class="fas fa-wallet text-xl"></i>
+                            </div>
+                            <span class="text-red-500 text-xs font-medium flex items-center">
+                                82% 已用
+                            </span>
+                        </div>
+                        <h3 class="text-gray-500 text-xs font-medium uppercase tracking-wider">季度预算支出</h3>
+                        <p class="text-2xl font-bold text-gray-800 mt-1">¥42.5w</p>
+                    </div>
+                </div>
+                <!-- Charts & Lists -->
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="col-span-2 bg-white p-6 rounded-2xl border border-gray-100 card-shadow overflow-hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-gray-800">全年度活动覆盖趋势</h3>
+                            <select class="text-xs bg-gray-50 border-gray-200 rounded-md p-1">
+                                <option>2026年数据</option>
+                                <option>2025年数据</option>
+                            </select>
+                        </div>
+                        <div class="w-full h-[300px]" id="trendChart"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                        <h3 class="font-bold text-gray-800 mb-6 italic">待办速递</h3>
+                        <div class="space-y-4">
+                            <div
+                                class="flex items-center p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-100 transition-all cursor-pointer"
+                                onclick="showTaskDetailModal('审核安全生产月海报')">
+                                <div class="w-1.5 h-10 bg-orange-500 rounded-full mr-4"></div>
+                                <div class="flex-1">
+                                    <h4 class="text-xs font-bold text-gray-800">审核安全生产月海报</h4>
+                                    <p class="text-[10px] text-gray-400 mt-1">截止日期: 今天 18:00</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-300"></i>
+                            </div>
+                            <div
+                                class="flex items-center p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-100 transition-all cursor-pointer"
+                                onclick="showTaskDetailModal('更新Q1宣传评估报告')">
+                                <div class="w-1.5 h-10 bg-blue-500 rounded-full mr-4"></div>
+                                <div class="flex-1">
+                                    <h4 class="text-xs font-bold text-gray-800">更新Q1宣传评估报告</h4>
+                                    <p class="text-[10px] text-gray-400 mt-1">截止日期: 明天 10:00</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-300"></i>
+                            </div>
+                            <div
+                                class="flex items-center p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-100 transition-all cursor-pointer"
+                                onclick="showTaskDetailModal('与供应商对接场地布置')">
+                                <div class="w-1.5 h-10 bg-gray-300 rounded-full mr-4"></div>
+                                <div class="flex-1">
+                                    <h4 class="text-xs font-bold text-gray-800">与供应商对接场地布置</h4>
+                                    <p class="text-[10px] text-gray-400 mt-1">截止日期: 3月22日</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-300"></i>
+                            </div>
+                        </div>
+                        <button
+                            class="w-full mt-6 py-2 border border-dashed border-gray-300 rounded-lg text-xs text-gray-500 hover:bg-gray-50" onclick="switchPage('tasks')">查看全部任务</button>
+                    </div>
+                </div>
+                <!-- 快捷操作和最近活动 -->
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- 快捷操作 -->
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                        <h3 class="font-bold text-gray-800 mb-4">快捷操作</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors text-center" onclick="showCreateActivityModal()">
+                                <i class="fas fa-plus-circle text-blue-500 text-xl mb-2"></i>
+                                <p class="text-xs text-blue-600 font-medium">新建活动</p>
+                            </button>
+                            <button class="p-4 bg-green-50 rounded-xl hover:bg-green-100 transition-colors text-center" onclick="switchPage('tasks')">
+                                <i class="fas fa-tasks text-green-500 text-xl mb-2"></i>
+                                <p class="text-xs text-green-600 font-medium">创建任务</p>
+                            </button>
+                            <button class="p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition-colors text-center" onclick="switchPage('resources')">
+                                <i class="fas fa-cloud-upload-alt text-purple-500 text-xl mb-2"></i>
+                                <p class="text-xs text-purple-600 font-medium">上传资源</p>
+                            </button>
+                            <button class="p-4 bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors text-center" onclick="switchPage('reports')">
+                                <i class="fas fa-chart-pie text-orange-500 text-xl mb-2"></i>
+                                <p class="text-xs text-orange-600 font-medium">查看报表</p>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 最近活动 -->
+                    <div class="col-span-2 bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-800">最近活动</h3>
+                            <button class="text-xs text-blue-500 hover:text-blue-600" onclick="switchPage('activities')">查看全部</button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer" onclick="showActivityDetailModal('2026 安全生产月主会场策划')">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-hard-hat text-blue-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium">2026 安全生产月主会场策划</h4>
+                                    <p class="text-xs text-gray-400">筹得中 · 12/35 任务</p>
+                                </div>
+                                <span class="status-badge bg-blue-50 text-blue-600">年度项目</span>
+                            </div>
+                            <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer" onclick="showActivityDetailModal('全员网络信息安全周周答')">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-shield-alt text-green-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium">全员网络信息安全周周答</h4>
+                                    <p class="text-xs text-gray-400">进行中 · 第三阶段</p>
+                                </div>
+                                <span class="status-badge bg-green-50 text-green-600">78%</span>
+                            </div>
+                            <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer" onclick="showActivityDetailModal('消防安全科普进社区')">
+                                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-fire text-orange-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium">消防安全科普进社区</h4>
+                                    <p class="text-xs text-gray-400">筹得中 · 5个社区</p>
+                                </div>
+                                <span class="status-badge bg-orange-50 text-orange-600">25%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 团队概览 -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-800">团队成员</h3>
+                        <button class="text-xs text-blue-500 hover:text-blue-600">
+                            <i class="fas fa-plus mr-1"></i> 添加成员
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-5 gap-4">
+                        <div class="text-center">
+                            <img src="https://modao.cc/agent-py/media/generated_images/2026-03-18/683bf32533a4427d824573f8fb99b81d.jpg" class="w-12 h-12 rounded-full mx-auto mb-2" />
+                            <p class="text-xs font-medium">张晓星</p>
+                            <p class="text-xs text-gray-400">项目负责人</p>
+                        </div>
+                        <div class="text-center">
+                            <img src="https://modao.cc/agent-py/media/generated_images/2026-03-18/87bb89d9c97748bd90c7f8308fa2d1b6.jpg" class="w-12 h-12 rounded-full mx-auto mb-2" />
+                            <p class="text-xs font-medium">李明华</p>
+                            <p class="text-xs text-gray-400">活动策划</p>
+                        </div>
+                        <div class="text-center">
+                            <img src="https://ui-avatars.com/api/?name=王芳&background=8B5CF6&color=fff&size=48" class="w-12 h-12 rounded-full mx-auto mb-2" />
+                            <p class="text-xs font-medium">王芳</p>
+                            <p class="text-xs text-gray-400">设计师</p>
+                        </div>
+                        <div class="text-center">
+                            <img src="https://ui-avatars.com/api/?name=赵强&background=EF4444&color=fff&size=48" class="w-12 h-12 rounded-full mx-auto mb-2" />
+                            <p class="text-xs font-medium">赵强</p>
+                            <p class="text-xs text-gray-400">安全顾问</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 rounded-full mx-auto mb-2 bg-gray-200 flex items-center justify-center">
+                                <i class="fas fa-user-plus text-gray-400"></i>
+                            </div>
+                            <p class="text-xs text-blue-500 font-medium">邀请成员</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Activities Page (Hidden) -->
+            <section class="hidden space-y-6 animate-in fade-in duration-500" id="page-activities">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-900">活动中心</h2>
+                    <div class="flex bg-gray-200 p-1 rounded-lg text-xs">
+                        <button class="px-3 py-1 bg-white rounded-md shadow-sm font-medium">看板模式</button>
+                        <button class="px-3 py-1 hover:bg-white hover:shadow-sm rounded-md transition-all">列表模式</button>
+                        <button class="px-3 py-1 hover:bg-white hover:shadow-sm rounded-md transition-all">日历视图</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Column: Preparation -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between px-2">
+                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
+                                <span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span> 筹得中 (3)
+                            </h3>
+                            <button class="text-gray-400 hover:text-gray-600" onclick="showInfoModal('更多操作', '更多操作菜单')">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                        <div
+                            class="bg-white p-4 rounded-xl border border-gray-100 card-shadow hover:ring-2 hover:ring-blue-100 transition-all">
+                            <span class="status-badge bg-blue-50 text-blue-600 mb-2 inline-block">年度项目</span>
+                            <h4 class="font-bold text-gray-800 mb-2">2026 安全生产月主会场策划</h4>
+                            <p class="text-xs text-gray-500 mb-4 line-clamp-2">包括主旨演讲编排、外部嘉宾邀请及多媒体互动展区设计方案审核。</p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex -space-x-2">
+                                    <img alt="Avatar" class="w-6 h-6 rounded-full border-2 border-white"
+                                        src="https://modao.cc/agent-py/media/generated_images/2026-03-18/87bb89d9c97748bd90c7f8308fa2d1b6.jpg" />
+                                    <img alt="Avatar" class="w-6 h-6 rounded-full border-2 border-white"
+                                        src="https://modao.cc/agent-py/media/generated_images/2026-03-18/87bb89d9c97748bd90c7f8308fa2d1b6.jpg" />
+                                </div>
+                                <span class="text-[10px] text-gray-400 font-medium">12/35 任务</span>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                            <span class="status-badge bg-orange-50 text-orange-600 mb-2 inline-block">专项活动</span>
+                            <h4 class="font-bold text-gray-800 mb-2">消防安全科普进社区</h4>
+                            <p class="text-xs text-gray-500 mb-4">5个样板社区巡回展示，实操演练与物料发放。</p>
+                            <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-orange-400 w-1/4 h-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Column: In Progress -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between px-2">
+                            <h3 class="text-xs font-bold text-blue-600 uppercase tracking-widest flex items-center">
+                                <span class="w-2 h-2 bg-blue-600 rounded-full mr-2"></span> 正在进行 (2)
+                            </h3>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-blue-100 card-shadow ring-1 ring-blue-50">
+                            <span class="status-badge bg-green-50 text-green-600 mb-2 inline-block">网络安全</span>
+                            <h4 class="font-bold text-gray-800 mb-2">全员网络信息安全周周答</h4>
+                            <div class="flex items-center space-x-2 mb-4">
+                                <i class="fas fa-globe text-blue-500" style="font-size: 12px;"></i>
+                                <span class="text-[10px] text-blue-500 font-medium">线上互动活动</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="text-gray-500 italic">进行中: 第三阶段</span>
+                                <span class="text-gray-800 font-bold">78%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                                <div class="bg-green-500 w-[78%] h-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Column: Evaluation -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between px-2">
+                            <h3 class="text-xs font-bold text-green-600 uppercase tracking-widest flex items-center">
+                                <span class="w-2 h-2 bg-green-600 rounded-full mr-2"></span> 效果评估 (4)
+                            </h3>
+                        </div>
+                        <div
+                            class="bg-white p-4 rounded-xl border border-gray-100 card-shadow grayscale opacity-75 hover:grayscale-0 hover:opacity-100 transition-all">
+                            <h4 class="font-bold text-gray-800 mb-2">春节返工安全生产第一课</h4>
+                            <p class="text-[10px] text-gray-400">已于2026年3月5日完成执行</p>
+                            <div class="mt-4 flex items-center justify-between">
+                                    <span class="text-xs font-bold text-gray-700">报告生成中...</span>
+                                    <i class="fas fa-spinner text-orange-500 animate-spin" style="font-size: 14px;"></i>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Tasks Page (Hidden) -->
+            <section class="hidden space-y-6 animate-in fade-in duration-500" id="page-tasks">
+                <div class="flex justify-between items-center px-2">
+                    <h2 class="text-2xl font-bold text-gray-900">任务清单</h2>
+                    <div class="flex space-x-2">
+                        <div class="relative">
+                            <i class="fas fa-filter absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" style="font-size: 12px;"></i>
+                            <select class="bg-white border-gray-200 rounded-md py-1 px-8 text-xs outline-none">
+                                <option>全部优先级</option>
+                                <option>高优先级</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-100 card-shadow overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold text-gray-600">任务名称</th>
+                                <th class="px-6 py-4 font-semibold text-gray-600">关联活动</th>
+                                <th class="px-6 py-4 font-semibold text-gray-600">负责人</th>
+                                <th class="px-6 py-4 font-semibold text-gray-600">截止时间</th>
+                                <th class="px-6 py-4 font-semibold text-gray-600">优先级</th>
+                                <th class="px-6 py-4 font-semibold text-gray-600">状态</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            <tr class="hover:bg-blue-50/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <input class="mr-3 rounded border-gray-300" type="checkbox" />
+                                        <span class="font-medium">安全月主视觉海报终审</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-500">年度安全生产月</td>
+                                <td class="px-6 py-4 flex items-center">
+                                    <img alt="user" class="w-5 h-5 rounded-full mr-2"
+                                        src="https://modao.cc/agent-py/media/generated_images/2026-03-18/683bf32533a4427d824573f8fb99b81d.jpg" />
+                                    <span>张晓星</span>
+                                </td>
+                                <td class="px-6 py-4 text-orange-600 font-medium">18:00 (今日)</td>
+                                <td class="px-6 py-4"><span class="status-badge bg-red-50 text-red-600">高</span></td>
+                                <td class="px-6 py-4"><span class="status-badge bg-gray-100 text-gray-600">进行中</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-blue-50/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <input class="mr-3 rounded border-gray-300" type="checkbox" />
+                                        <span class="font-medium">预订宣传手册印刷供应商</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-500">消防科普周</td>
+                                <td class="px-6 py-4 flex items-center">
+                                    <img alt="user" class="w-5 h-5 rounded-full mr-2"
+                                        src="https://modao.cc/agent-py/media/generated_images/2026-03-18/683bf32533a4427d824573f8fb99b81d.jpg" />
+                                    <span>李婷婷</span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-500">3月20日</td>
+                                <td class="px-6 py-4"><span class="status-badge bg-blue-50 text-blue-600">中</span></td>
+                                <td class="px-6 py-4"><span class="status-badge bg-gray-100 text-gray-600">待处理</span>
+                                </td>
+                            </tr>
+                            <!-- 重复数据以增加丰富度 -->
+                            <tr class="hover:bg-blue-50/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <input class="mr-3 rounded border-gray-300" type="checkbox" />
+                                        <span class="font-medium">编写网络安全周微信推文</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-500">网安专题</td>
+                                <td class="px-6 py-4 flex items-center">
+                                    <img alt="user" class="w-5 h-5 rounded-full mr-2"
+                                        src="https://modao.cc/agent-py/media/generated_images/2026-03-18/683bf32533a4427d824573f8fb99b81d.jpg" />
+                                    <span>王晓明</span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-500">3月21日</td>
+                                <td class="px-6 py-4"><span class="status-badge bg-blue-50 text-blue-600">中</span></td>
+                                <td class="px-6 py-4"><span class="status-badge bg-gray-100 text-gray-600">进行中</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-blue-50/30 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <input checked="" class="mr-3 rounded border-gray-300" type="checkbox" />
+                                        <span class="font-medium line-through text-gray-400">确定安全周启动仪式地点</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-300">年度安全月</td>
+                                <td class="px-6 py-4 flex items-center text-gray-300">
+                                    <img alt="user" class="w-5 h-5 rounded-full mr-2 grayscale"
+                                        src="https://modao.cc/agent-py/media/generated_images/2026-03-18/683bf32533a4427d824573f8fb99b81d.jpg" />
+                                    <span>张晓星</span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-300">3月15日</td>
+                                <td class="px-6 py-4"><span class="status-badge bg-gray-50 text-gray-300">低</span></td>
+                                <td class="px-6 py-4"><span class="status-badge bg-green-50 text-green-600">已完成</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <!-- Resources Page -->
+            <section class="hidden space-y-6" id="page-resources">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-900">资源管理</h2>
+                    <button class="action-btn action-btn-blue" onclick="showUploadResourceModal()">
+                        <i class="fas fa-cloud-upload-alt"></i> 上传资源
+                    </button>
+                </div>
+                
+                <!-- 筛选栏 -->
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 card-shadow">
+                    <div class="flex gap-4">
+                        <div class="flex-1 relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" placeholder="搜索资源..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+                        <select class="px-4 py-2 border border-gray-200 rounded-lg text-sm">
+                            <option>全部类型</option>
+                            <option>图片</option>
+                            <option>文档</option>
+                            <option>视频</option>
+                            <option>音频</option>
+                        </select>
+                        <select class="px-4 py-2 border border-gray-200 rounded-lg text-sm">
+                            <option>全部时间</option>
+                            <option>今天</option>
+                            <option>本周</option>
+                            <option>本月</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="resource-card bg-white p-4 rounded-xl border border-gray-100 card-shadow hover:shadow-lg" onclick="showResourceDetail('2026安全图标集.zip')">
+                        <div class="h-32 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
+                            <i class="fas fa-file-image text-3xl text-blue-400"></i>
+                        </div>
+                        <p class="text-sm font-bold truncate">2026安全图标集.zip</p>
+                        <p class="text-xs text-gray-400">12.8 MB · 3月10日上传</p>
+                        <div class="mt-3 flex gap-2">
+                            <button class="flex-1 text-xs text-blue-500 hover:text-blue-600" onclick="event.stopPropagation(); showInfoModal('下载', '文件开始下载')">
+                                <i class="fas fa-download mr-1"></i> 下载
+                            </button>
+                            <button class="flex-1 text-xs text-gray-500 hover:text-gray-600" onclick="event.stopPropagation(); showConfirmModal('确认删除', '确定要删除该文件吗？', () => { closeModal(); showSuccessModal('删除成功', '文件已删除') })">
+                                <i class="fas fa-trash mr-1"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                    <div class="resource-card bg-white p-4 rounded-xl border border-gray-100 card-shadow hover:shadow-lg" onclick="showResourceDetail('安全生产月宣传册.pdf')">
+                        <div class="h-32 bg-red-50 rounded-lg flex items-center justify-center mb-3">
+                            <i class="fas fa-file-pdf text-3xl text-red-400"></i>
+                        </div>
+                        <p class="text-sm font-bold truncate">安全生产月宣传册.pdf</p>
+                        <p class="text-xs text-gray-400">8.2 MB · 3月8日上传</p>
+                        <div class="mt-3 flex gap-2">
+                            <button class="flex-1 text-xs text-blue-500 hover:text-blue-600" onclick="event.stopPropagation()">
+                                <i class="fas fa-download mr-1"></i> 下载
+                            </button>
+                            <button class="flex-1 text-xs text-gray-500 hover:text-gray-600" onclick="event.stopPropagation()">
+                                <i class="fas fa-trash mr-1"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                    <div class="resource-card bg-white p-4 rounded-xl border border-gray-100 card-shadow hover:shadow-lg" onclick="showResourceDetail('消防演练视频.mp4')">
+                        <div class="h-32 bg-purple-50 rounded-lg flex items-center justify-center mb-3">
+                            <i class="fas fa-file-video text-3xl text-purple-400"></i>
+                        </div>
+                        <p class="text-sm font-bold truncate">消防演练视频.mp4</p>
+                        <p class="text-xs text-gray-400">156 MB · 3月5日上传</p>
+                        <div class="mt-3 flex gap-2">
+                            <button class="flex-1 text-xs text-blue-500 hover:text-blue-600" onclick="event.stopPropagation()">
+                                <i class="fas fa-download mr-1"></i> 下载
+                            </button>
+                            <button class="flex-1 text-xs text-gray-500 hover:text-gray-600" onclick="event.stopPropagation()">
+                                <i class="fas fa-trash mr-1"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                    <div class="resource-card bg-white p-4 rounded-xl border border-gray-100 card-shadow hover:shadow-lg" onclick="showResourceDetail('网络安全培训PPT.pptx')">
+                        <div class="h-32 bg-orange-50 rounded-lg flex items-center justify-center mb-3">
+                            <i class="fas fa-file-powerpoint text-3xl text-orange-400"></i>
+                        </div>
+                        <p class="text-sm font-bold truncate">网络安全培训PPT.pptx</p>
+                        <p class="text-xs text-gray-400">24.5 MB · 3月1日上传</p>
+                        <div class="mt-3 flex gap-2">
+                            <button class="flex-1 text-xs text-blue-500 hover:text-blue-600" onclick="event.stopPropagation()">
+                                <i class="fas fa-download mr-1"></i> 下载
+                            </button>
+                            <button class="flex-1 text-xs text-gray-500 hover:text-gray-600" onclick="event.stopPropagation()">
+                                <i class="fas fa-trash mr-1"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 资源统计 -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 rounded-lg">
+                                <i class="fas fa-image text-blue-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-xl font-bold">1,256</p>
+                                <p class="text-xs text-gray-500">图片资源</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-red-50 rounded-lg">
+                                <i class="fas fa-file-pdf text-red-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-xl font-bold">892</p>
+                                <p class="text-xs text-gray-500">文档资源</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-purple-50 rounded-lg">
+                                <i class="fas fa-video text-purple-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-xl font-bold">324</p>
+                                <p class="text-xs text-gray-500">视频资源</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-green-50 rounded-lg">
+                                <i class="fas fa-database text-green-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-xl font-bold">2.8 GB</p>
+                                <p class="text-xs text-gray-500">总存储</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Reports Page -->
+            <section class="hidden space-y-6" id="page-reports">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-900">报表统计</h2>
+                    <div class="flex gap-2">
+                        <button class="action-btn action-btn-blue" onclick="showExportReportModal()">
+                            <i class="fas fa-download"></i> 导出报表
+                        </button>
+                        <button class="action-btn action-btn-green" onclick="showGenerateReportModal()">
+                            <i class="fas fa-sync"></i> 刷新数据
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 统计概览卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="p-2 bg-blue-50 rounded-lg">
+                                <i class="fas fa-calendar-check text-blue-600"></i>
+                            </div>
+                            <span class="text-green-500 text-xs font-medium"><i class="fas fa-arrow-up mr-1"></i>+15%</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800">156</p>
+                        <p class="text-xs text-gray-500">本年活动总数</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="p-2 bg-green-50 rounded-lg">
+                                <i class="fas fa-users text-green-600"></i>
+                            </div>
+                            <span class="text-green-500 text-xs font-medium"><i class="fas fa-arrow-up mr-1"></i>+22%</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800">45,892</p>
+                        <p class="text-xs text-gray-500">累计参与人次</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="p-2 bg-purple-50 rounded-lg">
+                                <i class="fas fa-file-alt text-purple-600"></i>
+                            </div>
+                            <span class="text-green-500 text-xs font-medium"><i class="fas fa-arrow-up mr-1"></i>+8%</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800">89%</p>
+                        <p class="text-xs text-gray-500">活动完成率</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="p-2 bg-orange-50 rounded-lg">
+                                <i class="fas fa-star text-orange-600"></i>
+                            </div>
+                            <span class="text-green-500 text-xs font-medium"><i class="fas fa-arrow-up mr-1"></i>+5%</span>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-800">4.8</p>
+                        <p class="text-xs text-gray-500">平均满意度</p>
+                    </div>
+                </div>
+                
+                <!-- 图表区域 -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="col-span-2 bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-800">活动参与度趋势</h3>
+                            <select class="text-xs bg-gray-50 border-gray-200 rounded-md p-2">
+                                <option>本月</option>
+                                <option>本季度</option>
+                                <option>本年</option>
+                            </select>
+                        </div>
+                        <div class="w-full h-[280px]" id="participationChart"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                        <h3 class="font-bold text-gray-800 mb-4">活动类型分布</h3>
+                        <div class="w-full h-[200px]" id="typeChart"></div>
+                        <div class="mt-4 space-y-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>安全宣传</span>
+                                <span class="font-semibold">45%</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>消防演练</span>
+                                <span class="font-semibold">30%</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="flex items-center"><span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>培训讲座</span>
+                                <span class="font-semibold">25%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 排行榜 -->
+                <div class="bg-white rounded-2xl border border-gray-100 card-shadow p-6">
+                    <h3 class="font-bold text-gray-800 mb-4">活动效果排行榜 TOP 10</h3>
+                    <table class="w-full text-left text-sm">
+                        <thead class="border-b border-gray-100">
+                            <tr>
+                                <th class="pb-3 font-semibold text-gray-600">排名</th>
+                                <th class="pb-3 font-semibold text-gray-600">活动名称</th>
+                                <th class="pb-3 font-semibold text-gray-600">类型</th>
+                                <th class="pb-3 font-semibold text-gray-600">参与人数</th>
+                                <th class="pb-3 font-semibold text-gray-600">覆盖人次</th>
+                                <th class="pb-3 font-semibold text-gray-600">满意度</th>
+                                <th class="pb-3 font-semibold text-gray-600">状态</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            <tr>
+                                <td class="py-3"><span class="text-yellow-500 font-bold">1</span></td>
+                                <td class="py-3 font-medium">2026安全生产月启动仪式</td>
+                                <td class="py-3"><span class="status-badge bg-blue-50 text-blue-600">安全宣传</span></td>
+                                <td class="py-3">2,450</td>
+                                <td class="py-3">15,200</td>
+                                <td class="py-3"><span class="text-green-600 font-semibold">96%</span></td>
+                                <td class="py-3"><span class="status-badge bg-green-50 text-green-600">已完成</span></td>
+                            </tr>
+                            <tr>
+                                <td class="py-3"><span class="text-gray-400 font-bold">2</span></td>
+                                <td class="py-3 font-medium">全员网络信息安全周周答</td>
+                                <td class="py-3"><span class="status-badge bg-purple-50 text-purple-600">网络安全</span></td>
+                                <td class="py-3">5,800</td>
+                                <td class="py-3">28,600</td>
+                                <td class="py-3"><span class="text-green-600 font-semibold">92%</span></td>
+                                <td class="py-3"><span class="status-badge bg-blue-50 text-blue-600">进行中</span></td>
+                            </tr>
+                            <tr>
+                                <td class="py-3"><span class="text-orange-400 font-bold">3</span></td>
+                                <td class="py-3 font-medium">消防安全进社区</td>
+                                <td class="py-3"><span class="status-badge bg-red-50 text-red-600">消防演练</span></td>
+                                <td class="py-3">1,200</td>
+                                <td class="py-3">8,500</td>
+                                <td class="py-3"><span class="text-green-600 font-semibold">89%</span></td>
+                                <td class="py-3"><span class="status-badge bg-green-50 text-green-600">已完成</span></td>
+                            </tr>
+                            <tr>
+                                <td class="py-3"><span class="text-gray-400 font-bold">4</span></td>
+                                <td class="py-3 font-medium">春季防火安全宣传</td>
+                                <td class="py-3"><span class="status-badge bg-red-50 text-red-600">消防演练</span></td>
+                                <td class="py-3">980</td>
+                                <td class="py-3">6,200</td>
+                                <td class="py-3"><span class="text-green-600 font-semibold">87%</span></td>
+                                <td class="py-3"><span class="status-badge bg-green-50 text-green-600">已完成</span></td>
+                            </tr>
+                            <tr>
+                                <td class="py-3"><span class="text-gray-400 font-bold">5</span></td>
+                                <td class="py-3 font-medium">职业健康防护讲座</td>
+                                <td class="py-3"><span class="status-badge bg-orange-50 text-orange-600">培训讲座</span></td>
+                                <td class="py-3">750</td>
+                                <td class="py-3">4,500</td>
+                                <td class="py-3"><span class="text-green-600 font-semibold">94%</span></td>
+                                <td class="py-3"><span class="status-badge bg-green-50 text-green-600">已完成</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- Knowledge Page -->
+            <section class="hidden space-y-6" id="page-knowledge">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-900">知识库</h2>
+                    <button class="action-btn action-btn-blue" onclick="showAddKnowledgeModal()">
+                        <i class="fas fa-plus"></i> 添加文档
+                    </button>
+                </div>
+                
+                <!-- 搜索和筛选 -->
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 card-shadow">
+                    <div class="flex gap-4">
+                        <div class="flex-1 relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" placeholder="搜索文档..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+                        <select class="px-4 py-2 border border-gray-200 rounded-lg text-sm">
+                            <option>全部分类</option>
+                            <option>安全生产</option>
+                            <option>消防安全</option>
+                            <option>网络安全</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="col-span-2 space-y-4">
+                        <div class="bg-white p-5 rounded-xl border border-gray-100 card-shadow hover:shadow-lg" onclick="showKnowledgeDetail('安全生产管理制度')">
+                            <div class="flex items-start gap-4">
+                                <div class="p-3 bg-blue-50 rounded-lg">
+                                    <i class="fas fa-bookmark text-blue-600 text-xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-bold text-gray-800">安全生产管理制度</h4>
+                                        <span class="status-badge bg-blue-50 text-blue-600">制度文档</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mb-3">包含安全生产责任制、安全操作规程、应急预案等核心管理制度文档。</p>
+                                    <div class="flex items-center gap-4 text-xs text-gray-400">
+                                        <span><i class="fas fa-eye mr-1"></i> 1,234</span>
+                                        <span><i class="fas fa-download mr-1"></i> 567</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-5 rounded-xl border border-gray-100 card-shadow hover:shadow-lg" onclick="showKnowledgeDetail('消防设施操作指南')">
+                            <div class="flex items-start gap-4">
+                                <div class="p-3 bg-red-50 rounded-lg">
+                                    <i class="fas fa-fire-extinguisher text-red-600 text-xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-bold text-gray-800">消防设施操作指南</h4>
+                                        <span class="status-badge bg-red-50 text-red-600">操作指南</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mb-3">各类消防设施的正确使用方法和日常维护注意事项。</p>
+                                    <div class="flex items-center gap-4 text-xs text-gray-400">
+                                        <span><i class="fas fa-eye mr-1"></i> 892</span>
+                                        <span><i class="fas fa-download mr-1"></i> 345</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-5 rounded-xl border border-gray-100 card-shadow hover:shadow-lg" onclick="showKnowledgeDetail('网络安全防护手册')">
+                            <div class="flex items-start gap-4">
+                                <div class="p-3 bg-green-50 rounded-lg">
+                                    <i class="fas fa-shield-alt text-green-600 text-xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-bold text-gray-800">网络安全防护手册</h4>
+                                        <span class="status-badge bg-green-50 text-green-600">操作指南</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mb-3">企业网络安全防护知识、常见威胁及应对措施。</p>
+                                    <div class="flex items-center gap-4 text-xs text-gray-400">
+                                        <span><i class="fas fa-eye mr-1"></i> 1,567</span>
+                                        <span><i class="fas fa-download mr-1"></i> 723</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                            <h3 class="font-bold text-gray-800 mb-4">热门标签</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs cursor-pointer">安全生产</span>
+                                <span class="px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs cursor-pointer">消防安全</span>
+                                <span class="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs cursor-pointer">网络安全</span>
+                                <span class="px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-xs cursor-pointer">应急处理</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                            <h3 class="font-bold text-gray-800 mb-4">最近访问</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3 text-sm text-gray-600 cursor-pointer hover:text-blue-500" onclick="showKnowledgeDetail('安全检查清单')">
+                                    <i class="fas fa-clock text-gray-400"></i>
+                                    <span>安全检查清单</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-600 cursor-pointer hover:text-blue-500" onclick="showKnowledgeDetail('隐患排查标准')">
+                                    <i class="fas fa-clock text-gray-400"></i>
+                                    <span>隐患排查标准</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                            <h3 class="font-bold text-gray-800 mb-4">文档统计</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">总文档数</span>
+                                    <span class="font-semibold">156</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">本月新增</span>
+                                    <span class="font-semibold text-green-500">+12</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Settings Page -->
+            <section class="hidden space-y-6" id="page-settings">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-900">系统设置</h2>
+                </div>
+                
+                <!-- 个人资料 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="p-3 bg-blue-50 rounded-xl">
+                                <i class="fas fa-user text-blue-500 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800">个人资料</h3>
+                                <p class="text-xs text-gray-500">管理您的个人信息</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-gray-500 block mb-1">姓名</label>
+                                <input type="text" class="form-input" value="张晓星" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 block mb-1">电子邮箱</label>
+                                <input type="email" class="form-input" value="zhangxiaoxing@company.com" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 block mb-1">联系电话</label>
+                                <input type="tel" class="form-input" value="138****8888" />
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 block mb-1">所属部门</label>
+                                <input type="text" class="form-input" value="安全管理部" />
+                            </div>
+                            <button class="btn-primary" onclick="showSuccessModal('保存成功', '个人资料已更新')">
+                                <i class="fas fa-save mr-2"></i> 保存修改
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 通知设置 -->
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="p-3 bg-orange-50 rounded-xl">
+                                <i class="fas fa-bell text-orange-500 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800">通知设置</h3>
+                                <p class="text-xs text-gray-500">管理您的通知偏好</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                                <div>
+                                    <p class="text-sm font-medium">任务到期提醒</p>
+                                    <p class="text-xs text-gray-500">任务截止前1小时发送通知</p>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                            </div>
+                            <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                                <div>
+                                    <p class="text-sm font-medium">活动进度更新</p>
+                                    <p class="text-xs text-gray-500">活动状态变更时发送通知</p>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                            </div>
+                            <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                                <div>
+                                    <p class="text-sm font-medium">系统公告</p>
+                                    <p class="text-xs text-gray-500">接收系统重要通知</p>
+                                </div>
+                                <div class="toggle-switch" onclick="toggleSetting(this)"></div>
+                            </div>
+                            <div class="flex items-center justify-between py-3">
+                                <div>
+                                    <p class="text-sm font-medium">邮件通知</p>
+                                    <p class="text-xs text-gray-500">通过邮件接收通知</p>
+                                </div>
+                                <div class="toggle-switch" onclick="toggleSetting(this)"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 账号安全 -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="p-3 bg-green-50 rounded-xl">
+                            <i class="fas fa-shield-alt text-green-500 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">账号安全</h3>
+                            <p class="text-xs text-gray-500">管理您的账号安全设置</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left" onclick="showInfoModal('修改密码', '密码修改功能')">
+                            <i class="fas fa-key text-gray-500 mb-2 block"></i>
+                            <p class="text-sm font-medium">修改密码</p>
+                            <p class="text-xs text-gray-400">定期更换密码</p>
+                        </button>
+                        <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left" onclick="showInfoModal('两步验证', '两步验证设置')">
+                            <i class="fas fa-mobile-alt text-gray-500 mb-2 block"></i>
+                            <p class="text-sm font-medium">两步验证</p>
+                            <p class="text-xs text-gray-400">增强账号安全</p>
+                        </button>
+                        <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left" onclick="showConfirmModal('退出登录', '确定要退出登录吗？', () => { showSuccessModal('已退出', '您已成功退出登录') })">
+                            <i class="fas fa-sign-out-alt text-gray-500 mb-2 block"></i>
+                            <p class="text-sm font-medium">退出登录</p>
+                            <p class="text-xs text-gray-400">安全退出账号</p>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 快捷操作 -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="p-3 bg-purple-50 rounded-xl">
+                            <i class="fas fa-bolt text-purple-500 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">快捷操作</h3>
+                            <p class="text-xs text-gray-500">常用功能快捷入口</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left" onclick="showInfoModal('数据备份', '数据备份功能')">
+                            <i class="fas fa-database text-blue-500 text-xl mb-2"></i>
+                            <p class="text-sm font-medium">数据备份</p>
+                        </button>
+                        <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left" onclick="showInfoModal('清理缓存', '缓存清理功能')">
+                            <i class="fas fa-trash text-orange-500 text-xl mb-2"></i>
+                            <p class="text-sm font-medium">清理缓存</p>
+                        </button>
+                        <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left" onclick="showInfoModal('导出数据', '数据导出功能')">
+                            <i class="fas fa-download text-green-500 text-xl mb-2"></i>
+                            <p class="text-sm font-medium">导出数据</p>
+                        </button>
+                        <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left" onclick="showInfoModal('主题设置', '主题设置功能')">
+                            <i class="fas fa-palette text-purple-500 text-xl mb-2"></i>
+                            <p class="text-sm font-medium">主题设置</p>
+                        </button>
+                    </div>
+                </div>
+            </section>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Page Navigation Logic
+        function switchPage(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('main section');
+            pages.forEach(p => p.classList.add('hidden'));
+
+            // Show target page
+            const targetPage = document.getElementById('page-' + pageId);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+            }
+
+            // Update sidebar state
+            const navItems = document.querySelectorAll('.sidebar-item');
+            navItems.forEach(nav => {
+                nav.classList.remove('sidebar-item-active');
+                nav.classList.remove('text-gray-600');
+                nav.classList.add('text-[color:var(--mac-text-secondary)]');
+            });
+
+            const activeNav = document.getElementById('nav-' + pageId);
+            if (activeNav) {
+                activeNav.classList.add('sidebar-item-active');
+                activeNav.classList.remove('text-gray-600');
+                activeNav.classList.remove('text-[color:var(--mac-text-secondary)]');
+            }
+
+            const contentTitle = document.getElementById('content-title');
+            if (contentTitle && activeNav) {
+                contentTitle.textContent = activeNav.textContent.trim();
+            }
+
+            // Re-init chart if switching to dashboard
+            if (pageId === 'dashboard') {
+                setTimeout(initChart, 100);
+            }
+        }
+
+        // Chart Initialization
+        function initChart() {
+            const chartDom = document.getElementById('trendChart');
+            if (!chartDom) return;
+            const myChart = echarts.init(chartDom);
+            const option = {
+                color: ['#0A84FF', '#FF9F0A'],
+                tooltip: { trigger: 'axis' },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true, top: '10%' },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
+                    axisLine: { lineStyle: { color: '#E5E7EB' } },
+                    axisLabel: { color: '#9CA3AF', fontSize: 10 }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitLine: { lineStyle: { type: 'dashed', color: '#F3F4F6' } },
+                    axisLabel: { color: '#9CA3AF', fontSize: 10 }
+                },
+                series: [
+                    {
+                        name: '宣传覆盖人次',
+                        type: 'line',
+                        smooth: true,
+                        data: [12000, 18000, 31000, 45000, 42000, 89000, 95000],
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(10, 132, 255, 0.22)' },
+                                { offset: 1, color: 'rgba(10, 132, 255, 0)' }
+                            ])
+                        }
+                    },
+                    {
+                        name: '互动点击率',
+                        type: 'line',
+                        smooth: true,
+                        data: [5000, 7000, 12000, 15000, 14000, 32000, 35000],
+                        lineStyle: { width: 3, type: 'dotted' }
+                    }
+                ]
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', myChart.resize);
+        }
+
+        // Auto-run on load
+        window.addEventListener('DOMContentLoaded', () => {
+            initChart();
+        });
+
+        // 弹窗功能
+        function showModal(title, content, buttons = []) {
+            const container = document.getElementById('modal-container');
+            let buttonsHtml = '';
+            buttons.forEach(btn => {
+                buttonsHtml += `<button class="${btn.class || 'btn-secondary'}" onclick="${btn.onclick}">${btn.text}</button>`;
+            });
+            container.innerHTML = `
+                <div class="modal-overlay active" onclick="closeModal(event)">
+                    <div class="mac-modal" onclick="event.stopPropagation()">
+                        <div class="modal-titlebar">
+                            <div class="traffic-lights">
+                                <div class="traffic-light traffic-light-red" onclick="closeModal()"></div>
+                                <div class="traffic-light traffic-light-yellow" onclick="closeModal()"></div>
+                                <div class="traffic-light traffic-light-green"></div>
+                            </div>
+                            <div class="text-[13px] font-semibold tracking-tight text-[color:var(--mac-text)] ml-4">${title}</div>
+                        </div>
+                        <div class="modal-content modal-text-center">
+                            ${content}
+                            <div class="flex justify-center gap-3 mt-6">
+                                ${buttonsHtml}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const container = document.getElementById('modal-container');
+            const overlay = container.querySelector('.modal-overlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+                setTimeout(() => container.innerHTML = '', 300);
+            }
+        }
+
+        function showInfoModal(title, message) {
+            showModal(title, `
+                <i class="fas fa-info-circle text-4xl text-blue-500 mb-4"></i>
+                <p class="text-gray-600">${message}</p>
+            `, [{ text: '确定', class: 'btn-primary', onclick: 'closeModal()' }]);
+        }
+
+        function showConfirmModal(title, message, onConfirm) {
+            showModal(title, `
+                <i class="fas fa-question-circle text-4xl text-orange-500 mb-4"></i>
+                <p class="text-gray-600">${message}</p>
+            `, [
+                { text: '取消', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '确定', class: 'btn-primary', onclick: 'closeModal(); ' + onConfirm.toString().replace(/;/g, '') }
+            ]);
+        }
+
+        function showSuccessModal(title, message) {
+            showModal(title, `
+                <i class="fas fa-check-circle text-4xl text-green-500 mb-4"></i>
+                <p class="text-gray-600">${message}</p>
+            `, [{ text: '确定', class: 'btn-primary', onclick: 'closeModal()' }]);
+        }
+
+        // 导出报表弹窗
+        function showExportReportModal() {
+            showModal('导出报表', `
+                <div class="text-left space-y-4">
+                    <p class="text-sm text-gray-500 mb-2">选择导出格式：</p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-500 transition-colors" onclick="closeModal(); showSuccessModal('导出成功', '报表已导出为PDF格式')">
+                            <i class="fas fa-file-pdf text-3xl text-red-500 mb-2 block"></i>
+                            <span class="text-xs block">PDF</span>
+                        </button>
+                        <button class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-green-500 transition-colors" onclick="closeModal(); showSuccessModal('导出成功', '报表已导出为Excel格式')">
+                            <i class="fas fa-file-excel text-3xl text-green-600 mb-2 block"></i>
+                            <span class="text-xs block">Excel</span>
+                        </button>
+                        <button class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-500 transition-colors" onclick="closeModal(); showSuccessModal('导出成功', '报表已导出为Word格式')">
+                            <i class="fas fa-file-word text-3xl text-blue-600 mb-2 block"></i>
+                            <span class="text-xs block">Word</span>
+                        </button>
+                    </div>
+                </div>
+            `, []);
+        }
+
+        // 刷新数据
+        function showGenerateReportModal() {
+            showModal('刷新数据', `
+                <div class="text-center py-4">
+                    <i class="fas fa-sync fa-spin text-4xl text-blue-500 mb-4"></i>
+                    <p class="text-gray-500">正在刷新数据...</p>
+                </div>
+            `, []);
+            setTimeout(() => {
+                closeModal();
+                showSuccessModal('刷新成功', '数据已更新到最新状态');
+            }, 1500);
+        }
+
+        // 窗口控制
+        function closeWindow() {
+            showConfirmModal('关闭窗口', '确定要关闭应用程序吗？', () => { window.close(); });
+        }
+        function minimizeWindow() { showInfoModal('窗口已最小化', '窗口已最小化到任务栏'); }
+        function maximizeWindow() { showInfoModal('窗口已最大化', '窗口已切换到最大化模式'); }
+
+        // 导航功能
+        function switchPage(pageId) {
+            const pages = document.querySelectorAll('main section');
+            pages.forEach(p => p.classList.add('hidden'));
+            const targetPage = document.getElementById('page-' + pageId);
+            if (targetPage) targetPage.classList.remove('hidden');
+            const navItems = document.querySelectorAll('.sidebar-item');
+            navItems.forEach(nav => {
+                nav.classList.remove('sidebar-item-active');
+                nav.classList.remove('text-gray-600');
+                nav.classList.add('text-[color:var(--mac-text-secondary)]');
+            });
+            const activeNav = document.getElementById('nav-' + pageId);
+            if (activeNav) {
+                activeNav.classList.add('sidebar-item-active');
+                activeNav.classList.remove('text-gray-600');
+                activeNav.classList.remove('text-[color:var(--mac-text-secondary)]');
+            }
+            const contentTitle = document.getElementById('content-title');
+            if (contentTitle && activeNav) {
+                contentTitle.textContent = activeNav.textContent.trim();
+            }
+            if (pageId === 'dashboard') {
+                setTimeout(initChart, 100);
+            }
+        }
+
+        // 搜索功能
+        function handleGlobalSearch(e) {
+            if (e.key === 'Enter') {
+                const keyword = e.target.value;
+                showInfoModal('搜索结果', `正在搜索: "${keyword}"<br>找到 0 个相关结果`);
+            }
+        }
+
+        // 通知下拉菜单
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notification-dropdown');
+            const userDropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('hidden');
+            if (userDropdown) userDropdown.classList.add('hidden');
+        }
+
+        function closeNotificationDropdown() {
+            document.getElementById('notification-dropdown').classList.add('hidden');
+        }
+
+        function showNotificationDetail(title, content) {
+            showModal(title, `
+                <div class="text-left">
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <p class="text-sm text-gray-600">${content}</p>
+                    </div>
+                    <p class="text-xs text-gray-400">10分钟前</p>
+                </div>
+            `, [{ text: '知道了', class: 'btn-primary', onclick: 'closeModal()' }]);
+            closeNotificationDropdown();
+        }
+
+        // 点击其他地方关闭下拉菜单
+        document.addEventListener('click', function(e) {
+            const notifDropdown = document.getElementById('notification-dropdown');
+            const notifBtn = e.target.closest('button[onclick*="toggleNotificationDropdown"]');
+            if (!notifBtn && notifDropdown) notifDropdown.classList.add('hidden');
+        });
+
+        // 活动中心功能
+        function showActivityDetailModal(activityName) {
+            showModal('活动详情', `
+                <div class="text-left">
+                    <h3 class="font-bold text-lg mb-2">${activityName}</h3>
+                    <p class="text-gray-500 text-sm mb-4">活动详情信息加载中...</p>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-xs text-gray-500">状态: 进行中</p>
+                        <p class="text-xs text-gray-500">进度: 65%</p>
+                        <p class="text-xs text-gray-500">负责人: 张晓星</p>
+                    </div>
+                </div>
+            `, [
+                { text: '关闭', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '编辑', class: 'btn-primary', onclick: 'closeModal(); showInfoModal("编辑活动", "活动编辑功能开发中")' }
+            ]);
+        }
+
+        // 任务功能
+        function showTaskDetailModal(taskName) {
+            showModal('任务详情', `
+                <div class="text-left">
+                    <h3 class="font-bold text-lg mb-2">${taskName}</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-xs text-gray-500">截止时间: 今天 18:00</p>
+                        <p class="text-xs text-gray-500">优先级: 高</p>
+                        <p class="text-xs text-gray-500">状态: 进行中</p>
+                    </div>
+                </div>
+            `, [
+                { text: '关闭', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '标记完成', class: 'btn-primary', onclick: 'closeModal(); showSuccessModal("任务完成", "任务已标记为完成")' }
+            ]);
+        }
+
+        // 新建活动
+        function showCreateActivityModal() {
+            showModal('新建活动', `
+                <div class="text-left space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">活动名称</label>
+                        <input type="text" class="form-input" placeholder="请输入活动名称" />
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">活动类型</label>
+                        <select class="form-input">
+                            <option>请选择活动类型</option>
+                            <option>年度项目</option>
+                            <option>专项活动</option>
+                            <option>常规活动</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">活动描述</label>
+                        <textarea class="form-input" rows="3" placeholder="请输入活动描述"></textarea>
+                    </div>
+                </div>
+            `, [
+                { text: '取消', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '创建', class: 'btn-primary', onclick: 'closeModal(); showSuccessModal("创建成功", "新活动已创建")' }
+            ]);
+        }
+
+        // 资源详情
+        function showResourceDetail(fileName) {
+            showModal('资源详情', `
+                <div class="text-left">
+                    <h3 class="font-bold text-lg mb-2">${fileName}</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg mb-3">
+                        <p class="text-xs text-gray-500">大小: 12.8 MB</p>
+                        <p class="text-xs text-gray-500">上传时间: 2026-03-10</p>
+                        <p class="text-xs text-gray-500">类型: ZIP压缩包</p>
+                    </div>
+                </div>
+            `, [
+                { text: '关闭', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '下载', class: 'btn-primary', onclick: 'closeModal(); showSuccessModal("下载成功", "文件已下载到本地")' }
+            ]);
+        }
+
+        // 上传资源弹窗
+        function showUploadResourceModal() {
+            showModal('上传资源', `
+                <div class="text-left space-y-4">
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-sm text-gray-500">拖拽文件到此处上传</p>
+                        <p class="text-xs text-gray-400 mt-2">支持 PDF、Word、Excel、图片、视频等文件</p>
+                    </div>
+                    <div class="text-center text-xs text-gray-400">或</div>
+                    <button class="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-folder-open mr-2"></i> 选择文件
+                    </button>
+                </div>
+            `, [
+                { text: '取消', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '上传', class: 'btn-primary', onclick: 'closeModal(); showSuccessModal("上传成功", "文件已上传到资源库")' }
+            ]);
+        }
+
+        // 知识库详情
+        function showKnowledgeDetail(docName) {
+            showModal('知识库文档', `
+                <div class="text-left">
+                    <h3 class="font-bold text-lg mb-2">${docName}</h3>
+                    <p class="text-gray-500 text-sm mb-4">本文档详细介绍了相关内容，请查阅。</p>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-xs text-gray-500">浏览: 1,234 次</p>
+                        <p class="text-xs text-gray-500">下载: 567 次</p>
+                        <p class="text-xs text-gray-500">更新时间: 2026-03-15</p>
+                    </div>
+                </div>
+            `, [
+                { text: '关闭', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '下载', class: 'btn-primary', onclick: 'closeModal(); showInfoModal("下载成功", "文档已下载到本地")' }
+            ]);
+        }
+
+        // 添加知识文档
+        function showAddKnowledgeModal() {
+            showModal('添加文档', `
+                <div class="text-left space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">文档标题</label>
+                        <input type="text" class="form-input" placeholder="请输入文档标题" />
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">文档分类</label>
+                        <select class="form-input">
+                            <option>请选择分类</option>
+                            <option>安全生产</option>
+                            <option>消防安全</option>
+                            <option>网络安全</option>
+                            <option>应急预案</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">文档类型</label>
+                        <select class="form-input">
+                            <option>请选择类型</option>
+                            <option>制度文档</option>
+                            <option>操作指南</option>
+                            <option>培训资料</option>
+                            <option>表单模板</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">文档描述</label>
+                        <textarea class="form-input" rows="3" placeholder="请输入文档描述"></textarea>
+                    </div>
+                </div>
+            `, [
+                { text: '取消', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '添加', class: 'btn-primary', onclick: 'closeModal(); showSuccessModal("添加成功", "文档已添加到知识库")' }
+            ]);
+        }
+
+        // 设置开关
+        function toggleSetting(el) {
+            el.classList.toggle('active');
+        }
+
+        // 更新日期显示
+        const dateEl = document.getElementById('current-date');
+        if (dateEl) {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            dateEl.textContent = now.toLocaleDateString('zh-CN', options);
+        }
+    </script>
+    
+    <div id="modal-container"></div>
+</body>
+
+</html>

@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a56a0">
+  <title>评价任务</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    body {
+      background: #e8edf2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .phone-shell {
+      width: 100%;
+      height: 100vh;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status-bar {
+      background: #1a56a0;
+      padding: 14px 28px 8px;
+      display: flex;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .status-time {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .status-icons {
+      display: flex;
+      gap: 6px;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .topbar {
+      background: #1a56a0;
+      padding: 18px;
+      flex-shrink: 0;
+    }
+
+    .topbar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      color: #fff;
+      font-size: 18px;
+      text-decoration: none;
+    }
+
+    .topbar-title {
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .add-btn {
+      background: rgba(255, 255, 255, 0.22);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 16px;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .filter-chip {
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      background: #fff;
+      color: #7090b0;
+      border: 1.5px solid #e0e8f4;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .filter-chip.active {
+      background: #1a56a0;
+      color: #fff;
+      border-color: #1a56a0;
+    }
+
+    .task-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(26, 86, 160, 0.07);
+    }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .task-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a2a44;
+    }
+
+    .task-type {
+      font-size: 11px;
+      color: #7090b0;
+      margin-top: 3px;
+    }
+
+    .task-status {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .task-divider {
+      height: 1px;
+      background: #f0f4fb;
+      margin: 10px 0;
+    }
+
+    .task-info-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .task-info-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: #7090b0;
+    }
+
+    .task-info-item i {
+      font-size: 11px;
+    }
+
+    /* Progress */
+    .task-progress-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-bg {
+      flex: 1;
+      height: 7px;
+      background: #f0f4fb;
+      border-radius: 4px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .progress-label {
+      font-size: 11px;
+      color: #90a0b5;
+    }
+
+    /* Assignee Avatars */
+    .assignees {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .assignee-tag {
+      background: #f4f6fb;
+      border-radius: 20px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: #5070a0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .assignee-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .task-btn {
+      flex: 1;
+      padding: 9px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+    }
+
+    .task-btn-primary {
+      background: #1a56a0;
+      color: #fff;
+    }
+
+    .task-btn-outline {
+      background: #f4f6fb;
+      color: #1a56a0;
+      border: 1.5px solid #d0e0f7;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a2a44;
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title i {
+      color: #1a56a0;
+    }
+
+    .bottom-nav {
+      background: #fff;
+      border-top: 1px solid #e8eef7;
+      display: flex;
+      padding: 8px 0 20px;
+      flex-shrink: 0;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+    }
+
+    .nav-item i {
+      font-size: 20px;
+      color: #b0bec5;
+    }
+
+    .nav-item span {
+      font-size: 10px;
+      color: #b0bec5;
+    }
+
+    .nav-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-center-btn {
+      width: 46px;
+      height: 46px;
+      background: linear-gradient(135deg, #1a56a0, #3a8ee8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -18px;
+      box-shadow: 0 4px 14px rgba(26, 86, 160, 0.4);
+    }
+
+    .nav-center-btn i {
+      color: #fff;
+      font-size: 20px;
+    }
+
+    .nav-center span {
+      font-size: 10px;
+      color: #b0bec5;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="phone-shell">
+    <div class="topbar">
+      <div class="topbar-row">
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+        <span class="topbar-title">评价任务</span>
+        <div class="add-btn" onclick="showCreateTaskModal()"><i class="fas fa-plus"></i> 新建任务</div>
+      </div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="filter-row">
+        <div class="filter-chip active" onclick="filterTasks(this, 'all')">全部</div>
+        <div class="filter-chip" onclick="filterTasks(this, 'pending')">待开始</div>
+        <div class="filter-chip" onclick="filterTasks(this, 'ongoing')">进行中</div>
+        <div class="filter-chip" onclick="filterTasks(this, 'ended')">已结束</div>
+      </div>
+
+      <div class="section-title"><i class="fas fa-clock"></i> 待开始（2）</div>
+
+      <!-- Pending Task 1 -->
+      <div class="task-card" data-status="pending">
+        <div class="task-header">
+          <div>
+            <div class="task-title">第 9 周课堂教学评价</div>
+            <div class="task-type">周次评价 · 全员参与</div>
+          </div>
+          <div class="task-status" style="background:#f0f4fb;color:#90a0b5;">待开始</div>
+        </div>
+        <div class="task-divider"></div>
+        <div class="task-info-row">
+          <div class="task-info-item"><i class="fas fa-calendar-alt" style="color:#b0c4e0;"></i> 2025-03-28 至 04-04
+          </div>
+          <div class="task-info-item"><i class="fas fa-clock" style="color:#90a0b5;"></i> 5 天后开始</div>
+        </div>
+        <div class="assignees">
+          <div class="assignee-tag">
+            <div class="assignee-dot" style="background:#1a56a0;"></div>参与班级：6 个
+          </div>
+        </div>
+        <div class="task-actions">
+          <div class="task-btn task-btn-outline" style="flex:1;">查看要求</div>
+        </div>
+      </div>
+
+      <!-- Pending Task 2 -->
+      <div class="task-card" data-status="pending">
+        <div class="task-header">
+          <div>
+            <div class="task-title">学生学习效果追踪调查</div>
+            <div class="task-type">问卷调查 · 月度调研</div>
+          </div>
+          <div class="task-status" style="background:#f0f4fb;color:#90a0b5;">待开始</div>
+        </div>
+        <div class="task-divider"></div>
+        <div class="task-info-row">
+          <div class="task-info-item"><i class="fas fa-calendar-alt" style="color:#b0c4e0;"></i> 2025-04-01 至 04-07
+          </div>
+          <div class="task-info-item"><i class="fas fa-clock" style="color:#90a0b5;"></i> 9 天后开始</div>
+        </div>
+        <div class="assignees">
+          <div class="assignee-tag">
+            <div class="assignee-dot" style="background:#1a56a0;"></div>调查对象：全体
+          </div>
+        </div>
+        <div class="task-actions">
+          <div class="task-btn task-btn-outline" style="flex:1;">查看方案</div>
+        </div>
+      </div>
+
+      <div class="section-title"><i class="fas fa-fire"></i> 进行中（3）</div>
+
+      <!-- Task 1 -->
+      <div class="task-card" data-status="ongoing">
+        <div class="task-header">
+          <div>
+            <div class="task-title">第 8 周课堂教学评价</div>
+            <div class="task-type">周次评价 · 全员参与</div>
+          </div>
+          <div class="task-status" style="background:#fff3e6;color:#e07020;">进行中</div>
+        </div>
+        <div class="task-divider"></div>
+        <div class="task-info-row">
+          <div class="task-info-item"><i class="fas fa-calendar-alt" style="color:#b0c4e0;"></i> 2025-03-21 至 03-28
+          </div>
+          <div class="task-info-item"><i class="fas fa-exclamation-circle" style="color:#e07020;"></i> 剩余 7 天</div>
+        </div>
+        <div class="task-progress-row">
+          <div class="progress-label">完成进度</div>
+          <div class="progress-bg">
+            <div class="progress-fill" style="width:40%;background:linear-gradient(90deg,#e07020,#f5a623)"></div>
+          </div>
+          <div class="progress-text" style="color:#e07020;">40%</div>
+        </div>
+        <div class="assignees">
+          <div class="assignee-tag">
+            <div class="assignee-dot" style="background:#1a9c5a;"></div>已完成：3 班
+          </div>
+          <div class="assignee-tag">
+            <div class="assignee-dot" style="background:#e07020;"></div>待完成：3 班
+          </div>
+        </div>
+        <div class="task-actions">
+          <a href="eval-form.html" class="task-btn task-btn-primary">立即评价</a>
+          <div class="task-btn task-btn-outline" onclick="showTaskDetail('第 8 周课堂教学评价','周次评价','2025-03-21 至 03-28','40%')">查看详情</div>
+        </div>
+      </div>
+
+      <!-- Task 2 -->
+      <div class="task-card" data-status="ongoing">
+        <div class="task-header">
+          <div>
+            <div class="task-title">期中教学质量专项评价</div>
+            <div class="task-type">专项评价 · 教研室发布</div>
+          </div>
+          <div class="task-status" style="background:#fff3e6;color:#e07020;">进行中</div>
+        </div>
+        <div class="task-divider"></div>
+        <div class="task-info-row">
+          <div class="task-info-item"><i class="fas fa-calendar-alt" style="color:#b0c4e0;"></i> 2025-03-20 至 03-31
+          </div>
+          <div class="task-info-item"><i class="fas fa-exclamation-circle" style="color:#1a9c5a;"></i> 剩余 10 天</div>
+        </div>
+        <div class="task-progress-row">
+          <div class="progress-label">完成进度</div>
+          <div class="progress-bg">
+            <div class="progress-fill" style="width:25%;background:linear-gradient(90deg,#1a56a0,#3a8ee8)"></div>
+          </div>
+          <div class="progress-text" style="color:#1a56a0;">25%</div>
+        </div>
+        <div class="task-actions">
+          <a href="eval-form.html" class="task-btn task-btn-primary">开始评价</a>
+          <div class="task-btn task-btn-outline" onclick="showTaskDetail('期中教学质量专项评价','专项评价','2025-03-20 至 03-31','25%')">查看说明</div>
+        </div>
+      </div>
+
+      <!-- Task 3 -->
+      <div class="task-card" data-status="ongoing">
+        <div class="task-header">
+          <div>
+            <div class="task-title">学生学习成效自评问卷</div>
+            <div class="task-type">问卷调查 · 学生参与</div>
+          </div>
+          <div class="task-status" style="background:#fff3e6;color:#e07020;">进行中</div>
+        </div>
+        <div class="task-divider"></div>
+        <div class="task-info-row">
+          <div class="task-info-item"><i class="fas fa-calendar-alt" style="color:#b0c4e0;"></i> 2025-03-21 至 03-25
+          </div>
+          <div class="task-info-item"><i class="fas fa-exclamation-circle" style="color:#e05050;"></i> 剩余 3 天</div>
+        </div>
+        <div class="task-progress-row">
+          <div class="progress-label">完成进度</div>
+          <div class="progress-bg">
+            <div class="progress-fill" style="width:72%;background:linear-gradient(90deg,#6c35d4,#9a6dff)"></div>
+          </div>
+          <div class="progress-text" style="color:#6c35d4;">72%</div>
+        </div>
+        <div class="assignees">
+          <div class="assignee-tag">
+            <div class="assignee-dot" style="background:#6c35d4;"></div>已填写：31/42 人
+          </div>
+        </div>
+        <div class="task-actions">
+          <a href="questionnaire.html" class="task-btn task-btn-primary">查看问卷</a>
+          <div class="task-btn task-btn-outline" onclick="showToast('已发送催交通知')">催交提醒</div>
+        </div>
+      </div>
+
+      <div class="section-title"><i class="fas fa-check-double"></i> 已结束（5）</div>
+
+      <!-- Completed Task -->
+      <div class="task-card" data-status="ended" style="opacity:0.7;">
+        <div class="task-header">
+          <div>
+            <div class="task-title">第 7 周课堂教学评价</div>
+            <div class="task-type">周次评价</div>
+          </div>
+          <div class="task-status" style="background:#e6f9f0;color:#1a9c5a;">已完成</div>
+        </div>
+        <div class="task-info-row" style="margin-top:8px;">
+          <div class="task-info-item"><i class="fas fa-calendar-alt" style="color:#b0c4e0;"></i> 2025-03-07 至 03-14
+          </div>
+          <div class="task-info-item"><i class="fas fa-star" style="color:#f5a623;"></i> 综合得分：92</div>
+        </div>
+        <div class="task-actions">
+          <a href="report.html" class="task-btn task-btn-outline">查看报告</a>
+        </div>
+      </div>
+
+      <div class="task-card" data-status="ended" style="opacity:0.7;">
+        <div class="task-header">
+          <div>
+            <div class="task-title">第 6 周课堂教学评价</div>
+            <div class="task-type">周次评价</div>
+          </div>
+          <div class="task-status" style="background:#e6f9f0;color:#1a9c5a;">已完成</div>
+        </div>
+        <div class="task-info-row" style="margin-top:8px;">
+          <div class="task-info-item"><i class="fas fa-calendar-alt" style="color:#b0c4e0;"></i> 2025-02-28 至 03-07
+          </div>
+          <div class="task-info-item"><i class="fas fa-star" style="color:#f5a623;"></i> 综合得分：88</div>
+        </div>
+        <div class="task-actions">
+          <a href="report.html" class="task-btn task-btn-outline">查看报告</a>
+        </div>
+      </div>
+
+      <div style="height:10px;"></div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <a href="index.html" class="nav-item"><i class="fas fa-home"></i><span>首页</span></a>
+      <a href="evaluation.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>评价</span></a>
+      <div class="nav-center">
+        <a href="task.html" class="nav-center-btn">
+          <i class="fas fa-plus"></i>
+        </a>
+        <span>任务</span>
+      </div>
+      <a href="analysis.html" class="nav-item"><i class="fas fa-chart-pie"></i><span>分析</span></a>
+      <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>我的</span></a>
+    </div>
+
+    <!-- Create Task Modal -->
+    <div class="modal-overlay" id="createTaskModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">新建评价任务</span>
+          <span class="modal-close" onclick="closeCreateTaskModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body">
+          <div class="form-item">
+            <label class="form-label">任务名称</label>
+            <input type="text" class="form-input" placeholder="请输入任务名称，如：第 9 周课堂教学评价">
+          </div>
+          <div class="form-item">
+            <label class="form-label">任务类型</label>
+            <select class="form-input">
+              <option>周次评价</option>
+              <option>专项评价</option>
+              <option>问卷调查</option>
+              <option>学生自评</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label class="form-label">参与班级</label>
+            <div class="class-selector">
+              <div class="class-option" onclick="toggleClass(this)">
+                <i class="fas fa-check-circle"></i> 22 计算机 1 班
+              </div>
+              <div class="class-option" onclick="toggleClass(this)">
+                <i class="fas fa-check-circle"></i> 22 电子商务 2 班
+              </div>
+              <div class="class-option" onclick="toggleClass(this)">
+                <i class="fas fa-check-circle"></i> 22 汽修 1 班
+              </div>
+              <div class="class-option" onclick="toggleClass(this)">
+                <i class="fas fa-check-circle"></i> 22 护理 3 班
+              </div>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">时间范围</label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" class="form-input" placeholder="开始日期" style="flex:1;">
+              <input type="text" class="form-input" placeholder="结束日期" style="flex:1;">
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">任务说明</label>
+            <textarea class="form-input" rows="3" placeholder="请输入任务说明和要求..."></textarea>
+          </div>
+          <div class="modal-btn-row">
+            <div class="modal-btn modal-btn-cancel" onclick="closeCreateTaskModal()">取消</div>
+            <div class="modal-btn modal-btn-confirm" onclick="createTask()">创建任务</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Detail Modal -->
+    <div class="modal-overlay" id="taskDetailModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">任务详情</span>
+          <span class="modal-close" onclick="closeTaskDetailModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body" id="taskDetailContent">
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <i class="fas fa-check-circle"></i>
+      <span id="toastMessage">操作成功</span>
+    </div>
+
+    <style>
+      /* Modal Styles */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: flex-end;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: #fff;
+        width: 100%;
+        max-height: 80vh;
+        border-radius: 20px 20px 0 0;
+        padding: 0 0 20px;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+      }
+
+      .modal-overlay.active .modal-content {
+        transform: translateY(0);
+      }
+
+      .modal-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f4fb;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .modal-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1a2a44;
+        text-align: center;
+        flex: 1;
+      }
+
+      .modal-close {
+        color: #b0bec5;
+        font-size: 18px;
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-body {
+        padding: 16px 20px;
+        overflow-y: auto;
+        max-height: calc(80vh - 60px);
+      }
+
+      .form-item {
+        margin-bottom: 14px;
+      }
+
+      .form-label {
+        font-size: 12px;
+        color: #90a0b5;
+        margin-bottom: 6px;
+        display: block;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 12px;
+        border: 1.5px solid #e0e8f4;
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: 'Noto Sans SC', sans-serif;
+        color: #1a2a44;
+        box-sizing: border-box;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: #1a56a0;
+      }
+
+      .class-selector {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .class-option {
+        padding: 10px;
+        background: #f8f9fb;
+        border-radius: 8px;
+        font-size: 12px;
+        color: #1a2a44;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+      }
+
+      .class-option i {
+        color: #d0d0d0;
+        font-size: 14px;
+      }
+
+      .class-option.selected {
+        background: #e8f1ff;
+        color: #1a56a0;
+      }
+
+      .class-option.selected i {
+        color: #1a56a0;
+      }
+
+      .modal-btn-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .modal-btn {
+        flex: 1;
+        padding: 12px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+        cursor: pointer;
+        border: none;
+      }
+
+      .modal-btn-cancel {
+        background: #f4f6fb;
+        color: #7090b0;
+      }
+
+      .modal-btn-confirm {
+        background: #1a56a0;
+        color: #fff;
+      }
+
+      .task-detail-card {
+        background: #f8f9fb;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+      }
+
+      .task-detail-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1a2a44;
+        margin-bottom: 8px;
+      }
+
+      .task-detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #e8eef7;
+        font-size: 13px;
+      }
+
+      .task-detail-row:last-child {
+        border-bottom: none;
+      }
+
+      .task-detail-label {
+        color: #90a0b5;
+      }
+
+      .task-detail-value {
+        color: #1a2a44;
+        font-weight: 500;
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        background: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        padding: 14px 24px;
+        border-radius: 10px;
+        font-size: 14px;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        z-index: 2000;
+        opacity: 0;
+        transition: all 0.3s ease;
+      }
+
+      .toast.show {
+        display: flex;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .toast i {
+        color: #4caf50;
+      }
+    </style>
+
+    <script>
+      // Filter Tasks
+      function filterTasks(el, type) {
+        document.querySelectorAll('.filter-chip').forEach(function(chip) {
+          chip.classList.remove('active');
+        });
+        el.classList.add('active');
+
+        document.querySelectorAll('.task-card').forEach(function(card) {
+          if (type === 'all') {
+            card.style.display = 'block';
+          } else if (card.getAttribute('data-status') === type) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        // Update section titles
+        var counts = {pending: 0, ongoing: 0, ended: 0};
+        document.querySelectorAll('.task-card').forEach(function(card) {
+          if (card.style.display !== 'none') {
+            var status = card.getAttribute('data-status');
+            if (counts[status] !== undefined) counts[status]++;
+          }
+        });
+
+        document.querySelectorAll('.section-title').forEach(function(title) {
+          if (title.innerHTML.includes('待开始')) {
+            title.innerHTML = '<i class="fas fa-clock"></i> 待开始（' + counts.pending + '）';
+          } else if (title.innerHTML.includes('进行中')) {
+            title.innerHTML = '<i class="fas fa-fire"></i> 进行中（' + counts.ongoing + '）';
+          } else if (title.innerHTML.includes('已结束')) {
+            title.innerHTML = '<i class="fas fa-check-double"></i> 已结束（' + counts.ended + '）';
+          }
+        });
+      }
+
+      // Create Task Modal
+      function showCreateTaskModal() {
+        document.getElementById('createTaskModal').classList.add('active');
+      }
+
+      function closeCreateTaskModal() {
+        document.getElementById('createTaskModal').classList.remove('active');
+      }
+
+      function toggleClass(el) {
+        el.classList.toggle('selected');
+      }
+
+      function createTask() {
+        closeCreateTaskModal();
+        showToast('任务创建成功');
+        setTimeout(function() {
+          window.location.reload();
+        }, 1000);
+      }
+
+      // Task Detail Modal
+      function showTaskDetail(title, type, time, progress) {
+        var content = document.getElementById('taskDetailContent');
+        content.innerHTML = `
+          <div class="task-detail-card">
+            <div class="task-detail-title">${title}</div>
+            <div class="task-detail-row">
+              <span class="task-detail-label">任务类型</span>
+              <span class="task-detail-value">${type}</span>
+            </div>
+            <div class="task-detail-row">
+              <span class="task-detail-label">时间范围</span>
+              <span class="task-detail-value">${time}</span>
+            </div>
+            <div class="task-detail-row">
+              <span class="task-detail-label">完成进度</span>
+              <span class="task-detail-value" style="color:#1a56a0;">${progress}</span>
+            </div>
+            <div class="task-detail-row">
+              <span class="task-detail-label">参与班级</span>
+              <span class="task-detail-value">6 个班级</span>
+            </div>
+            <div class="task-detail-row">
+              <span class="task-detail-label">任务状态</span>
+              <span class="task-detail-value" style="color:#e07020;">进行中</span>
+            </div>
+          </div>
+          <div style="background:#fff8e6;border-radius:10px;padding:12px;margin-bottom:12px;">
+            <div style="font-size:12px;color:#806030;line-height:1.6;">
+              <i class="fas fa-info-circle" style="color:#f5a623;margin-right:6px;"></i>
+              请全体教师按时完成评价任务，评价结果将作为教学质量评估的重要依据。
+            </div>
+          </div>
+          <div class="modal-btn-row">
+            <div class="modal-btn modal-btn-cancel" onclick="closeTaskDetailModal()">关闭</div>
+            <a href="eval-form.html" class="modal-btn modal-btn-confirm" style="text-decoration:none;">立即评价</a>
+          </div>
+        `;
+        document.getElementById('taskDetailModal').classList.add('active');
+      }
+
+      function closeTaskDetailModal() {
+        document.getElementById('taskDetailModal').classList.remove('active');
+      }
+
+      // Toast Function
+      function showToast(message) {
+        var toast = document.getElementById('toast');
+        var toastMessage = document.getElementById('toastMessage');
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+        setTimeout(function() {
+          toast.classList.remove('show');
+        }, 2000);
+      }
+
+      // Close modal when clicking overlay
+      document.getElementById('createTaskModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCreateTaskModal();
+      });
+
+      document.getElementById('taskDetailModal').addEventListener('click', function(e) {
+        if (e.target === this) closeTaskDetailModal();
+      });
+    </script>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工业机器人智能定位抓取控制系统</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --mac-bg: #1a1a2e;
+      --window-bg: #1e1e2e;
+      --titlebar: #2a2a3e;
+      --sidebar-bg: #232336;
+      --card-bg: #2a2a40;
+      --card-border: #3a3a55;
+      --text-primary: #e0e0ec;
+      --text-secondary: #8888a8;
+      --text-dim: #5a5a78;
+      --accent-blue: #4a9eff;
+      --accent-green: #34d399;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #a78bfa;
+      --accent-cyan: #22d3ee;
+      --divider: #333350;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpg') no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .mac-window {
+      width: 1280px;
+      max-width: 96vw;
+      background: var(--window-bg);
+      border-radius: 12px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .title-bar {
+      height: 52px;
+      background: var(--titlebar);
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .title-bar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .toolbar {
+      height: 42px;
+      background: linear-gradient(180deg, #2a2a3e, #252538);
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 2px;
+    }
+
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      color: var(--text-secondary);
+      font-size: 11.5px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-primary);
+    }
+
+    .tool-btn:active {
+      transform: scale(0.97);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .tool-btn i {
+      font-size: 12px;
+    }
+
+    .tool-btn.primary {
+      color: var(--accent-blue);
+    }
+
+    .tool-btn.success {
+      color: var(--accent-green);
+    }
+
+    .tool-btn.danger {
+      color: var(--accent-red);
+    }
+
+    .tool-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--divider);
+      margin: 0 6px;
+    }
+
+    .toolbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px 3px 6px;
+      background: rgba(74, 158, 255, 0.12);
+      border: 1px solid rgba(74, 158, 255, 0.25);
+      border-radius: 12px;
+      color: var(--accent-blue);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .user-badge:hover {
+      background: rgba(74, 158, 255, 0.2);
+    }
+
+    .user-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .main-layout {
+      display: flex;
+      height: 620px;
+    }
+
+    .sidebar {
+      width: 200px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--divider);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 14px 14px 10px;
+      color: var(--text-dim);
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-item {
+      padding: 7px 12px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 6px 2px;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+
+    .nav-item:active {
+      transform: scale(0.98);
+    }
+
+    .nav-item.active {
+      background: rgba(74, 158, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .nav-item i {
+      width: 14px;
+      height: 14px;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 12px 14px;
+      border-top: 1px solid var(--divider);
+    }
+
+    .robot-status {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .robot-label {
+      color: var(--text-dim);
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .robot-name {
+      color: var(--text-primary);
+      font-size: 11.5px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .robot-meta {
+      display: flex;
+      gap: 12px;
+    }
+
+    .robot-meta span {
+      color: var(--text-dim);
+      font-size: 10px;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--window-bg);
+    }
+
+    .tab-bar {
+      display: flex;
+      background: #222233;
+      border-bottom: 1px solid var(--divider);
+      overflow-x: auto;
+    }
+
+    .tab {
+      padding: 9px 18px;
+      color: var(--text-dim);
+      font-size: 12px;
+      cursor: pointer;
+      border-right: 1px solid var(--divider);
+      white-space: nowrap;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .tab:hover {
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tab.active {
+      color: var(--text-primary);
+      background: var(--window-bg);
+    }
+
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent-blue);
+    }
+
+    .content-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      align-content: start;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      color: var(--text-primary);
+      font-size: 12.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .dot-blue { background: var(--accent-blue); }
+    .dot-green { background: var(--accent-green); }
+    .dot-orange { background: var(--accent-orange); }
+    .dot-purple { background: var(--accent-purple); }
+    .dot-red { background: var(--accent-red); }
+    .dot-cyan { background: var(--accent-cyan); }
+
+    .card-badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .badge-running {
+      background: rgba(52, 211, 153, 0.12);
+      color: var(--accent-green);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+
+    .badge-online {
+      background: rgba(52, 211, 153, 0.12);
+      color: var(--accent-green);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+
+    .badge-warning {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--accent-orange);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-info {
+      background: rgba(74, 158, 255, 0.12);
+      color: var(--accent-blue);
+      border: 1px solid rgba(74, 158, 255, 0.2);
+    }
+
+    .card-body {
+      padding: 14px;
+    }
+
+    .stat-cards {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat-block {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-block::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+
+    .stat-block.blue::before { background: linear-gradient(90deg, var(--accent-blue), transparent); }
+    .stat-block.green::before { background: linear-gradient(90deg, var(--accent-green), transparent); }
+    .stat-block.orange::before { background: linear-gradient(90deg, var(--accent-orange), transparent); }
+    .stat-block.purple::before { background: linear-gradient(90deg, var(--accent-purple), transparent); }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 3px;
+    }
+
+    .stat-value.blue { color: var(--accent-blue); }
+    .stat-value.green { color: var(--accent-green); }
+    .stat-value.orange { color: var(--accent-orange); }
+    .stat-value.purple { color: var(--accent-purple); }
+    .stat-value.cyan { color: var(--accent-cyan); }
+
+    .stat-label {
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+
+    .stat-sub {
+      color: var(--text-dim);
+      font-size: 10px;
+      margin-top: 4px;
+    }
+
+    .robot-view {
+      grid-column: 1 / 3;
+      grid-row: 2 / 4;
+    }
+
+    .robot-canvas {
+      height: 280px;
+      background: #181828;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .robot-canvas svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .canvas-overlay {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .coord-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--accent-cyan);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .joint-card {
+      grid-column: 3;
+      grid-row: 2 / 3;
+    }
+
+    .joint-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .joint-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .joint-name {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .joint-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent-cyan);
+    }
+
+    .joint-bar {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 2px;
+      margin-top: 3px;
+      overflow: hidden;
+    }
+
+    .joint-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 1s ease;
+    }
+
+    .task-card {
+      grid-column: 3;
+      grid-row: 3 / 4;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .task-item:last-child {
+      border-bottom: none;
+    }
+
+    .task-status {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .task-status.running {
+      background: var(--accent-green);
+      box-shadow: 0 0 4px rgba(52, 211, 153, 0.5);
+    }
+
+    .task-status.queued {
+      background: var(--accent-orange);
+    }
+
+    .task-status.done {
+      background: var(--text-dim);
+    }
+
+    .task-name {
+      flex: 1;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .side-info {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .info-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .info-card h4 {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .mini-chart {
+      height: 60px;
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      padding: 0 4px;
+    }
+
+    .mini-bar {
+      flex: 1;
+      border-radius: 2px 2px 0 0;
+      min-height: 4px;
+      transition: height 0.3s ease;
+    }
+
+    .alert-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .alert-item:last-child {
+      border-bottom: none;
+    }
+
+    .alert-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+
+    .alert-icon.warn {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .alert-icon.error {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+    }
+
+    .alert-icon.info {
+      background: rgba(74, 158, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .alert-text {
+      flex: 1;
+      color: var(--text-secondary);
+    }
+
+    .alert-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .status-bar {
+      height: 26px;
+      background: #222233;
+      border-top: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+    }
+
+    .status-item {
+      color: var(--text-dim);
+      font-size: 10.5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    .status-right {
+      margin-left: auto;
+      display: flex;
+      gap: 14px;
+    }
+
+    .progress-mini {
+      width: 60px;
+      height: 3px;
+      background: var(--card-border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-mini-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 2px;
+      width: 78%;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      min-width: 380px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: var(--titlebar);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .modal-traffic-lights {
+      position: absolute;
+      left: 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .modal-traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .modal-traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .modal-title {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 16px;
+    }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--divider);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background: var(--card-border);
+      color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+      background: #444460;
+      color: var(--text-primary);
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #5aadff;
+    }
+
+    .btn-success {
+      background: var(--accent-green);
+      color: #0a2020;
+    }
+
+    .btn-success:hover {
+      background: #4fe3ad;
+    }
+
+    .btn-danger {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #f87171;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      color: var(--text-dim);
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1a1a2e;
+      border: 1px solid var(--card-border);
+      border-radius: 5px;
+      color: var(--text-primary);
+      font-size: 12px;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1a1a2e;
+      border: 1px solid var(--card-border);
+      border-radius: 5px;
+      color: var(--text-primary);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    .checkbox-item span {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .run-progress {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .run-progress-text {
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .run-progress-bar {
+      height: 6px;
+      background: var(--card-border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .run-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .run-progress-percent {
+      color: var(--accent-blue);
+      font-size: 18px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .param-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .param-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .param-item:last-child {
+      border-bottom: none;
+    }
+
+    .param-name {
+      flex: 1;
+      color: var(--text-secondary);
+      font-size: 11.5px;
+    }
+
+    .param-value {
+      width: 70px;
+      padding: 4px 6px;
+      background: #1a1a2e;
+      border: 1px solid var(--card-border);
+      border-radius: 3px;
+      color: var(--text-primary);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      animation: fadeIn 0.4s ease both;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.2s; }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <span class="title-bar-text">工业机器人智能定位抓取控制系统</span>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool-btn primary" id="btnStart">
+        <i class="fa-solid fa-play"></i>
+        启动系统
+      </button>
+      <button class="tool-btn danger" id="btnStop">
+        <i class="fa-solid fa-stop"></i>
+        停止系统
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnConnect">
+        <i class="fa-solid fa-plug"></i>
+        连接机器人
+      </button>
+      <button class="tool-btn" id="btnCalibrate">
+        <i class="fa-solid fa-crosshairs"></i>
+        校准
+      </button>
+      <button class="tool-btn success" id="btnRunTask">
+        <i class="fa-solid fa-robot"></i>
+        运行任务
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnMonitor">
+        <i class="fa-solid fa-chart-line"></i>
+        监控面板
+      </button>
+      <button class="tool-btn" id="btnDataExport">
+        <i class="fa-solid fa-file-export"></i>
+        数据导出
+      </button>
+      <div class="toolbar-right">
+        <div class="user-badge">
+          <img class="user-avatar" src="https://i02piccdn.sogoucdn.com/93b2fc982f88939f" alt="王晓岚头像">
+          王晓岚
+        </div>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">功能导航</div>
+        <nav>
+          <a class="nav-item active" href="./main.html">
+            <i class="fa-solid fa-house"></i>
+            系统概览
+          </a>
+          <a class="nav-item" href="./vision.html">
+            <i class="fa-solid fa-eye"></i>
+            视觉定位
+          </a>
+          <a class="nav-item" href="./control.html">
+            <i class="fa-solid fa-gamepad"></i>
+            运动控制
+          </a>
+          <a class="nav-item" href="./task.html">
+            <i class="fa-solid fa-list-check"></i>
+            任务编排
+          </a>
+          <a class="nav-item" href="./statistics.html">
+            <i class="fa-solid fa-chart-bar"></i>
+            数据统计
+          </a>
+          <a class="nav-item" href="./alarm.html">
+            <i class="fa-solid fa-bell"></i>
+            报警管理
+          </a>
+          <a class="nav-item" href="./maintenance.html">
+            <i class="fa-solid fa-wrench"></i>
+            维护管理
+          </a>
+          <a class="nav-item" href="./log.html">
+            <i class="fa-solid fa-file-lines"></i>
+            运行日志
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="robot-status">
+            <div class="robot-label">当前机器人</div>
+            <div class="robot-name">FANUC M-20iD/25</div>
+            <div class="robot-meta">
+              <span>192.168.1.100</span>
+              <span>在线</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <div class="content-body">
+          <div class="stat-cards">
+            <div class="stat-block blue">
+              <div class="stat-value blue" id="grab-count">1,247</div>
+              <div class="stat-label">今日抓取次数</div>
+              <div class="stat-sub" style="color:var(--accent-green)">+12.3% 较昨日</div>
+            </div>
+            <div class="stat-block green">
+              <div class="stat-value green">98.6%</div>
+              <div class="stat-label">抓取成功率</div>
+              <div class="stat-sub" style="color:var(--accent-green)">+0.4% 较昨日</div>
+            </div>
+            <div class="stat-block orange">
+              <div class="stat-value orange">0.02mm</div>
+              <div class="stat-label">平均定位精度</div>
+              <div class="stat-sub">偏差范围 +/-0.05</div>
+            </div>
+            <div class="stat-block purple">
+              <div class="stat-value purple" id="uptime">14:27</div>
+              <div class="stat-label">系统运行时长</div>
+              <div class="stat-sub">连续运行中</div>
+            </div>
+          </div>
+
+          <div class="card robot-view">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-green"></span> 机器人实时状态 - FANUC M-20iD/25</div>
+              <span class="card-badge badge-online">ONLINE</span>
+            </div>
+            <div class="robot-canvas">
+              <svg viewBox="0 0 600 280" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                    <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#2a2a44" stroke-width="0.5" />
+                  </pattern>
+                </defs>
+                <rect width="600" height="280" fill="url(#grid)" />
+
+                <ellipse cx="200" cy="250" rx="60" ry="15" fill="#2a3a5a" stroke="#4a6a9a" stroke-width="1" />
+                <rect x="170" y="220" width="60" height="30" rx="4" fill="#2a3a5a" stroke="#4a6a9a" stroke-width="1" />
+
+                <rect x="185" y="150" width="30" height="70" rx="6" fill="#3a4a6a" stroke="#5a7aaa" stroke-width="1" />
+                <circle cx="200" cy="155" r="12" fill="#3a4a6a" stroke="#5a7aaa" stroke-width="1.5" />
+                <circle cx="200" cy="155" r="4" fill="#4a9eff" />
+
+                <rect x="190" y="90" width="20" height="65" rx="5" fill="#3a4a6a" stroke="#5a7aaa" stroke-width="1" transform="rotate(-15, 200, 125)" />
+
+                <circle cx="195" cy="92" r="10" fill="#3a4a6a" stroke="#5a7aaa" stroke-width="1.5" />
+                <circle cx="195" cy="92" r="3.5" fill="#34d399" />
+
+                <rect x="195" y="50" width="16" height="50" rx="4" fill="#3a4a6a" stroke="#5a7aaa" stroke-width="1" transform="rotate(25, 210, 70)" />
+
+                <circle cx="230" cy="48" r="8" fill="#3a4a6a" stroke="#5a7aaa" stroke-width="1.5" />
+                <circle cx="230" cy="48" r="3" fill="#f59e0b" />
+
+                <rect x="235" y="38" width="40" height="12" rx="3" fill="#4a5a7a" stroke="#6a8aba" stroke-width="1" />
+                <rect x="272" y="32" width="5" height="24" rx="2" fill="#22d3ee" opacity="0.8" />
+                <rect x="280" y="32" width="5" height="24" rx="2" fill="#22d3ee" opacity="0.8" />
+
+                <rect x="310" y="36" width="22" height="22" rx="3" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 2" />
+                <rect x="314" y="40" width="14" height="14" rx="2" fill="#f59e0b" opacity="0.3" />
+
+                <line x1="321" y1="30" x2="321" y2="64" stroke="#ef4444" stroke-width="0.5" opacity="0.6" />
+                <line x1="304" y1="47" x2="338" y2="47" stroke="#ef4444" stroke-width="0.5" opacity="0.6" />
+
+                <g transform="translate(520, 220)">
+                  <line x1="0" y1="0" x2="30" y2="0" stroke="#ef4444" stroke-width="1.5" />
+                  <line x1="0" y1="0" x2="0" y2="-30" stroke="#34d399" stroke-width="1.5" />
+                  <line x1="0" y1="0" x2="-15" y2="15" stroke="#4a9eff" stroke-width="1.5" />
+                  <text x="33" y="4" fill="#ef4444" font-size="9" font-family="JetBrains Mono">X</text>
+                  <text x="-4" y="-33" fill="#34d399" font-size="9" font-family="JetBrains Mono">Y</text>
+                  <text x="-24" y="22" fill="#4a9eff" font-size="9" font-family="JetBrains Mono">Z</text>
+                </g>
+
+                <text x="15" y="20" fill="#5a5a78" font-size="9" font-family="JetBrains Mono">TCP: [412.5, 87.3, -156.8]</text>
+                <text x="15" y="33" fill="#5a5a78" font-size="9" font-family="JetBrains Mono">RPY: [0.12, -1.45, 89.97]</text>
+              </svg>
+              <div class="canvas-overlay">
+                <div class="coord-display">X: 412.50 Y: 87.30 Z: -156.80</div>
+                <div class="coord-display">Speed: 120 mm/s</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card joint-card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-cyan"></span> 关节角度</div>
+            </div>
+            <div class="card-body">
+              <div class="joint-list">
+                <div>
+                  <div class="joint-row"><span class="joint-name">J1 基座</span><span class="joint-value">+45.20°</span></div>
+                  <div class="joint-bar"><div class="joint-bar-fill" style="width:62%;background:var(--accent-blue)"></div></div>
+                </div>
+                <div>
+                  <div class="joint-row"><span class="joint-name">J2 肩部</span><span class="joint-value">-32.80°</span></div>
+                  <div class="joint-bar"><div class="joint-bar-fill" style="width:48%;background:var(--accent-green)"></div></div>
+                </div>
+                <div>
+                  <div class="joint-row"><span class="joint-name">J3 肘部</span><span class="joint-value">+78.15°</span></div>
+                  <div class="joint-bar"><div class="joint-bar-fill" style="width:81%;background:var(--accent-orange)"></div></div>
+                </div>
+                <div>
+                  <div class="joint-row"><span class="joint-name">J4 腕部</span><span class="joint-value">+12.60°</span></div>
+                  <div class="joint-bar"><div class="joint-bar-fill" style="width:35%;background:var(--accent-purple)"></div></div>
+                </div>
+                <div>
+                  <div class="joint-row"><span class="joint-name">J5 腕部</span><span class="joint-value">-5.40°</span></div>
+                  <div class="joint-bar"><div class="joint-bar-fill" style="width:22%;background:var(--accent-cyan)"></div></div>
+                </div>
+                <div>
+                  <div class="joint-row"><span class="joint-name">J6 法兰</span><span class="joint-value">+89.97°</span></div>
+                  <div class="joint-bar"><div class="joint-bar-fill" style="width:75%;background:var(--accent-red)"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card task-card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-blue"></span> 当前任务队列</div>
+              <span class="card-badge badge-info">3 等待</span>
+            </div>
+            <div class="card-body">
+              <div class="task-list">
+                <div class="task-item">
+                  <div class="task-status running"></div>
+                  <span class="task-name">PCB板抓取 #0847</span>
+                  <span class="task-time">进行中</span>
+                </div>
+                <div class="task-item">
+                  <div class="task-status queued"></div>
+                  <span class="task-name">工件放置 - 工位A3</span>
+                  <span class="task-time">等待</span>
+                </div>
+                <div class="task-item">
+                  <div class="task-status queued"></div>
+                  <span class="task-name">料盘切换 #12</span>
+                  <span class="task-time">等待</span>
+                </div>
+                <div class="task-item">
+                  <div class="task-status done"></div>
+                  <span class="task-name">PCB板抓取 #0846</span>
+                  <span class="task-time">12:04</span>
+                </div>
+                <div class="task-item">
+                  <div class="task-status done"></div>
+                  <span class="task-name">质检定位 - B线</span>
+                  <span class="task-time">12:03</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-info" style="grid-column:1/-1">
+            <div class="info-card">
+              <h4><i class="fa-solid fa-chart-line" style="margin-right:6px;color:var(--accent-blue)"></i>每小时抓取量</h4>
+              <div class="mini-chart">
+                <div class="mini-bar" style="height:45%;background:var(--accent-blue)"></div>
+                <div class="mini-bar" style="height:62%;background:var(--accent-blue)"></div>
+                <div class="mini-bar" style="height:78%;background:var(--accent-blue)"></div>
+                <div class="mini-bar" style="height:55%;background:var(--accent-blue)"></div>
+                <div class="mini-bar" style="height:88%;background:var(--accent-blue)"></div>
+                <div class="mini-bar" style="height:95%;background:var(--accent-green)"></div>
+                <div class="mini-bar" style="height:82%;background:var(--accent-blue)"></div>
+                <div class="mini-bar" style="height:70%;background:var(--accent-blue)"></div>
+                <div class="mini-bar" style="height:60%;background:var(--accent-blue)"></div>
+                <div class="mini-bar" style="height:50%;background:var(--accent-blue)"></div>
+              </div>
+            </div>
+            <div class="info-card">
+              <h4><i class="fa-solid fa-bell" style="margin-right:6px;color:var(--accent-orange)"></i>最新报警</h4>
+              <div class="alert-item">
+                <div class="alert-icon warn"><i class="fa-solid fa-exclamation"></i></div>
+                <span class="alert-text">J3关节电流超限 4.8A</span>
+                <span class="alert-time">14:26</span>
+              </div>
+              <div class="alert-item">
+                <div class="alert-icon info"><i class="fa-solid fa-info"></i></div>
+                <span class="alert-text">视觉检测延迟 82ms</span>
+                <span class="alert-time">14:25</span>
+              </div>
+              <div class="alert-item">
+                <div class="alert-icon error"><i class="fa-solid fa-xmark"></i></div>
+                <span class="alert-text">任务#0839抓取失败</span>
+                <span class="alert-time">14:25</span>
+              </div>
+            </div>
+            <div class="info-card">
+              <h4><i class="fa-solid fa-microchip" style="margin-right:6px;color:var(--accent-purple)"></i>系统资源</h4>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:3px">
+                    <span>CPU 使用率</span><span style="color:var(--accent-green)">32%</span>
+                  </div>
+                  <div class="progress-mini"><div class="progress-mini-fill" style="width:32%"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:3px">
+                    <span>内存占用</span><span style="color:var(--accent-blue)">48%</span>
+                  </div>
+                  <div class="progress-mini"><div class="progress-mini-fill" style="width:48%;background:var(--accent-blue)"></div></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:3px">
+                    <span>GPU 使用率</span><span style="color:var(--accent-orange)">67%</span>
+                  </div>
+                  <div class="progress-mini"><div class="progress-mini-fill" style="width:67%;background:var(--accent-orange)"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-dot"></span>
+            系统就绪
+          </div>
+          <div class="status-item">机器人: 已连接</div>
+          <div class="status-item">视觉: 运行中</div>
+          <div class="status-item">任务执行: 1/4</div>
+          <div class="status-right">
+            <div class="status-item">FANUC M-20iD/25</div>
+            <div class="status-item">EtherNet/IP 2ms</div>
+            <div class="status-item">最后更新: 14:27:03</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.getElementById('btnStart').addEventListener('click', () => {
+      openModal(
+        '启动系统',
+        `<div style="text-align:center;padding:10px;">
+          <i class="fa-solid fa-power" style="font-size:48px;color:var(--accent-green);margin-bottom:16px;"></i>
+          <div style="color:var(--text-primary);font-size:14px;margin-bottom:8px;">确认启动机器人系统？</div>
+          <div style="color:var(--text-secondary);font-size:12px;">系统将建立与 FANUC 控制器的通信连接</div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-success" onclick="closeModal()">启动</button>`
+      );
+    });
+
+    document.getElementById('btnStop').addEventListener('click', () => {
+      openModal(
+        '停止系统',
+        `<div style="text-align:center;padding:10px;">
+          <i class="fa-solid fa-exclamation-triangle" style="font-size:48px;color:var(--accent-red);margin-bottom:16px;"></i>
+          <div style="color:var(--text-primary);font-size:14px;margin-bottom:8px;">确认停止机器人系统？</div>
+          <div style="color:var(--accent-red);font-size:12px;">警告：正在执行的任务将被中断！</div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-danger" onclick="closeModal()">确认停止</button>`
+      );
+    });
+
+    document.getElementById('btnConnect').addEventListener('click', () => {
+      openModal(
+        '连接机器人',
+        `<div class="form-group">
+          <label class="form-label">控制器类型</label>
+          <select class="form-select">
+            <option>FANUC R-30iB</option>
+            <option selected>FANUC R-30iB Plus</option>
+            <option>ABB IRC5</option>
+            <option>KUKA KRC4</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">IP地址</label>
+          <input type="text" class="form-input" value="192.168.1.100" placeholder="请输入机器人控制器IP">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">端口</label>
+            <input type="text" class="form-input" value="8080">
+          </div>
+          <div class="form-group">
+            <label class="form-label">超时(秒)</label>
+            <input type="text" class="form-input" value="5">
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" checked style="accent-color:var(--accent-blue)">
+            <span style="font-size:12px;color:var(--text-secondary)">自动重连</span>
+          </label>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="closeModal()">连接</button>`
+      );
+    });
+
+    document.getElementById('btnCalibrate').addEventListener('click', () => {
+      openModal(
+        '校准设置',
+        `<div class="form-group">
+          <label class="form-label">校准类型</label>
+          <select class="form-select">
+            <option>手眼标定</option>
+            <option>夹爪标定</option>
+            <option>原点复归</option>
+            <option>TCP标定</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">标定板类型</label>
+            <select class="form-select">
+              <option>9x6 棋盘格</option>
+              <option>7x5 棋盘格</option>
+              <option>CharUco</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">标定次数</label>
+            <input type="text" class="form-input" value="15">
+          </div>
+        </div>
+        <div style="padding:10px;background:rgba(74,158,255,0.1);border-radius:6px;border:1px solid rgba(74,158,255,0.2);margin-top:8px">
+          <div style="font-size:11px;color:var(--accent-blue);margin-bottom:4px">提示</div>
+          <div style="font-size:10px;color:var(--text-secondary)">校准过程需要人工配合放置标定板，预计用时3-5分钟</div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="closeModal()">开始校准</button>`
+      );
+    });
+
+    document.getElementById('btnRunTask').addEventListener('click', () => {
+      openModal(
+        '运行任务',
+        `<div class="form-group">
+          <label class="form-label">选择任务</label>
+          <select class="form-select">
+            <option>PCB板抓取流水线</option>
+            <option>IC芯片上料</option>
+            <option>模组装配</option>
+            <option>成品码垛</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">任务描述</label>
+          <div style="padding:8px;background:#1a1a2e;border-radius:5px;font-size:11px;color:var(--text-secondary);line-height:1.6">
+            从料盘抓取PCB板，放置到传送带A位置，循环执行100次
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">执行次数</label>
+            <input type="text" class="form-input" value="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label">速度比例</label>
+            <select class="form-select">
+              <option>50%</option>
+              <option selected>75%</option>
+              <option>100%</option>
+            </select>
+          </div>
+        </div>
+        <div class="checkbox-group" style="margin-top:8px">
+          <label class="checkbox-item">
+            <input type="checkbox" checked>
+            <span>完成后自动记录数据</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" checked>
+            <span>异常时自动暂停</span>
+          </label>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-success" onclick="closeModal()">开始执行</button>`
+      );
+    });
+
+    document.getElementById('btnMonitor').addEventListener('click', () => {
+      openModal(
+        '监控面板配置',
+        `<div class="form-group">
+          <label class="form-label">监控指标</label>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>关节角度实时显示</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>TCP位置坐标</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>抓取成功率统计</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox">
+              <span>关节负载曲线</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>任务执行进度</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:12px">
+          <div class="form-group">
+            <label class="form-label">刷新频率</label>
+            <select class="form-select">
+              <option>100ms</option>
+              <option selected>500ms</option>
+              <option>1s</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">数据保留</label>
+            <select class="form-select">
+              <option>最近1小时</option>
+              <option selected>最近8小时</option>
+              <option>最近24小时</option>
+            </select>
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="closeModal()">应用</button>`
+      );
+    });
+
+    document.getElementById('btnDataExport').addEventListener('click', () => {
+      openModal(
+        '数据导出',
+        `<div class="form-group">
+          <label class="form-label">导出格式</label>
+          <select class="form-select">
+            <option>Excel (.xlsx)</option>
+            <option>CSV (.csv)</option>
+            <option>JSON (.json)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">数据类型</label>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>任务执行记录</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>关节角度数据</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox">
+              <span>报警历史记录</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>统计汇总报表</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">开始日期</label>
+            <input type="date" class="form-input" value="2026-03-23">
+          </div>
+          <div class="form-group">
+            <label class="form-label">结束日期</label>
+            <input type="date" class="form-input" value="2026-03-23">
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="closeModal()">导出</button>`
+      );
+    });
+
+    document.querySelectorAll('.traffic-light').forEach(light => {
+      light.addEventListener('click', function() {
+        if (this.classList.contains('close')) {
+        } else if (this.classList.contains('minimize')) {
+        } else if (this.classList.contains('maximize')) {
+        }
+      });
+    });
+
+    let uptimeSeconds = 51623;
+    setInterval(() => {
+      uptimeSeconds++;
+      const h = Math.floor(uptimeSeconds / 3600);
+      const m = Math.floor((uptimeSeconds % 3600) / 60);
+      const el = document.getElementById('uptime');
+      if (el) el.textContent = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    }, 1000);
+
+    let grabCount = 1247;
+    setInterval(() => {
+      if (Math.random() > 0.7) {
+        grabCount++;
+        const el = document.getElementById('grab-count');
+        if (el) el.textContent = grabCount.toLocaleString();
+      }
+    }, 3000);
+  </script>
+</body>
+
+</html>

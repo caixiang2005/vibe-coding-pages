@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>消息通知 - 水利项目质量验收审核软件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <style>
+        body { background-color: #f0f4f8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .android-container { width: 100%; height: 100vh; overflow-y: auto; overflow-x: hidden; }
+        .android-container::-webkit-scrollbar { display: none; }
+        .btn-press:active { transform: scale(0.96); transition: transform 0.1s; }
+        .tab-btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .tab-btn.active { background: #2563eb; color: white; }
+        .tab-btn:not(.active) { background: #f3f4f6; color: #6b7280; }
+        .tab-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab-scroll::-webkit-scrollbar { display: none; }
+        .message-item { padding: 14px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.2s; }
+        .message-item:last-child { border-bottom: none; }
+        .message-item.unread { background: #eff6ff; margin: 0 -20px; padding: 14px 20px; }
+        .message-item:active { background: #dbeafe; }
+        .badge-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .type-tag { padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-900">
+    <div class="android-container bg-gray-50 flex flex-col">
+        <header class="bg-blue-700 text-white pt-12 pb-5 px-5 rounded-b-3xl shadow-lg">
+            <div class="flex items-center justify-between">
+                <a href="profile.html" class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 active:bg-blue-500 btn-press">
+                    <span class="iconify text-xl" data-icon="material-symbols:arrow-back"></span>
+                </a>
+                <h1 class="text-base font-bold text-center flex-1">水利项目质量验收审核软件</h1>
+                <div class="w-10"></div>
+            </div>
+            <p class="text-center text-blue-200 text-xs mt-1">消息通知</p>
+        </header>
+
+        <main class="flex-1 px-4 py-4 pb-8 -mt-2">
+            <div class="flex gap-2 mb-4 tab-scroll">
+                <button class="tab-btn active" onclick="switchTab(this, 'all')">全部</button>
+                <button class="tab-btn" onclick="switchTab(this, 'sys')">系统</button>
+                <button class="tab-btn" onclick="switchTab(this, 'audit')">审核</button>
+            </div>
+
+            <div class="space-y-3" id="messageList">
+                <div class="message-item unread" data-type="sys" onclick="viewMessage(this)">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="badge-dot bg-red-500"></span>
+                            <span class="text-sm font-medium text-gray-800">系统更新通知</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">今天 10:30</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="type-tag bg-blue-100 text-blue-600">系统</span>
+                        <span class="text-[10px] text-gray-400">版本 2.1.0</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed">系统已更新至最新版本，新增加密传输功能，优化了验收流程操作体验。</p>
+                </div>
+
+                <div class="message-item unread" data-type="audit" onclick="viewMessage(this)">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="badge-dot bg-orange-500"></span>
+                            <span class="text-sm font-medium text-gray-800">待验收任务提醒</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">今天 09:15</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="type-tag bg-orange-100 text-orange-600">审核</span>
+                        <span class="text-[10px] text-orange-500">待处理</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed">您有 1 条分部工程验收申请待处理，申请人：李志诚，申请项目：丹江口库区护坡工程 - 3号分部。</p>
+                    <div class="flex gap-2 mt-3">
+                        <button class="flex-1 py-2 bg-blue-600 text-white text-xs rounded-lg btn-press" onclick="event.stopPropagation(); handleAudit('pass', this)">通过</button>
+                        <button class="flex-1 py-2 bg-white border border-gray-300 text-gray-600 text-xs rounded-lg btn-press" onclick="event.stopPropagation(); handleAudit('reject', this)">驳回</button>
+                    </div>
+                </div>
+
+                <div class="message-item unread" data-type="sys" onclick="viewMessage(this)">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="badge-dot bg-purple-500"></span>
+                            <span class="text-sm font-medium text-gray-800">物联设备告警</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">昨天 22:30</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="type-tag bg-purple-100 text-purple-600">系统</span>
+                        <span class="text-[10px] text-purple-500">告警</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed">渗压计P2监测数据异常，当前值1.2超过安全阈值0.9，请及时检查设备状态。</p>
+                </div>
+
+                <div class="message-item" data-type="audit" onclick="viewMessage(this)">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="badge-dot bg-green-500"></span>
+                            <span class="text-sm font-medium text-gray-800">验收审核通过</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">03-18 16:45</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="type-tag bg-green-100 text-green-600">审核</span>
+                        <span class="text-[10px] text-green-500">已通过</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed">二号闸门启闭机安装 - 单元A-05 质量验收审核已通过，评定等级：优良。</p>
+                </div>
+
+                <div class="message-item" data-type="audit" onclick="viewMessage(this)">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="badge-dot bg-red-500"></span>
+                            <span class="text-sm font-medium text-gray-800">整改超时提醒</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">03-17 09:30</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="type-tag bg-red-100 text-red-600">审核</span>
+                        <span class="text-[10px] text-red-500">超时</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed">护坡混凝土强度不足问题（整改期限：2026-03-15）已超时，请尽快处理。</p>
+                </div>
+
+                <div class="message-item" data-type="sys" onclick="viewMessage(this)">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="badge-dot bg-blue-500"></span>
+                            <span class="text-sm font-medium text-gray-800">数据同步完成</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">03-16 18:00</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="type-tag bg-blue-100 text-blue-600">系统</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed">项目监测数据已成功同步至云端服务器，共同步 156 条监测记录。</p>
+                </div>
+
+                <div class="message-item" data-type="audit" onclick="viewMessage(this)">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="badge-dot bg-gray-400"></span>
+                            <span class="text-sm font-medium text-gray-800">报告生成完成</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">03-15 14:20</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="type-tag bg-gray-100 text-gray-600">审核</span>
+                        <span class="text-[10px] text-gray-500">已完成</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed">2026年3月工程质量月报已生成完毕，可前往报告生成模块查看和下载。</p>
+                </div>
+
+                <div class="message-item" data-type="sys" onclick="viewMessage(this)">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="badge-dot bg-cyan-500"></span>
+                            <span class="text-sm font-medium text-gray-800">账号安全提示</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">03-14 11:00</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="type-tag bg-cyan-100 text-cyan-600">系统</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed">您的账号于 03-14 10:58 在新设备上登录，如非本人操作请及时修改密码。</p>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <button class="text-sm text-blue-600 active:text-blue-800" onclick="markAllRead()">全部标为已读</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        var currentTab = 'all';
+
+        function switchTab(btn, type) {
+            currentTab = type;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterMessages();
+        }
+
+        function filterMessages() {
+            var items = document.querySelectorAll('.message-item');
+            items.forEach(function(item) {
+                if (currentTab === 'all' || item.dataset.type === currentTab) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function viewMessage(el) {
+            el.classList.remove('unread');
+            var dot = el.querySelector('.badge-dot');
+            if (dot) {
+                dot.classList.remove('bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-orange-500', 'bg-purple-500', 'bg-cyan-500');
+                dot.classList.add('bg-gray-300');
+            }
+        }
+
+        function handleAudit(action, btn) {
+            if (action === 'pass') {
+                btn.textContent = '已通过';
+                btn.disabled = true;
+                btn.classList.remove('bg-blue-600');
+                btn.classList.add('bg-green-500');
+                var nextBtn = btn.parentElement.querySelector('.border-gray-300');
+                if (nextBtn) {
+                    nextBtn.style.display = 'none';
+                }
+                alert('已通过该验收申请');
+            } else {
+                btn.textContent = '已驳回';
+                btn.disabled = true;
+                btn.classList.remove('bg-white', 'border', 'border-gray-300', 'text-gray-600');
+                btn.classList.add('bg-red-500', 'text-white');
+                var prevBtn = btn.parentElement.querySelector('.bg-blue-600');
+                if (prevBtn) {
+                    prevBtn.style.display = 'none';
+                }
+                alert('已驳回该验收申请');
+            }
+        }
+
+        function markAllRead() {
+            document.querySelectorAll('.message-item').forEach(function(item) {
+                item.classList.remove('unread');
+                var dot = item.querySelector('.badge-dot');
+                if (dot) {
+                    dot.classList.remove('bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-orange-500', 'bg-purple-500', 'bg-cyan-500');
+                    dot.classList.add('bg-gray-300');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

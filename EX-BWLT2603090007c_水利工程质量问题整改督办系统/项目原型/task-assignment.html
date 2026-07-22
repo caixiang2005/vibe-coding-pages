@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>任务分派 - 水利工程质量问题整改督办系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        :root { color-scheme: light; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        .desktop-shell { width: min(1720px, 100vw); height: min(1080px, 100vh); padding: 16px; box-sizing: border-box; }
+        .mac-window { height: 100%; border-radius: 18px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.55); background: rgba(248, 250, 253, 0.78); backdrop-filter: blur(20px) saturate(150%); box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08); }
+        .window-titlebar { height: 44px; border-bottom: 1px solid rgba(15, 23, 42, 0.08); background: linear-gradient(180deg, rgba(249, 251, 255, 0.92) 0%, rgba(240, 245, 252, 0.78) 100%); backdrop-filter: blur(22px); }
+        .sidebar-blur { background: linear-gradient(180deg, rgba(243, 247, 251, 0.88) 0%, rgba(236, 242, 249, 0.78) 100%); backdrop-filter: blur(24px); border-right: 1px solid rgba(148, 163, 184, 0.18); }
+        .glass-card { background: linear-gradient(165deg, rgba(255, 255, 255, 0.78), rgba(251, 253, 255, 0.62)); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.7); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); transition: transform 180ms ease, box-shadow 220ms ease, border-color 180ms ease; }
+        .glass-card:hover { transform: translateY(-2px); border-color: rgba(148, 163, 184, 0.28); box-shadow: 0 16px 30px rgba(15, 23, 42, 0.1); }
+        .toolbar-surface { background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(16px); border: 1px solid rgba(148, 163, 184, 0.12); }
+        .active-nav { background: linear-gradient(135deg, rgba(0, 87, 146, 0.18), rgba(0, 122, 255, 0.14)); color: #0b3d71; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(0, 87, 146, 0.08); }
+        .status-badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+        .mac-input { background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(148, 163, 184, 0.28); }
+        .mac-input:focus { border-color: rgba(0, 122, 255, 0.42); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12); outline: none; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.36); border-radius: 999px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .modal-box { background: white; border-radius: 16px; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25); min-width: 480px; max-width: 600px; }
+        .modal-header-center { padding: 14px 20px; border-bottom: 1px solid rgba(148, 163, 184, 0.2); display: flex; align-items: center; cursor: move; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid rgba(148, 163, 184, 0.2); display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #005792, #0074d9); color: white; padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 150ms ease; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 87, 146, 0.3); }
+        .btn-secondary { background: rgba(148, 163, 184, 0.15); color: #475569; padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(148, 163, 184, 0.3); cursor: pointer; transition: all 150ms ease; }
+        .btn-secondary:hover { background: rgba(148, 163, 184, 0.25); }
+        .task-card { cursor: pointer; transition: all 180ms ease; }
+        .task-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .tab-btn { transition: all 150ms ease; }
+        .tab-btn.active { background: #1e293b; color: white; }
+        .empty-state { padding: 40px 20px; text-align: center; color: #94a3b8; }
+        .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .progress-track { height: 6px; border-radius: 3px; background: rgba(0,0,0,0.08); overflow: hidden; }
+        .status-timeline { position: relative; padding-left: 20px; }
+        .status-timeline::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, #3b82f6, #10b981); }
+        .timeline-dot { width: 14px; height: 14px; border-radius: 50%; background: white; border: 3px solid #3b82f6; position: absolute; left: 0; top: 2px; }
+        .timeline-dot.completed { border-color: #10b981; background: #10b981; }
+        .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        @media (max-width: 1200px) { .card-grid { grid-template-columns: 1fr; } }
+        .line-clamp-2 { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .line-clamp-1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    </style>
+</head>
+<body class="min-h-screen overflow-hidden">
+    <div class="desktop-shell">
+        <div class="mac-window">
+            <header class="window-titlebar px-5 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                    </div>
+                </div>
+            </header>
+            <div class="h-[calc(100%-44px)] flex overflow-hidden">
+                <aside class="w-72 sidebar-blur flex flex-col h-full flex-shrink-0">
+                    <div class="p-6 pb-2">
+                        <div class="flex items-center space-x-3 mb-8">
+                            <div class="w-11 h-11 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                                <img alt="系统Logo" class="w-11 h-11 object-contain" src="./static/logo.png" />
+                            </div>
+                            <div>
+                                <h1 class="text-[13px] font-bold text-slate-800 tracking-tight">水利工程质量问题</h1>
+                                <h1 class="text-[13px] font-bold text-slate-800 tracking-tight">整改督办系统</h1>
+                                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">macOS 客户端</p>
+                            </div>
+                        </div>
+                        <nav class="space-y-1">
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="dashboard.html">
+                                <i class="fa-solid fa-chart-line text-lg"></i>
+                                <span class="text-sm">综合态势</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg active-nav transition-all" href="#">
+                                <i class="fa-solid fa-list-check text-lg"></i>
+                                <span class="text-sm">任务分派</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="rectification-tracking.html">
+                                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                                <span class="text-sm">整改跟踪</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="quality-statistics.html">
+                                <i class="fa-solid fa-chart-pie text-lg"></i>
+                                <span class="text-sm">质量统计</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="project-distribution.html">
+                                <i class="fa-solid fa-map-location-dot text-lg"></i>
+                                <span class="text-sm">项目分布</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="system-security.html">
+                                <i class="fa-solid fa-shield-halved text-lg"></i>
+                                <span class="text-sm">系统安全</span>
+                            </a>
+                        </nav>
+                    </div>
+                    <div class="mt-auto p-4 border-t border-slate-200/70 bg-white/40">
+                        <div class="flex items-center space-x-3">
+                            <img alt="User Profile" class="w-9 h-9 rounded-full ring-2 ring-white shadow-sm" src="https://i01piccdn.sogoucdn.com/6de4845d273e3386" />
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold text-slate-800 truncate">文丹</p>
+                                <p class="text-[10px] text-[#005792]">管理员</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+                <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+                    <header class="h-12 border-b border-slate-200/70 flex items-center justify-between px-4 toolbar-surface sticky top-0 z-10">
+                        <div class="flex items-center space-x-3">
+                            <div class="px-3 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-semibold tracking-wide">
+                                任务分派
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-semibold text-slate-700">任务分派管理</h2>
+                                <p class="text-[10px] text-slate-500">指派责任 · 跟踪落实 · 限时办结</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input id="searchInput" class="pl-9 pr-4 py-1.5 mac-input rounded-xl text-xs w-64 transition-all outline-none" placeholder="搜索任务名称或责任人..." type="text" />
+                            </div>
+                            <button onclick="openAddModal()" class="flex items-center space-x-2 px-4 py-1.5 bg-[#005792] text-white rounded-lg text-xs font-semibold hover:bg-[#004a7a] transition-colors">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>新增任务</span>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="flex-1 overflow-y-auto p-4 bg-[#f2f5fa]">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-4">
+                                <span class="text-sm text-slate-600">共 <span id="totalCount" class="font-bold text-[#005792]">0</span> 个任务</span>
+                                <div class="flex bg-white/75 rounded-xl p-1 shadow-sm border border-slate-200/70 backdrop-blur">
+                                    <button id="tabAll" onclick="switchTab('all')" class="tab-btn active px-4 py-1.5 text-xs font-medium rounded-lg">全部</button>
+                                    <button id="tabPending" onclick="switchTab('pending')" class="tab-btn px-4 py-1.5 text-xs font-medium text-slate-500 rounded-lg">待分派 <span id="pendingCount" class="ml-1 px-1.5 py-0.5 bg-red-100 text-red-600 rounded-full text-[10px]">0</span></button>
+                                    <button id="tabProcessing" onclick="switchTab('processing')" class="tab-btn px-4 py-1.5 text-xs font-medium text-slate-500 rounded-lg">处理中 <span id="processingCount" class="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[10px]">0</span></button>
+                                    <button id="tabCompleted" onclick="switchTab('completed')" class="tab-btn px-4 py-1.5 text-xs font-medium text-slate-500 rounded-lg">已完成 <span id="completedCount" class="ml-1 px-1.5 py-0.5 bg-green-100 text-green-600 rounded-full text-[10px]">0</span></button>
+                                </div>
+                            </div>
+                            <button onclick="openFilterModal()" class="flex items-center space-x-2 text-xs text-slate-500 hover:text-slate-700 transition-colors">
+                                <i class="fa-solid fa-filter"></i>
+                                <span id="filterStatus">筛选</span>
+                            </button>
+                        </div>
+
+                        <div id="taskContent"></div>
+                    </div>
+                    <footer class="h-8 border-t border-slate-200/70 px-4 flex items-center justify-between bg-white/75 backdrop-blur text-[10px] text-slate-500">
+                        <div class="flex items-center space-x-4">
+                            <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>数据中心连接正常</span>
+                            <span>最后同步: 2026-03-19 14:32:01</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span>版本: V1.0.0</span>
+                        </div>
+                    </footer>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header-center" id="addModalHeader">
+                <div class="flex space-x-2 mr-4">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 flex-1 text-center pr-8">新增整改任务</h3>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">问题标题 <span class="text-red-500">*</span></label>
+                        <input type="text" id="addTitle" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none" placeholder="请输入问题标题">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">紧急程度 <span class="text-red-500">*</span></label>
+                            <select id="addLevel" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none">
+                                <option value="">请选择</option>
+                                <option value="重大">重大</option>
+                                <option value="一般">一般</option>
+                                <option value="轻微">轻微</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">所属项目 <span class="text-red-500">*</span></label>
+                            <select id="addProject" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none">
+                                <option value="">请选择</option>
+                                <option value="南调干渠">南调干渠</option>
+                                <option value="东岗水库">东岗水库</option>
+                                <option value="青山闸加固">青山闸加固</option>
+                                <option value="黑水河堤防">黑水河堤防</option>
+                                <option value="渭河橡胶坝">渭河橡胶坝</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">责任人 <span class="text-red-500">*</span></label>
+                        <input type="text" id="addPerson" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none" placeholder="请输入责任人姓名">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">发现日期 <span class="text-red-500">*</span></label>
+                            <input type="date" id="addStartDate" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">截止日期 <span class="text-red-500">*</span></label>
+                            <input type="date" id="addEndDate" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">问题描述</label>
+                        <textarea id="addDesc" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none resize-none" rows="3" placeholder="请详细描述问题情况..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeAddModal()" class="btn-secondary">取消</button>
+                <button onclick="submitAdd()" class="btn-primary">提交任务</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header-center" id="detailModalHeader">
+                <div class="flex space-x-2 mr-4">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 flex-1 text-center pr-8">任务详情</h3>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span id="detailStatus" class="status-badge bg-red-100 text-red-600">重大</span>
+                        <span id="detailLevel" class="text-xs text-slate-500">待分派</span>
+                    </div>
+                    <div>
+                        <h4 id="detailTitle" class="text-base font-bold text-slate-800 mb-2">任务标题</h4>
+                        <p id="detailProject" class="text-xs text-slate-500 flex items-center">
+                            <i class="fa-solid fa-building mr-1"></i>所属项目：-
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 p-3 bg-slate-50 rounded-xl">
+                        <div>
+                            <p class="text-[10px] text-slate-500 mb-1">责任人</p>
+                            <p id="detailPerson" class="text-sm font-semibold text-slate-700">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 mb-1">当前状态</p>
+                            <p id="detailState" class="text-sm font-semibold text-slate-700">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 mb-1">发现日期</p>
+                            <p id="detailStart" class="text-sm font-semibold text-slate-700">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 mb-1">截止日期</p>
+                            <p id="detailEnd" class="text-sm font-semibold text-slate-700">-</p>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-600 mb-2">问题描述</p>
+                        <p id="detailDesc" class="text-sm text-slate-600 leading-relaxed">-</p>
+                    </div>
+                    <div id="detailProgressArea" class="hidden">
+                        <p class="text-xs font-semibold text-slate-600 mb-2">整改进度</p>
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-1 bg-slate-100 rounded-full h-2">
+                                <div id="detailProgressBar" class="h-2 rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                            <span id="detailProgressText" class="text-sm font-bold text-slate-600">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="detailFooter">
+                <button onclick="closeDetailModal()" class="btn-secondary">关闭</button>
+                <button id="detailActionBtn" class="btn-primary" onclick="assignTask()">分派任务</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="filterModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header-center" id="filterModalHeader">
+                <div class="flex space-x-2 mr-4">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 flex-1 text-center pr-8">筛选条件</h3>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">紧急程度</label>
+                        <div class="flex flex-wrap gap-2">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="filterMajor" checked class="w-4 h-4 text-[#005792] rounded" />
+                                <span class="text-sm text-slate-600">重大</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="filterGeneral" checked class="w-4 h-4 text-[#005792] rounded" />
+                                <span class="text-sm text-slate-600">一般</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="filterMinor" checked class="w-4 h-4 text-[#005792] rounded" />
+                                <span class="text-sm text-slate-600">轻微</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">所属项目</label>
+                        <select id="filterProject" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none">
+                            <option value="">全部项目</option>
+                            <option value="南调干渠">南调干渠</option>
+                            <option value="东岗水库">东岗水库</option>
+                            <option value="青山闸加固">青山闸加固</option>
+                            <option value="黑水河堤防">黑水河堤防</option>
+                            <option value="渭河橡胶坝">渭河橡胶坝</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">截止日期范围</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="date" id="filterStartDate" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none" />
+                            <input type="date" id="filterEndDate" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">排序方式</label>
+                        <select id="filterSort" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none">
+                            <option value="deadline">按截止日期</option>
+                            <option value="priority">按紧急程度</option>
+                            <option value="time">按发现时间</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="resetFilter()" class="btn-secondary">重置</button>
+                <button onclick="applyFilter()" class="btn-primary">应用筛选</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isDraggingAdd = false, isDraggingDetail = false, isDraggingFilter = false;
+        let addOffsetX, addOffsetY, detailOffsetX, detailOffsetY, filterOffsetX, filterOffsetY;
+        let currentTab = 'all';
+        let selectedTaskData = null;
+
+        const allTasks = {
+            pending: [
+                { id: 1, title: '南调干渠三标段混凝土强度不达标', status: '重大', project: '南调干渠', person: '赵广生', startDate: '2026-03-15', endDate: '2026-03-25', state: '待分派', desc: '混凝土强度检测结果显示其抗压强度未达到设计要求的C30标准，目前已完成初次检测，正在等待第三方复检结果。', progress: 0, overdue: true },
+                { id: 2, title: '东岗水库泄洪闸门电气腐蚀', status: '一般', project: '东岗水库', person: '张志明', startDate: '2026-03-18', endDate: '2026-03-28', state: '待分派', desc: '巡查中发现泄洪闸门电气控制系统存在严重腐蚀痕迹，部分线路老化，存在安全隐患。', progress: 0, overdue: false },
+                { id: 3, title: '泾阳渠段护坡加固方案审批', status: '轻微', project: '泾阳渠道', person: '周明', startDate: '2026-03-16', endDate: '2026-03-26', state: '待分派', desc: '护坡加固施工方案待审批，需要相关部门签字确认。', progress: 0, overdue: false },
+            ],
+            processing: [
+                { id: 4, title: '青山闸加固工程材料检测', status: '跟进', project: '青山闸加固', person: '王建国', startDate: '2026-03-10', endDate: '2026-03-20', state: '处理中', desc: '材料检测报告因故延期提交，需监理现场复核签字确认。', progress: 78, overdue: false },
+                { id: 5, title: '黑水河堤防护坡裂缝修补', status: '一般', project: '黑水河堤防', person: '李文斌', startDate: '2026-03-05', endDate: '2026-03-22', state: '处理中', desc: '护坡表面出现多处细微裂缝，已安排施工队进行修补作业。', progress: 55, overdue: false },
+                { id: 6, title: '渭河橡胶坝渗水检测', status: '轻微', project: '渭河橡胶坝', person: '陈晓东', startDate: '2026-03-12', endDate: '2026-03-26', state: '处理中', desc: '日常巡查发现坝体局部有轻微渗水现象，需进行专业检测评估。', progress: 30, overdue: false },
+                { id: 7, title: '宝鸡峡渡槽裂缝注浆加固', status: '一般', project: '宝鸡峡渡槽', person: '孙立新', startDate: '2026-03-08', endDate: '2026-03-24', state: '处理中', desc: '渡槽主体发现裂缝，已开始注浆加固作业。', progress: 65, overdue: false },
+            ],
+            completed: [
+                { id: 8, title: '泾阳渠道清淤工程验收', status: '完成', project: '泾阳渠道', person: '刘德明', startDate: '2026-03-01', endDate: '2026-03-10', state: '已完成', desc: '渠道清淤工作已完成，淤泥清理量达1200立方米，通过竣工验收。', progress: 100, overdue: false },
+                { id: 9, title: '宝鸡峡渡槽安全检测', status: '完成', project: '宝鸡峡渡槽', person: '孙立新', startDate: '2026-02-28', endDate: '2026-03-08', state: '已完成', desc: '渡槽主体结构安全检测完成，各项指标符合规范要求。', progress: 100, overdue: false },
+                { id: 10, title: '东岗水库启闭机维修保养', status: '完成', project: '东岗水库', person: '张志明', startDate: '2026-02-25', endDate: '2026-03-05', state: '已完成', desc: '启闭机维修保养工作完成，已通过验收。', progress: 100, overdue: false },
+            ]
+        };
+
+        function getStatusColor(status) {
+            const colors = {
+                '重大': { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-600', text: 'text-red-600' },
+                '一般': { bg: 'bg-orange-50', border: 'border-orange-200', badge: 'bg-orange-100 text-orange-600', text: 'text-orange-600' },
+                '跟进': { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-600', text: 'text-blue-600' },
+                '轻微': { bg: 'bg-slate-50', border: 'border-slate-200', badge: 'bg-slate-100 text-slate-600', text: 'text-slate-500' },
+                '完成': { bg: 'bg-green-50', border: 'border-green-200', badge: 'bg-green-100 text-green-600', text: 'text-green-600' }
+            };
+            return colors[status] || colors['轻微'];
+        }
+
+        function getProgressColor(progress) {
+            if (progress >= 80) return 'bg-blue-500';
+            if (progress >= 50) return 'bg-green-500';
+            return 'bg-slate-400';
+        }
+
+        function getDaysRemaining(endDate) {
+            const end = new Date(endDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+            const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+            return diff;
+        }
+
+        function getDaysOverdue(endDate) {
+            const end = new Date(endDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+            const diff = Math.ceil((today - end) / (1000 * 60 * 60 * 24));
+            return diff;
+        }
+
+        function getPriorityIcon(status) {
+            if (status === '重大') return '<i class="fa-solid fa-circle-exclamation text-red-500"></i>';
+            if (status === '一般') return '<i class="fa-solid fa-circle-exclamation text-orange-500"></i>';
+            return '<i class="fa-solid fa-circle text-slate-400"></i>';
+        }
+
+        function getProgressPhase(progress) {
+            if (progress >= 80) return { text: '即将完成', color: 'text-green-600', bg: 'bg-green-50' };
+            if (progress >= 50) return { text: '稳步推进', color: 'text-blue-600', bg: 'bg-blue-50' };
+            if (progress >= 25) return { text: '正在处理', color: 'text-indigo-600', bg: 'bg-indigo-50' };
+            return { text: '刚刚启动', color: 'text-slate-500', bg: 'bg-slate-50' };
+        }
+
+        function renderPendingCard(task) {
+            const colors = getStatusColor(task.status);
+            const daysRemaining = getDaysRemaining(task.endDate);
+            const daysOverdue = getDaysOverdue(task.endDate);
+            const isOverdue = daysOverdue > 0;
+            const overdueClass = isOverdue ? 'text-red-600' : (daysRemaining <= 2 ? 'text-orange-500' : 'text-slate-500');
+            const overdueBg = isOverdue ? 'bg-red-50 border-red-200' : (daysRemaining <= 2 ? 'bg-orange-50 border-orange-200' : 'bg-white/60 border-slate-200');
+
+            return `
+                <div class="task-card ${overdueBg} rounded-xl border p-4 mb-3 last:mb-0" onclick="openDetailModal(${JSON.stringify(task).replace(/"/g, '&quot;')})">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="status-badge ${colors.badge}">${task.status}</span>
+                            <span class="text-[10px] text-slate-400 flex items-center">
+                                ${getPriorityIcon(task.status)}
+                                <span class="ml-1">优先级</span>
+                            </span>
+                        </div>
+                        ${isOverdue ? '<span class="text-[10px] px-2 py-0.5 bg-red-100 text-red-600 font-bold rounded-full">已逾期 ' + daysOverdue + ' 天</span>' : ''}
+                    </div>
+                    <h6 class="text-sm font-bold text-slate-800 mb-3 leading-snug line-clamp-2">${task.title}</h6>
+                    <div class="flex items-center text-[11px] text-slate-500 mb-3 space-x-3">
+                        <span class="flex items-center"><i class="fa-solid fa-building mr-1 text-slate-400"></i>${task.project}</span>
+                        <span class="flex items-center"><i class="fa-solid fa-user mr-1 text-slate-400"></i>${task.person}</span>
+                    </div>
+                    <div class="bg-slate-50/80 rounded-lg p-3 mb-3">
+                        <div class="flex items-center justify-between text-[11px] ${overdueClass}">
+                            <span class="flex items-center">
+                                <i class="fa-solid fa-calendar mr-1"></i>
+                                ${isOverdue ? '逾期 ' + daysOverdue + ' 天' : (daysRemaining === 0 ? '今天到期' : '剩余 ' + daysRemaining + ' 天')}
+                            </span>
+                            <span>截止：${task.endDate}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                        <span class="text-[10px] text-slate-400">
+                            <i class="fa-solid fa-clock mr-1"></i>发现于 ${task.startDate}
+                        </span>
+                        <button onclick="event.stopPropagation(); quickAssign(${task.id})" class="text-[11px] text-[#005792] font-semibold hover:underline flex items-center">
+                            <i class="fa-solid fa-paper-plane mr-1"></i>立即分派
+                        </button>
+                    </div>
+                </div>`;
+        }
+
+        function renderProcessingCard(task) {
+            const colors = getStatusColor(task.status);
+            const progressColor = getProgressColor(task.progress);
+            const phase = getProgressPhase(task.progress);
+
+            return `
+                <div class="task-card bg-white/60 rounded-xl border border-slate-200 p-4 mb-3 last:mb-0" onclick="openDetailModal(${JSON.stringify(task).replace(/"/g, '&quot;')})">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="status-badge ${colors.badge}">${task.status}</span>
+                            <span class="text-[10px] px-2 py-0.5 ${phase.bg} ${phase.color} font-semibold rounded-full">${phase.text}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-chart-simple text-slate-400 text-[10px]"></i>
+                            <span class="text-[12px] font-bold ${colors.text}">${task.progress}%</span>
+                        </div>
+                    </div>
+                    <h6 class="text-sm font-bold text-slate-800 mb-3 leading-snug line-clamp-2">${task.title}</h6>
+                    <div class="flex items-center text-[11px] text-slate-500 mb-3 space-x-3">
+                        <span class="flex items-center"><i class="fa-solid fa-building mr-1 text-slate-400"></i>${task.project}</span>
+                        <span class="flex items-center"><i class="fa-solid fa-user mr-1 text-slate-400"></i>${task.person}</span>
+                    </div>
+                    <div class="mb-3">
+                        <div class="flex items-center justify-between text-[10px] text-slate-500 mb-1.5">
+                            <span class="flex items-center">
+                                <i class="fa-solid fa-spinner fa-spin text-blue-500 mr-1"></i>
+                                整改进度
+                            </span>
+                            <span class="${colors.text} font-medium">${task.progress}%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="${progressColor} h-full rounded-full transition-all" style="width: ${task.progress}%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50/80 rounded-lg p-3">
+                        <div class="flex items-center justify-between text-[11px] text-slate-600">
+                            <span class="flex items-center">
+                                <i class="fa-solid fa-calendar mr-1 text-slate-400"></i>
+                                截止日期
+                            </span>
+                            <span class="font-semibold">${task.endDate}</span>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderCompletedCard(task) {
+            const colors = getStatusColor(task.status);
+            return `
+                <div class="task-card flex items-center justify-between p-4 bg-white/60 rounded-xl border border-slate-200 mb-2 last:mb-0 hover:border-green-300 hover:bg-green-50/30 transition-all" onclick="openDetailModal(${JSON.stringify(task).replace(/"/g, '&quot;')})">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-check text-green-600"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-sm font-bold text-slate-800 mb-0.5">${task.title}</h6>
+                            <p class="text-[11px] text-slate-500">
+                                <i class="fa-solid fa-calendar-check mr-1"></i>完成于 ${task.endDate}
+                                <span class="mx-1">|</span>
+                                <i class="fa-solid fa-user mr-1"></i>${task.person}
+                            </p>
+                        </div>
+                    </div>
+                    <span class="status-badge ${colors.badge}">完成</span>
+                </div>`;
+        }
+
+        function renderEmptyState(message) {
+            return `
+                <div class="empty-state">
+                    <i class="fa-solid fa-inbox text-4xl mb-3"></i>
+                    <p class="text-sm">${message}</p>
+                </div>`;
+        }
+
+        function renderContent() {
+            const content = document.getElementById('taskContent');
+            let html = '';
+
+            if (currentTab === 'all') {
+                html = `
+                    <div class="space-y-5">
+                        <div class="glass-card rounded-2xl overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-red-50 to-orange-50">
+                                <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                    <i class="fa-solid fa-circle-exclamation text-red-500 mr-2"></i>
+                                    待分派任务
+                                    <span class="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-[10px] rounded-full">${allTasks.pending.length} 项</span>
+                                    <span class="ml-auto text-[11px] text-slate-500 font-normal">需要及时处理</span>
+                                </h5>
+                            </div>
+                            <div class="p-4">
+                                ${allTasks.pending.length > 0 ? '<div class="card-grid">' + allTasks.pending.map(t => renderPendingCard(t)).join('') + '</div>' : renderEmptyState('暂无待分派任务')}
+                            </div>
+                        </div>
+                        <div class="glass-card rounded-2xl overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+                                <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                    <i class="fa-solid fa-spinner fa-spin text-blue-500 mr-2"></i>
+                                    处理中任务
+                                    <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded-full">${allTasks.processing.length} 项</span>
+                                    <span class="ml-auto text-[11px] text-slate-500 font-normal">正在整改中</span>
+                                </h5>
+                            </div>
+                            <div class="p-4">
+                                ${allTasks.processing.length > 0 ? '<div class="card-grid">' + allTasks.processing.map(t => renderProcessingCard(t)).join('') + '</div>' : renderEmptyState('暂无处理中任务')}
+                            </div>
+                        </div>
+                        <div class="glass-card rounded-2xl overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-green-50 to-emerald-50 flex items-center justify-between">
+                                <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                    <i class="fa-solid fa-check-circle text-green-500 mr-2"></i>
+                                    已完成任务
+                                    <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-600 text-[10px] rounded-full">${allTasks.completed.length} 项</span>
+                                </h5>
+                                <span class="text-[11px] text-slate-500">近30天完成 ${allTasks.completed.length} 项</span>
+                            </div>
+                            <div class="p-4 max-h-[200px] overflow-y-auto">
+                                ${allTasks.completed.length > 0 ? allTasks.completed.map(t => renderCompletedCard(t)).join('') : renderEmptyState('暂无已完成任务')}
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (currentTab === 'pending') {
+                html = `
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-red-50 to-orange-50">
+                            <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-circle-exclamation text-red-500 mr-2"></i>
+                                待分派任务
+                                <span class="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-[10px] rounded-full">${allTasks.pending.length} 项</span>
+                                <span class="ml-auto text-[11px] text-slate-500 font-normal">需要及时分派责任人和处理方案</span>
+                            </h5>
+                        </div>
+                        <div class="p-4">
+                            ${allTasks.pending.length > 0 ? '<div class="card-grid">' + allTasks.pending.map(t => renderPendingCard(t)).join('') + '</div>' : renderEmptyState('暂无待分派任务')}
+                        </div>
+                    </div>`;
+            } else if (currentTab === 'processing') {
+                html = `
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+                            <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-spinner fa-spin text-blue-500 mr-2"></i>
+                                处理中任务
+                                <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded-full">${allTasks.processing.length} 项</span>
+                                <span class="ml-auto text-[11px] text-slate-500 font-normal">跟踪整改进展</span>
+                            </h5>
+                        </div>
+                        <div class="p-4">
+                            ${allTasks.processing.length > 0 ? '<div class="card-grid">' + allTasks.processing.map(t => renderProcessingCard(t)).join('') + '</div>' : renderEmptyState('暂无处理中任务')}
+                        </div>
+                    </div>`;
+            } else if (currentTab === 'completed') {
+                html = `
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-green-50 to-emerald-50">
+                            <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-check-circle text-green-500 mr-2"></i>
+                                已完成任务
+                                <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-600 text-[10px] rounded-full">${allTasks.completed.length} 项</span>
+                            </h5>
+                        </div>
+                        <div class="p-4">
+                            ${allTasks.completed.length > 0 ? allTasks.completed.map(t => renderCompletedCard(t)).join('') : renderEmptyState('暂无已完成任务')}
+                        </div>
+                    </div>`;
+            }
+
+            content.innerHTML = html;
+        }
+
+        function updateCounts() {
+            const total = allTasks.pending.length + allTasks.processing.length + allTasks.completed.length;
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('pendingCount').textContent = allTasks.pending.length;
+            document.getElementById('processingCount').textContent = allTasks.processing.length;
+            document.getElementById('completedCount').textContent = allTasks.completed.length;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+            renderContent();
+        }
+
+        function openDetailModal(task) {
+            selectedTaskData = task;
+            document.getElementById('detailTitle').textContent = task.title;
+            document.getElementById('detailProject').innerHTML = '<i class="fa-solid fa-building mr-1"></i>所属项目：' + task.project;
+            document.getElementById('detailPerson').textContent = task.person;
+            document.getElementById('detailStart').textContent = task.startDate;
+            document.getElementById('detailEnd').textContent = task.endDate;
+            document.getElementById('detailState').textContent = task.state;
+            document.getElementById('detailDesc').textContent = task.desc;
+
+            const statusEl = document.getElementById('detailStatus');
+            const colors = getStatusColor(task.status);
+            statusEl.className = 'status-badge ' + colors.badge;
+            statusEl.textContent = task.status;
+
+            const levelEl = document.getElementById('detailLevel');
+            if (task.state === '已完成') {
+                levelEl.textContent = '已完成';
+                document.getElementById('detailProgressArea').classList.add('hidden');
+                document.getElementById('detailFooter').classList.remove('hidden');
+                document.getElementById('detailActionBtn').classList.add('hidden');
+            } else if (task.state === '处理中') {
+                levelEl.textContent = '处理中';
+                document.getElementById('detailProgressArea').classList.remove('hidden');
+                document.getElementById('detailProgressBar').style.width = task.progress + '%';
+                document.getElementById('detailProgressBar').className = getProgressColor(task.progress) + ' h-2 rounded-full transition-all';
+                document.getElementById('detailProgressText').textContent = task.progress + '%';
+                document.getElementById('detailFooter').classList.remove('hidden');
+                document.getElementById('detailActionBtn').classList.add('hidden');
+            } else {
+                levelEl.textContent = '待分派';
+                document.getElementById('detailProgressArea').classList.add('hidden');
+                document.getElementById('detailFooter').classList.remove('hidden');
+                document.getElementById('detailActionBtn').classList.remove('hidden');
+                document.getElementById('detailActionBtn').textContent = '分派任务';
+                document.getElementById('detailActionBtn').onclick = assignTask;
+            }
+
+            document.getElementById('detailModal').classList.remove('hidden');
+            isDraggingDetail = false;
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function assignTask() {
+            if (!selectedTaskData) return;
+            alert('任务分派成功！\n\n任务：' + selectedTaskData.title + '\n责任人：' + selectedTaskData.person + '\n\n已发送分派通知给相关人员。');
+            closeDetailModal();
+        }
+
+        function quickAssign(taskId) {
+            const task = allTasks.pending.find(t => t.id === taskId);
+            if (task) {
+                alert('任务分派成功！\n\n任务：' + task.title + '\n责任人：' + task.person + '\n\n已发送分派通知。');
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+            isDraggingAdd = false;
+            document.getElementById('addTitle').value = '';
+            document.getElementById('addLevel').value = '';
+            document.getElementById('addProject').value = '';
+            document.getElementById('addPerson').value = '';
+            document.getElementById('addStartDate').value = '';
+            document.getElementById('addEndDate').value = '';
+            document.getElementById('addDesc').value = '';
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+        }
+
+        function submitAdd() {
+            const title = document.getElementById('addTitle').value.trim();
+            const level = document.getElementById('addLevel').value;
+            const project = document.getElementById('addProject').value;
+            const person = document.getElementById('addPerson').value.trim();
+            const startDate = document.getElementById('addStartDate').value;
+            const endDate = document.getElementById('addEndDate').value;
+
+            if (!title) { alert('请输入问题标题！'); return; }
+            if (!level) { alert('请选择紧急程度！'); return; }
+            if (!project) { alert('请选择所属项目！'); return; }
+            if (!person) { alert('请输入责任人！'); return; }
+            if (!startDate) { alert('请选择发现日期！'); return; }
+            if (!endDate) { alert('请选择截止日期！'); return; }
+            if (new Date(startDate) > new Date(endDate)) { alert('截止日期不能早于发现日期！'); return; }
+
+            alert('任务提交成功！\n\n问题标题：' + title + '\n紧急程度：' + level + '\n所属项目：' + project + '\n责任人：' + person + '\n发现日期：' + startDate + '\n截止日期：' + endDate);
+            closeAddModal();
+        }
+
+        function openFilterModal() {
+            document.getElementById('filterModal').classList.remove('hidden');
+            isDraggingFilter = false;
+        }
+
+        function closeFilterModal() {
+            document.getElementById('filterModal').classList.add('hidden');
+        }
+
+        function resetFilter() {
+            document.getElementById('filterMajor').checked = true;
+            document.getElementById('filterGeneral').checked = true;
+            document.getElementById('filterMinor').checked = true;
+            document.getElementById('filterProject').value = '';
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('filterSort').value = 'deadline';
+            document.getElementById('filterStatus').textContent = '筛选';
+        }
+
+        function applyFilter() {
+            const major = document.getElementById('filterMajor').checked;
+            const general = document.getElementById('filterGeneral').checked;
+            const minor = document.getElementById('filterMinor').checked;
+            const project = document.getElementById('filterProject').value;
+            const hasFilter = (!major || !general || !minor || project || document.getElementById('filterStartDate').value || document.getElementById('filterEndDate').value);
+
+            document.getElementById('filterStatus').textContent = hasFilter ? '已筛选' : '筛选';
+            alert('筛选条件已应用！\n\n紧急程度：' + (major ? '重大 ' : '') + (general ? '一般 ' : '') + (minor ? '轻微' : '') + '\n项目：' + (project || '全部') + '\n排序：' + (document.getElementById('filterSort').value === 'deadline' ? '按截止日期' : (document.getElementById('filterSort').value === 'priority' ? '按紧急程度' : '按发现时间')));
+            closeFilterModal();
+        }
+
+        document.getElementById('addModalHeader').addEventListener('mousedown', function(e) {
+            isDraggingAdd = true;
+            addOffsetX = e.clientX - this.parentElement.getBoundingClientRect().left;
+            addOffsetY = e.clientY - this.parentElement.getBoundingClientRect().top;
+        });
+
+        document.getElementById('detailModalHeader').addEventListener('mousedown', function(e) {
+            isDraggingDetail = true;
+            detailOffsetX = e.clientX - this.parentElement.getBoundingClientRect().left;
+            detailOffsetY = e.clientY - this.parentElement.getBoundingClientRect().top;
+        });
+
+        document.getElementById('filterModalHeader').addEventListener('mousedown', function(e) {
+            isDraggingFilter = true;
+            filterOffsetX = e.clientX - this.parentElement.getBoundingClientRect().left;
+            filterOffsetY = e.clientY - this.parentElement.getBoundingClientRect().top;
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (isDraggingAdd) {
+                const modal = document.querySelector('#addModal .modal-box');
+                modal.style.margin = '0';
+                modal.style.position = 'fixed';
+                modal.style.left = (e.clientX - addOffsetX) + 'px';
+                modal.style.top = (e.clientY - addOffsetY) + 'px';
+            }
+            if (isDraggingDetail) {
+                const modal = document.querySelector('#detailModal .modal-box');
+                modal.style.margin = '0';
+                modal.style.position = 'fixed';
+                modal.style.left = (e.clientX - detailOffsetX) + 'px';
+                modal.style.top = (e.clientY - detailOffsetY) + 'px';
+            }
+            if (isDraggingFilter) {
+                const modal = document.querySelector('#filterModal .modal-box');
+                modal.style.margin = '0';
+                modal.style.position = 'fixed';
+                modal.style.left = (e.clientX - filterOffsetX) + 'px';
+                modal.style.top = (e.clientY - filterOffsetY) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDraggingAdd = false;
+            isDraggingDetail = false;
+            isDraggingFilter = false;
+        });
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const keyword = e.target.value.toLowerCase();
+            if (!keyword) {
+                renderContent();
+                return;
+            }
+            const filtered = {
+                pending: allTasks.pending.filter(t => t.title.toLowerCase().includes(keyword) || t.person.includes(keyword)),
+                processing: allTasks.processing.filter(t => t.title.toLowerCase().includes(keyword) || t.person.includes(keyword)),
+                completed: allTasks.completed.filter(t => t.title.toLowerCase().includes(keyword) || t.person.includes(keyword))
+            };
+            const content = document.getElementById('taskContent');
+            let html = '';
+            if (currentTab === 'all') {
+                html = `
+                    <div class="space-y-5">
+                        <div class="glass-card rounded-2xl overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-red-50 to-orange-50">
+                                <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                    <i class="fa-solid fa-circle-exclamation text-red-500 mr-2"></i>
+                                    待分派任务
+                                    <span class="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-[10px] rounded-full">${filtered.pending.length} 项</span>
+                                </h5>
+                            </div>
+                            <div class="p-4">
+                                ${filtered.pending.length > 0 ? '<div class="card-grid">' + filtered.pending.map(t => renderPendingCard(t)).join('') + '</div>' : renderEmptyState('无匹配结果')}
+                            </div>
+                        </div>
+                        <div class="glass-card rounded-2xl overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+                                <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                    <i class="fa-solid fa-spinner fa-spin text-blue-500 mr-2"></i>
+                                    处理中任务
+                                    <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded-full">${filtered.processing.length} 项</span>
+                                </h5>
+                            </div>
+                            <div class="p-4">
+                                ${filtered.processing.length > 0 ? '<div class="card-grid">' + filtered.processing.map(t => renderProcessingCard(t)).join('') + '</div>' : renderEmptyState('无匹配结果')}
+                            </div>
+                        </div>
+                        <div class="glass-card rounded-2xl overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-green-50 to-emerald-50">
+                                <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                    <i class="fa-solid fa-check-circle text-green-500 mr-2"></i>
+                                    已完成任务
+                                    <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-600 text-[10px] rounded-full">${filtered.completed.length} 项</span>
+                                </h5>
+                            </div>
+                            <div class="p-4 max-h-[200px] overflow-y-auto">
+                                ${filtered.completed.length > 0 ? filtered.completed.map(t => renderCompletedCard(t)).join('') : renderEmptyState('无匹配结果')}
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (currentTab === 'pending') {
+                html = `
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-red-50 to-orange-50">
+                            <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-circle-exclamation text-red-500 mr-2"></i>
+                                待分派任务
+                                <span class="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-[10px] rounded-full">${filtered.pending.length} 项</span>
+                            </h5>
+                        </div>
+                        <div class="p-4">
+                            ${filtered.pending.length > 0 ? '<div class="card-grid">' + filtered.pending.map(t => renderPendingCard(t)).join('') + '</div>' : renderEmptyState('无匹配结果')}
+                        </div>
+                    </div>`;
+            } else if (currentTab === 'processing') {
+                html = `
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+                            <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-spinner fa-spin text-blue-500 mr-2"></i>
+                                处理中任务
+                                <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded-full">${filtered.processing.length} 项</span>
+                            </h5>
+                        </div>
+                        <div class="p-4">
+                            ${filtered.processing.length > 0 ? '<div class="card-grid">' + filtered.processing.map(t => renderProcessingCard(t)).join('') + '</div>' : renderEmptyState('无匹配结果')}
+                        </div>
+                    </div>`;
+            } else if (currentTab === 'completed') {
+                html = `
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-green-50 to-emerald-50">
+                            <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-check-circle text-green-500 mr-2"></i>
+                                已完成任务
+                                <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-600 text-[10px] rounded-full">${filtered.completed.length} 项</span>
+                            </h5>
+                        </div>
+                        <div class="p-4">
+                            ${filtered.completed.length > 0 ? filtered.completed.map(t => renderCompletedCard(t)).join('') : renderEmptyState('无匹配结果')}
+                        </div>
+                    </div>`;
+            }
+            content.innerHTML = html;
+        });
+
+        window.addEventListener('load', function() {
+            updateCounts();
+            renderContent();
+        });
+    </script>
+</body>
+</html>

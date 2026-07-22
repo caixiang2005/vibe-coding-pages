@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>我的 - 水利项目质量验收审核软件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <style>
+        body {
+            background-color: #f0f4f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .android-container {
+            width: 100%;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+        .android-container::-webkit-scrollbar { display: none; }
+        .btn-press:active { transform: scale(0.96); transition: transform 0.1s; }
+        .card-hover { transition: all 0.2s; cursor: pointer; }
+        .card-hover:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); z-index: 1000; display: none;
+            justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            position: absolute; background: white; border-radius: 16px;
+            width: 90%; max-width: 340px; max-height: 80vh; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            background: #1e40af; color: white; padding: 16px;
+            cursor: move; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px; border-top: 1px solid #e5e7eb; display: flex; gap: 12px; }
+        .input-field {
+            width: 100%; padding: 10px 12px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .toggle-switch {
+            width: 44px; height: 24px; background: #d1d5db; border-radius: 12px;
+            position: relative; cursor: pointer; transition: background 0.3s;
+        }
+        .toggle-switch.active { background: #2563eb; }
+        .toggle-switch::after {
+            content: ''; width: 20px; height: 20px; background: white;
+            border-radius: 50%; position: absolute; top: 2px; left: 2px;
+            transition: left 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle-switch.active::after { left: 22px; }
+        .btn-primary {
+            background: #2563eb; color: white; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; border: none; cursor: pointer; flex: 1;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary {
+            background: #f3f4f6; color: #374151; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; border: none; cursor: pointer; flex: 1;
+            transition: background 0.2s;
+        }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .btn-danger {
+            background: #ef4444; color: white; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; border: none; cursor: pointer; flex: 1;
+            transition: background 0.2s;
+        }
+        .btn-danger:hover { background: #dc2626; }
+        .active-tab { color: #1d4ed8; }
+        .badge-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .switch-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+        .message-item { padding: 12px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+        .message-item:last-child { border-bottom: none; }
+        .message-item.unread { background: #eff6ff; margin: 0 -20px; padding: 12px 20px; }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-900">
+    <div class="android-container bg-gray-50 flex flex-col relative">
+        <header class="bg-gradient-to-r from-blue-700 to-blue-600 text-white pt-10 pb-6 px-5 rounded-b-[30px] shadow-lg">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full border-4 border-blue-400 overflow-hidden bg-white">
+                    <img alt="User Avatar" class="w-full h-full object-cover" id="userAvatar"
+                        src="https://i01piccdn.sogoucdn.com/6de4845d273e3386" />
+                </div>
+                <div class="flex-1">
+                    <h2 class="font-bold text-xl">文丹</h2>
+                    <p class="text-blue-200 text-sm">管理员</p>
+                    <p class="text-blue-200 text-xs mt-1">质检部 · 质量主管</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 px-4 py-4 pb-24 -mt-4">
+            <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+                <div class="grid grid-cols-3 text-center">
+                    <div class="border-r border-gray-100">
+                        <p class="text-lg font-bold text-gray-800">42</p>
+                        <p class="text-[10px] text-gray-500">本月验收</p>
+                    </div>
+                    <div class="border-r border-gray-100">
+                        <p class="text-lg font-bold text-gray-800">156</p>
+                        <p class="text-[10px] text-gray-500">累计验收</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-gray-800">98.5%</p>
+                        <p class="text-[10px] text-gray-500">合格率</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-4">
+                <a href="profile-info.html" class="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                            <span class="iconify text-lg" data-icon="material-symbols:person"></span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-800">个人信息</p>
+                            <p class="text-[10px] text-gray-400">查看和修改个人资料</p>
+                        </div>
+                    </div>
+                    <span class="iconify text-gray-400" data-icon="material-symbols:chevron-right"></span>
+                </a>
+                <a href="profile-password.html" class="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-50 text-green-600 rounded-lg flex items-center justify-center">
+                            <span class="iconify text-lg" data-icon="material-symbols:lock"></span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-800">修改密码</p>
+                            <p class="text-[10px] text-gray-400">定期更换保证安全</p>
+                        </div>
+                    </div>
+                    <span class="iconify text-gray-400" data-icon="material-symbols:chevron-right"></span>
+                </a>
+                <a href="profile-notify.html" class="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center">
+                            <span class="iconify text-lg" data-icon="material-symbols:notifications"></span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-800">消息通知</p>
+                            <p class="text-[10px] text-gray-400">系统消息和审核提醒</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-red-500 text-white text-[10px] px-1.5 rounded-full">3</span>
+                        <span class="iconify text-gray-400" data-icon="material-symbols:chevron-right"></span>
+                    </div>
+                </a>
+                <a href="profile-settings.html" class="p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center">
+                            <span class="iconify text-lg" data-icon="material-symbols:settings"></span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-800">系统设置</p>
+                            <p class="text-[10px] text-gray-400">外观、隐私等设置</p>
+                        </div>
+                    </div>
+                    <span class="iconify text-gray-400" data-icon="material-symbols:chevron-right"></span>
+                </a>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-4">
+                <a href="profile-help.html" class="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-cyan-50 text-cyan-600 rounded-lg flex items-center justify-center">
+                            <span class="iconify text-lg" data-icon="material-symbols:help-outline"></span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-800">帮助与反馈</p>
+                            <p class="text-[10px] text-gray-400">常见问题和使用帮助</p>
+                        </div>
+                    </div>
+                    <span class="iconify text-gray-400" data-icon="material-symbols:chevron-right"></span>
+                </a>
+                <a href="profile-about.html" class="p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
+                            <span class="iconify text-lg" data-icon="material-symbols:info-outline"></span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-800">关于系统</p>
+                            <p class="text-[10px] text-gray-400">版本信息和版权声明</p>
+                        </div>
+                    </div>
+                    <span class="iconify text-gray-400" data-icon="material-symbols:chevron-right"></span>
+                </a>
+            </div>
+
+            <button onclick="logout()" class="w-full bg-white text-red-500 py-3 rounded-xl shadow-sm text-sm font-medium btn-press">
+                退出登录
+            </button>
+        </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center py-2 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+            <a href="index.html" class="flex flex-col items-center space-y-1 text-gray-400">
+                <span class="iconify text-xl" data-icon="material-symbols:home-rounded"></span>
+                <span class="text-[10px] font-medium">工作台</span>
+            </a>
+            <a href="acceptance.html" class="flex flex-col items-center space-y-1 text-gray-400">
+                <span class="iconify text-xl" data-icon="material-symbols:approval-rounded"></span>
+                <span class="text-[10px] font-medium">验收</span>
+            </a>
+            <a href="charts.html" class="flex flex-col items-center space-y-1 text-gray-400">
+                <span class="iconify text-xl" data-icon="material-symbols:equalizer-rounded"></span>
+                <span class="text-[10px] font-medium">图表</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center space-y-1 active-tab">
+                <span class="iconify text-xl" data-icon="material-symbols:person"></span>
+                <span class="text-[10px] font-medium">我的</span>
+            </a>
+        </nav>
+    </div>
+</body>
+</html>

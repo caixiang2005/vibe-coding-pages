@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佳晔新能源物联网终端管控系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: #0a1628; color: #fff; overflow: hidden; height: 100vh; }
+        .title-bar { height: 32px; background: linear-gradient(180deg, #1a2a4a 0%, #0d1a30 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #1e3a5f; }
+        .title-bar-left { display: flex; align-items: center; gap: 8px; }
+        .title-bar-icon { width: 16px; height: 16px; background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); border-radius: 2px; }
+        .title-bar-text { font-size: 12px; color: #a0c4e8; }
+        .title-bar-controls { display: flex; height: 100%; }
+        .title-bar-btn { width: 46px; height: 100%; border: none; background: transparent; color: #a0c4e8; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .title-bar-btn:hover { background: rgba(255,255,255,0.1); }
+        .title-bar-btn.close:hover { background: #e81123; color: #fff; }
+        .title-bar-btn svg { width: 10px; height: 10px; }
+        .maximize-icon { width: 10px; height: 10px; border: 1px solid #a0c4e8; background: transparent; }
+        .main-container { height: calc(100vh - 32px); display: flex; flex-direction: column; }
+        .nav-bar { height: 50px; background: linear-gradient(180deg, #0d2040 0%, #081830 100%); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #1e4a7a; position: relative; }
+        .nav-tabs { display: flex; gap: 4px; }
+        .nav-tab { padding: 8px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px 4px 0 0; color: #7ab8e0; cursor: pointer; font-size: 14px; transition: all 0.2s; text-decoration: none; }
+        .nav-tab:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); color: #9ad8ff; }
+        .nav-tab.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 15px; }
+        .nav-btn { padding: 6px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .nav-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; color: #9ad8ff; }
+        .content-area { flex: 1; display: flex; overflow: hidden; }
+        .left-panel { width: 200px; padding: 15px 10px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #1e4a7a; }
+        .menu-btn { padding: 12px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .menu-btn i { width: 16px; text-align: center; }
+        .menu-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; }
+        .menu-btn.active { background: linear-gradient(180deg, #006699 0%, #004466 100%); border-color: #00aadd; color: #fff; }
+        .main-content { flex: 1; padding: 15px; overflow: auto; background: linear-gradient(90deg, rgba(0,170,220,0.03) 1px, transparent 1px), linear-gradient(rgba(0,170,220,0.03) 1px, transparent 1px); background-size: 30px 30px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #2a5a8a; border-radius: 8px; width: 700px; max-height: 80vh; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-header { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-bottom: 1px solid #2a5a8a; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 16px; color: #00d4ff; font-weight: bold; text-align: center; flex: 1; }
+        .modal-close { width: 28px; height: 28px; background: transparent; border: 1px solid #3a5a7a; border-radius: 4px; color: #7ab8e0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .modal-close:hover { background: #e81123; border-color: #e81123; color: #fff; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; color: #7ab8e0; margin-bottom: 6px; }
+        .form-label .required { color: #ff4444; }
+        .form-input { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: #00aadd; }
+        .form-select { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; cursor: pointer; }
+        .form-select:focus { outline: none; border-color: #00aadd; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .modal-footer { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-top: 1px solid #2a5a8a; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { padding: 10px 25px; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all 0.2s; border: 1px solid; }
+        .btn-primary { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .btn-primary:hover { background: linear-gradient(180deg, #00b8f6 0%, #0098d6 100%); }
+        .btn-secondary { background: linear-gradient(180deg, #3a5a7a 0%, #2a4a6a 100%); border-color: #4a7a9a; color: #a0c4e8; }
+        .btn-secondary:hover { background: linear-gradient(180deg, #4a6a8a 0%, #3a5a7a 100%); color: #fff; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 15px; }
+        .search-input { flex: 1; max-width: 250px; padding: 8px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; }
+        .search-input:focus { outline: none; border-color: #00aadd; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th { background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); padding: 12px 10px; text-align: left; color: #00d4ff; border-bottom: 1px solid #2a5a8a; font-weight: normal; }
+        .data-table td { padding: 10px; border-bottom: 1px solid #1e3a5a; color: #a0c4e8; }
+        .data-table tr:hover td { background: rgba(0,170,220,0.05); }
+        .table-btn { padding: 4px 10px; background: linear-gradient(180deg, #1a4a6a 0%, #0d3555 100%); border: 1px solid #2a6a9a; border-radius: 3px; color: #7ab8e0; cursor: pointer; font-size: 11px; margin-right: 5px; }
+        .table-btn:hover { background: linear-gradient(180deg, #2a5a7a 0%, #1a4565 100%); color: #fff; }
+        .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 15px; }
+        .page-btn { padding: 6px 12px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 12px; }
+        .page-btn:hover, .page-btn.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .status-tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; }
+        .status-tag.online { background: rgba(0,255,136,0.2); color: #00ff88; border: 1px solid #00aa66; }
+        .status-tag.offline { background: rgba(102,102,102,0.2); color: #999; border: 1px solid #666; }
+        .status-tag.fault { background: rgba(255,68,68,0.2); color: #ff4444; border: 1px solid #cc3333; }
+        .status-tag.maintenance { background: rgba(255,170,0,0.2); color: #ffaa00; border: 1px solid #cc8800; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a1628; }
+        ::-webkit-scrollbar-thumb { background: #2a5a8a; border-radius: 4px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 18px; color: #00d4ff; }
+        .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #1e4a7a; border-radius: 6px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #00d4ff; margin-bottom: 5px; }
+        .stat-label { font-size: 13px; color: #7a9ab8; }
+        .device-icon-large { font-size: 48px; color: #00aadd; margin: 20px 0; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <div class="title-bar-icon"></div>
+            <span class="title-bar-text">佳晔新能源物联网终端管控系统</span>
+        </div>
+        <div class="title-bar-controls">
+            <button class="title-bar-btn minimize" onclick="showMessage('窗口最小化')"><svg viewBox="0 0 10 10" fill="currentColor"><rect x="0" y="4.5" width="10" height="1"/></svg></button>
+            <button class="title-bar-btn maximize" onclick="showMessage('窗口最大化')"><div class="maximize-icon"></div></button>
+            <button class="title-bar-btn close" onclick="showMessage('系统关闭中...')"><svg viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2"><line x1="0" y1="0" x2="10" y2="10"/><line x1="10" y1="0" x2="0" y2="10"/></svg></button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="nav-bar">
+            <div class="nav-tabs">
+                <a href="index.html" class="nav-tab">主界面</a>
+                <a href="device-registry.html" class="nav-tab active">设备台账</a>
+                <a href="alarm-center.html" class="nav-tab">告警中心</a>
+                <a href="data-report.html" class="nav-tab">数据报表</a>
+                <a href="user-management.html" class="nav-tab">用户管理</a>
+                <a href="role-permission.html" class="nav-tab">角色权限</a>
+                <a href="system-log.html" class="nav-tab">系统日志</a>
+                <a href="system-setting.html" class="nav-tab">系统设置</a>
+            </div>
+            <div class="nav-right">
+                <button class="nav-btn" onclick="showMessage('跳转到告警管理')"><i class="fas fa-bell"></i> 告警管理</button>
+                <button class="nav-btn" onclick="showMessage('跳转到数据查询')"><i class="fas fa-search"></i> 数据查询</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="left-panel">
+                <button class="menu-btn active" onclick="switchTab('device-list', this)"><i class="fas fa-server"></i> 设备列表</button>
+                <button class="menu-btn" onclick="showAddDeviceModal()"><i class="fas fa-plus-circle"></i> 新增设备</button>
+                <button class="menu-btn" onclick="switchTab('device-category', this)"><i class="fas fa-tags"></i> 设备分类</button>
+                <button class="menu-btn" onclick="switchTab('maintenance-record', this)"><i class="fas fa-wrench"></i> 维护记录</button>
+            </div>
+
+            <div class="main-content">
+                <!-- 设备列表 -->
+                <div id="device-list">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-server"></i> 设备台账管理</h2>
+                        <button class="btn btn-primary" onclick="showAddDeviceModal()"><i class="fas fa-plus"></i> 新增设备</button>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card"><div class="stat-value">48</div><div class="stat-label">设备总数</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#00ff88;">42</div><div class="stat-label">运行中</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#ffaa00;">4</div><div class="stat-label">维护中</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#999;">2</div><div class="stat-label">离线</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#ff4444;">1</div><div class="stat-label">故障</div></div>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="搜索设备名称、编号...">
+                        <select class="form-select" style="width:150px;">
+                            <option value="">全部类型</option>
+                            <option value="storage">储能终端</option>
+                            <option value="charging">充电桩</option>
+                            <option value="solar">光伏逆变器</option>
+                            <option value="power">配电设备</option>
+                        </select>
+                        <select class="form-select" style="width:120px;">
+                            <option value="">全部状态</option>
+                            <option value="online">运行中</option>
+                            <option value="offline">离线</option>
+                            <option value="fault">故障</option>
+                            <option value="maintenance">维护</option>
+                        </select>
+                        <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                        <button class="nav-btn"><i class="fas fa-redo"></i> 重置</button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">序号</th>
+                                <th>设备编号</th>
+                                <th>设备名称</th>
+                                <th>设备类型</th>
+                                <th>所属区域</th>
+                                <th>额定功率</th>
+                                <th>状态</th>
+                                <th>投运日期</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>ESS-A-001</td>
+                                <td>储能终端 A-01</td>
+                                <td>储能终端</td>
+                                <td>A 区</td>
+                                <td>150 kW</td>
+                                <td><span class="status-tag online">运行中</span></td>
+                                <td>2023-06-15</td>
+                                <td><button class="table-btn" onclick="showDeviceDetail('储能终端 A-01')">详情</button><button class="table-btn" onclick="showEditDeviceModal('储能终端 A-01')">编辑</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>ESS-A-002</td>
+                                <td>储能终端 A-02</td>
+                                <td>储能终端</td>
+                                <td>A 区</td>
+                                <td>150 kW</td>
+                                <td><span class="status-tag online">运行中</span></td>
+                                <td>2023-06-20</td>
+                                <td><button class="table-btn" onclick="showDeviceDetail('储能终端 A-02')">详情</button><button class="table-btn" onclick="showEditDeviceModal('储能终端 A-02')">编辑</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>CS-B-005</td>
+                                <td>充电桩 B-05</td>
+                                <td>充电桩</td>
+                                <td>B 区</td>
+                                <td>60 kW</td>
+                                <td><span class="status-tag online">运行中</span></td>
+                                <td>2023-07-10</td>
+                                <td><button class="table-btn" onclick="showDeviceDetail('充电桩 B-05')">详情</button><button class="table-btn" onclick="showEditDeviceModal('充电桩 B-05')">编辑</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>PV-C-008</td>
+                                <td>光伏逆变器 C-08</td>
+                                <td>光伏逆变器</td>
+                                <td>C 区</td>
+                                <td>100 kW</td>
+                                <td><span class="status-tag online">运行中</span></td>
+                                <td>2023-08-01</td>
+                                <td><button class="table-btn" onclick="showDeviceDetail('光伏逆变器 C-08')">详情</button><button class="table-btn" onclick="showEditDeviceModal('光伏逆变器 C-08')">编辑</button></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>ESS-A-003</td>
+                                <td>储能柜 A-03</td>
+                                <td>储能终端</td>
+                                <td>A 区</td>
+                                <td>200 kW</td>
+                                <td><span class="status-tag fault">故障</span></td>
+                                <td>2023-06-25</td>
+                                <td><button class="table-btn" onclick="showDeviceDetail('储能柜 A-03')">详情</button><button class="table-btn" onclick="showEditDeviceModal('储能柜 A-03')">编辑</button></td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td>PDU-001</td>
+                                <td>配电柜 PDU-01</td>
+                                <td>配电设备</td>
+                                <td>A 区</td>
+                                <td>500 kW</td>
+                                <td><span class="status-tag online">运行中</span></td>
+                                <td>2023-05-01</td>
+                                <td><button class="table-btn" onclick="showDeviceDetail('配电柜 PDU-01')">详情</button><button class="table-btn" onclick="showEditDeviceModal('配电柜 PDU-01')">编辑</button></td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td>CS-B-007</td>
+                                <td>充电桩 B-07</td>
+                                <td>充电桩</td>
+                                <td>B 区</td>
+                                <td>120 kW</td>
+                                <td><span class="status-tag offline">离线</span></td>
+                                <td>2023-07-15</td>
+                                <td><button class="table-btn" onclick="showDeviceDetail('充电桩 B-07')">详情</button><button class="table-btn" onclick="showEditDeviceModal('充电桩 B-07')">编辑</button></td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td>PV-C-012</td>
+                                <td>光伏逆变器 C-12</td>
+                                <td>光伏逆变器</td>
+                                <td>C 区</td>
+                                <td>100 kW</td>
+                                <td><span class="status-tag maintenance">维护中</span></td>
+                                <td>2023-08-05</td>
+                                <td><button class="table-btn" onclick="showDeviceDetail('光伏逆变器 C-12')">详情</button><button class="table-btn" onclick="showEditDeviceModal('光伏逆变器 C-12')">编辑</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="pagination">
+                        <button class="page-btn">上一页</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">4</button>
+                        <button class="page-btn">下一页</button>
+                    </div>
+                </div>
+
+                <!-- 设备分类 -->
+                <div id="device-category" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-tags"></i> 设备分类管理</h2>
+                        <button class="btn btn-primary" onclick="showMessage('新增分类功能')"><i class="fas fa-plus"></i> 新增分类</button>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="搜索分类名称...">
+                        <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">序号</th>
+                                <th>分类名称</th>
+                                <th>分类编码</th>
+                                <th>父级分类</th>
+                                <th>设备数量</th>
+                                <th>描述</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td><i class="fas fa-battery-full" style="color:#00d4ff;margin-right:8px;"></i>储能终端</td>
+                                <td>STORAGE</td>
+                                <td>-</td>
+                                <td>15</td>
+                                <td>各类储能系统设备</td>
+                                <td>2023-01-15</td>
+                                <td><button class="table-btn" onclick="showMessage('编辑分类')">编辑</button><button class="table-btn" onclick="showMessage('删除分类')">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td><i class="fas fa-charging-station" style="color:#00d4ff;margin-right:8px;"></i>充电桩</td>
+                                <td>CHARGING</td>
+                                <td>-</td>
+                                <td>22</td>
+                                <td>直流/交流充电桩</td>
+                                <td>2023-01-15</td>
+                                <td><button class="table-btn" onclick="showMessage('编辑分类')">编辑</button><button class="table-btn" onclick="showMessage('删除分类')">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td><i class="fas fa-solar-panel" style="color:#00d4ff;margin-right:8px;"></i>光伏逆变器</td>
+                                <td>SOLAR</td>
+                                <td>-</td>
+                                <td>8</td>
+                                <td>太阳能光伏逆变设备</td>
+                                <td>2023-01-20</td>
+                                <td><button class="table-btn" onclick="showMessage('编辑分类')">编辑</button><button class="table-btn" onclick="showMessage('删除分类')">删除</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td><i class="fas fa-bolt" style="color:#00d4ff;margin-right:8px;"></i>配电设备</td>
+                                <td>POWER</td>
+                                <td>-</td>
+                                <td>3</td>
+                                <td>配电柜、PDU 等配电设备</td>
+                                <td>2023-01-10</td>
+                                <td><button class="table-btn" onclick="showMessage('编辑分类')">编辑</button><button class="table-btn" onclick="showMessage('删除分类')">删除</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 维护记录 -->
+                <div id="maintenance-record" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-wrench"></i> 维护记录管理</h2>
+                        <button class="btn btn-primary" onclick="showMessage('新增维护记录')"><i class="fas fa-plus"></i> 新增记录</button>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="搜索设备名称、维护人员...">
+                        <select class="form-select" style="width:150px;">
+                            <option value="">全部状态</option>
+                            <option value="pending">待处理</option>
+                            <option value="processing">处理中</option>
+                            <option value="completed">已完成</option>
+                        </select>
+                        <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">序号</th>
+                                <th>维护单号</th>
+                                <th>设备名称</th>
+                                <th>维护类型</th>
+                                <th>维护内容</th>
+                                <th>维护人员</th>
+                                <th>计划日期</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>WX-2024-001</td>
+                                <td>储能柜 A-03</td>
+                                <td>故障维修</td>
+                                <td>电池温度传感器更换</td>
+                                <td>张工</td>
+                                <td>2024-03-10</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(255,170,0,0.2);color:#ffaa00;border:1px solid #cc8800;">处理中</span></td>
+                                <td><button class="table-btn" onclick="showMessage('查看详情')">详情</button><button class="table-btn" onclick="showMessage('完成维护')">完成</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>WX-2024-002</td>
+                                <td>充电桩 B-07</td>
+                                <td>定期保养</td>
+                                <td>模块清洁、接线检查</td>
+                                <td>李工</td>
+                                <td>2024-03-12</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,170,220,0.2);color:#00aadd;border:1px solid #0088aa;">待处理</span></td>
+                                <td><button class="table-btn" onclick="showMessage('查看详情')">详情</button><button class="table-btn" onclick="showMessage('开始维护')">开始</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>WX-2024-003</td>
+                                <td>光伏逆变器 C-12</td>
+                                <td>效率优化</td>
+                                <td>MPPT 参数调整、固件升级</td>
+                                <td>王工</td>
+                                <td>2024-03-08</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,255,136,0.2);color:#00ff88;border:1px solid #00aa66;">已完成</span></td>
+                                <td><button class="table-btn" onclick="showMessage('查看详情')">详情</button><button class="table-btn" onclick="showMessage('评价')">评价</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>WX-2024-004</td>
+                                <td>配电柜 PDU-01</td>
+                                <td>定期检查</td>
+                                <td>断路器检测、温度测试</td>
+                                <td>张工</td>
+                                <td>2024-03-05</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,255,136,0.2);color:#00ff88;border:1px solid #00aa66;">已完成</span></td>
+                                <td><button class="table-btn" onclick="showMessage('查看详情')">详情</button></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>WX-2024-005</td>
+                                <td>储能终端 A-01</td>
+                                <td>软件升级</td>
+                                <td>BMS 系统固件升级至 V2.3</td>
+                                <td>李工</td>
+                                <td>2024-03-15</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,170,220,0.2);color:#00aadd;border:1px solid #0088aa;">待处理</span></td>
+                                <td><button class="table-btn" onclick="showMessage('查看详情')">详情</button><button class="table-btn" onclick="showMessage('开始维护')">开始</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="pagination">
+                        <button class="page-btn">上一页</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="deviceDetailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="deviceDetailTitle">设备详情</span>
+                <button class="modal-close" onclick="closeModal('deviceDetailModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="device-icon-large"><i class="fas fa-battery-three-quarters"></i></div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">设备编号</label><input type="text" class="form-input" value="ESS-A-001" readonly></div>
+                    <div class="form-group"><label class="form-label">设备名称</label><input type="text" class="form-input" value="储能终端 A-01" readonly></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">设备类型</label><input type="text" class="form-input" value="磷酸铁锂储能系统" readonly></div>
+                    <div class="form-group"><label class="form-label">额定功率</label><input type="text" class="form-input" value="150 kW" readonly></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">所属区域</label><input type="text" class="form-input" value="A 区" readonly></div>
+                    <div class="form-group"><label class="form-label">安装位置</label><input type="text" class="form-input" value="A 区储能站 1 号位" readonly></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">投运日期</label><input type="text" class="form-input" value="2023-06-15" readonly></div>
+                    <div class="form-group"><label class="form-label">供应商</label><input type="text" class="form-input" value="某某新能源科技有限公司" readonly></div>
+                </div>
+                <div class="form-group"><label class="form-label">设备描述</label><textarea class="form-input" style="min-height:80px;resize:vertical;" readonly>该设备为一套 150kW 磷酸铁锂储能系统，用于削峰填谷和应急供电，配备智能 BMS 电池管理系统。</textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('deviceDetailModal')">关闭</button>
+                <button class="btn btn-primary" onclick="showMessage('已进入设备控制界面')">设备控制</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addDeviceModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">新增设备</span>
+                <button class="modal-close" onclick="closeModal('addDeviceModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">设备编号 <span class="required">*</span></label><input type="text" class="form-input" placeholder="请输入设备编号"></div>
+                    <div class="form-group"><label class="form-label">设备名称 <span class="required">*</span></label><input type="text" class="form-input" placeholder="请输入设备名称"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">设备类型 <span class="required">*</span></label>
+                        <select class="form-select"><option value="">请选择设备类型</option><option value="storage">储能终端</option><option value="charging">充电桩</option><option value="solar">光伏逆变器</option><option value="power">配电设备</option></select>
+                    </div>
+                    <div class="form-group"><label class="form-label">所属区域 <span class="required">*</span></label>
+                        <select class="form-select"><option value="">请选择区域</option><option value="a">A 区</option><option value="b">B 区</option><option value="c">C 区</option></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">额定功率 (kW)</label><input type="number" class="form-input" placeholder="请输入额定功率"></div>
+                    <div class="form-group"><label class="form-label">投运日期</label><input type="date" class="form-input"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">通信地址</label><input type="text" class="form-input" placeholder="IP 地址或设备地址"></div>
+                    <div class="form-group"><label class="form-label">通信端口</label><input type="text" class="form-input" value="502"></div>
+                </div>
+                <div class="form-group"><label class="form-label">安装位置</label><input type="text" class="form-input" placeholder="请输入详细安装位置"></div>
+                <div class="form-group"><label class="form-label">设备描述</label><textarea class="form-input" style="min-height:80px;resize:vertical;" placeholder="请输入设备描述信息"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addDeviceModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveDevice()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editDeviceModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">编辑设备</span>
+                <button class="modal-close" onclick="closeModal('editDeviceModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">设备编号</label><input type="text" class="form-input" value="ESS-A-001" readonly></div>
+                    <div class="form-group"><label class="form-label">设备名称 <span class="required">*</span></label><input type="text" class="form-input" value="储能终端 A-01"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">设备类型</label><input type="text" class="form-input" value="磷酸铁锂储能系统" readonly></div>
+                    <div class="form-group"><label class="form-label">额定功率 (kW)</label><input type="number" class="form-input" value="150"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">所属区域</label>
+                        <select class="form-select"><option value="a" selected>A 区</option><option value="b">B 区</option><option value="c">C 区</option></select>
+                    </div>
+                    <div class="form-group"><label class="form-label">安装位置</label><input type="text" class="form-input" value="A 区储能站 1 号位"></div>
+                </div>
+                <div class="form-group"><label class="form-label">设备描述</label><textarea class="form-input" style="min-height:80px;resize:vertical;">该设备为一套 150kW 磷酸铁锂储能系统，用于削峰填谷和应急供电。</textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('editDeviceModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveDevice()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function showDeviceDetail(name) { document.getElementById('deviceDetailTitle').textContent = name + ' - 设备详情'; openModal('deviceDetailModal'); }
+        function showAddDeviceModal() { openModal('addDeviceModal'); }
+        function showEditDeviceModal(name) { openModal('editDeviceModal'); }
+        function saveDevice() { showMessage('设备信息保存成功'); closeModal('addDeviceModal'); closeModal('editDeviceModal'); }
+        
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.main-content > div').forEach(div => { div.style.display = 'none'; });
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        
+        function showMessage(text) { var msg = document.createElement('div'); msg.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#00a8e6 0%,#0088c6 100%);color:#fff;padding:12px 30px;border-radius:4px;z-index:2000;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);'; msg.textContent = text; document.body.appendChild(msg); setTimeout(() => { msg.style.opacity = '0'; msg.style.transition = 'opacity 0.3s'; setTimeout(() => msg.remove(), 300); }, 2000); }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => { overlay.addEventListener('click', function(e) { if (e.target === this) { this.classList.remove('show'); } }); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.show').forEach(modal => { modal.classList.remove('show'); }); } });
+    </script>
+</body>
+</html>

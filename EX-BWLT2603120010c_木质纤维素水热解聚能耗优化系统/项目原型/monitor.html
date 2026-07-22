@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>实时监测仪表盘 - 木质纤维素水热解聚能耗优化系统</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial;
+        }
+        .sidebar-item-active {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+        }
+        .sidebar-item:hover:not(.sidebar-item-active) {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+        }
+        .glass-card {
+            background: rgba(28, 28, 28, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .mac-traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .content-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .content-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        .btn-active {
+            background: #3b82f6;
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: modalIn 0.2s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .modal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .hover-lift {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .gauge-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .gauge-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 8;
+        }
+        .gauge-fill {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-black">
+    <div id="modal-container"></div>
+    <div class="w-[1280px] max-w-[95vw] h-[900px] max-h-[90vh] flex overflow-hidden rounded-[24px] border border-white/10 bg-[#050505]">
+        <aside class="w-[240px] h-full flex flex-col p-4 bg-[#1e1e1e] border-r border-white/5">
+            <div class="flex gap-2 mb-8 px-2">
+                <div class="mac-traffic-light bg-[#ff5f56]"></div>
+                <div class="mac-traffic-light bg-[#ffbd2e]"></div>
+                <div class="mac-traffic-light bg-[#27c93f]"></div>
+            </div>
+            <div class="px-2 mb-4">
+                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest">核心任务</p>
+            </div>
+            <nav class="flex-1 space-y-1">
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="index.html">
+                    <i class="fa-solid fa-table-cells"></i>
+                    主控制面板
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="settings.html">
+                    <i class="fa-solid fa-gear"></i>
+                    工艺参数设置
+                </a>
+                <a class="sidebar-item sidebar-item-active flex items-center gap-3 px-3 py-2 text-[13px]" href="monitor.html">
+                    <i class="fa-solid fa-chart-line text-blue-400"></i>
+                    实时监测仪表盘
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="energy.html">
+                    <i class="fa-solid fa-leaf"></i>
+                    能耗优化分析
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="data.html">
+                    <i class="fa-solid fa-database"></i>
+                    历史数据报表
+                </a>
+            </nav>
+            <div class="mt-auto p-3 glass-card rounded-xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full overflow-hidden">
+                        <img src="https://i01piccdn.sogoucdn.com/9f0c81ee016b30c7" alt="郑鹏" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium">郑鹏</p>
+                        <p class="text-[10px] text-gray-500">在线 (已授权)</p>
+                    </div>
+                    <a class="ml-auto text-gray-500 hover:text-red-400 transition-colors" href="login.html">
+                        <i class="fa-solid fa-door-open"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 h-full flex flex-col bg-[#121212] overflow-hidden">
+            <header class="h-16 flex items-center justify-between px-8 border-b border-white/5 bg-[#1e1e1e]/50">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-blue-500"></i>
+                    <span>木质纤维素水热解聚能耗优化系统</span>
+                </h2>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded-full text-xs">
+                        <span class="pulse-dot block w-2 h-2 bg-green-400 rounded-full"></span>
+                        数据采集中
+                    </div>
+                    <div class="text-gray-400 text-sm" id="current-time"></div>
+                </div>
+            </header>
+            <div class="flex-1 p-6 overflow-y-auto content-scroll">
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="glass-card rounded-[16px] p-4 text-center hover-lift">
+                        <div class="gauge-container mx-auto mb-2">
+                            <svg viewBox="0 0 100 100" class="w-full h-full">
+                                <circle class="gauge-bg" cx="50" cy="50" r="40"/>
+                                <circle class="gauge-fill" cx="50" cy="50" r="40" stroke="#f97316" stroke-dasharray="251" stroke-dashoffset="63"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xl font-bold text-orange-400">75%</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">反应器A-01温度</p>
+                        <p class="text-sm text-orange-400">117.5 ℃</p>
+                    </div>
+                    <div class="glass-card rounded-[16px] p-4 text-center hover-lift">
+                        <div class="gauge-container mx-auto mb-2">
+                            <svg viewBox="0 0 100 100" class="w-full h-full">
+                                <circle class="gauge-bg" cx="50" cy="50" r="40"/>
+                                <circle class="gauge-fill" cx="50" cy="50" r="40" stroke="#3b82f6" stroke-dasharray="251" stroke-dashoffset="50"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xl font-bold text-blue-400">80%</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">反应器A-01压力</p>
+                        <p class="text-sm text-blue-400">12.8 MPa</p>
+                    </div>
+                    <div class="glass-card rounded-[16px] p-4 text-center hover-lift">
+                        <div class="gauge-container mx-auto mb-2">
+                            <svg viewBox="0 0 100 100" class="w-full h-full">
+                                <circle class="gauge-bg" cx="50" cy="50" r="40"/>
+                                <circle class="gauge-fill" cx="50" cy="50" r="40" stroke="#22c55e" stroke-dasharray="251" stroke-dashoffset="38"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xl font-bold text-green-400">85%</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">转化率估算</p>
+                        <p class="text-sm text-green-400">86.4%</p>
+                    </div>
+                    <div class="glass-card rounded-[16px] p-4 text-center hover-lift">
+                        <div class="gauge-container mx-auto mb-2">
+                            <svg viewBox="0 0 100 100" class="w-full h-full">
+                                <circle class="gauge-bg" cx="50" cy="50" r="40"/>
+                                <circle class="gauge-fill" cx="50" cy="50" r="40" stroke="#a855f7" stroke-dasharray="251" stroke-dashoffset="69"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xl font-bold text-purple-400">72%</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">热量回收效率</p>
+                        <p class="text-sm text-purple-400">78.5%</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="glass-card rounded-[20px] p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-temperature-half text-orange-400"></i>
+                                温度趋势
+                            </h3>
+                            <div class="flex gap-2">
+                                <button id="btn-temp-realtime" onclick="switchTempView('realtime')" class="px-2 py-1 bg-blue-600 rounded text-xs">实时</button>
+                                <button id="btn-temp-1hour" onclick="switchTempView('1hour')" class="px-2 py-1 bg-white/10 rounded text-xs">1小时</button>
+                            </div>
+                        </div>
+                        <div id="temp-chart" class="h-[200px] bg-black/30 rounded-xl flex items-end justify-between px-4 pb-2">
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t" style="height: 60px"></div>
+                                <span class="text-[10px] text-gray-500">10:00</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t" style="height: 75px"></div>
+                                <span class="text-[10px] text-gray-500">10:15</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t" style="height: 82px"></div>
+                                <span class="text-[10px] text-gray-500">10:30</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t" style="height: 88px"></div>
+                                <span class="text-[10px] text-gray-500">10:45</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t" style="height: 95px"></div>
+                                <span class="text-[10px] text-gray-500">11:00</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t" style="height: 98px"></div>
+                                <span class="text-[10px] text-gray-500">11:15</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t animate-pulse" style="height: 100px"></div>
+                                <span class="text-[10px] text-gray-500">11:30</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs text-gray-500">
+                            <span>当前: 117.5℃</span>
+                            <span>目标: 120℃</span>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-[20px] p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-gauge-high text-blue-400"></i>
+                                压力趋势
+                            </h3>
+                            <div class="flex gap-2">
+                                <button id="btn-pres-realtime" onclick="switchPresView('realtime')" class="px-2 py-1 bg-blue-600 rounded text-xs">实时</button>
+                                <button id="btn-pres-1hour" onclick="switchPresView('1hour')" class="px-2 py-1 bg-white/10 rounded text-xs">1小时</button>
+                            </div>
+                        </div>
+                        <div id="pres-chart" class="h-[200px] bg-black/30 rounded-xl flex items-end justify-between px-4 pb-2">
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t" style="height: 55px"></div>
+                                <span class="text-[10px] text-gray-500">10:00</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t" style="height: 68px"></div>
+                                <span class="text-[10px] text-gray-500">10:15</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t" style="height: 78px"></div>
+                                <span class="text-[10px] text-gray-500">10:30</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t" style="height: 85px"></div>
+                                <span class="text-[10px] text-gray-500">10:45</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t" style="height: 90px"></div>
+                                <span class="text-[10px] text-gray-500">11:00</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t" style="height: 96px"></div>
+                                <span class="text-[10px] text-gray-500">11:15</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-6 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t animate-pulse" style="height: 100px"></div>
+                                <span class="text-[10px] text-gray-500">11:30</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs text-gray-500">
+                            <span>当前: 12.8 MPa</span>
+                            <span>目标: 13.0 MPa</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-[20px] p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-cyan-400"></i>
+                            传感器状态监控
+                        </h3>
+                        <button onclick="showModal('sensor-detail')" class="text-blue-400 text-xs hover:underline">
+                            <i class="fa-solid fa-expand mr-1"></i>查看详情
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-5 gap-4">
+                        <div class="bg-white/5 rounded-xl p-3 text-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2 pulse-dot"></div>
+                            <p class="text-xs font-medium">T-01 反应器温度</p>
+                            <p class="text-lg text-orange-400">117.5℃</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-3 text-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2 pulse-dot"></div>
+                            <p class="text-xs font-medium">T-02 预热器温度</p>
+                            <p class="text-lg text-orange-400">85.0℃</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-3 text-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2 pulse-dot"></div>
+                            <p class="text-xs font-medium">P-01 反应器压力</p>
+                            <p class="text-lg text-blue-400">12.8 MPa</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-3 text-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2 pulse-dot"></div>
+                            <p class="text-xs font-medium">F-01 进料流量</p>
+                            <p class="text-lg text-cyan-400">125 kg/h</p>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-3 text-center">
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full mx-auto mb-2"></div>
+                            <p class="text-xs font-medium">L-01 液位传感器</p>
+                            <p class="text-lg text-yellow-400">72.3%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).replace(/\//g, '.');
+            document.getElementById('current-time').textContent = timeStr;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        const tempData = {
+            realtime: [
+                { height: 60, time: '10:00' }, { height: 75, time: '10:15' },
+                { height: 82, time: '10:30' }, { height: 88, time: '10:45' },
+                { height: 95, time: '11:00' }, { height: 98, time: '11:15' },
+                { height: 100, time: '11:30' }
+            ],
+            '1hour': [
+                { height: 40, time: '09:00' }, { height: 50, time: '09:30' },
+                { height: 65, time: '10:00' }, { height: 78, time: '10:30' },
+                { height: 85, time: '11:00' }, { height: 92, time: '11:30' },
+                { height: 100, time: '12:00' }
+            ]
+        };
+
+        const presData = {
+            realtime: [
+                { height: 55, time: '10:00' }, { height: 68, time: '10:15' },
+                { height: 78, time: '10:30' }, { height: 85, time: '10:45' },
+                { height: 90, time: '11:00' }, { height: 96, time: '11:15' },
+                { height: 100, time: '11:30' }
+            ],
+            '1hour': [
+                { height: 35, time: '09:00' }, { height: 48, time: '09:30' },
+                { height: 62, time: '10:00' }, { height: 75, time: '10:30' },
+                { height: 88, time: '11:00' }, { height: 94, time: '11:30' },
+                { height: 100, time: '12:00' }
+            ]
+        };
+
+        function switchTempView(view) {
+            const btnRealtime = document.getElementById('btn-temp-realtime');
+            const btn1hour = document.getElementById('btn-temp-1hour');
+            const chart = document.getElementById('temp-chart');
+            
+            btnRealtime.className = view === 'realtime' ? 'px-2 py-1 bg-blue-600 rounded text-xs' : 'px-2 py-1 bg-white/10 rounded text-xs';
+            btn1hour.className = view === '1hour' ? 'px-2 py-1 bg-blue-600 rounded text-xs' : 'px-2 py-1 bg-white/10 rounded text-xs';
+            
+            const data = tempData[view];
+            chart.innerHTML = data.map(d => `
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-6 bg-gradient-to-t from-orange-600 to-orange-400 rounded-t" style="height: ${d.height}px"></div>
+                    <span class="text-[10px] text-gray-500">${d.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function switchPresView(view) {
+            const btnRealtime = document.getElementById('btn-pres-realtime');
+            const btn1hour = document.getElementById('btn-pres-1hour');
+            const chart = document.getElementById('pres-chart');
+            
+            btnRealtime.className = view === 'realtime' ? 'px-2 py-1 bg-blue-600 rounded text-xs' : 'px-2 py-1 bg-white/10 rounded text-xs';
+            btn1hour.className = view === '1hour' ? 'px-2 py-1 bg-blue-600 rounded text-xs' : 'px-2 py-1 bg-white/10 rounded text-xs';
+            
+            const data = presData[view];
+            chart.innerHTML = data.map(d => `
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-6 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t" style="height: ${d.height}px"></div>
+                    <span class="text-[10px] text-gray-500">${d.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function showModal(type) {
+            const container = document.getElementById('modal-container');
+            let content = '';
+            if (type === 'sensor-detail') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[700px] max-w-[90vw] max-h-[80vh] overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-microchip text-cyan-400 mr-2"></i>传感器详细状态</h3>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-4">
+                            <table class="w-full text-sm">
+                                <thead><tr class="text-gray-500 text-xs border-b border-white/10"><th class="text-left py-2 px-2">传感器</th><th class="text-left py-2 px-2">描述</th><th class="text-left py-2 px-2">当前值</th><th class="text-left py-2 px-2">状态</th><th class="text-left py-2 px-2">最后更新</th></tr></thead>
+                                <tbody class="text-gray-300">
+                                    <tr class="border-t border-white/5"><td class="py-2 px-2">T-01</td><td class="py-2 px-2">反应器A-01温度</td><td class="py-2 px-2 text-orange-400">117.5 ℃</td><td class="py-2 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">正常</span></td><td class="py-2 px-2">2026.03.21 14:35:12</td></tr>
+                                    <tr class="border-t border-white/5"><td class="py-2 px-2">T-02</td><td class="py-2 px-2">预热器温度</td><td class="py-2 px-2 text-orange-400">85.0 ℃</td><td class="py-2 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">正常</span></td><td class="py-2 px-2">2026.03.21 14:35:11</td></tr>
+                                    <tr class="border-t border-white/5"><td class="py-2 px-2">T-03</td><td class="py-2 px-2">热交换器出口</td><td class="py-2 px-2 text-orange-400">84.2 ℃</td><td class="py-2 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">正常</span></td><td class="py-2 px-2">2026.03.21 14:35:10</td></tr>
+                                    <tr class="border-t border-white/5"><td class="py-2 px-2">P-01</td><td class="py-2 px-2">反应器A-01压力</td><td class="py-2 px-2 text-blue-400">12.8 MPa</td><td class="py-2 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">正常</span></td><td class="py-2 px-2">2026.03.21 14:35:12</td></tr>
+                                    <tr class="border-t border-white/5"><td class="py-2 px-2">P-02</td><td class="py-2 px-2">泵出口压力</td><td class="py-2 px-2 text-blue-400">1.25 MPa</td><td class="py-2 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">正常</span></td><td class="py-2 px-2">2026.03.21 14:35:09</td></tr>
+                                    <tr class="border-t border-white/5"><td class="py-2 px-2">F-01</td><td class="py-2 px-2">进料流量</td><td class="py-2 px-2 text-cyan-400">125 kg/h</td><td class="py-2 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">正常</span></td><td class="py-2 px-2">2026.03.21 14:35:08</td></tr>
+                                    <tr class="border-t border-white/5"><td class="py-2 px-2">F-02</td><td class="py-2 px-2">产物流量</td><td class="py-2 px-2 text-cyan-400">118 kg/h</td><td class="py-2 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">正常</span></td><td class="py-2 px-2">2026.03.21 14:35:07</td></tr>
+                                    <tr class="border-t border-white/5"><td class="py-2 px-2">L-01</td><td class="py-2 px-2">反应器液位</td><td class="py-2 px-2 text-yellow-400">72.3 %</td><td class="py-2 px-2"><span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs">告警</span></td><td class="py-2 px-2">2026.03.21 14:35:06</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex justify-center">
+                            <button onclick="closeModal()" class="btn-primary px-6 py-2 rounded-lg"><i class="fa-solid fa-xmark mr-1"></i>关闭</button>
+                        </div>
+                    </div></div>`;
+            }
+            container.innerHTML = content;
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modal-container').innerHTML = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>水利工程数字化勘测设计与建模软件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --accent: #0a84ff;
+            --surface-0: #12151b;
+            --surface-1: rgba(32, 36, 45, 0.78);
+            --surface-2: rgba(44, 49, 60, 0.72);
+            --surface-3: rgba(22, 26, 34, 0.68);
+            --border-soft: rgba(255, 255, 255, 0.08);
+            --text-main: #e9edf5;
+            --text-subtle: #98a3b8;
+            --shadow-main: 0 20px 40px rgba(0, 0, 0, 0.38);
+            --radius-window: 18px;
+            --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px;
+            letter-spacing: 0.01em;
+            background: url('static/rBBhH19EnsmAYlDbAAHfSFltjL4040-1.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        .window-shell {
+            width: 1680px;
+            height: 100%;
+            margin: 0 auto;
+            border-radius: var(--radius-window);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 40px 80px rgba(3, 6, 13, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            background: transparent;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: rgba(32, 36, 45, 0.4);
+            backdrop-filter: blur(26px) saturate(1.2);
+            border-right: 1px solid var(--border-soft);
+            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .inspector {
+            width: 300px;
+            background: rgba(32, 36, 45, 0.4);
+            backdrop-filter: blur(26px) saturate(1.2);
+            border-left: 1px solid var(--border-soft);
+            box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .toolbar {
+            height: 56px;
+            background: rgba(44, 49, 60, 0.5);
+            backdrop-filter: blur(30px) saturate(1.1);
+            border-bottom: 1px solid var(--border-soft);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        }
+
+        .window-controls {
+            gap: 8px;
+        }
+
+        .mac-content {
+            background: rgba(10, 14, 20, 0.35);
+            backdrop-filter: blur(4px);
+        }
+
+        .control-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.25);
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+
+        .toolbar:hover .control-dot {
+            transform: scale(1.05);
+            filter: saturate(1.15) brightness(1.06);
+        }
+
+        .viewport {
+            background: transparent;
+            position: relative;
+        }
+
+        .mac-button {
+            transition: all 0.22s var(--ease-out-quint);
+            border: 1px solid transparent;
+            border-radius: 10px;
+        }
+
+        .mac-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--border-soft);
+            transform: translateY(-1px);
+        }
+
+        .mac-button:active {
+            transform: translateY(0) scale(0.985);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .active-tab {
+            background: linear-gradient(145deg, rgba(10, 132, 255, 0.28), rgba(10, 132, 255, 0.12));
+            color: #9eccff;
+            border: 1px solid rgba(10, 132, 255, 0.32);
+            box-shadow: 0 8px 24px rgba(10, 132, 255, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+        }
+
+        .grid-bg {
+            background-image: linear-gradient(rgba(174, 191, 214, 0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(174, 191, 214, 0.09) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .glass-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-soft);
+            border-radius: 11px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .segmented-control {
+            background: rgba(9, 12, 17, 0.45);
+            border: 1px solid var(--border-soft);
+            border-radius: 10px;
+            padding: 3px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .segmented-item {
+            color: var(--text-subtle);
+            transition: all 0.2s var(--ease-out-quint);
+            border-radius: 7px;
+        }
+
+        .segmented-item.active {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+            color: var(--text-main);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 14px rgba(0, 0, 0, 0.32);
+        }
+
+        .segmented-item:hover {
+            color: #cdd6e8;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .segmented-item:active {
+            transform: scale(0.97);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .primary-action {
+            background: linear-gradient(150deg, #3da0ff, #0a84ff 55%, #0a74df);
+            border: 1px solid rgba(126, 193, 255, 0.5);
+            box-shadow: 0 10px 20px rgba(10, 132, 255, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transition: all 0.22s var(--ease-out-quint);
+            cursor: pointer;
+        }
+
+        .primary-action:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.06);
+            box-shadow: 0 14px 24px rgba(10, 132, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.48);
+        }
+
+        .primary-action:active {
+            transform: translateY(0) scale(0.985);
+            filter: brightness(0.98);
+            box-shadow: 0 8px 14px rgba(10, 132, 255, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+        }
+
+        .floating-card {
+            background: rgba(22, 26, 34, 0.5);
+            border: 1px solid var(--border-soft);
+            backdrop-filter: blur(18px) saturate(1.15);
+            box-shadow: var(--shadow-main);
+        }
+
+        .tool-btn {
+            transition: all 0.2s var(--ease-out-quint);
+        }
+
+        .tool-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .tool-btn:active {
+            transform: scale(0.96);
+        }
+
+        .tool-btn.active {
+            background: rgba(10, 132, 255, 0.2) !important;
+            color: #3da0ff !important;
+        }
+
+        .section-title {
+            color: #8d98ae;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+        }
+
+        .meta-value {
+            color: #bbc5d8;
+        }
+
+        input, select {
+            background: rgba(16, 19, 26, 0.84) !important;
+            border: 1px solid var(--border-soft) !important;
+            color: var(--text-main) !important;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        input::placeholder {
+            color: #8490a8;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: rgba(10, 132, 255, 0.7) !important;
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.18);
+        }
+
+        footer {
+            background: rgba(25, 29, 36, 0.74) !important;
+            border-top: 1px solid var(--border-soft) !important;
+            backdrop-filter: blur(20px);
+            color: #a6b0c3 !important;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .status-pill {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-soft);
+            border-radius: 999px;
+            padding: 2px 8px;
+            line-height: 1;
+        }
+
+        .status-meta {
+            color: #93a0b8;
+        }
+
+        .status-strong {
+            color: #bfc9db;
+            font-weight: 500;
+        }
+
+        .compliance-pill {
+            background: rgba(24, 199, 126, 0.12);
+            border: 1px solid rgba(24, 199, 126, 0.35);
+            color: #8de7be;
+            border-radius: 999px;
+            padding: 2px 8px;
+        }
+
+        .real-model-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .real-model {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            border: none;
+            background: transparent;
+        }
+
+        .node-badge {
+            background: linear-gradient(145deg, rgba(10, 132, 255, 0.9), rgba(8, 106, 211, 0.82));
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 8px 20px rgba(10, 132, 255, 0.3);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(182, 198, 226, 0.2);
+            border-radius: 999px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface-3);
+            border-radius: 12px;
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75);
+            min-width: 420px;
+            max-height: 85vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: move;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+
+        .modal-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn-primary {
+            background: linear-gradient(150deg, #3da0ff, #0a84ff 55%, #0a74df);
+            color: white;
+            border-color: rgba(126, 193, 255, 0.5);
+        }
+
+        .action-btn-primary:hover {
+            filter: brightness(1.1);
+        }
+
+        .action-btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-subtle);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .action-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .section-content {
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+        }
+
+        .section-toggle i {
+            transition: transform 0.3s ease;
+        }
+
+        .section-toggle.collapsed i {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+
+<body class="h-screen overflow-hidden">
+    <div class="window-shell h-full flex flex-col">
+        <!-- macOS Toolbar -->
+        <header class="toolbar flex items-center justify-between px-5 z-50">
+            <div class="flex items-center space-x-3">
+                <div class="window-controls flex pr-4">
+                    <div class="control-dot bg-[#ff5f57]"></div>
+                    <div class="control-dot bg-[#febc2e]"></div>
+                    <div class="control-dot bg-[#28c840]"></div>
+                </div>
+                <div class="glass-chip flex items-center space-x-1 px-3 py-1">
+                    <span class="fas fa-folder text-blue-400"></span>
+                    <span class="text-xs font-medium tracking-wide whitespace-nowrap">水利工程数字化勘测设计与建模软件</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-5">
+                <div class="segmented-control flex">
+                    <a href="scheme.html" class="segmented-item active px-3.5 py-1 text-xs">设计</a>
+                    <a href="hydrology.html" class="segmented-item px-3.5 py-1 text-xs">推演</a>
+                    <a href="archive.html" class="segmented-item px-3.5 py-1 text-xs">报表</a>
+                </div>
+                <div class="h-6 w-[1px] bg-white/10"></div>
+                <button onclick="openModal('runModelModal')" class="primary-action px-4 py-1.5 rounded-lg text-xs font-medium text-white flex items-center space-x-2">
+                    <span class="fas fa-play"></span>
+                    <span>运行水力模拟</span>
+                </button>
+                <div class="flex items-center -space-x-2">
+                    <img alt="User" class="w-7 h-7 rounded-full border border-gray-800" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/88a6f9a501ac49469ebc7601944e76a8.jpg" />
+                    <div class="w-7 h-7 rounded-full bg-gray-700 border border-gray-800 flex items-center justify-center text-[10px] text-white">+3</div>
+                </div>
+            </div>
+        </header>
+        <div class="mac-content flex-1 flex overflow-hidden">
+            <!-- Sidebar -->
+            <aside class="sidebar flex flex-col border-right border-black/40">
+                <div class="p-4">
+                    <div class="relative mb-5">
+                        <span class="absolute left-3 top-2.5 text-gray-500 fas fa-search"></span>
+                        <input id="searchInput" class="w-full bg-black/20 border border-white/5 rounded-lg py-2 pl-9 pr-3 text-xs focus:outline-none focus:border-blue-500/50" placeholder="搜索资源..." type="text" onkeyup="handleSearch(event)" />
+                    </div>
+                    <nav class="space-y-1">
+                        <a href="scheme.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button active-tab">
+                            <span class="fas fa-lightbulb text-cyan-300"></span>
+                            <span>方案设计</span>
+                        </a>
+                        <a href="point-cloud.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button">
+                            <span class="fas fa-cloud text-blue-300"></span>
+                            <span>点云质检</span>
+                        </a>
+                        <a href="hydrology.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button">
+                            <span class="fas fa-water text-indigo-300"></span>
+                            <span>水文推演</span>
+                        </a>
+                        <a href="archive.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button">
+                            <span class="fas fa-archive text-violet-300"></span>
+                            <span>成果归档</span>
+                        </a>
+                    </nav>
+                </div>
+                <div class="mt-auto p-4 border-t border-black/20 bg-black/10">
+                    <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2">
+                        <span>协同与版本状态</span>
+                        <span class="text-blue-400">3 人在线 · 自动保存</span>
+                    </div>
+                    <div class="glass-chip w-full h-1 rounded-full overflow-hidden">
+                        <div class="bg-blue-500 h-full w-[86%] shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
+                    </div>
+                </div>
+            </aside>
+            <!-- Viewport -->
+            <main class="flex-1 viewport flex flex-col">
+                <!-- 3D Transform Tools -->
+                <div class="absolute top-6 left-6 flex flex-col space-y-2 z-10">
+                    <div class="floating-card flex flex-col rounded-lg p-1">
+                        <button id="tool-select" class="tool-btn p-2 rounded hover:bg-white/10 text-blue-400 active" onclick="setTool('select')"><span class="fas fa-mouse-pointer text-lg"></span></button>
+                        <button id="tool-move" class="tool-btn p-2 rounded hover:bg-white/10 text-gray-400" onclick="setTool('move')"><span class="fas fa-arrows-alt text-lg"></span></button>
+                        <button id="tool-rotate" class="tool-btn p-2 rounded hover:bg-white/10 text-gray-400" onclick="setTool('rotate')"><span class="fas fa-sync text-lg"></span></button>
+                        <button id="tool-scale" class="tool-btn p-2 rounded hover:bg-white/10 text-gray-400" onclick="setTool('scale')"><span class="fas fa-expand text-lg"></span></button>
+                    </div>
+                    <div class="floating-card flex flex-col rounded-lg p-1">
+                        <button id="tool-cube" class="tool-btn p-2 rounded hover:bg-white/10 text-gray-400" onclick="toggleView('cube')"><span class="fas fa-cube text-xl"></span></button>
+                        <button id="tool-eye" class="tool-btn p-2 rounded hover:bg-white/10 text-gray-400" onclick="toggleView('eye')"><span class="fas fa-eye text-xl"></span></button>
+                    </div>
+                </div>
+                <!-- Central 3D Placeholder -->
+                <div class="flex-1 relative overflow-hidden" id="viewportArea" style="background: url('static/rBBhH19EnsmAYlDbAAHfSFltjL4040-1.jpg') center/cover no-repeat;">
+                    <!-- Perspective Hint -->
+                    <div class="absolute bottom-6 left-6 text-slate-500 text-[10px] font-mono">
+                        PERSPECTIVE | GRID: 5.0m | METAL PIPELINE 3.2 | 工具: <span id="currentToolLabel">选择</span>
+                    </div>
+                    <!-- Main Model Placeholder -->
+                    <div class="real-model-wrap group">
+                        <div class="real-model opacity-90 group-hover:opacity-100 transition-all flex items-center justify-center">
+                            <div class="text-center">
+                                <i class="fas fa-dam text-6xl text-blue-400/50 mb-4"></i>
+                                <div class="text-gray-400 text-sm">3D视图区域</div>
+                                <div class="text-gray-500 text-xs mt-2">使用左侧工具栏进行操作</div>
+                            </div>
+                        </div>
+                        <div class="node-badge absolute top-1/4 left-1/3 backdrop-blur text-white text-[10px] px-2 py-1 rounded-full">
+                            坝体中段: El. 128.5m
+                        </div>
+                    </div>
+                </div>
+                <!-- Analysis Drawer (Mini Chart) -->
+                <div class="h-40 floating-card border-t p-4 flex space-x-6">
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2">
+                            <span class="flex items-center space-x-1 uppercase tracking-widest">
+                                <span class="fas fa-wave-square"></span>
+                                <span>实时流量推演 (HEC-RAS 3.0 Engine)</span>
+                            </span>
+                            <span>2.4k iterations/sec</span>
+                        </div>
+                        <div class="w-full h-24" id="chart-mini"></div>
+                    </div>
+                    <div class="w-64 glass-chip p-3.5">
+                        <h4 class="text-[10px] text-gray-500 uppercase mb-2">水力参数概览</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-[10px]">入库流量</span>
+                                <span class="text-[10px] font-mono text-cyan-400">1,240.5 m³/s</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[10px]">校核水位</span>
+                                <span class="text-[10px] font-mono text-cyan-400">175.44 m</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[10px]">防洪库容</span>
+                                <span class="text-[10px] font-mono text-cyan-400">22.1 亿 m³</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <!-- Inspector -->
+            <aside class="inspector border-l border-black/40 flex flex-col">
+                <!-- Inspector Header -->
+                <div class="p-4 border-b border-black/40">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-gray-300">属性检查器</span>
+                        <button class="text-gray-500 hover:text-white" onclick="closeInspector()"><span class="fas fa-times"></span></button>
+                    </div>
+                    <div class="flex items-center space-x-3 p-2 rounded-lg border border-blue-400/30 bg-blue-500/15 shadow-[0_10px_20px_rgba(10,132,255,0.16)]">
+                        <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
+                            <span class="fas fa-box text-white"></span>
+                        </div>
+                        <div>
+                            <div class="text-[11px] font-bold">泄洪闸_B1_Main</div>
+                            <div class="text-[9px] text-blue-400">参数化水工构筑物 v2.1</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Property Groups -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-6">
+                    <section>
+                        <button class="section-toggle flex items-center justify-between w-full text-[10px] font-bold text-gray-500 uppercase mb-3" onclick="toggleSection(this)">
+                            <span>三维空间坐标</span>
+                            <span class="fas fa-chevron-down"></span>
+                        </button>
+                        <div class="section-content">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="space-y-1">
+                                    <span class="text-[9px] text-gray-500 ml-1">X</span>
+                                    <input class="w-full bg-black/30 border border-white/5 rounded px-2 py-1 text-[10px] font-mono text-blue-400 focus:outline-none" type="text" value="12,504.2" />
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="text-[9px] text-gray-500 ml-1">Y</span>
+                                    <input class="w-full bg-black/30 border border-white/5 rounded px-2 py-1 text-[10px] font-mono text-blue-400 focus:outline-none" type="text" value="3,112.8" />
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="text-[9px] text-gray-500 ml-1">Z</span>
+                                    <input class="w-full bg-black/30 border border-white/5 rounded px-2 py-1 text-[10px] font-mono text-blue-400 focus:outline-none" type="text" value="85.4" />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section>
+                        <button class="section-toggle flex items-center justify-between w-full text-[10px] font-bold text-gray-500 uppercase mb-3" onclick="toggleSection(this)">
+                            <span>几何设计参数</span>
+                            <span class="fas fa-chevron-down"></span>
+                        </button>
+                        <div class="section-content">
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-400">闸门总宽 (m)</span>
+                                    <input id="gateWidth" class="w-20 bg-black/30 border border-white/5 rounded px-2 py-1 text-xs text-right" type="number" value="12.0" />
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-400">底槛高程 (m)</span>
+                                    <input id="bottomElevation" class="w-20 bg-black/30 border border-white/5 rounded px-2 py-1 text-xs text-right" type="number" value="65.0" />
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-400">闸门级数</span>
+                                    <select id="gateStage" class="bg-black/30 border border-white/5 rounded px-1 py-1 text-xs w-20">
+                                        <option>单级</option>
+                                        <option selected>双级</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section>
+                        <button class="section-toggle flex items-center justify-between w-full text-[10px] font-bold text-gray-500 uppercase mb-3 text-blue-400" onclick="toggleSection(this)">
+                            <span>水力性能优化 (A.I.)</span>
+                            <span class="fas fa-magic"></span>
+                        </button>
+                        <div class="section-content">
+                            <div class="glass-chip p-3 text-[10px] leading-relaxed" id="aiSuggestion">
+                                <span class="text-blue-400">AI 建议:</span> 当前底板厚度 (2.5m) 的抗浮稳定安全系数为 1.25，建议通过算法增加至 2.8m 以符合最新的 SL/T73 标准。
+                                <button id="applyAiBtn" class="mt-2 block w-full py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded border border-blue-500/30 transition-all font-medium" onclick="applyAiSuggestion()">应用 A.I. 建议</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <!-- Metadata Info -->
+                <div class="p-4 border-t border-black/40 text-[9px] text-gray-500 space-y-1.5">
+                    <div class="flex justify-between"><span>GUID:</span> <span class="meta-value">H-STA-5049-DWD-X</span></div>
+                    <div class="flex justify-between"><span>修改日期:</span> <span class="meta-value">2026/03/19 14:22</span></div>
+                    <div class="flex justify-between"><span>修改人:</span> <span class="meta-value">付晓磊</span></div>
+                </div>
+            </aside>
+        </div>
+        <!-- macOS StatusBar -->
+        <footer class="h-7 bg-[#252525] border-t border-black/40 flex items-center justify-between px-4 text-[10px] text-gray-500">
+            <div class="flex items-center space-x-3">
+                <div class="status-pill flex items-center space-x-1">
+                    <span class="fas fa-wifi"></span>
+                    <span>加密隧道已开启</span>
+                </div>
+                <span class="status-meta">GPU:</span>
+                <span class="status-strong">Metal 3.2 (M3 Max 128GB)</span>
+                <span class="status-pill">FPS 120.4</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="compliance-pill flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span>SL/T73.1 合规校验: 正常</span>
+                </div>
+                <span class="status-pill font-mono">X: 25.112 Y: 8.490 Z: 204.11</span>
+                <span class="status-meta">UTF-8 · MacOS UI Kit 1.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="runModelModal">
+        <div class="modal-content" style="min-width: 480px;">
+            <div class="modal-header" id="runModelModalHeader">
+                <div class="flex items-center space-x-2">
+                    <div class="flex space-x-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-semibold text-white absolute left-1/2 transform -translate-x-1/2">运行水力模拟</span>
+                <button onclick="closeModal('runModelModal')" class="text-gray-400 hover:text-white ml-auto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label class="text-xs text-gray-400 block mb-1.5">选择方案</label>
+                    <select id="runModelScheme" class="w-full px-3 py-2 text-xs">
+                        <option value="">-- 请选择方案 --</option>
+                        <option value="1">泄洪闸设计方案A</option>
+                        <option value="2">引水隧洞方案B</option>
+                        <option value="3">溢洪道加固方案</option>
+                        <option value="4">生态护坡方案</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="text-xs text-gray-400 block mb-1.5">模拟类型</label>
+                    <select id="runModelType" class="w-full px-3 py-2 text-xs">
+                        <option value="flood">洪水演进模拟</option>
+                        <option value="gate">闸门启闭模拟</option>
+                        <option value="pressure">压力流模拟</option>
+                        <option value="sediment">泥沙输移模拟</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="text-xs text-gray-400 block mb-1.5">计算引擎</label>
+                    <select id="runModelEngine" class="w-full px-3 py-2 text-xs">
+                        <option value="hecras">HEC-RAS 6.0</option>
+                        <option value="mike11">MIKE 11</option>
+                        <option value="swmm">SWMM 5.1</option>
+                        <option value="telecoral">Telecoral 2D</option>
+                    </select>
+                </div>
+                <div class="glass-chip p-3">
+                    <div class="text-[10px] text-gray-500 uppercase mb-2">模拟参数</div>
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <label class="text-gray-500 block mb-1">时间步长 (s)</label>
+                            <input type="number" id="runModelTimestep" value="1.0" class="w-full px-2 py-1 bg-black/20 rounded text-white" />
+                        </div>
+                        <div>
+                            <label class="text-gray-500 block mb-1">模拟时长 (h)</label>
+                            <input type="number" id="runModelDuration" value="72" class="w-full px-2 py-1 bg-black/20 rounded text-white" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('runModelModal')" class="action-btn action-btn-secondary">取消</button>
+                <button onclick="startModelRun()" class="action-btn action-btn-primary"><i class="fas fa-play mr-1"></i> 开始模拟</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="searchResultsModal">
+        <div class="modal-content" style="min-width: 500px;">
+            <div class="modal-header" id="searchResultsModalHeader">
+                <div class="flex items-center space-x-2">
+                    <div class="flex space-x-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-semibold text-white absolute left-1/2 transform -translate-x-1/2">搜索结果</span>
+                <button onclick="closeModal('searchResultsModal')" class="text-gray-400 hover:text-white ml-auto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="searchResultsContent" class="space-y-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('searchResultsModal')" class="action-btn action-btn-secondary">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTool = 'select';
+        let aiApplied = false;
+
+        const searchData = [
+            { type: '方案', name: '泄洪闸设计方案A', icon: 'lightbulb' },
+            { type: '方案', name: '引水隧洞方案B', icon: 'lightbulb' },
+            { type: '点云', name: '左岸边坡点云数据', icon: 'cloud' },
+            { type: '点云', name: '坝体基础点云', icon: 'cloud' },
+            { type: '水文', name: '2024年洪水推演记录', icon: 'water' },
+            { type: '归档', name: '初步设计报告.pdf', icon: 'file-pdf' }
+        ];
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.querySelectorAll('.modal-content').forEach(m => m.style.transform = 'translate(0, 0)');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+        });
+
+        function setTool(tool) {
+            currentTool = tool;
+            const tools = ['select', 'move', 'rotate', 'scale'];
+            tools.forEach(t => {
+                const btn = document.getElementById(`tool-${t}`);
+                btn.classList.remove('active');
+                btn.classList.remove('text-blue-400');
+                btn.classList.add('text-gray-400');
+            });
+            const activeBtn = document.getElementById(`tool-${tool}`);
+            activeBtn.classList.add('active');
+            activeBtn.classList.remove('text-gray-400');
+            activeBtn.classList.add('text-blue-400');
+            
+            const toolLabels = { select: '选择', move: '移动', rotate: '旋转', scale: '缩放' };
+            document.getElementById('currentToolLabel').textContent = toolLabels[tool];
+            showNotification(`已切换到${toolLabels[tool]}工具`);
+        }
+
+        function toggleView(view) {
+            const btn = document.getElementById(`tool-${view}`);
+            btn.classList.toggle('text-blue-400');
+            btn.classList.toggle('text-gray-400');
+            
+            const messages = {
+                cube: '立方体视图切换',
+                eye: '透视/正交视图切换'
+            };
+            showNotification(messages[view]);
+        }
+
+        function toggleSection(btn) {
+            btn.classList.toggle('collapsed');
+            const content = btn.nextElementSibling;
+            content.classList.toggle('collapsed');
+        }
+
+        function closeInspector() {
+            showNotification('属性检查器已隐藏（可通过视图菜单重新打开）');
+        }
+
+        function applyAiSuggestion() {
+            if (aiApplied) {
+                showNotification('AI建议已经应用过了');
+                return;
+            }
+            
+            document.getElementById('gateWidth').value = '12.5';
+            document.getElementById('bottomElevation').value = '64.8';
+            document.getElementById('gateStage').value = '双级';
+            
+            const aiSuggestion = document.getElementById('aiSuggestion');
+            aiSuggestion.innerHTML = `
+                <span class="text-green-400">✓ AI 建议已应用</span>
+                <div class="mt-2 text-gray-400">
+                    <div>底板厚度: 2.5m → 2.8m</div>
+                    <div>安全系数: 1.25 → 1.55</div>
+                    <div>状态: 符合 SL/T73 标准</div>
+                </div>
+                <button class="mt-2 block w-full py-1.5 bg-green-600/20 text-green-400 rounded border border-green-500/30 font-medium" disabled>
+                    <i class="fas fa-check mr-1"></i>已应用
+                </button>
+            `;
+            
+            aiApplied = true;
+            showNotification('AI优化建议已成功应用！');
+        }
+
+        function handleSearch(event) {
+            if (event.key === 'Enter') {
+                const query = event.target.value.toLowerCase().trim();
+                if (!query) {
+                    showNotification('请输入搜索关键词');
+                    return;
+                }
+                
+                const results = searchData.filter(item => 
+                    item.name.toLowerCase().includes(query) || 
+                    item.type.toLowerCase().includes(query)
+                );
+                
+                showSearchResults(results, query);
+            }
+        }
+
+        function showSearchResults(results, query) {
+            const content = document.getElementById('searchResultsContent');
+            
+            if (results.length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fas fa-search text-3xl mb-2"></i>
+                        <div>未找到与 "${query}" 相关的结果</div>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = results.map(item => `
+                    <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
+                        <div class="w-8 h-8 bg-blue-500/20 rounded flex items-center justify-center">
+                            <i class="fas fa-${item.icon} text-blue-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-sm text-white">${item.name}</div>
+                            <div class="text-xs text-gray-500">${item.type}</div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-500"></i>
+                    </div>
+                `).join('');
+            }
+            
+            openModal('searchResultsModal');
+        }
+
+        function startModelRun() {
+            const schemeId = document.getElementById('runModelScheme').value;
+            const modelType = document.getElementById('runModelType');
+            const engine = document.getElementById('runModelEngine');
+            const timestep = document.getElementById('runModelTimestep').value;
+            const duration = document.getElementById('runModelDuration').value;
+
+            if (!schemeId) {
+                alert('请选择一个方案');
+                return;
+            }
+
+            const schemeName = document.querySelector(`#runModelScheme option[value="${schemeId}"]`).textContent;
+            const modelTypeText = modelType.options[modelType.selectedIndex].text;
+            const engineText = engine.options[engine.selectedIndex].text;
+
+            alert(`水力模拟任务已创建！\n\n方案：${schemeName}\n模拟类型：${modelTypeText}\n计算引擎：${engineText}\n时间步长：${timestep}s\n模拟时长：${duration}h\n\n任务已添加到水文推演队列，请在推演页面查看进度。`);
+
+            closeModal('runModelModal');
+            showNotification('水力模拟任务已提交');
+
+            document.getElementById('runModelScheme').value = '';
+            document.getElementById('runModelTimestep').value = '1.0';
+            document.getElementById('runModelDuration').value = '72';
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-20 right-10 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center space-x-2 animate-pulse';
+            notification.innerHTML = `
+                <i class="fas fa-info-circle text-blue-400"></i>
+                <span class="text-sm">${message}</span>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        function makeDraggable(modalId, headerId) {
+            const modal = document.getElementById(modalId);
+            const header = document.getElementById(headerId);
+            let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
+
+            header.addEventListener('mousedown', function(e) {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                if (e.target === header || header.contains(e.target)) {
+                    isDragging = true;
+                }
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    modal.querySelector('.modal-content').style.transform = `translate(${currentX}px, ${currentY}px)`;
+                }
+            });
+
+            document.addEventListener('mouseup', function() {
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+            });
+        }
+
+        makeDraggable('runModelModal', 'runModelModalHeader');
+        makeDraggable('searchResultsModal', 'searchResultsModalHeader');
+
+        const chartDom = document.getElementById('chart-mini');
+        const myChart = echarts.init(chartDom, 'dark');
+        const option = {
+            backgroundColor: 'transparent',
+            grid: { left: 40, right: 10, top: 10, bottom: 25 },
+            xAxis: {
+                type: 'category',
+                data: ['0h', '12h', '24h', '36h', '48h', '60h', '72h'],
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+                axisTick: { show: false },
+                axisLabel: { color: '#6b7280', fontSize: 10 }
+            },
+            yAxis: {
+                type: 'value',
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { color: '#6b7280', fontSize: 10 }
+            },
+            series: [{
+                data: [1200, 1900, 2400, 2100, 1500, 1100, 900],
+                type: 'line',
+                smooth: true,
+                showSymbol: false,
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(59, 130, 246, 0.35)' },
+                        { offset: 1, color: 'rgba(59, 130, 246, 0)' }
+                    ])
+                },
+                lineStyle: { color: '#3b82f6', width: 2 },
+                itemStyle: { color: '#3b82f6' }
+            }],
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: '#1f2937',
+                borderColor: '#374151',
+                textStyle: { color: '#fff', fontSize: 11 }
+            }
+        };
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+    </script>
+</body>
+
+</html>

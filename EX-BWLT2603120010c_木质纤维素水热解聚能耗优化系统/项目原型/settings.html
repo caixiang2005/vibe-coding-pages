@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>工艺参数设置 - 木质纤维素水热解聚能耗优化系统</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial;
+        }
+        .sidebar-item-active {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+        }
+        .sidebar-item:hover:not(.sidebar-item-active) {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+        }
+        .glass-card {
+            background: rgba(28, 28, 28, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .mac-traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .content-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .content-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        .btn-success {
+            background: #16a34a;
+            transition: all 0.2s;
+        }
+        .btn-success:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background: #dc2626;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+            transform: translateY(-1px);
+        }
+        .btn-warning {
+            background: #d97706;
+            transition: all 0.2s;
+        }
+        .btn-warning:hover {
+            background: #b45309;
+            transform: translateY(-1px);
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: modalIn 0.2s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .modal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .hover-lift {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .select-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            padding-right: 32px;
+        }
+        .select-field:focus {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .param-card {
+            transition: all 0.2s;
+        }
+        .param-card:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-black">
+    <div id="modal-container"></div>
+    <div class="w-[1280px] max-w-[95vw] h-[900px] max-h-[90vh] flex overflow-hidden rounded-[24px] border border-white/10 bg-[#050505]">
+        <aside class="w-[240px] h-full flex flex-col p-4 bg-[#1e1e1e] border-r border-white/5">
+            <div class="flex gap-2 mb-8 px-2">
+                <div class="mac-traffic-light bg-[#ff5f56]"></div>
+                <div class="mac-traffic-light bg-[#ffbd2e]"></div>
+                <div class="mac-traffic-light bg-[#27c93f]"></div>
+            </div>
+            <div class="px-2 mb-4">
+                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest">核心任务</p>
+            </div>
+            <nav class="flex-1 space-y-1">
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="index.html">
+                    <i class="fa-solid fa-table-cells"></i>
+                    主控制面板
+                </a>
+                <a class="sidebar-item sidebar-item-active flex items-center gap-3 px-3 py-2 text-[13px]" href="settings.html">
+                    <i class="fa-solid fa-gear text-blue-400"></i>
+                    工艺参数设置
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="monitor.html">
+                    <i class="fa-solid fa-chart-line"></i>
+                    实时监测仪表盘
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="energy.html">
+                    <i class="fa-solid fa-leaf"></i>
+                    能耗优化分析
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="data.html">
+                    <i class="fa-solid fa-database"></i>
+                    历史数据报表
+                </a>
+            </nav>
+            <div class="mt-auto p-3 glass-card rounded-xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full overflow-hidden">
+                        <img src="https://i01piccdn.sogoucdn.com/9f0c81ee016b30c7" alt="郑鹏" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium">郑鹏</p>
+                        <p class="text-[10px] text-gray-500">在线 (已授权)</p>
+                    </div>
+                    <a class="ml-auto text-gray-500 hover:text-red-400 transition-colors" href="login.html">
+                        <i class="fa-solid fa-door-open"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 h-full flex flex-col bg-[#121212] overflow-hidden">
+            <header class="h-16 flex items-center justify-between px-8 border-b border-white/5 bg-[#1e1e1e]/50">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-blue-500"></i>
+                    <span>木质纤维素水热解聚能耗优化系统</span>
+                </h2>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded-full text-xs">
+                        <span class="pulse-dot block w-2 h-2 bg-green-400 rounded-full"></span>
+                        参数已保存
+                    </div>
+                    <div class="text-gray-400 text-sm" id="current-time"></div>
+                </div>
+            </header>
+            <div class="flex-1 p-6 overflow-y-auto content-scroll">
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="glass-card rounded-[20px] p-6 param-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-temperature-half text-orange-400"></i>
+                                温度参数配置
+                            </h3>
+                            <button onclick="showModal('temp-detail')" class="text-blue-400 text-xs hover:underline">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i>编辑
+                            </button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">反应温度设定</span>
+                                <span class="text-lg font-light text-orange-400">117.5 ℃</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">预热温度</span>
+                                <span class="text-lg font-light">85.0 ℃</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">温升速率上限</span>
+                                <span class="text-lg font-light">5.0 ℃/min</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-[20px] p-6 param-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-gauge-high text-blue-400"></i>
+                                压力参数配置
+                            </h3>
+                            <button onclick="showModal('pressure-detail')" class="text-blue-400 text-xs hover:underline">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i>编辑
+                            </button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">反应压力设定</span>
+                                <span class="text-lg font-light text-blue-400">12.8 MPa</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">压力波动范围</span>
+                                <span class="text-lg font-light">±0.5 MPa</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">安全阀阈值</span>
+                                <span class="text-lg font-light">15.0 MPa</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-[20px] p-6 param-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-flask text-green-400"></i>
+                                物料参数配置
+                            </h3>
+                            <button onclick="showModal('material-detail')" class="text-blue-400 text-xs hover:underline">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i>编辑
+                            </button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">当前物料类型</span>
+                                <span class="text-sm px-2 py-0.5 bg-green-600/30 text-green-400 rounded">玉米秸秆</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">进料速率</span>
+                                <span class="text-lg font-light text-green-400">125 kg/h</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">固含量</span>
+                                <span class="text-lg font-light">15.0 %</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-[20px] p-6 param-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-clock text-purple-400"></i>
+                                时间参数配置
+                            </h3>
+                            <button onclick="showModal('time-detail')" class="text-blue-400 text-xs hover:underline">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i>编辑
+                            </button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">反应停留时间</span>
+                                <span class="text-lg font-light text-purple-400">25 min</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">预热时间</span>
+                                <span class="text-lg font-light">15 min</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">冷却时间</span>
+                                <span class="text-lg font-light">20 min</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-[20px] p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-file-code text-yellow-400"></i>
+                            预设工艺方案
+                        </h3>
+                        <button onclick="showModal('add-scheme')" class="btn-primary px-3 py-1.5 rounded-lg text-xs">
+                            <i class="fa-solid fa-plus mr-1"></i>新建方案
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="bg-white/5 rounded-xl p-4 border border-blue-500/30 hover-lift cursor-pointer" onclick="showModal('scheme-detail')">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-cube text-blue-400"></i>
+                                <span class="font-medium">玉米秸秆_低温_V2</span>
+                            </div>
+                            <p class="text-xs text-gray-500">温度: 115-120℃ | 压力: 12MPa</p>
+                            <div class="mt-2 flex items-center gap-2">
+                                <span class="text-[10px] px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">运行中</span>
+                                <span class="text-[10px] text-gray-500">转化率: 86.4%</span>
+                            </div>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/5 hover-lift cursor-pointer" onclick="showModal('scheme-detail')">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-leaf text-green-400"></i>
+                                <span class="font-medium">稻壳_中温_V1</span>
+                            </div>
+                            <p class="text-xs text-gray-500">温度: 140-150℃ | 压力: 15MPa</p>
+                            <div class="mt-2 flex items-center gap-2">
+                                <span class="text-[10px] px-2 py-0.5 bg-gray-500/20 text-gray-400 rounded">未激活</span>
+                            </div>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/5 hover-lift cursor-pointer" onclick="showModal('scheme-detail')">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-tree text-orange-400"></i>
+                                <span class="font-medium">木屑_高温_V1</span>
+                            </div>
+                            <p class="text-xs text-gray-500">温度: 180-200℃ | 压力: 18MPa</p>
+                            <div class="mt-2 flex items-center gap-2">
+                                <span class="text-[10px] px-2 py-0.5 bg-gray-500/20 text-gray-400 rounded">未激活</span>
+                            </div>
+                        </div>
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/5 hover-lift cursor-pointer" onclick="showModal('scheme-detail')">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-cactus text-emerald-400"></i>
+                                <span class="font-medium">芦竹_低温_V1</span>
+                            </div>
+                            <p class="text-xs text-gray-500">温度: 110-125℃ | 压力: 10MPa</p>
+                            <div class="mt-2 flex items-center gap-2">
+                                <span class="text-[10px] px-2 py-0.5 bg-gray-500/20 text-gray-400 rounded">未激活</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-[20px] p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-cyan-400"></i>
+                            高级控制参数
+                        </h3>
+                    </div>
+                    <div class="grid grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2">解耦控制增益 (Kp)</label>
+                            <input type="number" value="1.25" step="0.01" class="input-field w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2">积分时间常数 (Ti)</label>
+                            <input type="number" value="45" step="1" class="input-field w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2">微分时间常数 (Td)</label>
+                            <input type="number" value="8" step="0.1" class="input-field w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2">热量回收目标 (%)</label>
+                            <input type="number" value="78" step="1" min="0" max="100" class="input-field w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2">催化剂添加量 (kg/h)</label>
+                            <input type="number" value="2.5" step="0.1" class="input-field w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2">反应器搅拌速率 (rpm)</label>
+                            <input type="number" value="150" step="10" class="input-field w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button onclick="showModal('reset-confirm')" class="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-sm">
+                            <i class="fa-solid fa-rotate-left mr-1"></i>恢复默认
+                        </button>
+                        <button onclick="showModal('save-success')" class="btn-primary px-6 py-2 rounded-lg text-sm">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i>保存参数
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).replace(/\//g, '.');
+            document.getElementById('current-time').textContent = timeStr;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        function showModal(type) {
+            const container = document.getElementById('modal-container');
+            let content = '';
+            if (type === 'temp-detail') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[500px] max-w-[90vw] overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-temperature-half text-orange-400 mr-2"></i>温度参数编辑</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div><label class="block text-xs text-gray-500 mb-1">反应温度设定 (℃)</label><input type="number" id="temp1" value="117.5" step="0.1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">预热温度 (℃)</label><input type="number" id="temp2" value="85.0" step="0.1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">温升速率上限 (℃/min)</label><input type="number" id="temp3" value="5.0" step="0.1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">冷却速率 (℃/min)</label><input type="number" id="temp4" value="3.0" step="0.1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex gap-3">
+                            <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"><i class="fa-solid fa-xmark mr-1"></i>取消</button>
+                            <button onclick="saveTempParams()" class="flex-1 btn-primary px-4 py-2 rounded-lg"><i class="fa-solid fa-check mr-1"></i>确认</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'pressure-detail') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[500px] max-w-[90vw] overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-gauge-high text-blue-400 mr-2"></i>压力参数编辑</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div><label class="block text-xs text-gray-500 mb-1">反应压力设定 (MPa)</label><input type="number" id="pres1" value="12.8" step="0.1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">压力波动范围 (MPa)</label><input type="number" id="pres2" value="0.5" step="0.1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">安全阀阈值 (MPa)</label><input type="number" id="pres3" value="15.0" step="0.1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">升压速率 (MPa/min)</label><input type="number" id="pres4" value="0.8" step="0.1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex gap-3">
+                            <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"><i class="fa-solid fa-xmark mr-1"></i>取消</button>
+                            <button onclick="savePresParams()" class="flex-1 btn-primary px-4 py-2 rounded-lg"><i class="fa-solid fa-check mr-1"></i>确认</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'material-detail') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[500px] max-w-[90vw] overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-flask text-green-400 mr-2"></i>物料参数编辑</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div><label class="block text-xs text-gray-500 mb-1">物料类型</label>
+                                <select id="matType" class="select-field w-full px-3 py-2 rounded-lg">
+                                    <option value="corn">玉米秸秆</option>
+                                    <option value="rice">稻壳</option>
+                                    <option value="wood">木屑</option>
+                                    <option value="reed">芦竹</option>
+                                    <option value="other">其他</option>
+                                </select>
+                            </div>
+                            <div><label class="block text-xs text-gray-500 mb-1">进料速率 (kg/h)</label><input type="number" id="matFeed" value="125" step="1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">固含量 (%)</label><input type="number" id="matSolid" value="15" step="0.5" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">粒径分布 (目)</label><input type="text" id="matSize" value="20-80" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex gap-3">
+                            <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"><i class="fa-solid fa-xmark mr-1"></i>取消</button>
+                            <button onclick="saveMatParams()" class="flex-1 btn-primary px-4 py-2 rounded-lg"><i class="fa-solid fa-check mr-1"></i>确认</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'time-detail') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[500px] max-w-[90vw] overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-clock text-purple-400 mr-2"></i>时间参数编辑</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div><label class="block text-xs text-gray-500 mb-1">反应停留时间 (min)</label><input type="number" id="time1" value="25" step="1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">预热时间 (min)</label><input type="number" id="time2" value="15" step="1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">冷却时间 (min)</label><input type="number" id="time3" value="20" step="1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">总批次周期 (min)</label><input type="number" id="time4" value="60" step="1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex gap-3">
+                            <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"><i class="fa-solid fa-xmark mr-1"></i>取消</button>
+                            <button onclick="saveTimeParams()" class="flex-1 btn-primary px-4 py-2 rounded-lg"><i class="fa-solid fa-check mr-1"></i>确认</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'add-scheme') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[550px] max-w-[90vw] overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-file-circle-plus text-blue-400 mr-2"></i>新建工艺方案</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div><label class="block text-xs text-gray-500 mb-1">方案名称</label><input type="text" id="schemeName" placeholder="请输入方案名称" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">物料类型</label>
+                                <select id="schemeMat" class="select-field w-full px-3 py-2 rounded-lg">
+                                    <option value="corn">玉米秸秆</option>
+                                    <option value="rice">稻壳</option>
+                                    <option value="wood">木屑</option>
+                                    <option value="reed">芦竹</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-xs text-gray-500 mb-1">反应温度 (℃)</label><input type="number" id="schemeTemp" value="120" step="1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                                <div><label class="block text-xs text-gray-500 mb-1">反应压力 (MPa)</label><input type="number" id="schemePres" value="12" step="0.1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-xs text-gray-500 mb-1">进料速率 (kg/h)</label><input type="number" id="schemeFeed" value="100" step="1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                                <div><label class="block text-xs text-gray-500 mb-1">停留时间 (min)</label><input type="number" id="schemeTime" value="25" step="1" class="input-field w-full px-3 py-2 rounded-lg"></div>
+                            </div>
+                            <div><label class="block text-xs text-gray-500 mb-1">方案描述</label><textarea id="schemeDesc" placeholder="请输入方案描述" rows="2" class="input-field w-full px-3 py-2 rounded-lg resize-none"></textarea></div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex gap-3">
+                            <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"><i class="fa-solid fa-xmark mr-1"></i>取消</button>
+                            <button onclick="createScheme()" class="flex-1 btn-success px-4 py-2 rounded-lg"><i class="fa-solid fa-check mr-1"></i>创建方案</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'scheme-detail') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[600px] max-w-[90vw] overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-cube text-blue-400 mr-2"></i>方案详情: 玉米秸秆_低温_V2</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">物料类型</span><p class="mt-1">玉米秸秆</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">反应温度</span><p class="mt-1">115-120 ℃</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">反应压力</span><p class="mt-1">12 MPa</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">进料速率</span><p class="mt-1">125 kg/h</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">停留时间</span><p class="mt-1">25 min</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">预估转化率</span><p class="mt-1 text-green-400">86.4%</p></div>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-3 text-sm">
+                                <p class="text-gray-500 text-xs mb-2">工艺参数</p>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <span>解耦增益 Kp: 1.25</span>
+                                    <span>热量回收: 78%</span>
+                                    <span>催化剂: 2.5 kg/h</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex gap-3">
+                            <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"><i class="fa-solid fa-xmark mr-1"></i>关闭</button>
+                            <button onclick="applyScheme()" class="flex-1 btn-primary px-4 py-2 rounded-lg"><i class="fa-solid fa-play mr-1"></i>应用此方案</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'reset-confirm') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[400px] max-w-[90vw] overflow-hidden border border-yellow-500/30" onclick="event.stopPropagation()">
+                        <div class="modal-header bg-yellow-900/20">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12 text-yellow-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>确认恢复</h3>
+                        </div>
+                        <div class="p-6 text-center">
+                            <p class="text-gray-400">此操作将丢失所有未保存的更改</p>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex gap-3">
+                            <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"><i class="fa-solid fa-xmark mr-1"></i>取消</button>
+                            <button onclick="resetParams()" class="flex-1 btn-warning px-4 py-2 rounded-lg"><i class="fa-solid fa-check mr-1"></i>确认恢复</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'save-success') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[350px] max-w-[90vw] text-center overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium flex-1 pr-12">操作结果</h3>
+                        </div>
+                        <div class="p-8">
+                            <i class="fa-solid fa-circle-check text-5xl text-green-500 mb-4"></i>
+                            <h3 class="text-lg font-bold">保存成功</h3>
+                            <p class="text-gray-400 mt-1 text-sm">参数已更新并生效</p>
+                        </div>
+                    </div></div>`;
+                setTimeout(closeModal, 1500);
+            }
+            container.innerHTML = content;
+        }
+
+        function saveTempParams() {
+            const temp1 = document.getElementById('temp1').value;
+            const temp2 = document.getElementById('temp2').value;
+            const temp3 = document.getElementById('temp3').value;
+            const temp4 = document.getElementById('temp4').value;
+            console.log('保存温度参数:', { temp1, temp2, temp3, temp4 });
+            showModal('save-success');
+        }
+
+        function savePresParams() {
+            const pres1 = document.getElementById('pres1').value;
+            const pres2 = document.getElementById('pres2').value;
+            const pres3 = document.getElementById('pres3').value;
+            const pres4 = document.getElementById('pres4').value;
+            console.log('保存压力参数:', { pres1, pres2, pres3, pres4 });
+            showModal('save-success');
+        }
+
+        function saveMatParams() {
+            const matType = document.getElementById('matType').value;
+            const matFeed = document.getElementById('matFeed').value;
+            const matSolid = document.getElementById('matSolid').value;
+            const matSize = document.getElementById('matSize').value;
+            console.log('保存物料参数:', { matType, matFeed, matSolid, matSize });
+            showModal('save-success');
+        }
+
+        function saveTimeParams() {
+            const time1 = document.getElementById('time1').value;
+            const time2 = document.getElementById('time2').value;
+            const time3 = document.getElementById('time3').value;
+            const time4 = document.getElementById('time4').value;
+            console.log('保存时间参数:', { time1, time2, time3, time4 });
+            showModal('save-success');
+        }
+
+        function createScheme() {
+            const name = document.getElementById('schemeName').value;
+            const mat = document.getElementById('schemeMat').value;
+            const temp = document.getElementById('schemeTemp').value;
+            const pres = document.getElementById('schemePres').value;
+            const feed = document.getElementById('schemeFeed').value;
+            const time = document.getElementById('schemeTime').value;
+            const desc = document.getElementById('schemeDesc').value;
+            if (!name) {
+                alert('请输入方案名称');
+                return;
+            }
+            console.log('创建方案:', { name, mat, temp, pres, feed, time, desc });
+            showModal('save-success');
+        }
+
+        function applyScheme() {
+            console.log('应用方案');
+            showModal('save-success');
+        }
+
+        function resetParams() {
+            console.log('恢复默认参数');
+            closeModal();
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modal-container').innerHTML = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

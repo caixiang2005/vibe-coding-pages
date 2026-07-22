@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据统计 - 车辆行驶轨迹分析系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .window-frame {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            border: 1px solid #3a3a5a;
+        }
+
+        .title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #2d2d4a;
+            height: 32px;
+            padding: 0 8px;
+            user-select: none;
+        }
+
+        .title-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title-bar-icon {
+            width: 16px;
+            height: 16px;
+            color: #6c9fff;
+        }
+
+        .title-bar-text {
+            font-size: 12px;
+            color: #e0e0e0;
+        }
+
+        .window-controls {
+            display: flex;
+            height: 100%;
+        }
+
+        .window-btn {
+            width: 46px;
+            height: 100%;
+            border: none;
+            background: transparent;
+            color: #e0e0e0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .window-btn:hover {
+            background: #4a4a6a;
+        }
+
+        .window-btn.close:hover {
+            background: #e81123;
+        }
+
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            background: #252542;
+            padding: 0 12px;
+            height: 42px;
+            gap: 4px;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: #b0b0c0;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: #3a3a5a;
+            color: #fff;
+        }
+
+        .nav-btn.active {
+            background: #4a7cff;
+            color: #fff;
+        }
+
+        .nav-divider {
+            width: 1px;
+            height: 24px;
+            background: #3a3a5a;
+            margin: 0 8px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: #1e1e36;
+            border-right: 1px solid #3a3a5a;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu {
+            padding: 8px 0;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: #b0b0c0;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 10px;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(74, 124, 255, 0.1);
+            color: #e0e0e0;
+        }
+
+        .sidebar-item.active {
+            background: rgba(74, 124, 255, 0.15);
+            color: #4a7cff;
+            border-left-color: #4a7cff;
+        }
+
+        .sidebar-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: #3a3a5a;
+            margin: 8px 16px;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .page-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            background: #222240;
+            gap: 12px;
+            border-bottom: 1px solid #3a3a5a;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-label {
+            font-size: 12px;
+            color: #9090a0;
+        }
+
+        .toolbar-select {
+            padding: 6px 10px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .toolbar-btn {
+            padding: 6px 14px;
+            background: #4a7cff;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: #5a8cff;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #9090a0;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a7cff;
+        }
+
+        .stat-unit {
+            font-size: 12px;
+            color: #9090a0;
+            margin-left: 4px;
+        }
+
+        .stat-trend {
+            font-size: 11px;
+            margin-top: 6px;
+        }
+
+        .stat-trend.up {
+            color: #4ade80;
+        }
+
+        .stat-trend.down {
+            color: #f87171;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #6c9fff;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .chart-card {
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .chart-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+
+        .chart-container {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            padding: 10px 0;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #4a7cff, #6c9fff);
+            border-radius: 4px 4px 0 0;
+            min-height: 20px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .chart-bar:hover {
+            background: linear-gradient(to top, #5a8cff, #7ca0ff);
+        }
+
+        .chart-bar-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #9090a0;
+            white-space: nowrap;
+        }
+
+        .chart-bar-value {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #e0e0e0;
+            white-space: nowrap;
+        }
+
+        .pie-chart-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .pie-chart {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #4a7cff 0deg 180deg,
+                #22c55e 180deg 270deg,
+                #f59e0b 270deg 320deg,
+                #ef4444 320deg 360deg
+            );
+            position: relative;
+        }
+
+        .pie-chart-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: #1a1a2e;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pie-chart-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+
+        .pie-chart-label {
+            font-size: 10px;
+            color: #9090a0;
+        }
+
+        .pie-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pie-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .pie-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th {
+            background: #2d2d4a;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #9090a0;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #3a3a5a;
+            color: #e0e0e0;
+        }
+
+        .data-table tr:hover {
+            background: rgba(74, 124, 255, 0.1);
+        }
+
+        .rank-badge {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .rank-badge.gold {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+        }
+
+        .rank-badge.silver {
+            background: rgba(192, 192, 192, 0.2);
+            color: #c0c0c0;
+        }
+
+        .rank-badge.bronze {
+            background: rgba(205, 127, 50, 0.2);
+            color: #cd7f32;
+        }
+
+        .rank-badge.normal {
+            background: rgba(74, 124, 255, 0.2);
+            color: #6c9fff;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #3a3a5a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4a7cff;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1e1e36;
+            padding: 6px 16px;
+            font-size: 11px;
+            color: #7070a0;
+            border-top: 1px solid #3a3a5a;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #252542;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            min-width: 520px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: #2d2d4a;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .modal-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            color: #9090a0;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #e81123;
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 20px;
+            background: #2d2d4a;
+            border-top: 1px solid #3a3a5a;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4a7cff;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #5a8cff;
+        }
+
+        .btn-secondary {
+            background: #3a3a5a;
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #4a4a6a;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3a3a5a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a4a6a;
+        }
+
+        .setting-section {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .setting-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .setting-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #6c9fff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .setting-label {
+            font-size: 12px;
+            color: #9090a0;
+        }
+
+        .setting-value {
+            font-size: 12px;
+            color: #e0e0e0;
+        }
+
+        .setting-select {
+            padding: 6px 10px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .setting-btn {
+            padding: 6px 12px;
+            background: #3a3a5a;
+            border: none;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+
+        .setting-btn:hover {
+            background: #4a7cff;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #3a3a5a;
+            transition: 0.3s;
+            border-radius: 22px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #e0e0e0;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4a7cff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+    </style>
+</head>
+<body>
+    <div class="window-frame">
+        <div class="title-bar">
+            <div class="title-bar-left">
+                <i class="fa-solid fa-route title-bar-icon"></i>
+                <span class="title-bar-text">车辆行驶轨迹分析系统</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn" title="最小化">
+                    <i class="fa-solid fa-minus"></i>
+                </button>
+                <button class="window-btn" title="最大化">
+                    <div style="width:10px;height:10px;border:1px solid #e0e0e0;"></div>
+                </button>
+                <button class="window-btn close" title="关闭">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-bar">
+            <button class="nav-btn" onclick="navigateTo('index.html')">
+                <i class="fa-solid fa-map-location-dot"></i>
+                轨迹查询
+            </button>
+            <button class="nav-btn" onclick="navigateTo('trip.html')">
+                <i class="fa-solid fa-route"></i>
+                行程记录
+            </button>
+            <button class="nav-btn" onclick="navigateTo('vehicle.html')">
+                <i class="fa-solid fa-car"></i>
+                车辆管理
+            </button>
+            <button class="nav-btn" onclick="navigateTo('driver.html')">
+                <i class="fa-solid fa-id-card"></i>
+                驾驶员管理
+            </button>
+            <button class="nav-btn active" onclick="navigateTo('statistics.html')">
+                <i class="fa-solid fa-chart-line"></i>
+                数据统计
+            </button>
+            <div class="nav-divider"></div>
+            <button class="nav-btn" onclick="navigateTo('alarm.html')">
+                <i class="fa-solid fa-bell"></i>
+                报警记录
+            </button>
+            <button class="nav-btn" onclick="navigateTo('fence.html')">
+                <i class="fa-solid fa-draw-polygon"></i>
+                电子围栏
+            </button>
+            <div class="nav-divider"></div>
+            <button class="nav-btn" onclick="navigateTo('settings.html')">
+                <i class="fa-solid fa-gear"></i>
+                系统设置
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="content-wrapper">
+                <div class="sidebar">
+                    <div class="sidebar-menu">
+                        <div class="sidebar-item" onclick="navigateTo('index.html')">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <span>轨迹查询</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('trip.html')">
+                            <i class="fa-solid fa-route"></i>
+                            <span>行程记录</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('vehicle.html')">
+                            <i class="fa-solid fa-car"></i>
+                            <span>车辆管理</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('driver.html')">
+                            <i class="fa-solid fa-id-card"></i>
+                            <span>驾驶员管理</span>
+                        </div>
+                        <div class="sidebar-item active" onclick="navigateTo('statistics.html')">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>数据统计</span>
+                        </div>
+                        <div class="sidebar-divider"></div>
+                        <div class="sidebar-item" onclick="navigateTo('alarm.html')">
+                            <i class="fa-solid fa-bell"></i>
+                            <span>报警记录</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('fence.html')">
+                            <i class="fa-solid fa-draw-polygon"></i>
+                            <span>电子围栏</span>
+                        </div>
+                        <div class="sidebar-divider"></div>
+                        <div class="sidebar-item" onclick="navigateTo('settings.html')">
+                            <i class="fa-solid fa-gear"></i>
+                            <span>系统设置</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page-content">
+                    <div class="toolbar">
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">统计周期:</span>
+                            <select class="toolbar-select" id="statPeriod">
+                                <option value="today">今日</option>
+                                <option value="week">本周</option>
+                                <option value="month" selected>本月</option>
+                                <option value="year">本年</option>
+                            </select>
+                        </div>
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">部门:</span>
+                            <select class="toolbar-select" id="statDept">
+                                <option value="">全部部门</option>
+                                <option value="logistics">物流运输部</option>
+                                <option value="business">商务接待部</option>
+                                <option value="sales">销售部</option>
+                                <option value="admin">行政部</option>
+                            </select>
+                        </div>
+                        <button class="toolbar-btn" onclick="refreshStatistics()">
+                            <i class="fa-solid fa-refresh"></i>
+                            刷新
+                        </button>
+                        <button class="toolbar-btn" onclick="exportStatistics()">
+                            <i class="fa-solid fa-download"></i>
+                            导出报表
+                        </button>
+                    </div>
+
+                    <div class="content-area">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">总行驶里程</div>
+                                <div class="stat-value">12,586<span class="stat-unit">km</span></div>
+                                <div class="stat-trend up">
+                                    <i class="fa-solid fa-arrow-up"></i> 较上月增长 15.2%
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">总行程次数</div>
+                                <div class="stat-value">1,258<span class="stat-unit">次</span></div>
+                                <div class="stat-trend up">
+                                    <i class="fa-solid fa-arrow-up"></i> 较上月增长 8.5%
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">运行时长</div>
+                                <div class="stat-value">3,256<span class="stat-unit">小时</span></div>
+                                <div class="stat-trend up">
+                                    <i class="fa-solid fa-arrow-up"></i> 较上月增长 12.3%
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">平均速度</div>
+                                <div class="stat-value">48.6<span class="stat-unit">km/h</span></div>
+                                <div class="stat-trend down">
+                                    <i class="fa-solid fa-arrow-down"></i> 较上月下降 3.2%
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-row">
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <span class="chart-title">每日里程统计</span>
+                                </div>
+                                <div class="chart-container" id="mileageChart">
+                                    <div class="chart-bar" style="height:60%;">
+                                        <span class="chart-bar-value">320</span>
+                                        <span class="chart-bar-label">周一</span>
+                                    </div>
+                                    <div class="chart-bar" style="height:85%;">
+                                        <span class="chart-bar-value">456</span>
+                                        <span class="chart-bar-label">周二</span>
+                                    </div>
+                                    <div class="chart-bar" style="height:45%;">
+                                        <span class="chart-bar-value">240</span>
+                                        <span class="chart-bar-label">周三</span>
+                                    </div>
+                                    <div class="chart-bar" style="height:75%;">
+                                        <span class="chart-bar-value">398</span>
+                                        <span class="chart-bar-label">周四</span>
+                                    </div>
+                                    <div class="chart-bar" style="height:90%;">
+                                        <span class="chart-bar-value">482</span>
+                                        <span class="chart-bar-label">周五</span>
+                                    </div>
+                                    <div class="chart-bar" style="height:50%;">
+                                        <span class="chart-bar-value">268</span>
+                                        <span class="chart-bar-label">周六</span>
+                                    </div>
+                                    <div class="chart-bar" style="height:35%;">
+                                        <span class="chart-bar-value">186</span>
+                                        <span class="chart-bar-label">周日</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <span class="chart-title">车辆类型分布</span>
+                                </div>
+                                <div class="pie-chart-container">
+                                    <div class="pie-chart">
+                                        <div class="pie-chart-center">
+                                            <span class="pie-chart-value">128</span>
+                                            <span class="pie-chart-label">辆</span>
+                                        </div>
+                                    </div>
+                                    <div class="pie-legend">
+                                        <div class="pie-legend-item">
+                                            <span class="pie-legend-dot" style="background:#4a7cff;"></span>
+                                            <span>货运车辆: 72辆 (50%)</span>
+                                        </div>
+                                        <div class="pie-legend-item">
+                                            <span class="pie-legend-dot" style="background:#22c55e;"></span>
+                                            <span>客运车辆: 38辆 (30%)</span>
+                                        </div>
+                                        <div class="pie-legend-item">
+                                            <span class="pie-legend-dot" style="background:#f59e0b;"></span>
+                                            <span>特种车辆: 12辆 (12.5%)</span>
+                                        </div>
+                                        <div class="pie-legend-item">
+                                            <span class="pie-legend-dot" style="background:#ef4444;"></span>
+                                            <span>其他: 6辆 (7.5%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-row">
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <span class="chart-title">部门里程排名</span>
+                                </div>
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>排名</th>
+                                            <th>部门</th>
+                                            <th>里程</th>
+                                            <th>占比</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span class="rank-badge gold">1</span></td>
+                                            <td>物流运输部</td>
+                                            <td>5,682 km</td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" style="width:45%;"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="rank-badge silver">2</span></td>
+                                            <td>商务接待部</td>
+                                            <td>3,256 km</td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" style="width:26%;"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="rank-badge bronze">3</span></td>
+                                            <td>销售部</td>
+                                            <td>2,148 km</td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" style="width:17%;"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="rank-badge normal">4</span></td>
+                                            <td>行政部</td>
+                                            <td>1,500 km</td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" style="width:12%;"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <span class="chart-title">驾驶员里程排名 TOP 5</span>
+                                </div>
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>排名</th>
+                                            <th>姓名</th>
+                                            <th>里程</th>
+                                            <th>安全评分</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span class="rank-badge gold">1</span></td>
+                                            <td>周建国</td>
+                                            <td>2,156 km</td>
+                                            <td><span style="color:#4ade80;">98分</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="rank-badge silver">2</span></td>
+                                            <td>李明</td>
+                                            <td>1,892 km</td>
+                                            <td><span style="color:#4ade80;">96分</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="rank-badge bronze">3</span></td>
+                                            <td>张伟</td>
+                                            <td>1,756 km</td>
+                                            <td><span style="color:#4ade80;">95分</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="rank-badge normal">4</span></td>
+                                            <td>王强</td>
+                                            <td>1,523 km</td>
+                                            <td><span style="color:#fbbf24;">92分</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="rank-badge normal">5</span></td>
+                                            <td>陈刚</td>
+                                            <td>1,412 km</td>
+                                            <td><span style="color:#4ade80;">94分</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <span class="chart-title">速度分布统计</span>
+                            </div>
+                            <div class="chart-container" id="speedChart" style="height:150px;">
+                                <div class="chart-bar" style="height:20%;background:#4ade80;">
+                                    <span class="chart-bar-value">256</span>
+                                    <span class="chart-bar-label">0-20</span>
+                                </div>
+                                <div class="chart-bar" style="height:65%;background:#4a7cff;">
+                                    <span class="chart-bar-value">826</span>
+                                    <span class="chart-bar-label">20-40</span>
+                                </div>
+                                <div class="chart-bar" style="height:85%;background:#6c9fff;">
+                                    <span class="chart-bar-value">1,082</span>
+                                    <span class="chart-bar-label">40-60</span>
+                                </div>
+                                <div class="chart-bar" style="height:55%;background:#f59e0b;">
+                                    <span class="chart-bar-value">698</span>
+                                    <span class="chart-bar-label">60-80</span>
+                                </div>
+                                <div class="chart-bar" style="height:25%;background:#ef4444;">
+                                    <span class="chart-bar-value">318</span>
+                                    <span class="chart-bar-label">80+</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span>数据更新时间: 2024-03-15 17:30:00</span>
+            </div>
+            <div class="status-item">
+                <span>统计周期: 2024-03-01 至 2024-03-15</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        function refreshStatistics() {
+            const period = document.getElementById('statPeriod').value;
+            const dept = document.getElementById('statDept').value;
+            alert('正在刷新统计数据...\n统计周期: ' + period + '\n部门: ' + (dept || '全部'));
+        }
+
+        function exportStatistics() {
+            alert('正在生成统计报表，请稍候...');
+            setTimeout(function() {
+                alert('报表生成成功，正在下载...');
+            }, 1500);
+        }
+
+        document.querySelector('.window-btn.close').addEventListener('click', function() {
+            if (confirm('确定要关闭系统吗？')) {
+                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#666;">系统已关闭</div>';
+            }
+        });
+    </script>
+</body>
+</html>

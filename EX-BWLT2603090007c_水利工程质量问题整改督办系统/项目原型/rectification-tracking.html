@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>整改跟踪 - 水利工程质量问题整改督办系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        :root { color-scheme: light; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        .desktop-shell { width: min(1720px, 100vw); height: min(1080px, 100vh); padding: 16px; box-sizing: border-box; }
+        .mac-window { height: 100%; border-radius: 18px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.55); background: rgba(248, 250, 253, 0.78); backdrop-filter: blur(20px) saturate(150%); box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08); }
+        .window-titlebar { height: 44px; border-bottom: 1px solid rgba(15, 23, 42, 0.08); background: linear-gradient(180deg, rgba(249, 251, 255, 0.92) 0%, rgba(240, 245, 252, 0.78) 100%); backdrop-filter: blur(22px); }
+        .sidebar-blur { background: linear-gradient(180deg, rgba(243, 247, 251, 0.88) 0%, rgba(236, 242, 249, 0.78) 100%); backdrop-filter: blur(24px); border-right: 1px solid rgba(148, 163, 184, 0.18); }
+        .glass-card { background: linear-gradient(165deg, rgba(255, 255, 255, 0.78), rgba(251, 253, 255, 0.62)); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.7); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); transition: transform 180ms ease, box-shadow 220ms ease, border-color 180ms ease; }
+        .glass-card:hover { transform: translateY(-2px); border-color: rgba(148, 163, 184, 0.28); box-shadow: 0 16px 30px rgba(15, 23, 42, 0.1); }
+        .toolbar-surface { background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(16px); border: 1px solid rgba(148, 163, 184, 0.12); }
+        .active-nav { background: linear-gradient(135deg, rgba(0, 87, 146, 0.18), rgba(0, 122, 255, 0.14)); color: #0b3d71; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(0, 87, 146, 0.08); }
+        .status-badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+        .mac-input { background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(148, 163, 184, 0.28); }
+        .mac-input:focus { border-color: rgba(0, 122, 255, 0.42); box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12); outline: none; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.36); border-radius: 999px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .modal-box { background: white; border-radius: 16px; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25); min-width: 520px; max-width: 680px; }
+        .modal-header { padding: 14px 20px; border-bottom: 1px solid rgba(148, 163, 184, 0.2); display: flex; justify-content: space-between; align-items: center; cursor: move; }
+        .modal-header-center { padding: 14px 20px; border-bottom: 1px solid rgba(148, 163, 184, 0.2); display: flex; align-items: center; cursor: move; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid rgba(148, 163, 184, 0.2); display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #005792, #0074d9); color: white; padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 150ms ease; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 87, 146, 0.3); }
+        .btn-secondary { background: rgba(148, 163, 184, 0.15); color: #475569; padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(148, 163, 184, 0.3); cursor: pointer; transition: all 150ms ease; }
+        .btn-secondary:hover { background: rgba(148, 163, 184, 0.25); }
+        .timeline-item { position: relative; padding-left: 32px; padding-bottom: 24px; }
+        .timeline-item::before { content: ''; position: absolute; left: 7px; top: 24px; bottom: 0; width: 2px; background: #e2e8f0; }
+        .timeline-item:last-child::before { display: none; }
+        .timeline-dot { position: absolute; left: 0; top: 4px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 2px #e2e8f0; }
+        .progress-ring { transform: rotate(-90deg); }
+    </style>
+</head>
+<body class="min-h-screen overflow-hidden">
+    <div class="desktop-shell">
+        <div class="mac-window">
+            <header class="window-titlebar px-5 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                    </div>
+                </div>
+            </header>
+            <div class="h-[calc(100%-44px)] flex overflow-hidden">
+                <aside class="w-72 sidebar-blur flex flex-col h-full flex-shrink-0">
+                    <div class="p-6 pb-2">
+                        <div class="flex items-center space-x-3 mb-8">
+                            <div class="w-11 h-11 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                                <img alt="系统Logo" class="w-11 h-11 object-contain" src="./static/logo.png" />
+                            </div>
+                            <div>
+                                <h1 class="text-[13px] font-bold text-slate-800 tracking-tight">水利工程质量问题</h1>
+                                <h1 class="text-[13px] font-bold text-slate-800 tracking-tight">整改督办系统</h1>
+                                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">macOS 客户端</p>
+                            </div>
+                        </div>
+                        <nav class="space-y-1">
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="dashboard.html">
+                                <i class="fa-solid fa-chart-line text-lg"></i>
+                                <span class="text-sm">综合态势</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="task-assignment.html">
+                                <i class="fa-solid fa-list-check text-lg"></i>
+                                <span class="text-sm">任务分派</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg active-nav transition-all" href="#">
+                                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                                <span class="text-sm">整改跟踪</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="quality-statistics.html">
+                                <i class="fa-solid fa-chart-pie text-lg"></i>
+                                <span class="text-sm">质量统计</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="project-distribution.html">
+                                <i class="fa-solid fa-map-location-dot text-lg"></i>
+                                <span class="text-sm">项目分布</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="system-security.html">
+                                <i class="fa-solid fa-shield-halved text-lg"></i>
+                                <span class="text-sm">系统安全</span>
+                            </a>
+                        </nav>
+                    </div>
+                    <div class="mt-auto p-4 border-t border-slate-200/70 bg-white/40">
+                        <div class="flex items-center space-x-3">
+                            <img alt="User Profile" class="w-9 h-9 rounded-full ring-2 ring-white shadow-sm" src="https://i01piccdn.sogoucdn.com/6de4845d273e3386" />
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold text-slate-800 truncate">文丹</p>
+                                <p class="text-[10px] text-[#005792]">管理员</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+                <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+                    <header class="h-12 border-b border-slate-200/70 flex items-center justify-between px-4 toolbar-surface sticky top-0 z-10">
+                        <div class="flex items-center space-x-3">
+                            <div class="px-3 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-semibold tracking-wide">
+                                整改跟踪
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-semibold text-slate-700">整改进度跟踪</h2>
+                                <p class="text-[10px] text-slate-500">实时监控 · 节点管理 · 超期预警</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input class="pl-9 pr-4 py-1.5 mac-input rounded-xl text-xs w-64 transition-all outline-none" placeholder="搜索项目名称或编号..." type="text" />
+                            </div>
+                            <button onclick="openUpdateModal()" class="flex items-center space-x-2 px-4 py-1.5 bg-[#005792] text-white rounded-lg text-xs font-semibold hover:bg-[#004a7a] transition-colors">
+                                <i class="fa-solid fa-upload"></i>
+                                <span>进度上报</span>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="flex-1 overflow-y-hidden p-4 space-y-4 bg-[#f2f5fa]">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="glass-card p-4 rounded-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-clipboard-list text-blue-600"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">+8</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium">整改中总数</p>
+                                <h4 class="text-xl font-bold text-slate-800 mt-1">156</h4>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-hourglass-half text-orange-600"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">预警</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium">本周待验收</p>
+                                <h4 class="text-xl font-bold text-slate-800 mt-1">23</h4>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-circle-exclamation text-red-600"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">超期</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium">逾期未完成</p>
+                                <h4 class="text-xl font-bold text-slate-800 mt-1">8</h4>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-check-double text-green-600"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-400">稳定</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium">本月闭环率</p>
+                                <h4 class="text-xl font-bold text-slate-800 mt-1">94.2%</h4>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                            <div class="lg:col-span-2 glass-card rounded-2xl overflow-hidden">
+                                <div class="p-3 border-b border-slate-100 bg-white/60">
+                                    <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                        <i class="fa-solid fa-list-check text-blue-500 mr-2"></i>
+                                        整改任务列表
+                                    </h5>
+                                </div>
+                                <div class="p-3 space-y-3 max-h-[340px] overflow-y-auto">
+                                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer" onclick="openTrackDetail('南调干渠三标段混凝土强度不达标', '南调干渠', '赵广生', 45, '2026-03-15', '2026-03-25')">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                                <span class="text-xs font-bold text-slate-700">南调干渠三标段混凝土强度不达标</span>
+                                            </div>
+                                            <span class="status-badge bg-orange-100 text-orange-600">进行中</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-slate-500 mb-2">
+                                            <span><i class="fa-solid fa-user mr-1"></i>责任人：赵广生</span>
+                                            <span><i class="fa-solid fa-calendar mr-1"></i>截止：2026-03-25</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                                <div class="bg-orange-500 h-2 rounded-full" style="width: 45%"></div>
+                                            </div>
+                                            <span class="text-xs font-bold text-orange-600">45%</span>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer" onclick="openTrackDetail('东岗水库泄洪闸门腐蚀检修', '东岗水库', '张志明', 72, '2026-03-10', '2026-03-22')">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                                                <span class="text-xs font-bold text-slate-700">东岗水库泄洪闸门腐蚀检修</span>
+                                            </div>
+                                            <span class="status-badge bg-orange-100 text-orange-600">进行中</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-slate-500 mb-2">
+                                            <span><i class="fa-solid fa-user mr-1"></i>责任人：张志明</span>
+                                            <span><i class="fa-solid fa-calendar mr-1"></i>截止：2026-03-22</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                                <div class="bg-orange-500 h-2 rounded-full" style="width: 72%"></div>
+                                            </div>
+                                            <span class="text-xs font-bold text-orange-600">72%</span>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer" onclick="openTrackDetail('青山闸加固工程检测验收', '青山闸加固', '王建国', 88, '2026-03-08', '2026-03-20')">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                                <span class="text-xs font-bold text-slate-700">青山闸加固工程检测验收</span>
+                                            </div>
+                                            <span class="status-badge bg-blue-100 text-blue-600">即将完成</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-slate-500 mb-2">
+                                            <span><i class="fa-solid fa-user mr-1"></i>责任人：王建国</span>
+                                            <span><i class="fa-solid fa-calendar mr-1"></i>截止：2026-03-20</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                                <div class="bg-blue-500 h-2 rounded-full" style="width: 88%"></div>
+                                            </div>
+                                            <span class="text-xs font-bold text-blue-600">88%</span>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer" onclick="openTrackDetail('黑水河堤防护坡裂缝修补', '黑水河堤防', '李文斌', 60, '2026-03-12', '2026-03-24')">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                                                <span class="text-xs font-bold text-slate-700">黑水河堤防护坡裂缝修补</span>
+                                            </div>
+                                            <span class="status-badge bg-green-100 text-green-600">进行中</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px] text-slate-500 mb-2">
+                                            <span><i class="fa-solid fa-user mr-1"></i>责任人：李文斌</span>
+                                            <span><i class="fa-solid fa-calendar mr-1"></i>截止：2026-03-24</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                                <div class="bg-green-500 h-2 rounded-full" style="width: 60%"></div>
+                                            </div>
+                                            <span class="text-xs font-bold text-green-600">60%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="glass-card rounded-2xl overflow-hidden">
+                                <div class="p-3 border-b border-slate-100 bg-white/60">
+                                    <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                        <i class="fa-solid fa-bell text-orange-500 mr-2"></i>
+                                        超期预警
+                                    </h5>
+                                </div>
+                                <div class="p-3 space-y-3 max-h-[340px] overflow-y-auto">
+                                    <div class="p-3 bg-red-50/60 rounded-xl border border-red-200">
+                                        <div class="flex items-start space-x-3">
+                                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                                <i class="fa-solid fa-circle-exclamation text-red-500 text-sm"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <h6 class="text-xs font-bold text-slate-800 mb-1">南调干渠混凝土检测</h6>
+                                                <p class="text-[10px] text-slate-500 mb-2">逾期 2 天未完成整改</p>
+                                                <button class="text-[10px] text-[#005792] font-semibold hover:underline flex items-center">
+                                                    <i class="fa-solid fa-arrow-right mr-1"></i>查看详情
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 bg-orange-50/60 rounded-xl border border-orange-200">
+                                        <div class="flex items-start space-x-3">
+                                            <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                                <i class="fa-solid fa-triangle-exclamation text-orange-500 text-sm"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <h6 class="text-xs font-bold text-slate-800 mb-1">渭河橡胶坝渗水评估</h6>
+                                                <p class="text-[10px] text-slate-500 mb-2">还剩 3 天即将到期</p>
+                                                <button class="text-[10px] text-[#005792] font-semibold hover:underline flex items-center">
+                                                    <i class="fa-solid fa-arrow-right mr-1"></i>查看详情
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 bg-yellow-50/60 rounded-xl border border-yellow-200">
+                                        <div class="flex items-start space-x-3">
+                                            <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                                                <i class="fa-solid fa-clock text-yellow-600 text-sm"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <h6 class="text-xs font-bold text-slate-800 mb-1">泾阳渠段护坡加固</h6>
+                                                <p class="text-[10px] text-slate-500 mb-2">还剩 5 天即将到期</p>
+                                                <button class="text-[10px] text-[#005792] font-semibold hover:underline flex items-center">
+                                                    <i class="fa-solid fa-arrow-right mr-1"></i>查看详情
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-card rounded-2xl overflow-hidden">
+                            <div class="p-3 border-b border-slate-100 bg-white/60 flex items-center justify-between">
+                                <h5 class="text-sm font-bold text-slate-800 flex items-center">
+                                    <i class="fa-solid fa-route text-green-500 mr-2"></i>
+                                    整改里程碑
+                                </h5>
+                                <select class="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none">
+                                    <option>全部项目</option>
+                                    <option>南调干渠</option>
+                                    <option>东岗水库</option>
+                                    <option>青山闸加固</option>
+                                </select>
+                            </div>
+                            <div class="p-4">
+                                <div class="timeline-item">
+                                    <div class="timeline-dot bg-green-500"></div>
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h6 class="text-xs font-bold text-slate-800">青山闸加固工程 - 完成材料检测</h6>
+                                            <p class="text-[10px] text-slate-500 mt-1">第三方检测报告显示所有材料指标达标</p>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400">03-15</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot bg-blue-500"></div>
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h6 class="text-xs font-bold text-slate-800">黑水河堤防 - 裂缝修补过半</h6>
+                                            <p class="text-[10px] text-slate-500 mt-1">已完成东侧护坡裂缝修补，西侧正在施工</p>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400">03-14</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot bg-orange-500"></div>
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h6 class="text-xs font-bold text-slate-800">东岗水库 - 闸门除锈完成</h6>
+                                            <p class="text-[10px] text-slate-500 mt-1">闸门金属表面除锈和防腐涂层处理完毕</p>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400">03-12</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot bg-slate-300"></div>
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h6 class="text-xs font-bold text-slate-600">南调干渠 - 等待复检</h6>
+                                            <p class="text-[10px] text-slate-500 mt-1">初检不合格，已委托第三方进行复检</p>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400">03-10</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="h-8 border-t border-slate-200/70 px-4 flex items-center justify-between bg-white/75 backdrop-blur text-[10px] text-slate-500">
+                        <div class="flex items-center space-x-4">
+                            <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>数据中心连接正常</span>
+                            <span>最后同步: 2026-03-19 14:32:01</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span>版本: V1.0.0</span>
+                        </div>
+                    </footer>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <div id="trackModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header-center" id="trackModalHeader">
+                <div class="flex space-x-2 mr-4">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 flex-1 text-center pr-8">整改进度详情</h3>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <h4 id="trackTitle" class="text-base font-bold text-slate-800 mb-1">南调干渠三标段混凝土强度不达标</h4>
+                    <div class="flex items-center space-x-4 text-[10px] text-slate-500">
+                        <span><i class="fa-solid fa-building mr-1"></i><span id="trackProject">南调干渠</span></span>
+                        <span><i class="fa-solid fa-user mr-1"></i><span id="trackPerson">赵广生</span></span>
+                        <span><i class="fa-solid fa-calendar mr-1"></i><span id="trackDeadline">截止 2026-03-25</span></span>
+                    </div>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-600">当前进度</span>
+                        <span id="trackPercent" class="text-lg font-bold text-orange-600">45%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-3">
+                        <div id="trackProgressBar" class="bg-orange-500 h-3 rounded-full transition-all" style="width: 45%"></div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center p-3 bg-green-50/60 rounded-xl">
+                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                            <i class="fa-solid fa-clipboard-check text-green-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h6 class="text-xs font-bold text-slate-800">完成初步检测</h6>
+                            <p class="text-[10px] text-slate-500">03-10 | 检测报告已提交</p>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-green-500"></i>
+                    </div>
+                    <div class="flex items-center p-3 bg-green-50/60 rounded-xl">
+                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                            <i class="fa-solid fa-users text-green-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h6 class="text-xs font-bold text-slate-800">委托第三方复检</h6>
+                            <p class="text-[10px] text-slate-500">03-12 | 已签订复检合同</p>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-green-500"></i>
+                    </div>
+                    <div class="flex items-center p-3 bg-orange-50/60 rounded-xl border border-orange-200">
+                        <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center mr-3">
+                            <i class="fa-solid fa-hourglass-half text-orange-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h6 class="text-xs font-bold text-slate-800">等待复检结果</h6>
+                            <p class="text-[10px] text-slate-500">03-15 | 预计3天内出具报告</p>
+                        </div>
+                        <i class="fa-solid fa-spinner text-orange-500 animate-spin"></i>
+                    </div>
+                    <div class="flex items-center p-3 bg-slate-100/60 rounded-xl opacity-60">
+                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center mr-3">
+                            <i class="fa-solid fa-file-signature text-slate-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h6 class="text-xs font-bold text-slate-500">整改验收</h6>
+                            <p class="text-[10px] text-slate-400">待完成 | 等待最终验收签字</p>
+                        </div>
+                        <i class="fa-solid fa-clock text-slate-400"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeTrackModal()" class="btn-secondary">关闭</button>
+                <button onclick="openUpdateFromDetail()" class="btn-primary">更新进度</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="updateModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header-center" id="updateModalHeader">
+                <div class="flex space-x-2 mr-4">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 flex-1 text-center pr-8">进度上报</h3>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">选择项目 <span class="text-red-500">*</span></label>
+                        <select id="updateProject" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none">
+                            <option value="">请选择整改项目</option>
+                            <option>南调干渠三标段混凝土强度不达标</option>
+                            <option>东岗水库泄洪闸门腐蚀检修</option>
+                            <option>青山闸加固工程检测验收</option>
+                            <option>黑水河堤防护坡裂缝修补</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">当前进度 <span class="text-red-500">*</span></label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="updateProgress" min="0" max="100" value="50" class="flex-1 h-2 bg-slate-200 rounded-full appearance-none cursor-pointer" oninput="updateProgressValue(this.value)" />
+                            <span id="progressValue" class="text-sm font-bold text-[#005792] w-12 text-center">50%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">整改说明</label>
+                        <textarea id="updateDesc" class="w-full mac-input rounded-xl px-3 py-2 text-sm outline-none resize-none" rows="3" placeholder="请描述当前整改进展..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">上传附件</label>
+                        <div id="uploadArea" class="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-[#005792] transition-colors cursor-pointer" onclick="document.getElementById('fileInput').click()">
+                            <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileUpload(this)" />
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-2"></i>
+                            <p id="uploadText" class="text-xs text-slate-500">点击或拖拽文件到此处上传</p>
+                            <p class="text-[10px] text-slate-400 mt-1">支持 jpg、png、pdf 格式</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeUpdateModal()" class="btn-secondary">取消</button>
+                <button onclick="submitUpdate()" class="btn-primary">提交上报</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isDraggingTrack = false, isDraggingUpdate = false;
+        let trackOffsetX, trackOffsetY, updateOffsetX, updateOffsetY;
+        let currentTrackProject = '';
+
+        function openTrackDetail(title, project, person, progress, startDate, deadline) {
+            document.getElementById('trackTitle').textContent = title;
+            document.getElementById('trackProject').textContent = project;
+            document.getElementById('trackPerson').textContent = person;
+            document.getElementById('trackDeadline').textContent = '截止 ' + deadline;
+            document.getElementById('trackPercent').textContent = progress + '%';
+            document.getElementById('trackProgressBar').style.width = progress + '%';
+            currentTrackProject = title;
+
+            const colorClass = progress >= 80 ? 'bg-blue-500' : (progress >= 50 ? 'bg-orange-500' : 'bg-red-500');
+            document.getElementById('trackProgressBar').className = colorClass + ' h-3 rounded-full transition-all';
+
+            const textColorClass = progress >= 80 ? 'text-blue-600' : (progress >= 50 ? 'text-orange-600' : 'text-red-600');
+            document.getElementById('trackPercent').className = 'text-lg font-bold ' + textColorClass;
+
+            document.getElementById('trackModal').classList.remove('hidden');
+            isDraggingTrack = false;
+        }
+
+        function closeTrackModal() {
+            document.getElementById('trackModal').classList.add('hidden');
+        }
+
+        function openUpdateModal() {
+            document.getElementById('updateModal').classList.remove('hidden');
+            document.getElementById('updateProject').value = currentTrackProject;
+            document.getElementById('updateProgress').value = 50;
+            document.getElementById('progressValue').textContent = '50%';
+            document.getElementById('updateDesc').value = '';
+            document.getElementById('uploadText').textContent = '点击或拖拽文件到此处上传';
+            isDraggingUpdate = false;
+        }
+
+        function openUpdateFromDetail() {
+            closeTrackModal();
+            openUpdateModal();
+        }
+
+        function closeUpdateModal() {
+            document.getElementById('updateModal').classList.add('hidden');
+        }
+
+        function updateProgressValue(val) {
+            document.getElementById('progressValue').textContent = val + '%';
+        }
+
+        function handleFileUpload(input) {
+            if (input.files.length > 0) {
+                const fileNames = Array.from(input.files).map(f => f.name).join(', ');
+                document.getElementById('uploadText').textContent = '已选择: ' + fileNames;
+            }
+        }
+
+        function submitUpdate() {
+            const project = document.getElementById('updateProject').value;
+            const progress = document.getElementById('updateProgress').value;
+            const desc = document.getElementById('updateDesc').value;
+
+            if (!project) { alert('请选择整改项目！'); return; }
+
+            alert('进度上报成功！\n\n项目：' + project + '\n进度：' + progress + '%\n说明：' + (desc || '无'));
+            closeUpdateModal();
+        }
+
+        document.getElementById('trackModalHeader').addEventListener('mousedown', function(e) {
+            isDraggingTrack = true;
+            trackOffsetX = e.clientX - this.parentElement.getBoundingClientRect().left;
+            trackOffsetY = e.clientY - this.parentElement.getBoundingClientRect().top;
+        });
+
+        document.getElementById('updateModalHeader').addEventListener('mousedown', function(e) {
+            isDraggingUpdate = true;
+            updateOffsetX = e.clientX - this.parentElement.getBoundingClientRect().left;
+            updateOffsetY = e.clientY - this.parentElement.getBoundingClientRect().top;
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (isDraggingTrack) {
+                const modal = document.querySelector('#trackModal .modal-box');
+                modal.style.margin = '0';
+                modal.style.position = 'fixed';
+                modal.style.left = (e.clientX - trackOffsetX) + 'px';
+                modal.style.top = (e.clientY - trackOffsetY) + 'px';
+            }
+            if (isDraggingUpdate) {
+                const modal = document.querySelector('#updateModal .modal-box');
+                modal.style.margin = '0';
+                modal.style.position = 'fixed';
+                modal.style.left = (e.clientX - updateOffsetX) + 'px';
+                modal.style.top = (e.clientY - updateOffsetY) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDraggingTrack = false;
+            isDraggingUpdate = false;
+        });
+    </script>
+</body>
+</html>

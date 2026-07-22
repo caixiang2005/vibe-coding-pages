@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>需求分析 - 需求梳理分析系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css">
+    <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+
+        .macos-blur {
+            backdrop-filter: blur(20px);
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .sidebar-item-active {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: #007AFF;
+            font-weight: 500;
+        }
+
+        .window-shadow {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d1d1;
+            border-radius: 10px;
+        }
+        
+        /* Analysis Specific Styles */
+        .priority-p0 { color: #E0443E; background-color: #FFE5E5; }
+        .priority-p1 { color: #FF9500; background-color: #FFF5E5; }
+        .priority-p2 { color: #007AFF; background-color: #E5F1FF; }
+
+        /* Gantt Chart Customization */
+        .gantt_task_line {
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .gantt_grid_scale, .gantt_task_scale {
+            background-color: #f9fafb !important; /* gray-50 */
+            color: #6b7280 !important; /* gray-500 */
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb !important; /* gray-200 */
+        }
+        .gantt_grid_data .gantt_cell {
+            color: #111827; /* gray-900 */
+            border-right: 1px solid #f3f4f6 !important;
+        }
+        .gantt_row, .gantt_task_row {
+            background-color: white;
+            border-bottom: 1px solid #f3f4f6 !important;
+        }
+        .gantt_row.odd, .gantt_task_row.odd {
+            background-color: #ffffff !important; /* Force white for odd rows */
+        }
+        .gantt_row:hover, .gantt_task_row:hover {
+            background-color: #f9fafb !important;
+        }
+        .gantt_grid_head_cell {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .gantt_task_content {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        /* Custom scrollbars for Gantt */
+        .gantt_ver_scroll, .gantt_hor_scroll {
+            background-color: transparent;
+        }
+        .gantt_ver_scroll::-webkit-scrollbar,
+        .gantt_hor_scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .gantt_ver_scroll::-webkit-scrollbar-thumb,
+        .gantt_hor_scroll::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body class="bg-[#F5F5F7] h-screen flex items-center justify-center p-4">
+    <!-- macOS Window -->
+    <div class="w-full h-full max-w-[1440px] max-h-[900px] bg-white rounded-xl overflow-hidden flex flex-col window-shadow border border-gray-200">
+        <!-- Title Bar -->
+        <div class="h-12 bg-[#EBEBEB] border-b border-gray-300 flex items-center px-4 flex-shrink-0">
+            <div class="flex space-x-2 w-20">
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FF5F57] border border-[#E0443E]"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FFBD2E] border border-[#DEA123]"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#28C840] border border-[#1AAB29]"></div>
+            </div>
+            <div class="flex-1 text-center text-sm font-medium text-gray-600">软件开发项目需求梳理分析系统</div>
+            <div class="w-20"></div>
+        </div>
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <div class="w-64 bg-[#F2F2F2] border-r border-gray-200 flex flex-col overflow-hidden">
+                <!-- Scrollable Content -->
+                <div class="flex-1 overflow-y-auto p-3 space-y-6">
+                    <!-- User Profile -->
+                    <div class="flex items-center space-x-3 px-2 py-1">
+                        <img alt="Avatar" class="w-10 h-10 rounded-full border border-gray-300"
+                            src="https://i03piccdn.sogoucdn.com/d3e478a309b93af7" />
+                        <div>
+                            <div class="text-sm font-semibold text-gray-800">张源</div>
+                            <div class="text-xs text-gray-500">产品总监</div>
+                        </div>
+                    </div>
+                    <!-- Navigation List -->
+                    <nav class="space-y-1">
+                        <a class="flex items-center space-x-2 px-3 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                            href="index.html">
+                            <span class="iconify text-lg" data-icon="carbon:dashboard"></span>
+                            <span>项目管理</span>
+                        </a>
+                        <a class="sidebar-item-active flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm transition-colors"
+                            href="analysis.html">
+                            <span class="iconify text-lg" data-icon="carbon:document-view"></span>
+                            <span>需求分析</span>
+                        </a>
+                        <a class="flex items-center space-x-2 px-3 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                            href="collaboration.html">
+                            <span class="iconify text-lg" data-icon="carbon:user-multiple"></span>
+                            <span>协作动态</span>
+                        </a>
+                        <a class="flex items-center space-x-2 px-3 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                            href="flow.html">
+                            <span class="iconify text-lg" data-icon="carbon:flow"></span>
+                            <span>流程建模</span>
+                        </a>
+                        <a class="flex items-center space-x-2 px-3 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                            href="mindmap.html">
+                            <span class="iconify text-lg" data-icon="carbon:network-4"></span>
+                            <span>思维导图</span>
+                        </a>
+                    </nav>
+                </div>
+                <!-- Status Summary -->
+                <div class="p-3 border-t border-gray-200 bg-[#F2F2F2]">
+                    <div class="p-3 bg-white/50 rounded-lg border border-gray-200">
+                        <div class="text-xs text-gray-500 mb-2">本月配额已使用 68%</div>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                            <div class="bg-blue-500 h-1.5 rounded-full" style="width: 68%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content Area -->
+            <div class="flex-1 min-w-0 flex flex-col bg-white overflow-hidden">
+                
+                <!-- Toolbar -->
+                <div class="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white/80 macos-blur sticky top-0 z-10">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-lg font-bold text-gray-800">协同办公平台需求重组</h1>
+                        <div class="h-6 w-px bg-gray-300 mx-2"></div>
+                        <!-- View Toggles -->
+                        <div class="flex bg-gray-100 p-0.5 rounded-lg">
+                            <button id="btn-list-view" onclick="switchView('list')" class="px-3 py-1 text-xs font-medium rounded-md bg-white text-gray-800 shadow-sm transition-all">列表</button>
+                            <button id="btn-kanban-view" onclick="switchView('kanban')" class="px-3 py-1 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700 transition-all">看板</button>
+                            <button id="btn-gantt-view" onclick="switchView('gantt')" class="px-3 py-1 text-xs font-medium rounded-md text-gray-500 hover:text-gray-700 transition-all">甘特图</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="relative">
+                            <span class="iconify absolute left-2.5 top-2 text-gray-400" data-icon="carbon:search"></span>
+                            <input class="pl-8 pr-4 py-1.5 bg-gray-100 border-transparent focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm rounded-md w-48 transition-all" placeholder="搜索需求..." type="text" />
+                        </div>
+                        <button onclick="openCreateModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-1.5 rounded-md flex items-center space-x-1.5 shadow-sm transition-all transform active:scale-95">
+                            <span class="iconify" data-icon="carbon:add"></span>
+                            <span>新建需求</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Content Views -->
+                <div class="flex-1 overflow-hidden relative flex min-h-0">
+                    <div class="w-60 flex-shrink-0 border-r border-gray-200 bg-gray-50 p-4 overflow-y-auto">
+                        <div class="text-xs font-bold text-gray-400 uppercase mb-3">模块导航</div>
+                        <ul class="space-y-1 text-sm">
+                            <li>
+                                <div class="flex items-center justify-between px-2 py-1.5 bg-blue-100 text-blue-700 rounded-md font-medium cursor-pointer">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="iconify" data-icon="carbon:folder"></span>
+                                        <span>全部需求</span>
+                                    </div>
+                                    <span class="text-xs bg-blue-200 px-1.5 rounded-full">32</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="flex items-center px-2 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md cursor-pointer transition-colors">
+                                    <span class="iconify mr-2 text-gray-400" data-icon="carbon:folder"></span>
+                                    <span>支付网关集成</span>
+                                </div>
+                                <ul class="pl-6 mt-1 space-y-1 text-gray-500">
+                                    <li class="px-2 py-1 hover:text-gray-800 cursor-pointer">PayPal 接口</li>
+                                    <li class="px-2 py-1 hover:text-gray-800 cursor-pointer">Stripe 接口</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <div class="flex items-center px-2 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md cursor-pointer transition-colors">
+                                    <span class="iconify mr-2 text-gray-400" data-icon="carbon:folder"></span>
+                                    <span>合规风控</span>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="flex items-center px-2 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md cursor-pointer transition-colors">
+                                    <span class="iconify mr-2 text-gray-400" data-icon="carbon:folder"></span>
+                                    <span>多币种结算</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="flex-1 min-w-0 overflow-hidden relative flex flex-col min-h-0">
+                    <!-- List View -->
+                    <div id="list-view" class="flex-1 min-h-0 flex flex-col">
+                        <div class="flex-1 overflow-y-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0 z-10">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">需求名称 / 描述</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">优先级</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">负责人</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">更新时间</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 bg-white">
+                                <!-- REQ-001 -->
+                                <tr class="hover:bg-gray-50 transition-colors group cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-001'">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">REQ-2024-001</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">
+                                        <div class="flex items-center">
+                                            用户登录与注册模块
+                                        </div>
+                                        <div class="text-xs text-gray-400 mt-1">包含手机号、邮箱注册及找回密码功能</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full priority-p0">P0 紧急</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="flex items-center text-sm text-blue-600">
+                                            <span class="w-2 h-2 rounded-full bg-blue-600 mr-2"></span>
+                                            分析中
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-6 w-6 rounded-full mr-2" src="https://i04piccdn.sogoucdn.com/d01eb4fcb4e6b89f" alt="">
+                                            <span class="text-sm text-gray-600">李晓华</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2小时前</td>
+                                </tr>
+                                <!-- REQ-002 -->
+                                <tr class="hover:bg-gray-50 transition-colors group cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-002'">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">REQ-2024-002</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">
+                                        <div class="flex items-center">
+                                            数据可视化大屏展示
+                                        </div>
+                                        <div class="text-xs text-gray-400 mt-1">支持多维度数据筛选与实时更新</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full priority-p1">P1 重要</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="flex items-center text-sm text-gray-500">
+                                            <span class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span>
+                                            待评估
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-6 w-6 rounded-full mr-2" src="https://i04piccdn.sogoucdn.com/d01eb4fcb4e6b89f" alt="">
+                                            <span class="text-sm text-gray-600">李晓华</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">昨天</td>
+                                </tr>
+                                <!-- REQ-003 -->
+                                <tr class="hover:bg-gray-50 transition-colors group cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-003'">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">REQ-2024-003</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">
+                                        <div class="flex items-center">
+                                            系统权限管理功能
+                                        </div>
+                                        <div class="text-xs text-gray-400 mt-1">RBAC模型，支持自定义角色</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full priority-p0">P0 紧急</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="flex items-center text-sm text-green-600">
+                                            <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                                            已确认
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-6 w-6 rounded-full mr-2" src="https://i04piccdn.sogoucdn.com/1cdeb9e671d95544" alt="">
+                                            <span class="text-sm text-gray-600">赵琳</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3天前</td>
+                                </tr>
+                                <!-- REQ-004 -->
+                                <tr class="hover:bg-gray-50 transition-colors group cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-004'">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">REQ-2024-004</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">
+                                        <div class="flex items-center">
+                                            报表导出与打印
+                                        </div>
+                                        <div class="text-xs text-gray-400 mt-1">支持Excel、PDF格式导出</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full priority-p1">P1 重要</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="flex items-center text-sm text-purple-600">
+                                            <span class="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
+                                            开发中
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-6 w-6 rounded-full mr-2" src="https://i01piccdn.sogoucdn.com/1b27e4ae0a91c0f1" alt="">
+                                            <span class="text-sm text-gray-600">张伟</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1周前</td>
+                                </tr>
+                                <!-- REQ-005 -->
+                                <tr class="hover:bg-gray-50 transition-colors group cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-005'">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">REQ-2024-005</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">
+                                        <div class="flex items-center">
+                                            需求录入与编辑
+                                        </div>
+                                        <div class="text-xs text-gray-400 mt-1">支持富文本编辑与Markdown格式</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full priority-p0">P0 紧急</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="flex items-center text-sm text-blue-600">
+                                            <span class="w-2 h-2 rounded-full bg-blue-600 mr-2"></span>
+                                            进行中
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-6 w-6 rounded-full mr-2" src="https://i01piccdn.sogoucdn.com/1b27e4ae0a91c0f1" alt="">
+                                            <span class="text-sm text-gray-600">张伟</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1周前</td>
+                                </tr>
+                                <!-- REQ-006 -->
+                                <tr class="hover:bg-gray-50 transition-colors group cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-006'">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">REQ-2024-006</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">
+                                        <div class="flex items-center">
+                                            全局评论与批注系统
+                                        </div>
+                                        <div class="text-xs text-gray-400 mt-1">支持针对文档内容的即时评论</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full priority-p1">P1 重要</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="flex items-center text-sm text-gray-500">
+                                            <span class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span>
+                                            待开发
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-6 w-6 rounded-full mr-2" src="https://i01piccdn.sogoucdn.com/fc64ab05abb6d110" alt="">
+                                            <span class="text-sm text-gray-600">钱军</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2周前</td>
+                                </tr>
+                                <!-- REQ-007 -->
+                                <tr class="hover:bg-gray-50 transition-colors group cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-007'">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">REQ-2024-007</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">
+                                        <div class="flex items-center">
+                                            需求关联关系管理
+                                        </div>
+                                        <div class="text-xs text-gray-400 mt-1">管理需求间的依赖与冲突关系</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full priority-p2">P2 普通</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="flex items-center text-sm text-gray-500">
+                                            <span class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span>
+                                            待排期
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-6 w-6 rounded-full mr-2" src="https://i03piccdn.sogoucdn.com/1b342d4c21fa5990" alt="">
+                                            <span class="text-sm text-gray-600">王建国</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2周前</td>
+                                </tr>
+                                <!-- REQ-008 -->
+                                <tr class="hover:bg-gray-50 transition-colors group cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-008'">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">REQ-2024-008</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">
+                                        <div class="flex items-center">
+                                            移动端适配
+                                        </div>
+                                        <div class="text-xs text-gray-400 mt-1">兼容主流iOS与Android设备</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full priority-p1">P1 重要</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="flex items-center text-sm text-blue-600">
+                                            <span class="w-2 h-2 rounded-full bg-blue-600 mr-2"></span>
+                                            进行中
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <img class="h-6 w-6 rounded-full mr-2" src="https://i04piccdn.sogoucdn.com/d01eb4fcb4e6b89f" alt="">
+                                            <span class="text-sm text-gray-600">李晓华</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3周前</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-white flex-shrink-0">
+                            <div class="text-xs text-gray-500">
+                                显示 <span class="font-medium text-gray-900">1</span> 到 <span class="font-medium text-gray-900">8</span> 条，共 <span class="font-medium text-gray-900">32</span> 条
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="px-3 py-1 text-xs font-medium text-gray-400 bg-white border border-gray-200 rounded-md cursor-not-allowed">上一页</button>
+                                <button class="px-3 py-1 text-xs font-medium text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700">1</button>
+                                <button class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50">2</button>
+                                <button class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50">3</button>
+                                <button class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50">4</button>
+                                <button class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50">下一页</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kanban View -->
+                    <div id="kanban-view" class="hidden flex-1 min-h-0 overflow-x-auto bg-gray-50 p-6">
+                        <div class="flex space-x-6 h-full min-w-max">
+                            <!-- Column 1: To Do -->
+                            <div class="w-80 flex flex-col bg-gray-100/50 rounded-xl p-3 border border-gray-200/60">
+                                <div class="flex items-center justify-between px-2 mb-3">
+                                    <span class="text-sm font-semibold text-gray-700">待评估/待排期</span>
+                                    <span class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">3</span>
+                                </div>
+                                <div class="flex-1 overflow-y-auto space-y-3">
+                                    <!-- Card -->
+                                    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-002'">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <span class="text-xs font-mono text-gray-500">REQ-2024-002</span>
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-600">P1</span>
+                                        </div>
+                                        <div class="text-sm font-medium text-gray-800 mb-2">数据可视化大屏展示</div>
+                                        <div class="flex items-center justify-between mt-3">
+                                            <img class="h-5 w-5 rounded-full" src="https://modao.cc/agent-py/media/generated_images/2026-03-09/635a20049f804172a6ab8ced92a93c57.jpg" alt="">
+                                            <span class="text-xs text-gray-400">昨天</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Column 2: In Progress -->
+                            <div class="w-80 flex flex-col bg-gray-100/50 rounded-xl p-3 border border-gray-200/60">
+                                <div class="flex items-center justify-between px-2 mb-3">
+                                    <span class="text-sm font-semibold text-blue-700">分析/开发中</span>
+                                    <span class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full">2</span>
+                                </div>
+                                <div class="flex-1 overflow-y-auto space-y-3">
+                                    <!-- Card -->
+                                    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-001'">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <span class="text-xs font-mono text-gray-500">REQ-2024-001</span>
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-600">P0</span>
+                                        </div>
+                                        <div class="text-sm font-medium text-gray-800 mb-2">用户登录与注册模块</div>
+                                        <div class="flex items-center justify-between mt-3">
+                                            <img class="h-5 w-5 rounded-full" src="https://i04piccdn.sogoucdn.com/d01eb4fcb4e6b89f" alt="">
+                                            <span class="text-xs text-gray-400">2小时前</span>
+                                        </div>
+                                    </div>
+                                    <!-- Card -->
+                                    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="window.location.href='requirement_detail.html?id=REQ-2024-004'">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <span class="text-xs font-mono text-gray-500">REQ-2024-004</span>
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-600">P1</span>
+                                        </div>
+                                        <div class="text-sm font-medium text-gray-800 mb-2">报表导出与打印</div>
+                                        <div class="flex items-center justify-between mt-3">
+                                            <img class="h-5 w-5 rounded-full" src="https://i04piccdn.sogoucdn.com/d01eb4fcb4e6b89f" alt="">
+                                            <span class="text-xs text-gray-400">1周前</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Column 3: Done -->
+                            <div class="w-80 flex flex-col bg-gray-100/50 rounded-xl p-3 border border-gray-200/60">
+                                <div class="flex items-center justify-between px-2 mb-3">
+                                    <span class="text-sm font-semibold text-green-700">已完成</span>
+                                    <span class="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full">1</span>
+                                </div>
+                                <div class="flex-1 overflow-y-auto space-y-3">
+                                    <!-- Card -->
+                                    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer opacity-75" onclick="window.location.href='requirement_detail.html?id=REQ-2024-003'">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <span class="text-xs font-mono text-gray-500">REQ-2024-003</span>
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-600">P0</span>
+                                        </div>
+                                        <div class="text-sm font-medium text-gray-800 mb-2 line-through text-gray-500">系统权限管理功能</div>
+                                        <div class="flex items-center justify-between mt-3">
+                                            <img class="h-5 w-5 rounded-full" src="https://modao.cc/agent-py/media/generated_images/2026-03-09/a9bf17d3abb64392b9717a64e5c0beb0.jpg" alt="">
+                                            <span class="text-xs text-gray-400">3天前</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gantt View -->
+                    <div id="gantt-view" class="hidden flex-1 min-h-0 overflow-hidden bg-white">
+                        <div id="gantt-chart" class="w-full h-full"></div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Create Requirement Modal -->
+    <div id="create-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Transparent container for centering, clicks pass through outside (simulated modeless) or just transparent blocking -->
+        <!-- User requested "No mask", so we remove the dark overlay. We keep a transparent layer to center the modal. -->
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            
+            <!-- macOS Window Style Modal -->
+            <div id="modal-window" class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl sm:w-full sm:max-w-lg border border-gray-200 window-shadow">
+                
+                <!-- macOS Title Bar -->
+                <div id="modal-header" class="h-10 bg-[#EBEBEB] border-b border-gray-300 flex items-center px-4 justify-between select-none cursor-move">
+                    <!-- Traffic Lights -->
+                    <div class="flex space-x-2 w-14">
+                        <div onclick="closeCreateModal()" class="w-3 h-3 rounded-full bg-[#FF5F57] border border-[#E0443E] cursor-pointer hover:opacity-80 transition-opacity" title="Close"></div>
+                    </div>
+                    <!-- Title -->
+                    <div class="flex-1 text-center text-xs font-semibold text-gray-600">新建需求</div>
+                    <!-- Spacer for centering -->
+                    <div class="w-14"></div>
+                </div>
+
+                <!-- Modal Content -->
+                <div class="bg-white px-8 py-6">
+                    <div class="space-y-5">
+                        <div>
+                            <label for="req-title" class="block text-xs font-medium text-gray-700 mb-1.5">需求标题</label>
+                            <input type="text" name="req-title" id="req-title" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 bg-white border" placeholder="请输入需求标题">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-5">
+                            <div>
+                                <label for="req-priority" class="block text-xs font-medium text-gray-700 mb-1.5">优先级</label>
+                                <select id="req-priority" name="req-priority" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-2 py-2 bg-white border">
+                                    <option value="P0">P0 紧急</option>
+                                    <option value="P1">P1 重要</option>
+                                    <option value="P2" selected>P2 一般</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="req-status" class="block text-xs font-medium text-gray-700 mb-1.5">状态</label>
+                                <select id="req-status" name="req-status" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-2 py-2 bg-white border">
+                                    <option value="分析中">分析中</option>
+                                    <option value="待评估" selected>待评估</option>
+                                    <option value="待开发">待开发</option>
+                                    <option value="开发中">开发中</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-5">
+                            <div>
+                                <label for="req-start" class="block text-xs font-medium text-gray-700 mb-1.5">开始时间</label>
+                                <input type="date" name="req-start" id="req-start" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 bg-white border">
+                            </div>
+                            <div>
+                                <label for="req-end" class="block text-xs font-medium text-gray-700 mb-1.5">结束时间</label>
+                                <input type="date" name="req-end" id="req-end" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 bg-white border">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="req-owner" class="block text-xs font-medium text-gray-700 mb-1.5">负责人</label>
+                            <select id="req-owner" name="req-owner" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-2 py-2 bg-white border">
+                                <option value="李晓华">李晓华</option>
+                                <option value="张志强">张志强</option>
+                                <option value="王建国">王建国</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse border-t border-gray-200">
+                    <button type="button" onclick="saveRequirement()" class="inline-flex w-full justify-center rounded-md bg-[#007AFF] px-4 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-blue-600 sm:ml-3 sm:w-auto transition-colors">保存</button>
+                    <button type="button" onclick="closeCreateModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto transition-colors">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // View Switching Logic
+        let ganttChart = null;
+
+        function switchView(viewName) {
+            // Hide all views
+            document.getElementById('list-view').classList.add('hidden');
+            document.getElementById('kanban-view').classList.add('hidden');
+            document.getElementById('gantt-view').classList.add('hidden');
+
+            // Reset button styles
+            const buttons = ['btn-list-view', 'btn-kanban-view', 'btn-gantt-view'];
+            buttons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                btn.classList.remove('bg-white', 'text-gray-800', 'shadow-sm');
+                btn.classList.add('bg-transparent', 'text-gray-500');
+            });
+
+            // Show selected view and update button style
+            const activeBtn = document.getElementById(`btn-${viewName}-view`);
+            activeBtn.classList.remove('bg-transparent', 'text-gray-500');
+            activeBtn.classList.add('bg-white', 'text-gray-800', 'shadow-sm');
+
+            if (viewName === 'list') {
+                document.getElementById('list-view').classList.remove('hidden');
+            } else if (viewName === 'kanban') {
+                document.getElementById('kanban-view').classList.remove('hidden');
+            } else if (viewName === 'gantt') {
+                document.getElementById('gantt-view').classList.remove('hidden');
+                initGanttChart();
+                // Ensure chart renders correctly after being hidden
+                setTimeout(() => {
+                    if (window.gantt) gantt.render();
+                }, 50);
+            }
+        }
+
+        function initGanttChart() {
+            // Check if already initialized to avoid re-initialization
+            if (ganttChart) {
+                return;
+            }
+            
+            // Mark as initialized
+            ganttChart = true;
+
+            // Configure Gantt
+            gantt.config.date_format = "%Y-%m-%d";
+            gantt.config.start_date = new Date(2024, 1, 25); // Start view slightly before first task
+            gantt.config.end_date = new Date(2024, 2, 20);   // End view slightly after last task
+            gantt.config.columns = [
+                {name: "text", label: "任务名称", tree: true, width: 220, resize: true},
+                {name: "start_date", label: "开始时间", align: "center", width: 90},
+                {name: "duration", label: "工期", align: "center", width: 50},
+                {name: "status", label: "状态", align: "center", width: 80, template: function(obj) {
+                    const colors = {
+                        '已确认': 'bg-green-100 text-green-700',
+                        '分析中': 'bg-blue-100 text-blue-700',
+                        '进行中': 'bg-blue-100 text-blue-700',
+                        '待评估': 'bg-orange-100 text-orange-700',
+                        '待排期': 'bg-gray-100 text-gray-700',
+                        '待开发': 'bg-purple-100 text-purple-700',
+                        '开发中': 'bg-purple-100 text-purple-700'
+                    };
+                    const cls = colors[obj.status] || 'bg-gray-100 text-gray-700';
+                    return `<span class="px-2 py-0.5 rounded-md text-xs font-medium ${cls}">${obj.status}</span>`;
+                }}
+            ];
+            
+            gantt.config.grid_width = 460;
+            gantt.config.row_height = 40;
+            gantt.config.task_height = 24;
+            gantt.config.bar_height = 24;
+            gantt.config.min_column_width = 40;
+            gantt.config.scale_height = 50;
+            
+            // Custom timeline scale
+            gantt.config.scales = [
+                {unit: "month", step: 1, format: "%Y年%M"},
+                {unit: "day", step: 1, format: "%d"}
+            ];
+            
+            gantt.i18n.setLocale("cn"); // Chinese locale
+            
+            // Allow task drag and drop
+            gantt.config.readonly = true; // Set to true for prototype view only
+            gantt.config.drag_links = false;
+            gantt.config.drag_progress = false;
+
+            // Initialize
+            gantt.init("gantt-chart");
+
+            // Prepare Data
+            const rawData = [
+                { id: 1, name: '用户登录与注册模块', start: '2024-03-01', end: '2024-03-05', status: '分析中', progress: 0.6 },
+                { id: 2, name: '数据可视化大屏展示', start: '2024-03-03', end: '2024-03-10', status: '待评估', progress: 0.9 },
+                { id: 3, name: '系统权限管理功能', start: '2024-02-28', end: '2024-03-02', status: '已确认', progress: 1.0 },
+                { id: 4, name: '报表导出与打印', start: '2024-03-06', end: '2024-03-12', status: '开发中', progress: 0.3 },
+                { id: 5, name: '需求录入与编辑', start: '2024-03-05', end: '2024-03-09', status: '进行中', progress: 0.5 },
+                { id: 6, name: '全局评论与批注系统', start: '2024-03-08', end: '2024-03-15', status: '待开发', progress: 0 },
+                { id: 7, name: '需求关联关系管理', start: '2024-03-10', end: '2024-03-12', status: '待排期', progress: 0 },
+                { id: 8, name: '移动端适配', start: '2024-03-02', end: '2024-03-15', status: '进行中', progress: 0.4 }
+            ];
+
+            const tasks = {
+                data: rawData.map(item => ({
+                    id: item.id,
+                    text: item.name,
+                    start_date: item.start,
+                    duration: (new Date(item.end) - new Date(item.start)) / (1000 * 60 * 60 * 24) + 1, 
+                    status: item.status,
+                    progress: item.progress,
+                    color: getItemColor(item.status)
+                }))
+            };
+
+            gantt.parse(tasks);
+            
+            // Add resize listener
+            window.addEventListener('resize', () => {
+                // Only repaint if visible
+                if (!document.getElementById('gantt-view').classList.contains('hidden')) {
+                    gantt.render();
+                }
+            });
+        }
+
+        function getItemColor(status) {
+            if (status === '已确认') return '#22C55E';
+            if (status === '分析中' || status === '进行中') return '#3B82F6';
+            if (status === '待评估') return '#F59E0B';
+            if (status === '待排期') return '#9CA3AF';
+            return '#9333EA';
+        }
+
+        // Create Requirement Logic
+        function openCreateModal() {
+            document.getElementById('create-modal').classList.remove('hidden');
+            // Reset position if needed, or keep last position
+        }
+
+        function closeCreateModal() {
+            document.getElementById('create-modal').classList.add('hidden');
+        }
+
+        function saveRequirement() {
+            // Get values
+            const title = document.getElementById('req-title').value;
+            const priority = document.getElementById('req-priority').value;
+            const status = document.getElementById('req-status').value;
+            
+            if (!title) {
+                alert('请输入需求标题');
+                return;
+            }
+
+            // In a real app, this would save to backend
+            alert(`需求 "${title}" 已保存!\n优先级: ${priority}\n状态: ${status}`);
+            closeCreateModal();
+        }
+
+        // Draggable Modal Logic
+        (function() {
+            const modalHeader = document.getElementById('modal-header');
+            const modalWindow = document.getElementById('modal-window');
+            
+            if (!modalHeader || !modalWindow) return;
+
+            let isDragging = false;
+            let startX, startY, initialTranslateX, initialTranslateY;
+            
+            // Initialize transform
+            let currentTranslateX = 0;
+            let currentTranslateY = 0;
+
+            modalHeader.addEventListener('mousedown', dragStart);
+
+            function dragStart(e) {
+                // Ignore if clicking on buttons (traffic lights)
+                if (e.target.closest('.rounded-full')) return;
+
+                initialTranslateX = currentTranslateX;
+                initialTranslateY = currentTranslateY;
+                startX = e.clientX;
+                startY = e.clientY;
+
+                isDragging = true;
+                
+                // Attach event listeners to document to handle drag outside the header
+                document.addEventListener('mouseup', dragEnd);
+                document.addEventListener('mousemove', drag);
+                
+                modalHeader.style.cursor = 'grabbing';
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+
+                e.preventDefault();
+                
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                currentTranslateX = initialTranslateX + dx;
+                currentTranslateY = initialTranslateY + dy;
+
+                modalWindow.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px)`;
+            }
+
+            function dragEnd() {
+                isDragging = false;
+                document.removeEventListener('mouseup', dragEnd);
+                document.removeEventListener('mousemove', drag);
+                modalHeader.style.cursor = 'move';
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据采集 - 临床科研数据中心系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
+        body { background: #e8f4f8; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 20px; }
+        .app-window { width: 1200px; height: 720px; max-width: 100%; background: #f5f9fc; border-radius: 4px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); overflow: hidden; border: 1px solid #b8d4e8; display: flex; flex-direction: column; position: relative; }
+        .title-bar { background: linear-gradient(180deg, #c5dff0 0%, #a8cce4 100%); height: 32px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #8bb8d4; }
+        .title-bar-left { display: flex; align-items: center; gap: 8px; }
+        .title-bar-icon { width: 18px; height: 18px; background: linear-gradient(135deg, #4a90c2 0%, #2d6a9f 100%); border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; }
+        .title-bar-text { font-size: 13px; color: #1a3a52; font-weight: 500; }
+        .window-controls { display: flex; gap: 1px; }
+        .window-btn { width: 46px; height: 32px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #1a3a52; font-size: 10px; transition: background 0.15s; }
+        .window-btn:hover { background: rgba(0, 0, 0, 0.1); }
+        .window-btn.close:hover { background: #e81123; color: white; }
+        .window-btn-icon { width: 10px; height: 10px; display: flex; align-items: center; justify-content: center; }
+        .minimize-icon { width: 10px; height: 1px; background: currentColor; }
+        .maximize-icon { width: 10px; height: 10px; border: 1px solid currentColor; background: transparent; }
+        .close-icon { position: relative; width: 10px; height: 10px; }
+        .close-icon::before, .close-icon::after { content: ''; position: absolute; width: 12px; height: 1px; background: currentColor; top: 50%; left: 50%; }
+        .close-icon::before { transform: translate(-50%, -50%) rotate(45deg); }
+        .close-icon::after { transform: translate(-50%, -50%) rotate(-45deg); }
+        .main-nav { background: linear-gradient(180deg, #f0f7fc 0%, #dceaf5 100%); padding: 8px 12px; display: flex; gap: 6px; border-bottom: 1px solid #c5d9e8; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; min-width: 72px; text-decoration: none; }
+        .nav-item:hover { background: #e8f2fa; border-color: #b8d4e8; }
+        .nav-item.active { background: linear-gradient(180deg, #ffffff 0%, #e8f4fc 100%); border-color: #a0c8e0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+        .nav-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #5a9fcf 0%, #3a7fb0 100%); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; margin-bottom: 4px; }
+        .nav-item:nth-child(2) .nav-icon { background: linear-gradient(135deg, #6aaf70 0%, #4a9050 100%); }
+        .nav-item:nth-child(3) .nav-icon { background: linear-gradient(135deg, #e8a040 0%, #d08020 100%); }
+        .nav-item:nth-child(4) .nav-icon { background: linear-gradient(135deg, #9080c8 0%, #7060a8 100%); }
+        .nav-item:nth-child(5) .nav-icon { background: linear-gradient(135deg, #70a8b8 0%, #508898 100%); }
+        .nav-text { font-size: 12px; color: #2a4a60; }
+        .toolbar { background: #f8fbfd; padding: 8px 12px; display: flex; gap: 8px; border-bottom: 1px solid #d8e8f0; flex-wrap: wrap; align-items: center; }
+        .tool-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid #c0d4e4; background: linear-gradient(180deg, #ffffff 0%, #f0f6fa 100%); border-radius: 4px; cursor: pointer; font-size: 12px; color: #2a4a60; transition: all 0.2s; }
+        .tool-btn:hover { background: linear-gradient(180deg, #f0f8ff 0%, #e0f0fa 100%); border-color: #90b8d4; }
+        .tool-btn:active { transform: scale(0.96); }
+        .tool-btn i { color: #5090c0; }
+        .toolbar-separator { width: 1px; height: 24px; background: #d0e0ec; margin: 0 4px; }
+        .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+        .user-info { display: flex; align-items: center; gap: 8px; padding: 4px 12px; background: #eef5fa; border-radius: 4px; border: 1px solid #d0e0ec; }
+        .user-avatar { width: 28px; height: 28px; background: linear-gradient(135deg, #5a9fcf 0%, #3a7fb0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; }
+        .user-name { font-size: 12px; color: #2a4a60; }
+        .main-content { display: flex; flex: 1; overflow: hidden; }
+        .left-panel { width: 220px; background: #f0f6fa; border-right: 1px solid #d8e8f0; padding: 12px; overflow-y: auto; }
+        .panel-section { margin-bottom: 16px; }
+        .panel-title { font-size: 13px; font-weight: 600; color: #2a4a60; padding: 8px 10px; background: linear-gradient(180deg, #e8f2fa 0%, #dceaf4 100%); border: 1px solid #c8dcea; border-radius: 4px 4px 0 0; display: flex; align-items: center; gap: 8px; }
+        .panel-content { background: white; border: 1px solid #c8dcea; border-top: none; border-radius: 0 0 4px 4px; padding: 10px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .stat-item { text-align: center; padding: 10px 6px; background: #f8fbfd; border-radius: 4px; border: 1px solid #e8f0f6; }
+        .stat-value { font-size: 20px; font-weight: 600; color: #3080b0; }
+        .stat-label { font-size: 11px; color: #6090a8; margin-top: 2px; }
+        .quick-list { list-style: none; }
+        .quick-list li { padding: 8px 10px; font-size: 12px; color: #3a5a70; border-bottom: 1px dashed #e0ecf4; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+        .quick-list li:hover { background: #f0f8ff; }
+        .quick-list li:last-child { border-bottom: none; }
+        .quick-list li i { color: #80a8c4; width: 14px; }
+        .right-content { flex: 1; padding: 12px; background: #fafcfe; overflow-y: auto; position: relative; }
+        .content-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e0ecf4; }
+        .content-title { font-size: 15px; font-weight: 600; color: #2a4a60; display: flex; align-items: center; gap: 8px; }
+        .content-title i { color: #5090c0; }
+        .search-box { display: flex; gap: 8px; }
+        .search-input { padding: 6px 12px; border: 1px solid #c0d4e4; border-radius: 4px; font-size: 12px; width: 150px; outline: none; }
+        .search-input:focus { border-color: #80b0d0; }
+        .search-btn { padding: 6px 14px; background: linear-gradient(180deg, #5a9fcf 0%, #4088b8 100%); border: 1px solid #3078a8; border-radius: 4px; color: white; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .search-btn:hover { background: linear-gradient(180deg, #6aafdf 0%, #5098c8 100%); }
+        .data-table-container { background: white; border: 1px solid #d0e0ec; border-radius: 4px; overflow: hidden; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table th { background: linear-gradient(180deg, #e8f2fa 0%, #dceaf4 100%); padding: 10px 12px; text-align: left; font-weight: 600; color: #2a4a60; border-bottom: 1px solid #c8dcea; white-space: nowrap; }
+        .data-table td { padding: 10px 12px; border-bottom: 1px solid #e8f2f8; color: #3a5a70; }
+        .data-table tr:hover { background: #f5fafd; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; }
+        .status-active { background: #e0f5e6; color: #2a8040; }
+        .status-pending { background: #fff4e0; color: #b07020; }
+        .status-completed { background: #e0f0ff; color: #2070b0; }
+        .action-btns { display: flex; gap: 6px; }
+        .action-btn { padding: 4px 10px; border: 1px solid #c0d4e4; background: #f8fbfd; border-radius: 3px; font-size: 11px; color: #4080a8; cursor: pointer; transition: all 0.2s; }
+        .action-btn:hover { background: #e8f4fc; border-color: #90b8d4; }
+        .pagination { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fbfd; border-top: 1px solid #e0ecf4; }
+        .pagination-info { font-size: 12px; color: #6090a8; }
+        .pagination-btns { display: flex; gap: 4px; }
+        .page-btn { padding: 5px 10px; border: 1px solid #c0d4e4; background: white; border-radius: 3px; font-size: 12px; color: #4080a8; cursor: pointer; }
+        .page-btn:hover { background: #e8f4fc; }
+        .page-btn.active { background: #5090c0; color: white; border-color: #4080b0; }
+        .status-bar { background: linear-gradient(180deg, #e0ecf4 0%, #d0e0ec 100%); padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #4a6a80; border-top: 1px solid #c0d4e4; }
+        .status-left { display: flex; align-items: center; gap: 16px; }
+        .status-item { display: flex; align-items: center; gap: 6px; }
+        .status-dot { width: 8px; height: 8px; background: #50b060; border-radius: 50%; }
+        .modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #f5f9fc; border-radius: 4px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); width: auto; max-width: 90%; max-height: 90vh; overflow: hidden; border: 1px solid #a0c0d8; margin: auto; }
+        .modal-header { background: linear-gradient(180deg, #c5dff0 0%, #a8cce4 100%); padding: 10px 16px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #8bb8d4; position: relative; }
+        .modal-title { font-size: 14px; font-weight: 600; color: #1a3a52; text-align: center; }
+        .modal-close { position: absolute; right: 8px; width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #1a3a52; font-size: 14px; }
+        .modal-close:hover { background: rgba(0, 0, 0, 0.1); }
+        .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 0; }
+        .form-group.full-width { grid-column: span 2; }
+        .form-label { display: block; font-size: 12px; color: #2a4a60; margin-bottom: 6px; font-weight: 500; }
+        .form-label .required { color: #d04040; margin-left: 2px; }
+        .form-input { width: 100%; padding: 8px 12px; border: 1px solid #c0d4e4; border-radius: 4px; font-size: 12px; outline: none; background: white; }
+        .form-input:focus { border-color: #80b0d0; box-shadow: 0 0 0 2px rgba(80, 144, 192, 0.1); }
+        .form-select { width: 100%; padding: 8px 12px; border: 1px solid #c0d4e4; border-radius: 4px; font-size: 12px; outline: none; background: white; cursor: pointer; }
+        .modal-footer { padding: 12px 20px; background: #f0f6fa; border-top: 1px solid #d8e8f0; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { padding: 8px 20px; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; border: 1px solid; }
+        .btn-primary { background: linear-gradient(180deg, #5a9fcf 0%, #4088b8 100%); border-color: #3078a8; color: white; }
+        .btn-primary:hover { background: linear-gradient(180deg, #6aafdf 0%, #5098c8 100%); }
+        .btn-secondary { background: linear-gradient(180deg, #ffffff 0%, #f0f6fa 100%); border-color: #c0d4e4; color: #4a6a80; }
+        .btn-secondary:hover { background: linear-gradient(180deg, #f0f8ff 0%, #e0f0fa 100%); }
+        .toast { position: fixed; top: 80px; right: 20px; padding: 12px 20px; background: #2a8040; color: white; border-radius: 4px; font-size: 13px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); z-index: 2000; display: none; align-items: center; gap: 8px; }
+        .toast.show { display: flex; }
+        .toast.error { background: #c04040; }
+        .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .detail-item { display: flex; }
+        .detail-label { min-width: 100px; font-size: 12px; color: #6090a8; }
+        .detail-value { font-size: 12px; color: #2a4a60; }
+        .file-upload-zone { border: 2px dashed #c0d4e4; border-radius: 4px; padding: 24px; text-align: center; background: #fafcfe; cursor: pointer; position: relative; }
+        .file-upload-zone input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 0; }
+        .modal { overflow: visible; }
+    </style>
+</head>
+<body>
+    <div class="app-window">
+        <div class="title-bar">
+            <div class="title-bar-left">
+                <div class="title-bar-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <span class="title-bar-text">临床科研数据中心系统</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize"><div class="window-btn-icon"><div class="minimize-icon"></div></div></button>
+                <button class="window-btn maximize"><div class="window-btn-icon"><div class="maximize-icon"></div></div></button>
+                <button class="window-btn close"><div class="window-btn-icon"><div class="close-icon"></div></div></button>
+            </div>
+        </div>
+        <div class="main-nav">
+            <a class="nav-item" href="project.html">
+                <div class="nav-icon"><i class="fas fa-folder-open"></i></div>
+                <span class="nav-text">项目管理</span>
+            </a>
+            <a class="nav-item active" href="data-collection.html">
+                <div class="nav-icon"><i class="fas fa-edit"></i></div>
+                <span class="nav-text">数据采集</span>
+            </a>
+            <a class="nav-item" href="quality-control.html">
+                <div class="nav-icon"><i class="fas fa-check-circle"></i></div>
+                <span class="nav-text">质量控制</span>
+            </a>
+            <a class="nav-item" href="statistics.html">
+                <div class="nav-icon"><i class="fas fa-chart-bar"></i></div>
+                <span class="nav-text">统计分析</span>
+            </a>
+            <a class="nav-item" href="system-settings.html">
+                <div class="nav-icon"><i class="fas fa-cog"></i></div>
+                <span class="nav-text">系统设置</span>
+            </a>
+        </div>
+        <div class="toolbar">
+            <button class="tool-btn" onclick="openModal('newCase')">
+                <i class="fas fa-user-plus"></i>新增病例
+            </button>
+            <button class="tool-btn" onclick="openModal('batchImport')">
+                <i class="fas fa-file-upload"></i>批量导入
+            </button>
+            <button class="tool-btn" onclick="openModal('crfForm')">
+                <i class="fas fa-file-alt"></i>CRF录入
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="tool-btn" onclick="openModal('refreshData')">
+                <i class="fas fa-sync-alt"></i>刷新
+            </button>
+            <div class="toolbar-right">
+                <div class="user-info">
+                    <div class="user-avatar"><i class="fas fa-user"></i></div>
+                    <span class="user-name">王晓明</span>
+                </div>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="panel-section">
+                    <div class="panel-title">
+                        <i class="fas fa-chart-pie"></i>采集统计
+                    </div>
+                    <div class="panel-content">
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">1,847</div>
+                                <div class="stat-label">病例总数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">156</div>
+                                <div class="stat-label">今日新增</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">89%</div>
+                                <div class="stat-label">完成度</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">42</div>
+                                <div class="stat-label">待录入</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <div class="panel-title">
+                        <i class="fas fa-tasks"></i>采集任务
+                    </div>
+                    <div class="panel-content">
+                        <ul class="quick-list">
+                            <li><i class="fas fa-clock" style="color:#5090c0;"></i>V3访视待录入 12例</li>
+                            <li><i class="fas fa-clock" style="color:#5090c0;"></i>V5随访待录入 8例</li>
+                            <li><i class="fas fa-clock" style="color:#5090c0;"></i>实验室检查待补 15例</li>
+                            <li><i class="fas fa-exclamation-circle" style="color:#d08020;"></i>影像学待上传 6例</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <div class="panel-title">
+                        <i class="fas fa-bell"></i>提醒
+                    </div>
+                    <div class="panel-content">
+                        <ul class="quick-list">
+                            <li><i class="fas fa-exclamation-circle" style="color:#c04040;"></i>3例超期未录入</li>
+                            <li><i class="fas fa-clock" style="color:#5090c0;"></i>8例随访即将到期</li>
+                            <li><i class="fas fa-flag" style="color:#c04040;"></i>2例SAE待上报</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="right-content">
+                <div class="content-header">
+                    <div class="content-title">
+                        <i class="fas fa-edit"></i>病例数据采集
+                    </div>
+                    <div class="search-box">
+                        <select class="search-input">
+                            <option>全部项目</option>
+                            <option>NSCLC-2024-001</option>
+                            <option>CHD-2024-002</option>
+                            <option>DM-2024-003</option>
+                        </select>
+                        <input type="text" class="search-input" placeholder="输入病例编号...">
+                        <button class="search-btn"><i class="fas fa-search"></i>搜索</button>
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>病例编号</th>
+                                <th>所属项目</th>
+                                <th>受试者缩写</th>
+                                <th>性别</th>
+                                <th>年龄</th>
+                                <th>入组日期</th>
+                                <th>当前访视</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>CRF-2024-0892</td>
+                                <td>NSCLC-2024-001</td>
+                                <td>ZWL</td>
+                                <td>男</td>
+                                <td>58</td>
+                                <td>2024-11-20</td>
+                                <td>V3-治疗期</td>
+                                <td><span class="status-badge status-active">录入中</span></td>
+                                <td class="action-btns">
+                                    <button class="action-btn" onclick="openModal('crfForm')">录入</button>
+                                    <button class="action-btn" onclick="viewCaseDetail('CRF-2024-0892')">详情</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>CRF-2024-0891</td>
+                                <td>NSCLC-2024-001</td>
+                                <td>LMH</td>
+                                <td>女</td>
+                                <td>62</td>
+                                <td>2024-11-18</td>
+                                <td>V2-基线</td>
+                                <td><span class="status-badge status-pending">待核查</span></td>
+                                <td class="action-btns">
+                                    <button class="action-btn" onclick="openModal('crfForm')">录入</button>
+                                    <button class="action-btn" onclick="viewCaseDetail('CRF-2024-0891')">详情</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>CRF-2024-0756</td>
+                                <td>CHD-2024-002</td>
+                                <td>WJX</td>
+                                <td>男</td>
+                                <td>67</td>
+                                <td>2024-10-15</td>
+                                <td>V4-随访1</td>
+                                <td><span class="status-badge status-completed">已完成</span></td>
+                                <td class="action-btns">
+                                    <button class="action-btn" onclick="openModal('crfForm')">录入</button>
+                                    <button class="action-btn" onclick="viewCaseDetail('CRF-2024-0756')">详情</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="pagination">
+                        <div class="pagination-info">共 1,847 条记录，当前显示 1-3</div>
+                        <div class="pagination-btns">
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn"><i class="fas fa-angle-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-item"><div class="status-dot"></div>系统正常</div>
+                <div class="status-item">当前用户：王晓明</div>
+            </div>
+            <div>临床科研数据中心系统</div>
+        </div>
+    </div>
+
+    <div id="modal-newCase" class="modal-overlay">
+        <div class="modal" style="min-width: 620px;">
+            <div class="modal-header">
+                <span class="modal-title">新增病例</span>
+                <button class="modal-close" onclick="closeModal('newCase')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 12px; padding: 8px 12px; background: #e8f4fc; border-radius: 4px; border-left: 3px solid #5090c0;">
+                    <i class="fas fa-user-plus" style="color: #5090c0; margin-right: 6px;"></i>
+                    <span style="font-size: 12px; color: #2a4a60;">请填写病例基本信息，带 <span style="color: #d04040;">*</span> 的为必填项</span>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-file-alt"></i>基本信息</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">病例编号 <span class="required">*</span></label>
+                        <input type="text" class="form-input" value="CRF-2024-0893" readonly style="background: #f0f0f0;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属项目 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option>请选择项目</option>
+                            <option>NSCLC-2024-001 非小细胞肺癌免疫治疗</option>
+                            <option>CHD-2024-002 冠心病介入治疗预后分析</option>
+                            <option>DM-2024-003 2型糖尿病队列随访研究</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">姓名缩写 <span class="required">*</span></label>
+                        <input type="text" class="form-input" placeholder="如: ZWY" maxlength="4">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">性别 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option>请选择</option>
+                            <option>男</option>
+                            <option>女</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">出生日期</label>
+                        <input type="date" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">年龄</label>
+                        <input type="number" class="form-input" placeholder="周岁">
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-calendar-check"></i>入组信息</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">入组日期 <span class="required">*</span></label>
+                        <input type="date" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">当前访视</label>
+                        <select class="form-select">
+                            <option>V1-筛选期</option>
+                            <option>V2-基线</option>
+                            <option>V3-治疗期</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">筛选号</label>
+                        <input type="text" class="form-input" placeholder="如: SCR-2024-0893">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">随机号</label>
+                        <input type="text" class="form-input" placeholder="如: RND-2024-0893">
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-phone-alt"></i>联系方式</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">联系电话</label>
+                        <input type="tel" class="form-input" placeholder="请输入联系电话">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">紧急联系人</label>
+                        <input type="text" class="form-input" placeholder="请输入联系人姓名">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">备注</label>
+                        <textarea class="form-input" rows="2" placeholder="请输入备注信息，如：合并用药、过敏史等"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('newCase')">取消</button>
+                <button class="btn btn-secondary"><i class="fas fa-file-medical"></i>下载知情同意书</button>
+                <button class="btn btn-primary" onclick="submitCase()"><i class="fas fa-check"></i>创建病例</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-batchImport" class="modal-overlay">
+        <div class="modal" style="min-width: 580px;">
+            <div class="modal-header">
+                <span class="modal-title">批量导入</span>
+                <button class="modal-close" onclick="closeModal('batchImport')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-cloud-upload-alt"></i>文件上传</div>
+                <div class="form-group full-width" style="margin-bottom: 16px;">
+                    <div class="file-upload-zone">
+                        <i class="fas fa-file-excel" style="font-size: 40px; color: #6aaf70; margin-bottom: 12px;"></i>
+                        <div style="font-size: 13px; color: #2a4a60; font-weight: 500; margin-bottom: 6px;">点击选择文件或拖拽文件到此处</div>
+                        <div style="font-size: 11px; color: #80a0b0;">支持 .xlsx、.xls、.csv 格式，文件大小不超过100MB</div>
+                        <input type="file" accept=".xlsx,.xls,.csv">
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-sliders-h"></i>导入配置</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">目标项目 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option>NSCLC-2024-001 非小细胞肺癌</option>
+                            <option>CHD-2024-002 冠心病</option>
+                            <option>DM-2024-003 糖尿病</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">数据类型</label>
+                        <select class="form-select">
+                            <option>病例基本信息</option>
+                            <option>实验室检查数据</option>
+                            <option>用药记录</option>
+                            <option>随访记录</option>
+                            <option>不良事件记录</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">模板类型</label>
+                        <select class="form-select">
+                            <option>标准CRF模板</option>
+                            <option>简化模板</option>
+                            <option>自定义模板</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">数据编码</label>
+                        <select class="form-select">
+                            <option>UTF-8</option>
+                            <option>GB2312</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-exclamation-circle"></i>导入选项</div>
+                <div style="background: #f8fbfd; border: 1px solid #d0e0ec; border-radius: 4px; padding: 12px;">
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 验证数据格式和必填字段
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 自动跳过重复记录
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox"> 自动发送通知给录入人员
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" checked> 导入后自动进入待审核状态
+                    </div>
+                </div>
+                <div style="margin-top: 12px; padding: 10px; background: #fff9e6; border-radius: 4px; border-left: 3px solid #e8a040;">
+                    <i class="fas fa-lightbulb" style="color: #e8a040; margin-right: 6px;"></i>
+                    <span style="font-size: 11px; color: #806020;">提示：批量导入前建议先下载标准模板，确保数据格式正确</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('batchImport')">取消</button>
+                <button class="btn btn-secondary"><i class="fas fa-download"></i>下载模板</button>
+                <button class="btn btn-primary" onclick="batchImport()"><i class="fas fa-upload"></i>开始导入</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-crfForm" class="modal-overlay">
+        <div class="modal" style="min-width: 700px;">
+            <div class="modal-header">
+                <span class="modal-title">CRF表单录入</span>
+                <button class="modal-close" onclick="closeModal('crfForm')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 16px; margin-bottom: 16px; padding: 12px; background: #f8fbfd; border-radius: 4px;">
+                    <div style="flex: 1;">
+                        <div style="font-size: 11px; color: #6090a8;">病例编号</div>
+                        <div style="font-size: 14px; font-weight: 600; color: #2a4a60;">CRF-2024-0892</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 11px; color: #6090a8;">受试者</div>
+                        <div style="font-size: 14px; font-weight: 600; color: #2a4a60;">ZWL</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 11px; color: #6090a8;">当前访视</div>
+                        <div style="font-size: 14px; font-weight: 600; color: #2a4a60;">
+                            <select class="form-select" style="padding: 4px 8px; font-size: 12px;">
+                                <option>V1-筛选期</option>
+                                <option selected>V2-基线</option>
+                                <option>V3-治疗期</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-heartbeat"></i>生命体征</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">体温 (℃)</label>
+                        <input type="number" class="form-input" step="0.1" placeholder="36.0-37.5" value="36.8">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">血压 (mmHg)</label>
+                        <input type="text" class="form-input" placeholder="如: 120/80" value="125/82">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">心率 (次/分)</label>
+                        <input type="number" class="form-input" placeholder="60-100" value="78">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">呼吸频率 (次/分)</label>
+                        <input type="number" class="form-input" placeholder="12-20" value="18">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">血氧饱和度 (%)</label>
+                        <input type="number" class="form-input" placeholder="95-100" value="98">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">体重 (kg)</label>
+                        <input type="number" class="form-input" step="0.1" placeholder="体重" value="65.5">
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-stethoscope"></i>体格检查</div>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label">一般情况</label>
+                        <textarea class="form-input" rows="2" placeholder="请描述一般状况">神志清，精神可，发育正常，营养良好</textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">既往病史</label>
+                        <textarea class="form-input" rows="2" placeholder="请输入既往病史">高血压病史5年，规律服药控制良好</textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">过敏史</label>
+                        <textarea class="form-input" rows="2" placeholder="请输入过敏史">无食物及药物过敏史</textarea>
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-pills"></i>合并用药</div>
+                <div style="background: #f8fbfd; border: 1px solid #d0e0ec; border-radius: 4px; padding: 12px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 12px; color: #2a4a60; font-weight: 500;">用药记录</span>
+                        <button class="action-btn" style="padding: 4px 10px;"><i class="fas fa-plus"></i> 添加</button>
+                    </div>
+                    <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #d0e0ec;">
+                            <td style="padding: 6px 4px; color: #6090a8;">药物名称</td>
+                            <td style="padding: 6px 4px; color: #6090a8;">剂量</td>
+                            <td style="padding: 6px 4px; color: #6090a8;">用法</td>
+                            <td style="padding: 6px 4px; color: #6090a8;">开始日期</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px 4px;">苯磺酸氨氯地平片</td>
+                            <td style="padding: 6px 4px;">5mg</td>
+                            <td style="padding: 6px 4px;">口服，每日1次</td>
+                            <td style="padding: 6px 4px;">2020-01-15</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('crfForm')">取消</button>
+                <button class="btn btn-secondary"><i class="fas fa-print"></i>打印表单</button>
+                <button class="btn btn-primary" onclick="saveCRF()"><i class="fas fa-save"></i>保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-caseDetail" class="modal-overlay">
+        <div class="modal" style="min-width: 620px;">
+            <div class="modal-header">
+                <span class="modal-title">病例详情</span>
+                <button class="modal-close" onclick="closeModal('caseDetail')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background: linear-gradient(135deg, #6aaf70 0%, #4a9050 100%); padding: 16px; border-radius: 4px; margin-bottom: 16px; color: white;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user" style="font-size: 24px;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 16px; font-weight: 600;">ZWL</div>
+                            <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">男 · 58岁</div>
+                        </div>
+                        <div><span class="status-badge" style="background: white; color: #2a8040;">进行中</span></div>
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-file-alt"></i>基本信息</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
+                    <div style="background: #f8fbfd; padding: 10px; border-radius: 4px;">
+                        <div style="font-size: 11px; color: #6090a8;">病例编号</div>
+                        <div style="font-size: 13px; font-weight: 500; color: #2a4a60;" id="detail-code">CRF-2024-0892</div>
+                    </div>
+                    <div style="background: #f8fbfd; padding: 10px; border-radius: 4px;">
+                        <div style="font-size: 11px; color: #6090a8;">所属项目</div>
+                        <div style="font-size: 13px; font-weight: 500; color: #2a4a60;">NSCLC-2024-001</div>
+                    </div>
+                    <div style="background: #f8fbfd; padding: 10px; border-radius: 4px;">
+                        <div style="font-size: 11px; color: #6090a8;">入组日期</div>
+                        <div style="font-size: 13px; font-weight: 500; color: #2a4a60;">2024-11-20</div>
+                    </div>
+                    <div style="background: #f8fbfd; padding: 10px; border-radius: 4px;">
+                        <div style="font-size: 11px; color: #6090a8;">当前访视</div>
+                        <div style="font-size: 13px; font-weight: 500; color: #2a4a60;">V3-治疗期</div>
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-chart-line"></i>访视进度</div>
+                <div style="display: flex; gap: 4px; margin-bottom: 16px;">
+                    <div style="flex: 1; padding: 8px; background: #50b060; color: white; text-align: center; font-size: 11px; border-radius: 4px 0 0 4px;">V1<br><span style="font-size: 10px;">已完成</span></div>
+                    <div style="flex: 1; padding: 8px; background: #50b060; color: white; text-align: center; font-size: 11px;">V2<br><span style="font-size: 10px;">已完成</span></div>
+                    <div style="flex: 1; padding: 8px; background: #5090c0; color: white; text-align: center; font-size: 11px;">V3<br><span style="font-size: 10px;">进行中</span></div>
+                    <div style="flex: 1; padding: 8px; background: #e0e0e0; color: #999; text-align: center; font-size: 11px; border-radius: 0 4px 4px 0;">V4<br><span style="font-size: 10px;">未开始</span></div>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-clock"></i>最近动态</div>
+                <div style="background: #f8fbfd; border-radius: 4px; padding: 12px;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <i class="fas fa-edit" style="color: #5090c0; margin-top: 2px;"></i>
+                        <div>
+                            <div style="font-size: 12px; color: #2a4a60;">CRF表单已录入</div>
+                            <div style="font-size: 11px; color: #80a0b0;">2024-12-15 14:30</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <i class="fas fa-check-circle" style="color: #50b060; margin-top: 2px;"></i>
+                        <div>
+                            <div style="font-size: 12px; color: #2a4a60;">V2访视已完成</div>
+                            <div style="font-size: 11px; color: #80a0b0;">2024-12-10 09:15</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <i class="fas fa-user-plus" style="color: #6aaf70; margin-top: 2px;"></i>
+                        <div>
+                            <div style="font-size: 12px; color: #2a4a60;">病例入组成功</div>
+                            <div style="font-size: 11px; color: #80a0b0;">2024-11-20 16:45</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('caseDetail')">关闭</button>
+                <button class="btn btn-secondary"><i class="fas fa-print"></i>打印</button>
+                <button class="btn btn-primary" onclick="editCase()"><i class="fas fa-edit"></i>编辑</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-refreshData" class="modal-overlay">
+        <div class="modal" style="min-width: 520px;">
+            <div class="modal-header">
+                <span class="modal-title">刷新数据</span>
+                <button class="modal-close" onclick="closeModal('refreshData')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 12px; padding: 10px 12px; background: #e8f4fc; border-radius: 4px; border-left: 3px solid #5090c0;">
+                    <i class="fas fa-sync-alt" style="color: #5090c0; margin-right: 6px;"></i>
+                    <span style="font-size: 12px; color: #2a4a60;">选择需要刷新的数据范围和刷新选项</span>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-database"></i>刷新范围</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">项目范围</label>
+                        <select class="form-select">
+                            <option>全部项目</option>
+                            <option>NSCLC-2024-001 非小细胞肺癌</option>
+                            <option>CHD-2024-002 冠心病</option>
+                            <option>DM-2024-003 糖尿病</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">数据类型</label>
+                        <select class="form-select">
+                            <option>全部数据</option>
+                            <option>病例信息</option>
+                            <option>CRF 数据</option>
+                            <option>随访记录</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-cog"></i>刷新选项</div>
+                <div style="background: #f8fbfd; border: 1px solid #d0e0ec; border-radius: 4px; padding: 12px;">
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 刷新病例列表
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 更新采集统计
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 同步新增记录
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox"> 清除本地缓存
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('refreshData')">取消</button>
+                <button class="btn btn-primary" onclick="confirmRefresh()"><i class="fas fa-sync-alt"></i>立即刷新</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById('modal-' + id).classList.add('show');
+        }
+
+        function closeModal(id) {
+            document.getElementById('modal-' + id).classList.remove('show');
+        }
+
+        function showToast(message, isError) {
+            var toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('error');
+            if (isError) toast.classList.add('error');
+            toast.classList.add('show');
+            setTimeout(function() { toast.classList.remove('show'); }, 2000);
+        }
+
+        function submitCase() {
+            closeModal('newCase');
+            showToast('病例创建成功');
+        }
+
+        function batchImport() {
+            closeModal('batchImport');
+            showToast('数据导入成功');
+        }
+
+        function saveCRF() {
+            closeModal('crfForm');
+            showToast('CRF保存成功');
+        }
+
+        function confirmRefresh() {
+            closeModal('refreshData');
+            var btn = document.querySelector('.tool-btn[onclick="openModal(\'refreshData\')"]');
+            if (btn) {
+                var originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>刷新中...';
+                btn.disabled = true;
+                setTimeout(function() {
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                    showToast('数据已刷新');
+                }, 1000);
+            }
+        }
+
+        function viewCaseDetail(code) {
+            document.getElementById('detail-code').textContent = code;
+            openModal('caseDetail');
+        }
+
+        function editCase() {
+            closeModal('caseDetail');
+            openModal('newCase');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

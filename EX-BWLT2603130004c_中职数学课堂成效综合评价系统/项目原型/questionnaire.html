@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a56a0">
+  <title>问卷调查</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #e8edf2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .phone-shell {
+      width: 100%;
+      height: 100vh;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: #1a56a0;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .topbar-title {
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      flex: 1;
+      text-align: center;
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 16px;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quest-header {
+      background: linear-gradient(135deg, #6c35d4, #9a6dff);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quest-header-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .quest-header-icon i {
+      font-size: 24px;
+      color: #fff;
+    }
+
+    .quest-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .quest-subtitle {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 10px;
+    }
+
+    .quest-meta-row {
+      display: flex;
+      gap: 14px;
+    }
+
+    .quest-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .progress-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(26, 86, 160, 0.07);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .progress-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a2a44;
+    }
+
+    .progress-num {
+      font-size: 13px;
+      color: #1a56a0;
+      font-weight: 600;
+    }
+
+    .progress-bar-bg {
+      height: 8px;
+      background: #e8eef7;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6c35d4, #9a6dff);
+      border-radius: 4px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(26, 86, 160, 0.07);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a2a44;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title i {
+      color: #6c35d4;
+    }
+
+    .question-item {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f0f4fb;
+    }
+
+    .question-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .question-num {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #6c35d4;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 20px;
+      margin-right: 8px;
+    }
+
+    .question-text {
+      font-size: 13px;
+      color: #1a2a44;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .option-list {
+      margin-top: 12px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #f8f9fb;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .option-item:active {
+      transform: scale(0.98);
+    }
+
+    .option-item.selected {
+      background: #f2eeff;
+      border: 1.5px solid #6c35d4;
+    }
+
+    .option-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #d0d0d0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .option-item.selected .option-radio {
+      border-color: #6c35d4;
+      background: #6c35d4;
+    }
+
+    .option-item.selected .option-radio::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .option-text {
+      font-size: 13px;
+      color: #1a2a44;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #6c35d4, #9a6dff);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    .bottom-nav {
+      background: #fff;
+      border-top: 1px solid #e8eef7;
+      display: flex;
+      padding: 14px 0;
+      flex-shrink: 0;
+      box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .nav-item i {
+      font-size: 20px;
+      color: #b0bec5;
+    }
+
+    .nav-item.active i {
+      color: #1a56a0;
+    }
+
+    .nav-item span {
+      font-size: 10px;
+      color: #b0bec5;
+    }
+
+    .nav-item.active span {
+      color: #1a56a0;
+      font-weight: 600;
+    }
+
+    .nav-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-center-btn {
+      width: 46px;
+      height: 46px;
+      background: linear-gradient(135deg, #1a56a0, #3a8ee8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -18px;
+      box-shadow: 0 4px 14px rgba(26, 86, 160, 0.4);
+    }
+
+    .nav-center-btn i {
+      color: #fff;
+      font-size: 20px;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      width: 100%;
+      max-height: 50vh;
+      border-radius: 20px 20px 0 0;
+      padding: 0 0 20px;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f4fb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2a44;
+      text-align: center;
+      flex: 1;
+    }
+
+    .modal-close {
+      color: #b0bec5;
+      font-size: 18px;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      max-height: calc(50vh - 60px);
+    }
+
+    .confirm-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #e6f9f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 20px auto 16px;
+      font-size: 28px;
+      color: #1a9c5a;
+    }
+
+    .confirm-text {
+      text-align: center;
+      font-size: 15px;
+      color: #1a2a44;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .confirm-sub {
+      text-align: center;
+      font-size: 12px;
+      color: #90a0b5;
+      margin-bottom: 20px;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+    }
+
+    .modal-btn-cancel {
+      background: #f4f6fb;
+      color: #7090b0;
+    }
+
+    .modal-btn-confirm {
+      background: #6c35d4;
+      color: #fff;
+    }
+
+    .modal-btn:active, .submit-btn:active, .option-item:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="phone-shell">
+    <div class="topbar">
+      <a href="task.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <span class="topbar-title">问卷调查</span>
+    </div>
+
+    <div class="scroll-area">
+      <div class="quest-header">
+        <div class="quest-header-icon"><i class="fas fa-clipboard-list"></i></div>
+        <div class="quest-title">学生学习成效自评问卷</div>
+        <div class="quest-subtitle">第8周 · 22计算机1班</div>
+        <div class="quest-meta-row">
+          <div class="quest-meta-item"><i class="fas fa-clock"></i> 剩余3天</div>
+          <div class="quest-meta-item"><i class="fas fa-users"></i> 31/42人已填写</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-title">填写进度</span>
+          <span class="progress-num">31/42人</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width:74%;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="fas fa-question-circle"></i> 自评问题</div>
+
+        <div class="question-item">
+          <div class="question-text"><span class="question-num">1</span>你对本周课堂内容的掌握程度如何？</div>
+          <div class="option-list">
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">完全掌握，能够独立完成相关习题</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">基本掌握，但还需进一步巩固</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">部分掌握，存在较多疑问</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">尚未掌握，需要额外辅导</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text"><span class="question-num">2</span>你在课堂上的参与度如何？</div>
+          <div class="option-list">
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">非常积极，主动回答问题和参与讨论</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">比较积极，能够配合老师教学</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">偶尔参与，需要被点名</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">很少参与，经常走神</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text"><span class="question-num">3</span>你对老师教学方法的评价？</div>
+          <div class="option-list">
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">非常满意，教学方法生动有趣</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">比较满意，能够跟上教学节奏</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">一般，节奏有些快或慢</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">不太满意，希望改进教学方法</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="question-item">
+          <div class="question-text"><span class="question-num">4</span>你完成作业的情况如何？</div>
+          <div class="option-list">
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">全部按时完成，质量很高</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">基本按时完成，质量较好</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">偶尔迟到，质量一般</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this)">
+              <div class="option-radio"></div>
+              <span class="option-text">经常不完成或抄袭</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="showSubmitModal()">提交自评</button>
+
+      <div style="height:20px;"></div>
+    </div>
+
+    <div class="bottom-nav">
+      <a href="index.html" class="nav-item"><i class="fas fa-home"></i><span>首页</span></a>
+      <a href="evaluation.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>评价</span></a>
+      <a href="analysis.html" class="nav-item"><i class="fas fa-chart-pie"></i><span>分析</span></a>
+      <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>我的</span></a>
+    </div>
+
+    <div class="modal-overlay" id="submitModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">确认提交</span>
+          <span class="modal-close" onclick="closeSubmitModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-icon"><i class="fas fa-check"></i></div>
+          <div class="confirm-text">是否确认提交自评问卷？</div>
+          <div class="confirm-sub">提交后将无法再次修改，请确认填写完整</div>
+          <div class="modal-btn-row">
+            <div class="modal-btn modal-btn-cancel" onclick="closeSubmitModal()">取消</div>
+            <div class="modal-btn modal-btn-confirm" onclick="submitQuestionnaire()">确认提交</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="successModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">提交成功</span>
+          <span class="modal-close" onclick="closeSuccessModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-icon"><i class="fas fa-check"></i></div>
+          <div class="confirm-text">自评问卷已成功提交！</div>
+          <div class="confirm-sub">感谢你的参与，教师将根据反馈优化教学</div>
+          <div class="modal-btn-row">
+            <div class="modal-btn modal-btn-confirm" onclick="goBack()">返回</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function selectOption(el) {
+      var parent = el.parentElement;
+      parent.querySelectorAll('.option-item').forEach(function(item) {
+        item.classList.remove('selected');
+      });
+      el.classList.add('selected');
+    }
+
+    function showSubmitModal() {
+      document.getElementById('submitModal').classList.add('active');
+    }
+
+    function closeSubmitModal() {
+      document.getElementById('submitModal').classList.remove('active');
+    }
+
+    function submitQuestionnaire() {
+      closeSubmitModal();
+      document.getElementById('successModal').classList.add('active');
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('successModal').classList.remove('active');
+      goBack();
+    }
+
+    function goBack() {
+      window.location.href = 'task.html';
+    }
+
+    document.getElementById('submitModal').addEventListener('click', function(e) {
+      if (e.target === this) closeSubmitModal();
+    });
+
+    document.getElementById('successModal').addEventListener('click', function(e) {
+      if (e.target === this) closeSuccessModal();
+    });
+  </script>
+</body>
+
+</html>

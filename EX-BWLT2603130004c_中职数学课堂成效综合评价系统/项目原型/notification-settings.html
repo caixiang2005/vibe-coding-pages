@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a56a0">
+  <title>通知设置</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #e8edf2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .phone-shell {
+      width: 100%;
+      height: 100vh;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: #1a56a0;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .topbar-title {
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      flex: 1;
+      text-align: center;
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 16px;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(26, 86, 160, 0.05);
+    }
+
+    .card-title {
+      font-size: 12px;
+      color: #90a0b5;
+      font-weight: 600;
+      padding: 12px 16px 8px;
+      border-bottom: 1px solid #f0f4fb;
+    }
+
+    .toggle-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f8f9fb;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-item:last-child {
+      border-bottom: none;
+    }
+
+    .toggle-item:active {
+      background: #f8f9fb;
+    }
+
+    .toggle-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toggle-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    .toggle-info {
+      flex: 1;
+    }
+
+    .toggle-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1a2a44;
+    }
+
+    .toggle-desc {
+      font-size: 11px;
+      color: #90a0b5;
+      margin-top: 2px;
+    }
+
+    .toggle-switch {
+      width: 48px;
+      height: 28px;
+      border-radius: 14px;
+      background: #d0d0d0;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .toggle-switch.active {
+      background: #1a56a0;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #fff;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .toggle-switch.active::after {
+      transform: translateX(20px);
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #1a56a0, #3a8ee8);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .save-btn:active {
+      transform: scale(0.98);
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      width: 100%;
+      max-height: 50vh;
+      border-radius: 20px 20px 0 0;
+      padding: 0 0 20px;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f4fb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2a44;
+      text-align: center;
+      flex: 1;
+    }
+
+    .modal-close {
+      color: #b0bec5;
+      font-size: 18px;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      max-height: calc(50vh - 60px);
+    }
+
+    .confirm-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #e6f9f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 20px auto 16px;
+      font-size: 28px;
+      color: #1a9c5a;
+    }
+
+    .confirm-text {
+      text-align: center;
+      font-size: 15px;
+      color: #1a2a44;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .confirm-sub {
+      text-align: center;
+      font-size: 12px;
+      color: #90a0b5;
+      margin-bottom: 20px;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+    }
+
+    .modal-btn-cancel {
+      background: #f4f6fb;
+      color: #7090b0;
+    }
+
+    .modal-btn-confirm {
+      background: #1a56a0;
+      color: #fff;
+    }
+
+    .modal-btn:active, .save-btn:active, .toggle-item:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="phone-shell">
+    <div class="topbar">
+      <a href="profile.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <span class="topbar-title">通知设置</span>
+    </div>
+
+    <div class="scroll-area">
+      <div class="card">
+        <div class="card-title">任务通知</div>
+
+        <div class="toggle-item" onclick="toggleSwitch(this)">
+          <div class="toggle-item-left">
+            <div class="toggle-icon" style="background:#e8f1ff;color:#1a56a0;"><i class="fas fa-tasks"></i></div>
+            <div class="toggle-info">
+              <div class="toggle-label">评价任务提醒</div>
+              <div class="toggle-desc">新评价任务发布时推送通知</div>
+            </div>
+          </div>
+          <div class="toggle-switch active"></div>
+        </div>
+
+        <div class="toggle-item" onclick="toggleSwitch(this)">
+          <div class="toggle-item-left">
+            <div class="toggle-icon" style="background:#fff3e6;color:#e07020;"><i class="fas fa-clock"></i></div>
+            <div class="toggle-info">
+              <div class="toggle-label">任务截止提醒</div>
+              <div class="toggle-desc">任务即将到期时提醒</div>
+            </div>
+          </div>
+          <div class="toggle-switch active"></div>
+        </div>
+
+        <div class="toggle-item" onclick="toggleSwitch(this)">
+          <div class="toggle-item-left">
+            <div class="toggle-icon" style="background:#e6f9f0;color:#1a9c5a;"><i class="fas fa-check-circle"></i></div>
+            <div class="toggle-info">
+              <div class="toggle-label">任务完成通知</div>
+              <div class="toggle-desc">评价任务审核通过时通知</div>
+            </div>
+          </div>
+          <div class="toggle-switch active"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">数据通知</div>
+
+        <div class="toggle-item" onclick="toggleSwitch(this)">
+          <div class="toggle-item-left">
+            <div class="toggle-icon" style="background:#f2eeff;color:#6c35d4;"><i class="fas fa-chart-line"></i></div>
+            <div class="toggle-info">
+              <div class="toggle-label">成绩数据更新</div>
+              <div class="toggle-desc">学生成绩数据更新时通知</div>
+            </div>
+          </div>
+          <div class="toggle-switch active"></div>
+        </div>
+
+        <div class="toggle-item" onclick="toggleSwitch(this)">
+          <div class="toggle-item-left">
+            <div class="toggle-icon" style="background:#ffeef5;color:#c42882;"><i class="fas fa-bell"></i></div>
+            <div class="toggle-info">
+              <div class="toggle-label">分析报告生成</div>
+              <div class="toggle-desc">周报/月报生成完成时通知</div>
+            </div>
+          </div>
+          <div class="toggle-switch active"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">系统通知</div>
+
+        <div class="toggle-item" onclick="toggleSwitch(this)">
+          <div class="toggle-item-left">
+            <div class="toggle-icon" style="background:#e5f7f7;color:#1a8a8a;"><i class="fas fa-cog"></i></div>
+            <div class="toggle-info">
+              <div class="toggle-label">系统公告</div>
+              <div class="toggle-desc">系统更新、功能升级等公告</div>
+            </div>
+          </div>
+          <div class="toggle-switch active"></div>
+        </div>
+
+        <div class="toggle-item" onclick="toggleSwitch(this)">
+          <div class="toggle-item-left">
+            <div class="toggle-icon" style="background:#fffbe6;color:#c8900a;"><i class="fas fa-envelope"></i></div>
+            <div class="toggle-info">
+              <div class="toggle-label">消息推送</div>
+              <div class="toggle-desc">接收来自学生家长的消息</div>
+            </div>
+          </div>
+          <div class="toggle-switch"></div>
+        </div>
+      </div>
+
+      <button class="save-btn" onclick="showSaveModal()">保存设置</button>
+
+      <div style="height:20px;"></div>
+    </div>
+
+    <div class="modal-overlay" id="saveModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">确认保存</span>
+          <span class="modal-close" onclick="closeSaveModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-icon"><i class="fas fa-check"></i></div>
+          <div class="confirm-text">是否保存通知设置？</div>
+          <div class="confirm-sub">已开启7项通知，共3项关闭</div>
+          <div class="modal-btn-row">
+            <div class="modal-btn modal-btn-cancel" onclick="closeSaveModal()">取消</div>
+            <div class="modal-btn modal-btn-confirm" onclick="saveSettings()">确认保存</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleSwitch(el) {
+      var toggle = el.querySelector('.toggle-switch');
+      toggle.classList.toggle('active');
+    }
+
+    function showSaveModal() {
+      document.getElementById('saveModal').classList.add('active');
+    }
+
+    function closeSaveModal() {
+      document.getElementById('saveModal').classList.remove('active');
+    }
+
+    function saveSettings() {
+      closeSaveModal();
+      alert('设置已保存');
+      window.location.href = 'profile.html';
+    }
+
+    document.getElementById('saveModal').addEventListener('click', function(e) {
+      if (e.target === this) closeSaveModal();
+    });
+  </script>
+</body>
+
+</html>

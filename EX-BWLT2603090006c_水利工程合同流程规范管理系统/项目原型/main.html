@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>控制台 - 水利工程合同流程规范管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            background-image: radial-gradient(circle at 50% 50%, rgba(0, 122, 255, 0.05) 0%, rgba(245, 245, 247, 1) 100%);
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .mac-window {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.15), 0 30px 60px -30px rgba(0, 0, 0, 0.2);
+        }
+        .sidebar-item.active {
+            background-color: rgba(0, 122, 255, 0.1);
+            color: #007aff;
+        }
+        .sidebar-item {
+            transition: all 0.15s ease;
+        }
+        .sidebar-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        .glass-card:hover {
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .kpi-card {
+            transition: all 0.2s ease;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.4);
+        }
+        .btn-primary {
+            background: #007aff;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover { background: #0066dd; transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0) scale(0.98); }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="mac-window w-[1280px] h-[832px] rounded-xl flex overflow-hidden">
+        <aside class="w-64 border-r border-gray-200/50 flex flex-col pt-4">
+            <div class="px-5 flex space-x-2 mb-8">
+                <div class="traffic-light bg-[#ff5f57]"></div>
+                <div class="traffic-light bg-[#febc2e]"></div>
+                <div class="traffic-light bg-[#28c840]"></div>
+            </div>
+            <div class="px-5 mb-6 flex items-center space-x-3">
+                <img class="w-10 h-10 rounded-full object-cover" src="https://i01piccdn.sogoucdn.com/6de4845d273e3386" alt="文丹头像" />
+                <div>
+                    <div class="text-sm font-semibold text-gray-800">文丹</div>
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">业务办理员</div>
+                </div>
+            </div>
+            <nav class="flex-1 px-3 space-y-0.5 overflow-y-auto custom-scrollbar">
+                <div class="px-3 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">主菜单</div>
+                <a href="main.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg active">
+                    <i class="fa-solid fa-gauge-high mr-3 text-base"></i> 控制台
+                </a>
+                <a href="contracts.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600">
+                    <i class="fa-solid fa-file-contract mr-3 text-base"></i> 合同管理
+                </a>
+                <a href="approvals.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600">
+                    <i class="fa-solid fa-clipboard-check mr-3 text-base"></i> 流程审批
+                    <span class="ml-auto bg-red-500 text-white text-[10px] px-1.5 rounded-full">4</span>
+                </a>
+                <a href="regulations.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600">
+                    <i class="fa-solid fa-shield-halved mr-3 text-base"></i> 规范管理
+                </a>
+                <a href="reports.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600">
+                    <i class="fa-solid fa-chart-pie mr-3 text-base"></i> 报表统计
+                </a>
+                <a href="settings.html" class="sidebar-item w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600">
+                    <i class="fa-solid fa-gears mr-3 text-base"></i> 系统设置
+                </a>
+            </nav>
+            <div class="p-4 border-t border-gray-200/50">
+                <button class="flex items-center text-xs text-gray-500 hover:text-red-500 transition-colors" onclick="location.reload()">
+                    <i class="fa-solid fa-right-from-bracket mr-2"></i> 退出登录
+                </button>
+            </div>
+        </aside>
+        <main class="flex-1 flex flex-col bg-white/40">
+            <header class="h-14 border-b border-gray-200/50 flex items-center justify-between px-6 bg-white/30">
+                <h2 class="text-lg font-semibold text-gray-800">水利工程合同流程规范管理系统</h2>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input class="pl-9 pr-4 py-1.5 bg-gray-200/50 rounded-md text-xs w-64 border-transparent focus:bg-white transition-colors" placeholder="全局搜索合同、流程、法律法规..." type="text" />
+                    </div>
+                    <button id="notificationBtn" class="w-8 h-8 rounded-full hover:bg-gray-200 flex items-center justify-center relative transition-colors">
+                        <i class="fa-regular fa-bell text-gray-600"></i>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    </button>
+                    <div id="notificationDropdown" class="hidden absolute right-6 top-14 w-80 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                            <span class="text-sm font-semibold text-gray-800">通知中心</span>
+                            <button onclick="clearAllNotifications()" class="text-xs text-blue-500 hover:text-blue-600">全部标为已读</button>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto custom-scrollbar">
+                            <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-exclamation text-red-500 text-xs"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-sm text-gray-800 font-medium">合同到期预警</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">「南水北调施工合同-2026」将于30天后到期</div>
+                                        <div class="text-[10px] text-gray-400 mt-1">10分钟前</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-sm text-gray-800 font-medium">审批通过</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">「设备采购合同-2026」已通过最终审批</div>
+                                        <div class="text-[10px] text-gray-400 mt-1">30分钟前</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-clock text-orange-500 text-xs"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-sm text-gray-800 font-medium">待处理审批</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">您有4项审批流程待处理</div>
+                                        <div class="text-[10px] text-gray-400 mt-1">1小时前</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fa-solid fa-upload text-blue-500 text-xs"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-sm text-gray-800 font-medium">文件上传成功</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">「监理实施细则」已成功上传到规范库</div>
+                                        <div class="text-[10px] text-gray-400 mt-1">2小时前</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
+                            <a href="approvals.html" class="block text-center text-xs text-blue-500 hover:text-blue-600 py-1">查看全部通知</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <div class="space-y-6">
+                    <div class="grid grid-cols-4 gap-6">
+                        <div class="kpi-card glass-card p-5 shadow-sm cursor-pointer" onclick="window.location.href='contracts.html'">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-files text-xl"></i></div>
+                                <span class="text-xs font-medium text-green-600 mt-1">+12%</span>
+                            </div>
+                            <div class="text-2xl font-bold">1,284</div>
+                            <div class="text-xs text-gray-500">本年合同总数</div>
+                        </div>
+                        <div class="kpi-card glass-card p-5 shadow-sm cursor-pointer" onclick="window.location.href='approvals.html'">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-purple-50 text-purple-600 rounded-lg"><i class="fa-solid fa-clock text-xl"></i></div>
+                                <span class="text-xs font-medium text-orange-600 mt-1">4 紧急</span>
+                            </div>
+                            <div class="text-2xl font-bold">28</div>
+                            <div class="text-xs text-gray-500">待办审批流程</div>
+                        </div>
+                        <div class="kpi-card glass-card p-5 shadow-sm">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-green-50 text-green-600 rounded-lg"><i class="fa-solid fa-chart-line text-xl"></i></div>
+                                <span class="text-xs font-medium text-gray-400 mt-1">执行率 82%</span>
+                            </div>
+                            <div class="text-2xl font-bold">￥14.2M</div>
+                            <div class="text-xs text-gray-500">已支付金额</div>
+                        </div>
+                        <div class="kpi-card glass-card p-5 shadow-sm cursor-pointer" onclick="window.location.href='regulations.html'">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-red-50 text-red-600 rounded-lg"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
+                                <span class="text-xs font-medium text-red-600 mt-1">需关注</span>
+                            </div>
+                            <div class="text-2xl font-bold">5</div>
+                            <div class="text-xs text-gray-500">规范预警项</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="col-span-2 glass-card p-6 min-h-[400px]">
+                            <h3 class="font-semibold text-gray-800 mb-6">合同资金执行趋势 (2026年度)</h3>
+                            <div class="w-full h-[320px]" id="mainChart"></div>
+                        </div>
+                        <div class="glass-card p-6">
+                            <h3 class="font-semibold text-gray-800 mb-4">合同类型分布</h3>
+                            <div class="w-full h-[280px]" id="pieChart"></div>
+                            <div class="mt-2 space-y-2">
+                                <div class="flex items-center text-xs justify-between">
+                                    <span class="flex items-center"><i class="w-2 h-2 rounded-full bg-blue-500 mr-2"></i>施工类</span>
+                                    <span class="font-semibold">45%</span>
+                                </div>
+                                <div class="flex items-center text-xs justify-between">
+                                    <span class="flex items-center"><i class="w-2 h-2 rounded-full bg-indigo-500 mr-2"></i>监理类</span>
+                                    <span class="font-semibold">20%</span>
+                                </div>
+                                <div class="flex items-center text-xs justify-between">
+                                    <span class="flex items-center"><i class="w-2 h-2 rounded-full bg-purple-500 mr-2"></i>设计类</span>
+                                    <span class="font-semibold">15%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6">
+                        <h3 class="font-semibold text-gray-800 mb-4">快捷入口</h3>
+                        <div class="grid grid-cols-4 gap-4">
+                            <a href="contracts.html" class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fa-solid fa-plus text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-700">新建合同</div>
+                                    <div class="text-[10px] text-gray-400">快速创建</div>
+                                </div>
+                            </a>
+                            <a href="approvals.html" class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-green-50 transition-colors cursor-pointer">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fa-solid fa-clipboard-check text-green-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-700">待我审批</div>
+                                    <div class="text-[10px] text-gray-400">4 项待处理</div>
+                                </div>
+                            </a>
+                            <a href="reports.html" class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-purple-50 transition-colors cursor-pointer">
+                                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fa-solid fa-file-export text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-700">导出报表</div>
+                                    <div class="text-[10px] text-gray-400">台账汇总</div>
+                                </div>
+                            </a>
+                            <a href="regulations.html" class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-orange-50 transition-colors cursor-pointer">
+                                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fa-solid fa-scale-balanced text-orange-600"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-700">合规自评</div>
+                                    <div class="text-[10px] text-gray-400">检查清单</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="h-10 border-t border-gray-200/50 flex items-center justify-between px-6 bg-white/30 text-xs">
+                <div class="flex items-center gap-4 text-gray-600">
+                    <span class="font-medium text-gray-700">签署金额合计：￥10,590,000.00</span>
+                    <span class="text-gray-300">|</span>
+                    <span class="flex items-center"><i class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></i>执行中 2</span>
+                    <span class="flex items-center"><i class="w-1.5 h-1.5 bg-orange-500 rounded-full mr-1.5"></i>审批中 1</span>
+                    <span class="flex items-center"><i class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></i>预警 1</span>
+                    <span class="flex items-center"><i class="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1.5"></i>归档 1</span>
+                </div>
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider">水利工程合同流程规范管理系统</div>
+            </footer>
+        </main>
+    </div>
+    <script>
+        function showToast(message, type) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = 'fixed top-6 left-1/2 -translate-x-1/2 text-white px-6 py-3 rounded-lg shadow-lg z-[100] flex items-center';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = '<i class="fa-solid ' + (type === 'success' ? 'fa-check' : 'fa-xmark') + ' mr-3"></i>' + message;
+            toast.className = 'fixed top-6 left-1/2 -translate-x-1/2 ' + (type === 'success' ? 'bg-gray-800' : 'bg-red-600') + ' text-white px-6 py-3 rounded-lg shadow-lg z-[100] flex items-center';
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+        }
+
+        function clearAllNotifications() {
+            const notificationBtn = document.getElementById('notificationBtn');
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            const badge = notificationBtn ? notificationBtn.querySelector('span') : null;
+            if (badge) badge.remove();
+            showToast('已全部标为已读', 'success');
+            if (notificationDropdown) notificationDropdown.classList.add('hidden');
+        }
+
+        setTimeout(function() {
+            const mainChart = echarts.init(document.getElementById('mainChart'));
+            mainChart.setOption({
+                tooltip: { trigger: 'axis' },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', boundaryGap: false, data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'] },
+                yAxis: { type: 'value' },
+                series: [{
+                    name: '支付金额',
+                    type: 'line',
+                    smooth: true,
+                    data: [120, 152, 210, 250, 480, 520, 610, 890, 710, 940, 1100, 1420],
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(0, 122, 255, 0.3)' },
+                            { offset: 1, color: 'rgba(0, 122, 255, 0.05)' }
+                        ])
+                    },
+                    lineStyle: { color: '#007aff', width: 3 },
+                    itemStyle: { color: '#007aff' }
+                }]
+            });
+
+            const pieChart = echarts.init(document.getElementById('pieChart'));
+            pieChart.setOption({
+                tooltip: { trigger: 'item' },
+                series: [{
+                    name: '合同分类',
+                    type: 'pie',
+                    radius: ['60%', '85%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: { show: false },
+                    data: [
+                        { value: 45, name: '施工类', itemStyle: { color: '#3b82f6' } },
+                        { value: 20, name: '监理类', itemStyle: { color: '#6366f1' } },
+                        { value: 15, name: '设计类', itemStyle: { color: '#8b5cf6' } },
+                        { value: 10, name: '采购类', itemStyle: { color: '#a855f7' } },
+                        { value: 10, name: '其他', itemStyle: { color: '#d1d5db' } }
+                    ]
+                }]
+            });
+
+            window.addEventListener('resize', function() {
+                mainChart.resize();
+                pieChart.resize();
+            });
+
+            const notificationBtn = document.getElementById('notificationBtn');
+            const notificationDropdown = document.getElementById('notificationDropdown');
+
+            if (notificationBtn && notificationDropdown) {
+                notificationBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    notificationDropdown.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!notificationDropdown.contains(e.target) && !notificationBtn.contains(e.target)) {
+                        notificationDropdown.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

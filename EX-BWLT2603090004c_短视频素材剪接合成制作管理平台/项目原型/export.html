@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>导出设置 - 短视频素材剪接合成制作管理平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0b0c0e;
+            --window-bg: rgba(20, 20, 22, 0.92);
+            --sidebar-bg: rgba(26, 26, 28, 0.92);
+            --surface: rgba(34, 34, 38, 0.72);
+            --surface-2: rgba(46, 46, 50, 0.76);
+            --border: rgba(255, 255, 255, 0.10);
+            --text: rgba(255, 255, 255, 0.92);
+            --text-2: rgba(255, 255, 255, 0.68);
+            --text-3: rgba(255, 255, 255, 0.42);
+            --accent: #3b82f6;
+            --accent-2: #60a5fa;
+            --danger: #ff5f57;
+            --warn: #febc2e;
+            --ok: #28c840;
+            --radius-xl: 18px;
+            --radius-lg: 14px;
+            --shadow-window: 0 30px 110px rgba(0, 0, 0, 0.62), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+            --shadow-card: 0 18px 45px rgba(0, 0, 0, 0.40);
+            --ring: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 0 4px rgba(59, 130, 246, 0.18);
+        }
+
+        body {
+            background: url('./bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+        }
+
+        .app-shell { min-height: 100vh; display: flex; }
+        .app-window {
+            width: 100%;
+            min-height: 100vh;
+            background: var(--window-bg);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(22px) saturate(1.15);
+        }
+
+        .titlebar {
+            height: 46px;
+            background: rgba(12, 12, 12, 0.92);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 14px;
+        }
+
+        .traffic-lights { display: flex; gap: 8px; }
+        .traffic-light { width: 12px; height: 12px; border-radius: 999px; }
+        .traffic-light.red { background: var(--danger); box-shadow: 0 0 0 1px rgba(0,0,0,0.22) inset; }
+        .traffic-light.yellow { background: var(--warn); box-shadow: 0 0 0 1px rgba(0,0,0,0.22) inset; }
+        .traffic-light.green { background: var(--ok); box-shadow: 0 0 0 1px rgba(0,0,0,0.22) inset; }
+
+        .titlebar-center { position: absolute; left: 50%; transform: translateX(-50%); }
+        .app-title { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 13px; color: var(--text-2); }
+
+        .titlebar-right { margin-left: auto; display: flex; gap: 10px; }
+
+        .btn {
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 120ms ease, background 120ms ease;
+        }
+        .btn:hover { background: var(--surface-2); }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary {
+            border-color: rgba(250, 204, 21, 0.55);
+            background: linear-gradient(180deg, rgba(250, 204, 21, 0.92), rgba(234, 179, 8, 0.92));
+            color: rgba(0, 0, 0, 0.86);
+            box-shadow: 0 14px 26px rgba(250, 204, 21, 0.14);
+        }
+        .btn-primary:hover { background: linear-gradient(180deg, rgba(253, 224, 71, 0.95), rgba(250, 204, 21, 0.95)); }
+
+        .app-body { flex: 1; display: flex; }
+
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar-header { padding: 8px; }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(168, 85, 247, 0.75));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .brand-name { font-weight: 700; font-size: 13px; color: var(--text); line-height: 1.3; }
+
+        .nav-group-title { padding: 10px 10px 6px 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: var(--text-3); }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 10px;
+            border-radius: 12px;
+            color: var(--text-2);
+            text-decoration: none;
+            transition: background 120ms ease, color 120ms ease;
+        }
+        .nav-item:hover { background: var(--surface); color: var(--text); }
+        .nav-item.active { background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); color: rgba(96, 165, 250, 0.95); }
+        .nav-item i { width: 18px; text-align: center; }
+
+        .content { flex: 1; display: flex; flex-direction: column; }
+        .content-toolbar {
+            padding: 16px 18px 12px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .content-title h2 { font-size: 18px; font-weight: 800; color: var(--text); }
+
+        .scroll-area { flex: 1; overflow: auto; padding: 18px; }
+
+        .export-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+        .export-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            transition: transform 140ms ease, border-color 140ms ease;
+        }
+        .export-card:hover { transform: translateY(-2px); border-color: rgba(59, 130, 246, 0.28); }
+
+        .export-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .export-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .export-icon.mp4 { background: rgba(59, 130, 246, 0.18); color: rgba(96, 165, 250, 0.95); }
+        .export-icon.gif { background: rgba(168, 85, 247, 0.18); color: rgba(217, 70, 239, 0.95); }
+        .export-icon.jpg { background: rgba(34, 197, 94, 0.18); color: rgba(74, 222, 128, 0.95); }
+        .export-icon.wav { background: rgba(249, 115, 22, 0.18); color: rgba(251, 146, 60, 0.95); }
+
+        .export-title { font-size: 15px; font-weight: 800; color: var(--text); }
+        .export-desc { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .form-group { margin-bottom: 0; }
+        .form-label { display: block; font-size: 11px; font-weight: 700; color: var(--text-2); margin-bottom: 4px; }
+        .form-select {
+            width: 100%;
+            height: 32px;
+            padding: 0 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text);
+            font-size: 12px;
+            outline: none;
+        }
+        .form-select:focus { border-color: rgba(59, 130, 246, 0.5); }
+
+        .export-actions { display: flex; gap: 8px; margin-top: 14px; }
+        .export-actions .btn { flex: 1; height: 30px; font-size: 12px; justify-content: center; }
+
+        .preset-section { margin-bottom: 20px; }
+        .preset-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .preset-title { font-size: 14px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
+
+        .preset-list { display: flex; gap: 10px; flex-wrap: wrap; }
+        .preset-chip {
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-2);
+            cursor: pointer;
+            transition: all 120ms ease;
+        }
+        .preset-chip:hover { border-color: rgba(59, 130, 246, 0.4); color: var(--text); }
+        .preset-chip.active { border-color: rgba(250, 204, 21, 0.6); background: rgba(250, 204, 21, 0.15); color: rgba(250, 204, 21, 0.95); }
+
+        .queue-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+        .queue-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .queue-title { font-size: 14px; font-weight: 800; color: var(--text); }
+        .queue-count { font-size: 12px; color: var(--text-3); background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px; }
+
+        .queue-item { padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .queue-item:last-child { border-bottom: none; }
+        .queue-thumb { width: 48px; height: 32px; border-radius: 6px; overflow: hidden; }
+        .queue-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .queue-info { flex: 1; }
+        .queue-name { font-size: 13px; font-weight: 700; color: var(--text); }
+        .queue-meta { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+        .queue-progress { width: 80px; }
+        .progress-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--warn)); border-radius: 2px; transition: width 300ms ease; }
+        .progress-text { font-size: 10px; color: var(--text-3); text-align: right; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--window-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            width: 440px;
+            max-width: 90vw;
+        }
+
+        .modal-header {
+            height: 52px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            cursor: move;
+        }
+        .modal-title { font-size: 14px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .modal-close { width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; color: var(--text-2); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: var(--surface); color: var(--text); }
+
+        .modal-body { padding: 18px; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+        .form-input {
+            width: 100%;
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+        .form-input:focus { border-color: rgba(59, 130, 246, 0.5); box-shadow: var(--ring); }
+
+        .modal-footer {
+            padding: 14px 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 300ms ease, opacity 300ms ease;
+            z-index: 1001;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: rgba(40, 200, 64, 0.4); }
+        .toast.success i { color: var(--ok); }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 999px; }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <div class="app-window">
+            <div class="titlebar">
+                <div class="traffic-lights">
+                    <div class="traffic-light red"></div>
+                    <div class="traffic-light yellow"></div>
+                    <div class="traffic-light green"></div>
+                </div>
+                <div class="titlebar-center">
+                    <div class="app-title">
+                        <i class="fas fa-file-export" style="color: var(--warn);"></i>
+                        导出设置
+                    </div>
+                </div>
+                <div class="titlebar-right">
+                    <button class="btn" onclick="openModal('presetModal')">
+                        <i class="fas fa-plus"></i> 新建预设
+                    </button>
+                    <button class="btn btn-primary" onclick="startExport()">
+                        <i class="fas fa-rocket"></i> 开始导出
+                    </button>
+                </div>
+            </div>
+
+            <div class="app-body">
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <div class="brand">
+                            <div class="brand-icon"><i class="fas fa-film"></i></div>
+                            <div class="brand-name">短视频素材剪接合成<br>制作管理平台</div>
+                        </div>
+                    </div>
+
+                    <div class="nav-group-title">导航</div>
+                    <a href="dashboard.html" class="nav-item"><i class="fas fa-desktop"></i> <span>工作台</span></a>
+                    <a href="media_library.html" class="nav-item"><i class="fas fa-photo-video"></i> <span>素材库</span></a>
+                    <a href="projects.html" class="nav-item"><i class="fas fa-folder-open"></i> <span>项目管理</span></a>
+                    <a href="export.html" class="nav-item active"><i class="fas fa-file-export"></i> <span>导出设置</span></a>
+
+                    <div class="nav-group-title">系统</div>
+                    <a href="settings.html" class="nav-item"><i class="fas fa-cog"></i> <span>系统设置</span></a>
+                    <a href="users.html" class="nav-item"><i class="fas fa-users"></i> <span>用户管理</span></a>
+                </div>
+
+                <div class="content">
+                    <div class="content-toolbar">
+                        <div class="content-title"><h2>导出设置</h2></div>
+                    </div>
+
+                    <div class="scroll-area">
+                        <div class="preset-section">
+                            <div class="preset-header">
+                                <div class="preset-title"><i class="fas fa-bolt" style="color: var(--warn);"></i> 快速预设</div>
+                            </div>
+                            <div class="preset-list">
+                                <div class="preset-chip active" onclick="selectPreset(this, '抖音')">抖音</div>
+                                <div class="preset-chip" onclick="selectPreset(this, '小红书')">小红书</div>
+                                <div class="preset-chip" onclick="selectPreset(this, 'B站')">B站</div>
+                                <div class="preset-chip" onclick="selectPreset(this, '微信')">微信</div>
+                                <div class="preset-chip" onclick="selectPreset(this, '快手')">快手</div>
+                            </div>
+                        </div>
+
+                        <div class="export-grid">
+                            <div class="export-card">
+                                <div class="export-header">
+                                    <div class="export-icon mp4"><i class="fas fa-video"></i></div>
+                                    <div>
+                                        <div class="export-title">MP4 视频</div>
+                                        <div class="export-desc">H.264 编码，适合大多数平台</div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">分辨率</label>
+                                        <select class="form-select">
+                                            <option>3840×2160</option>
+                                            <option selected>1920×1080</option>
+                                            <option>1280×720</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">帧率</label>
+                                        <select class="form-select">
+                                            <option>60 fps</option>
+                                            <option selected>30 fps</option>
+                                            <option>24 fps</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">视频码率</label>
+                                        <select class="form-select">
+                                            <option>50 Mbps</option>
+                                            <option selected>25 Mbps</option>
+                                            <option>15 Mbps</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">音频码率</label>
+                                        <select class="form-select">
+                                            <option selected>320 kbps</option>
+                                            <option>256 kbps</option>
+                                            <option>128 kbps</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="export-actions">
+                                    <button class="btn" onclick="previewExport()"><i class="fas fa-eye"></i> 预览</button>
+                                    <button class="btn btn-primary" onclick="quickExport('mp4')"><i class="fas fa-download"></i> 导出</button>
+                                </div>
+                            </div>
+
+                            <div class="export-card">
+                                <div class="export-header">
+                                    <div class="export-icon gif"><i class="fas fa-images"></i></div>
+                                    <div>
+                                        <div class="export-title">GIF 动图</div>
+                                        <div class="export-desc">无损压缩，适合社交媒体</div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">分辨率</label>
+                                        <select class="form-select">
+                                            <option selected>原尺寸</option>
+                                            <option>1280×720</option>
+                                            <option>640×360</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">帧率</label>
+                                        <select class="form-select">
+                                            <option>30 fps</option>
+                                            <option selected>15 fps</option>
+                                            <option>10 fps</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">颜色数量</label>
+                                    <select class="form-select">
+                                        <option>256 色</option>
+                                        <option selected>128 色</option>
+                                        <option>64 色</option>
+                                    </select>
+                                </div>
+                                <div class="export-actions">
+                                    <button class="btn" onclick="previewExport()"><i class="fas fa-eye"></i> 预览</button>
+                                    <button class="btn btn-primary" onclick="quickExport('gif')"><i class="fas fa-download"></i> 导出</button>
+                                </div>
+                            </div>
+
+                            <div class="export-card">
+                                <div class="export-header">
+                                    <div class="export-icon jpg"><i class="fas fa-image"></i></div>
+                                    <div>
+                                        <div class="export-title">图片序列</div>
+                                        <div class="export-desc">导出视频帧为图片序列</div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">格式</label>
+                                        <select class="form-select">
+                                            <option selected>JPEG</option>
+                                            <option>PNG</option>
+                                            <option>TIFF</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">分辨率</label>
+                                        <select class="form-select">
+                                            <option>3840×2160</option>
+                                            <option selected>1920×1080</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">导出范围</label>
+                                    <select class="form-select">
+                                        <option selected>全部帧</option>
+                                        <option>指定区间</option>
+                                        <option>关键帧</option>
+                                    </select>
+                                </div>
+                                <div class="export-actions">
+                                    <button class="btn" onclick="previewExport()"><i class="fas fa-eye"></i> 预览</button>
+                                    <button class="btn btn-primary" onclick="quickExport('jpg')"><i class="fas fa-download"></i> 导出</button>
+                                </div>
+                            </div>
+
+                            <div class="export-card">
+                                <div class="export-header">
+                                    <div class="export-icon wav"><i class="fas fa-music"></i></div>
+                                    <div>
+                                        <div class="export-title">音频导出</div>
+                                        <div class="export-desc">独立导出音轨或背景音乐</div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">格式</label>
+                                        <select class="form-select">
+                                            <option selected>WAV (无损)</option>
+                                            <option>MP3</option>
+                                            <option>AAC</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">采样率</label>
+                                        <select class="form-select">
+                                            <option selected>48 kHz</option>
+                                            <option>44.1 kHz</option>
+                                            <option>96 kHz</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">声道</label>
+                                    <select class="form-select">
+                                        <option selected>立体声</option>
+                                        <option>单声道</option>
+                                    </select>
+                                </div>
+                                <div class="export-actions">
+                                    <button class="btn" onclick="previewExport()"><i class="fas fa-eye"></i> 预览</button>
+                                    <button class="btn btn-primary" onclick="quickExport('wav')"><i class="fas fa-download"></i> 导出</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="queue-section" style="margin-top: 20px;">
+                            <div class="queue-header">
+                                <div class="queue-title"><i class="fas fa-list-ol" style="margin-right: 8px;"></i>导出队列</div>
+                                <div class="queue-count">2 个任务</div>
+                            </div>
+                            <div class="queue-item">
+                                <div class="queue-thumb"><img src="https://i02piccdn.sogoucdn.com/933d3e9927463dba" /></div>
+                                <div class="queue-info">
+                                    <div class="queue-name">三月品牌短片_V01</div>
+                                    <div class="queue-meta">MP4 · 1920×1080 · 30fps</div>
+                                </div>
+                                <div class="queue-progress">
+                                    <div class="progress-bar"><div class="progress-fill" style="width: 65%;"></div></div>
+                                    <div class="progress-text">65%</div>
+                                </div>
+                            </div>
+                            <div class="queue-item">
+                                <div class="queue-thumb"><img src="https://i03piccdn.sogoucdn.com/a2e85ad6c7e3499b" /></div>
+                                <div class="queue-info">
+                                    <div class="queue-name">春季上新宣传_V02</div>
+                                    <div class="queue-meta">GIF · 720×1280</div>
+                                </div>
+                                <div class="queue-progress">
+                                    <div class="progress-bar"><div class="progress-fill" style="width: 12%;"></div></div>
+                                    <div class="progress-text">等待中</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="presetModal">
+        <div class="modal">
+            <div class="modal-header" id="presetModalHeader">
+                <div class="modal-title"><i class="fas fa-plus-circle" style="color: var(--accent);"></i> 新建导出预设</div>
+                <button class="modal-close" onclick="closeModal('presetModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">预设名称</label>
+                    <input type="text" class="form-input" id="presetName" placeholder="输入预设名称" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">预设类型</label>
+                    <select class="form-select" id="presetType">
+                        <option value="video">视频</option>
+                        <option value="audio">音频</option>
+                        <option value="image">图片</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">目标平台</label>
+                    <select class="form-select" id="presetPlatform">
+                        <option value="douyin">抖音</option>
+                        <option value="xiaohongshu">小红书</option>
+                        <option value="bilibili">B站</option>
+                        <option value="youtube">YouTube</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('presetModal')">取消</button>
+                <button class="btn btn-primary" onclick="savePreset()">
+                    <i class="fas fa-check"></i> 保存预设
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">操作成功</span>
+    </div>
+
+    <script>
+        let selectedPreset = '抖音';
+
+        function selectPreset(el, name) {
+            document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            selectedPreset = name;
+            showToast('已选择预设: ' + name);
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow = ''; }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function startExport() { showToast('开始导出任务...'); }
+        function quickExport(type) { showToast('正在导出 ' + type.toUpperCase() + ' 格式...'); }
+        function previewExport() { showToast('正在生成预览...'); }
+
+        function savePreset() {
+            const name = document.getElementById('presetName').value;
+            if (!name) { showToast('请输入预设名称'); return; }
+            closeModal('presetModal');
+            showToast('预设保存成功: ' + name);
+            document.getElementById('presetName').value = '';
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }));
+
+        function initDragModal(modalId, headerId) {
+            const modal = document.getElementById(modalId), header = document.getElementById(headerId);
+            let isDragging = false, offsetX, offsetY;
+            header.addEventListener('mousedown', e => {
+                if (e.target.closest('.modal-close')) return;
+                isDragging = true;
+                offsetX = e.clientX - modal.offsetLeft;
+                offsetY = e.clientY - modal.offsetTop;
+                modal.style.transition = 'none';
+            });
+            document.addEventListener('mousemove', e => { if (isDragging) { modal.style.left = (e.clientX - offsetX) + 'px'; modal.style.top = (e.clientY - offsetY) + 'px'; }});
+            document.addEventListener('mouseup', () => { isDragging = false; modal.style.transition = ''; });
+        }
+
+        initDragModal('presetModal', 'presetModalHeader');
+    </script>
+</body>
+</html>

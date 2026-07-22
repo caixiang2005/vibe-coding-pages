@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>资源仓库 - 云端VR多人协作作业实训平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        @font-face {
+            font-family: 'SF Pro';
+            src: local('SF Pro Display'), local('SF Pro Text');
+        }
+        body {
+            font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mac-window {
+            width: 1200px;
+            height: 800px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            margin: 20px auto;
+        }
+        .sidebar {
+            width: 240px;
+            background: rgba(255, 255, 255, 0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .glass-btn {
+            transition: all 0.3s ease;
+        }
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        .liquid-card {
+            background: rgba(255, 255, 255, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .liquid-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 0;
+            min-width: 480px;
+            max-width: 550px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            cursor: move;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+        .resource-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mac-window overflow-hidden">
+        <div class="h-10 flex items-center justify-between px-4 shrink-0">
+            <div class="flex space-x-2">
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FF5F56] shadow-inner"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FFBD2E] shadow-inner"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#27C93F] shadow-inner"></div>
+            </div>
+            <div class="text-xs font-semibold text-gray-600 flex items-center space-x-4">
+                <span class="flex items-center"><i class="fa-solid fa-cloud mr-1"></i> 云服务连接正常</span>
+                <span class="flex items-center"><i class="fa-solid fa-signal mr-1 text-green-600"></i> 延迟: 12ms</span>
+                <span>2026年3月21日 09:20</span>
+            </div>
+        </div>
+        <div class="flex-1 flex overflow-hidden">
+            <nav class="sidebar p-4 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center space-x-3 mb-10 px-2">
+                        <div class="w-10 h-10 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                            <i class="fa-solid fa-vr-cardboard w-6 h-6"></i>
+                        </div>
+                        <span class="text-sm font-bold text-gray-800 leading-tight">云端VR多人协作<br>作业实训平台</span>
+                    </div>
+                    <ul class="space-y-1">
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="index.html"><i class="fa-solid fa-house w-5"></i> <span>工作台</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="training.html"><i class="fa-solid fa-photo-film w-5"></i> <span>实训广场</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 bg-white/40 rounded-lg text-blue-600 font-medium" href="resources.html"><i class="fa-solid fa-box-open w-5"></i> <span>资源仓库</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="admin.html"><i class="fa-solid fa-chart-line w-5"></i> <span>数据评估</span></a></li>
+                    </ul>
+                </div>
+                <div class="px-2 pb-4">
+                    <div class="bg-white/30 rounded-xl p-3 flex items-center space-x-3">
+                        <img alt="User avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="https://i01piccdn.sogoucdn.com/b0d2f6ab67584bd8" />
+                        <div class="overflow-hidden">
+                            <p class="text-sm font-bold text-gray-800 truncate">张明远</p>
+                            <p class="text-[10px] text-gray-500">在线</p>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <main class="flex-1 p-8 overflow-y-auto bg-white/10">
+                <header class="mb-8 flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-gray-800 mb-2">资源仓库</h1>
+                        <p class="text-gray-500">管理VR模型、纹理、场景等教学资源</p>
+                    </div>
+                    <button class="btn-primary flex items-center gap-2" onclick="openUploadModal()">
+                        <i class="fa-solid fa-plus"></i> 上传资源
+                    </button>
+                </header>
+                <div class="flex gap-3 mb-6">
+                    <div class="flex-1 relative">
+                        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" class="w-full pl-12 pr-4 py-3 bg-white/50 rounded-xl border border-white/30 focus:outline-none focus:border-amber-400" placeholder="搜索资源名称、标签..." />
+                    </div>
+                    <select class="px-4 py-3 bg-white/50 rounded-xl border border-white/30 text-gray-600 focus:outline-none">
+                        <option>全部分类</option>
+                        <option>VR模型</option>
+                        <option>纹理贴图</option>
+                        <option>场景素材</option>
+                        <option>音频文件</option>
+                    </select>
+                    <select class="px-4 py-3 bg-white/50 rounded-xl border border-white/30 text-gray-600 focus:outline-none">
+                        <option>全部格式</option>
+                        <option>.obj</option>
+                        <option>.fbx</option>
+                        <option>.png</option>
+                        <option>.mp3</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="liquid-card rounded-xl p-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="resource-icon bg-blue-100 text-blue-600"><i class="fa-solid fa-cube"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">工业机械臂</h4>
+                                <p class="text-xs text-gray-400">VR模型</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-400">
+                            <span>256 MB</span>
+                            <button class="text-blue-500 hover:text-blue-600" onclick="openPreviewModal('工业机械臂', 'VR模型', '256 MB', 'obj/fbx', '工业机械臂三维模型，适用于工业制造类实训课程，支持多轴联动动画。')"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="liquid-card rounded-xl p-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="resource-icon bg-green-100 text-green-600"><i class="fa-solid fa-leaf"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">手术室场景</h4>
+                                <p class="text-xs text-gray-400">场景素材</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-400">
+                            <span>1.2 GB</span>
+                            <button class="text-blue-500 hover:text-blue-600" onclick="openPreviewModal('手术室场景', '场景素材', '1.2 GB', 'unity', '完整的手术室三维场景，包含手术台、无影灯、设备柜等组件。')"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="liquid-card rounded-xl p-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="resource-icon bg-purple-100 text-purple-600"><i class="fa-solid fa-image"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">金属纹理包</h4>
+                                <p class="text-xs text-gray-400">纹理贴图</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-400">
+                            <span>128 MB</span>
+                            <button class="text-blue-500 hover:text-blue-600" onclick="openPreviewModal('金属纹理包', '纹理贴图', '128 MB', 'png/jpg', '高清金属表面纹理贴图，包含划痕、锈迹等细节。')"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="liquid-card rounded-xl p-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="resource-icon bg-red-100 text-red-600"><i class="fa-solid fa-volume-high"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">工厂环境音</h4>
+                                <p class="text-xs text-gray-400">音频文件</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-400">
+                            <span>45 MB</span>
+                            <button class="text-blue-500 hover:text-blue-600" onclick="openPreviewModal('工厂环境音', '音频文件', '45 MB', 'mp3/wav', '真实工厂环境录音，包含机械运转声、人员对话等。')"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="liquid-card rounded-xl p-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="resource-icon bg-cyan-100 text-cyan-600"><i class="fa-solid fa-robot"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">人形机器人</h4>
+                                <p class="text-xs text-gray-400">VR模型</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-400">
+                            <span>512 MB</span>
+                            <button class="text-blue-500 hover:text-blue-600" onclick="openPreviewModal('人形机器人', 'VR模型', '512 MB', 'obj/fbx', '高精度人形机器人模型，支持骨骼动画。')"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="liquid-card rounded-xl p-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="resource-icon bg-amber-100 text-amber-600"><i class="fa-solid fa-hospital"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">医疗设备组</h4>
+                                <p class="text-xs text-gray-400">VR模型</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-400">
+                            <span>340 MB</span>
+                            <button class="text-blue-500 hover:text-blue-600" onclick="openPreviewModal('医疗设备组', 'VR模型', '340 MB', 'obj/fbx', '包含心电监护仪、呼吸机、输液泵等医疗设备模型。')"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="liquid-card rounded-xl p-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="resource-icon bg-indigo-100 text-indigo-600"><i class="fa-solid fa-wheat-awn"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">化学实验室</h4>
+                                <p class="text-xs text-gray-400">场景素材</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-400">
+                            <span>890 MB</span>
+                            <button class="text-blue-500 hover:text-blue-600" onclick="openPreviewModal('化学实验室', '场景素材', '890 MB', 'unity', '化学实验室完整场景，包含通风橱、实验台、试剂架等。')"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="liquid-card rounded-xl p-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="resource-icon bg-pink-100 text-pink-600"><i class="fa-solid fa-car"></i></div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">汽车发动机</h4>
+                                <p class="text-xs text-gray-400">VR模型</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-400">
+                            <span>680 MB</span>
+                            <button class="text-blue-500 hover:text-blue-600" onclick="openPreviewModal('汽车发动机', 'VR模型', '680 MB', 'obj/fbx', '汽车发动机拆解与组装实训模型，包含所有零部件。')"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="liquid-card rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-gray-800">最近使用</h3>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex items-center gap-3 p-3 bg-white/30 rounded-xl flex-1">
+                            <div class="resource-icon bg-blue-100 text-blue-600 w-10 h-10 text-base"><i class="fa-solid fa-cube"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-medium text-gray-800 text-sm truncate">工业机械臂</h4>
+                                <p class="text-xs text-gray-400">2小时前使用</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-white/30 rounded-xl flex-1">
+                            <div class="resource-icon bg-green-100 text-green-600 w-10 h-10 text-base"><i class="fa-solid fa-leaf"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-medium text-gray-800 text-sm truncate">手术室场景</h4>
+                                <p class="text-xs text-gray-400">昨天使用</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-white/30 rounded-xl flex-1">
+                            <div class="resource-icon bg-purple-100 text-purple-600 w-10 h-10 text-base"><i class="fa-solid fa-image"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-medium text-gray-800 text-sm truncate">金属纹理包</h4>
+                                <p class="text-xs text-gray-400">3天前使用</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal-box" id="uploadModalContent">
+            <div class="modal-header">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+                </div>
+                <span class="font-bold text-lg absolute left-1/2 -translate-x-1/2">上传资源</span>
+                <button class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition ml-auto" onclick="closeUploadModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">资源名称</label>
+                    <input type="text" class="input-field" placeholder="请输入资源名称" />
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">资源分类</label>
+                    <select class="input-field">
+                        <option>VR模型</option>
+                        <option>纹理贴图</option>
+                        <option>场景素材</option>
+                        <option>音频文件</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">资源描述</label>
+                    <textarea class="input-field" rows="3" placeholder="请输入资源描述"></textarea>
+                </div>
+                <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-amber-400 transition cursor-pointer" onclick="document.getElementById('fileInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-300 mb-3"></i>
+                    <p class="text-gray-500 mb-1">点击或拖拽文件到此处</p>
+                    <p class="text-xs text-gray-400">支持 .obj .fbx .png .mp3 等格式</p>
+                    <input type="file" id="fileInput" class="hidden" multiple />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeUploadModal()">取消</button>
+                <button class="btn-primary" onclick="uploadResource()">上传</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal-box" id="previewModalContent">
+            <div class="modal-header">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+                </div>
+                <span class="font-bold text-lg absolute left-1/2 -translate-x-1/2">资源预览</span>
+                <button class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition ml-auto" onclick="closePreviewModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="previewContent">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closePreviewModal()">关闭</button>
+                <button class="btn-primary" onclick="downloadResource()"><i class="fa-solid fa-download mr-2"></i>下载</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function openUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+        }
+        function openPreviewModal(name, type, size, format, desc) {
+            document.getElementById('previewContent').innerHTML = `
+                <div class="flex gap-4 mb-4">
+                    <div class="w-20 h-20 bg-gray-100 rounded-xl flex items-center justify-center text-3xl text-gray-400">
+                        <i class="fa-solid fa-file"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gray-800 text-lg mb-1">${name}</h3>
+                        <div class="flex flex-wrap gap-2 mb-2">
+                            <span class="px-2 py-0.5 bg-blue-100 text-blue-600 rounded text-xs font-bold">${type}</span>
+                            <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">${format}</span>
+                        </div>
+                        <div class="text-sm text-gray-500 space-y-1">
+                            <p><i class="fa-solid fa-database mr-2 text-gray-400"></i>${size}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <h4 class="font-medium text-gray-700 mb-2">资源描述</h4>
+                    <p class="text-sm text-gray-500 leading-relaxed">${desc}</p>
+                </div>
+            `;
+            document.getElementById('previewModal').classList.add('active');
+        }
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.remove('active');
+        }
+        function uploadResource() {
+            alert('资源上传成功！');
+            closeUploadModal();
+        }
+        function downloadResource() {
+            alert('正在下载资源...');
+        }
+        function makeDraggable(element) {
+            let isDragging = false;
+            let offsetX, offsetY;
+            const header = element.querySelector('.modal-header');
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.closest('button')) return;
+                isDragging = true;
+                offsetX = e.clientX - element.getBoundingClientRect().left;
+                offsetY = e.clientY - element.getBoundingClientRect().top;
+                element.style.transition = 'none';
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                const x = e.clientX - offsetX;
+                const y = e.clientY - offsetY;
+                element.style.left = x + 'px';
+                element.style.top = y + 'px';
+                element.style.transform = 'none';
+            });
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+                element.style.transition = '';
+            });
+        }
+        makeDraggable(document.getElementById('uploadModalContent'));
+        makeDraggable(document.getElementById('previewModalContent'));
+        document.getElementById('uploadModal').addEventListener('click', function(e) {
+            if (e.target === this) closeUploadModal();
+        });
+        document.getElementById('previewModal').addEventListener('click', function(e) {
+            if (e.target === this) closePreviewModal();
+        });
+    </script>
+</body>
+</html>

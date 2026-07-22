@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>系统设置 - 短视频素材剪接合成制作管理平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --window-bg: rgba(20, 20, 22, 0.92);
+            --sidebar-bg: rgba(26, 26, 28, 0.92);
+            --surface: rgba(34, 34, 38, 0.72);
+            --surface-2: rgba(46, 46, 50, 0.76);
+            --border: rgba(255, 255, 255, 0.10);
+            --text: rgba(255, 255, 255, 0.92);
+            --text-2: rgba(255, 255, 255, 0.68);
+            --text-3: rgba(255, 255, 255, 0.42);
+            --accent: #3b82f6;
+            --danger: #ff5f57;
+            --warn: #febc2e;
+            --ok: #28c840;
+            --radius-xl: 18px;
+            --radius-lg: 14px;
+            --shadow-window: 0 30px 110px rgba(0, 0, 0, 0.62);
+            --ring: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 0 4px rgba(59, 130, 246, 0.18);
+        }
+
+        body {
+            background: url('./bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+        }
+
+        .app-shell { min-height: 100vh; display: flex; }
+        .app-window {
+            width: 100%;
+            min-height: 100vh;
+            background: var(--window-bg);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(22px) saturate(1.15);
+        }
+
+        .titlebar {
+            height: 46px;
+            background: rgba(12, 12, 12, 0.92);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 14px;
+        }
+
+        .traffic-lights { display: flex; gap: 8px; }
+        .traffic-light { width: 12px; height: 12px; border-radius: 999px; }
+        .traffic-light.red { background: var(--danger); }
+        .traffic-light.yellow { background: var(--warn); }
+        .traffic-light.green { background: var(--ok); }
+
+        .titlebar-center { position: absolute; left: 50%; transform: translateX(-50%); }
+        .app-title { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 13px; color: var(--text-2); }
+
+        .titlebar-right { margin-left: auto; display: flex; gap: 10px; }
+
+        .btn {
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 120ms ease, background 120ms ease;
+        }
+        .btn:hover { background: var(--surface-2); }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary {
+            border-color: rgba(59, 130, 246, 0.55);
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.92), rgba(37, 99, 235, 0.92));
+            color: white;
+        }
+
+        .app-body { flex: 1; display: flex; }
+
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar-header { padding: 8px; }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(168, 85, 247, 0.75));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .brand-name { font-weight: 700; font-size: 13px; color: var(--text); line-height: 1.3; }
+
+        .nav-group-title { padding: 10px 10px 6px 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: var(--text-3); }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 10px;
+            border-radius: 12px;
+            color: var(--text-2);
+            text-decoration: none;
+            transition: background 120ms ease, color 120ms ease;
+        }
+        .nav-item:hover { background: var(--surface); color: var(--text); }
+        .nav-item.active { background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); color: rgba(96, 165, 250, 0.95); }
+        .nav-item i { width: 18px; text-align: center; }
+
+        .content { flex: 1; display: flex; flex-direction: column; }
+        .content-toolbar {
+            padding: 16px 18px 12px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+        .content-title h2 { font-size: 18px; font-weight: 800; color: var(--text); }
+
+        .scroll-area { flex: 1; overflow: auto; padding: 18px; }
+
+        .settings-grid { display: grid; grid-template-columns: 240px 1fr; gap: 18px; }
+
+        .settings-nav {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 8px;
+            height: fit-content;
+        }
+
+        .settings-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: var(--text-2);
+            cursor: pointer;
+            transition: all 120ms ease;
+            font-size: 13px;
+        }
+        .settings-nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+        .settings-nav-item.active { background: rgba(59, 130, 246, 0.15); color: rgba(96, 165, 250, 0.95); }
+
+        .settings-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.02);
+        }
+        .panel-title { font-size: 14px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
+
+        .panel-body { padding: 16px; }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-info { flex: 1; }
+        .setting-label { font-size: 13px; font-weight: 600; color: var(--text); }
+        .setting-desc { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+        .toggle {
+            width: 44px;
+            height: 24px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            cursor: pointer;
+            position: relative;
+            transition: background 200ms ease;
+        }
+        .toggle.active { background: rgba(59, 130, 246, 0.8); }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            transition: transform 200ms ease;
+        }
+        .toggle.active::after { transform: translateX(20px); }
+
+        .form-input {
+            width: 200px;
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+        .form-input:focus { border-color: rgba(59, 130, 246, 0.5); }
+
+        .form-select {
+            width: 200px;
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .info-card {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .info-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .info-icon.blue { background: rgba(59, 130, 246, 0.15); color: rgba(96, 165, 250, 0.95); }
+        .info-icon.green { background: rgba(34, 197, 94, 0.15); color: rgba(74, 222, 128, 0.95); }
+        .info-text h4 { font-size: 13px; font-weight: 700; color: var(--text); }
+        .info-text p { font-size: 11px; color: var(--text-3); }
+
+        .storage-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .storage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--warn));
+            border-radius: 4px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--window-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            width: 400px;
+            max-width: 90vw;
+        }
+
+        .modal-header {
+            height: 52px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            cursor: move;
+        }
+        .modal-title { font-size: 14px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .modal-close { width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; color: var(--text-2); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: var(--surface); }
+
+        .modal-body { padding: 18px; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+        .form-input-full {
+            width: 100%;
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+        .form-input-full:focus { border-color: rgba(59, 130, 246, 0.5); box-shadow: var(--ring); }
+
+        .modal-footer {
+            padding: 14px 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 300ms ease, opacity 300ms ease;
+            z-index: 1001;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: rgba(40, 200, 64, 0.4); }
+        .toast.success i { color: var(--ok); }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 999px; }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <div class="app-window">
+            <div class="titlebar">
+                <div class="traffic-lights">
+                    <div class="traffic-light red"></div>
+                    <div class="traffic-light yellow"></div>
+                    <div class="traffic-light green"></div>
+                </div>
+                <div class="titlebar-center">
+                    <div class="app-title">
+                        <i class="fas fa-cog" style="color: var(--accent);"></i>
+                        系统设置
+                    </div>
+                </div>
+                <div class="titlebar-right">
+                </div>
+            </div>
+
+            <div class="app-body">
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <div class="brand">
+                            <div class="brand-icon"><i class="fas fa-film"></i></div>
+                            <div class="brand-name">短视频素材剪接合成<br>制作管理平台</div>
+                        </div>
+                    </div>
+
+                    <div class="nav-group-title">导航</div>
+                    <a href="dashboard.html" class="nav-item"><i class="fas fa-desktop"></i> <span>工作台</span></a>
+                    <a href="media_library.html" class="nav-item"><i class="fas fa-photo-video"></i> <span>素材库</span></a>
+                    <a href="projects.html" class="nav-item"><i class="fas fa-folder-open"></i> <span>项目管理</span></a>
+                    <a href="export.html" class="nav-item"><i class="fas fa-file-export"></i> <span>导出设置</span></a>
+
+                    <div class="nav-group-title">系统</div>
+                    <a href="settings.html" class="nav-item active"><i class="fas fa-cog"></i> <span>系统设置</span></a>
+                    <a href="users.html" class="nav-item"><i class="fas fa-users"></i> <span>用户管理</span></a>
+                </div>
+
+                <div class="content">
+                    <div class="content-toolbar">
+                        <div class="content-title"><h2>系统设置</h2></div>
+                    </div>
+
+                    <div class="scroll-area">
+                        <div class="settings-grid">
+                            <div class="settings-nav">
+                                <div class="settings-nav-item active" onclick="switchTab('general', this)">
+                                    <i class="fas fa-sliders-h"></i> 常规设置
+                                </div>
+                                <div class="settings-nav-item" onclick="switchTab('storage', this)">
+                                    <i class="fas fa-database"></i> 存储设置
+                                </div>
+                                <div class="settings-nav-item" onclick="switchTab('render', this)">
+                                    <i class="fas fa-cube"></i> 渲染设置
+                                </div>
+                                <div class="settings-nav-item" onclick="switchTab('shortcuts', this)">
+                                    <i class="fas fa-keyboard"></i> 快捷键
+                                </div>
+                                <div class="settings-nav-item" onclick="switchTab('backup', this)">
+                                    <i class="fas fa-save"></i> 备份与恢复
+                                </div>
+                            </div>
+
+                            <div class="settings-panel" id="general">
+                                <div class="panel-header">
+                                    <div class="panel-title"><i class="fas fa-sliders-h" style="color: var(--accent);"></i> 常规设置</div>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">自动保存</div>
+                                            <div class="setting-desc">自动保存项目防止数据丢失</div>
+                                        </div>
+                                        <div class="toggle active" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">自动保存间隔</div>
+                                            <div class="setting-desc">设置自动保存的时间间隔</div>
+                                        </div>
+                                        <select class="form-select">
+                                            <option>1 分钟</option>
+                                            <option selected>3 分钟</option>
+                                            <option>5 分钟</option>
+                                            <option>10 分钟</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">代理模式</div>
+                                            <div class="setting-desc">使用代理文件提高预览流畅度</div>
+                                        </div>
+                                        <div class="toggle active" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">显示启动画面</div>
+                                            <div class="setting-desc">启动时显示欢迎界面</div>
+                                        </div>
+                                        <div class="toggle" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">主题模式</div>
+                                            <div class="setting-desc">选择界面主题风格</div>
+                                        </div>
+                                        <select class="form-select">
+                                            <option>浅色</option>
+                                            <option selected>深色</option>
+                                            <option>跟随系统</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-panel" id="storage" style="display: none;">
+                                <div class="panel-header">
+                                    <div class="panel-title"><i class="fas fa-database" style="color: var(--warn);"></i> 存储设置</div>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="info-card">
+                                        <div class="info-icon blue"><i class="fas fa-hdd"></i></div>
+                                        <div class="info-text">
+                                            <h4>本地存储</h4>
+                                            <p>D:\Projects\VideoEditor</p>
+                                        </div>
+                                    </div>
+                                    <div class="info-card">
+                                        <div class="info-icon green"><i class="fas fa-cloud"></i></div>
+                                        <div class="info-text">
+                                            <h4>云存储</h4>
+                                            <p>已连接 - 1.2TB 可用</p>
+                                        </div>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">素材缓存位置</div>
+                                            <div class="setting-desc">设置代理文件缓存目录</div>
+                                        </div>
+                                        <button class="btn" onclick="selectFolder()">选择文件夹</button>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">缓存大小限制</div>
+                                            <div class="setting-desc">代理文件缓存上限</div>
+                                        </div>
+                                        <select class="form-select">
+                                            <option>10 GB</option>
+                                            <option selected>50 GB</option>
+                                            <option>100 GB</option>
+                                            <option>无限制</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">清理缓存</div>
+                                            <div class="setting-desc">清除代理文件和临时文件</div>
+                                        </div>
+                                        <button class="btn" onclick="clearCache()">清理</button>
+                                    </div>
+                                    <div style="margin-top: 16px;">
+                                        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+                                            <span>存储空间使用</span>
+                                            <span style="color: var(--text-3);">68.5 GB / 500 GB</span>
+                                        </div>
+                                        <div class="storage-bar">
+                                            <div class="storage-fill" style="width: 13.7%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-panel" id="render" style="display: none;">
+                                <div class="panel-header">
+                                    <div class="panel-title"><i class="fas fa-cube" style="color: var(--ok);"></i> 渲染设置</div>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">GPU 加速</div>
+                                            <div class="setting-desc">使用显卡加速渲染</div>
+                                        </div>
+                                        <div class="toggle active" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">多线程渲染</div>
+                                            <div class="setting-desc">使用多核心CPU加速</div>
+                                        </div>
+                                        <div class="toggle active" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">渲染线程数</div>
+                                            <div class="setting-desc">同时进行的渲染任务数</div>
+                                        </div>
+                                        <select class="form-select">
+                                            <option>1</option>
+                                            <option selected>2</option>
+                                            <option>4</option>
+                                        </select>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">输出临时目录</div>
+                                            <div class="setting-desc">渲染输出临时文件位置</div>
+                                        </div>
+                                        <button class="btn">选择</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-panel" id="shortcuts" style="display: none;">
+                                <div class="panel-header">
+                                    <div class="panel-title"><i class="fas fa-keyboard" style="color: var(--accent);"></i> 快捷键设置</div>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">播放 / 暂停</div>
+                                        </div>
+                                        <input type="text" class="form-input" value="Space" readonly />
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">撤销</div>
+                                        </div>
+                                        <input type="text" class="form-input" value="Ctrl + Z" readonly />
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">重做</div>
+                                        </div>
+                                        <input type="text" class="form-input" value="Ctrl + Shift + Z" readonly />
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">导出</div>
+                                        </div>
+                                        <input type="text" class="form-input" value="Ctrl + E" readonly />
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">保存项目</div>
+                                        </div>
+                                        <input type="text" class="form-input" value="Ctrl + S" readonly />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-panel" id="backup" style="display: none;">
+                                <div class="panel-header">
+                                    <div class="panel-title"><i class="fas fa-save" style="color: var(--warn);"></i> 备份与恢复</div>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">自动备份</div>
+                                            <div class="setting-desc">定期备份项目设置</div>
+                                        </div>
+                                        <div class="toggle active" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">备份位置</div>
+                                            <div class="setting-desc">设置备份文件存储位置</div>
+                                        </div>
+                                        <button class="btn">选择</button>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">手动备份</div>
+                                            <div class="setting-desc">立即创建系统备份</div>
+                                        </div>
+                                        <button class="btn btn-primary" onclick="createBackup()">创建备份</button>
+                                    </div>
+                                    <div class="setting-row">
+                                        <div class="setting-info">
+                                            <div class="setting-label">恢复系统</div>
+                                            <div class="setting-desc">从备份文件恢复设置</div>
+                                        </div>
+                                        <button class="btn" onclick="restoreSystem()">恢复</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">操作成功</span>
+    </div>
+
+    <script>
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.settings-panel').forEach(p => p.style.display = 'none');
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function toggleSwitch(el) { el.classList.toggle('active'); showToast('设置已更新'); }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow = ''; }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function selectFolder() { showToast('请选择文件夹'); }
+        function clearCache() { showToast('缓存清理完成'); }
+        function createBackup() { showToast('系统备份已创建'); }
+        function restoreSystem() { showToast('系统恢复功能'); }
+
+        document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }));
+
+        function initDragModal(modalId, headerId) {
+            const modal = document.getElementById(modalId), header = document.getElementById(headerId);
+            let isDragging = false, offsetX, offsetY;
+            header.addEventListener('mousedown', e => {
+                if (e.target.closest('.modal-close')) return;
+                isDragging = true;
+                offsetX = e.clientX - modal.offsetLeft;
+                offsetY = e.clientY - modal.offsetTop;
+                modal.style.transition = 'none';
+            });
+            document.addEventListener('mousemove', e => { if (isDragging) { modal.style.left = (e.clientX - offsetX) + 'px'; modal.style.top = (e.clientY - offsetY) + 'px'; }});
+            document.addEventListener('mouseup', () => { isDragging = false; modal.style.transition = ''; });
+        }
+    </script>
+</body>
+</html>

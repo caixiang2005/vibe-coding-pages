@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>考试练习</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --gold: #C9A84C; --gold-dark: #A07830; --red: #C0392B;
+    --bg: #FDF8F0; --text: #2C1810; --text2: #6B4C3B; --text3: #9C7B6B;
+  }
+  body { font-family: 'Noto Sans SC', sans-serif; background: #E8E0D0; display: flex; justify-content: center; }
+  .phone-frame {
+    width: 100%; height: 100vh; background: var(--bg);
+    overflow: hidden; overflow-y: auto; display: flex; flex-direction: column;
+  }
+  .status-bar { background: linear-gradient(135deg,#8B1A1A,#C9A84C); color:white; padding:12px 24px 8px; display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+  .status-bar .time { font-weight:700; font-size:15px; }
+  .status-icons { display:flex; gap:6px; }
+
+  .page-header { background: linear-gradient(135deg,#8B1A1A 0%,#C0392B 50%,#C9A84C 100%); padding:14px 20px 20px; }
+  .header-top { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .back-btn { width:36px; height:36px; background:rgba(255,255,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; text-decoration:none; border:1px solid rgba(255,255,255,0.2); cursor:pointer; }
+  .page-title { color:white; font-size:18px; font-weight:700; font-family:'Noto Serif SC',serif; flex:1; }
+
+  /* Score overview */
+  .score-row { display:flex; gap:10px; }
+  .score-card { flex:1; background:rgba(255,255,255,0.15); border-radius:14px; padding:12px; text-align:center; border:1px solid rgba(201,168,76,0.3); }
+  .score-card .v { color:white; font-size:22px; font-weight:700; font-family:'Noto Serif SC',serif; }
+  .score-card .l { color:rgba(255,255,255,0.8); font-size:11px; margin-top:3px; }
+  .score-card.highlight { background:rgba(201,168,76,0.25); border-color:rgba(201,168,76,0.5); }
+
+  /* Content */
+  .content { flex:1; overflow-y:auto; padding:16px 20px 90px; }
+  .content::-webkit-scrollbar { display:none; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  .section-title { font-family:'Noto Serif SC',serif; font-size:16px; font-weight:700; color:var(--text); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .section-title::before { content:''; width:4px; height:18px; background:linear-gradient(to bottom,var(--red),var(--gold)); border-radius:2px; }
+
+  /* Mode cards */
+  .mode-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+  .mode-card { border-radius:18px; padding:18px 14px; cursor:pointer; text-decoration:none; transition:all 0.2s; position:relative; overflow:hidden; }
+  .mode-card:active { transform:scale(0.97); }
+  .mode-card.red-card { background:linear-gradient(135deg,#C0392B,#8B1A1A); }
+  .mode-card.gold-card { background:linear-gradient(135deg,#C9A84C,#A07830); }
+  .mode-card.teal-card { background:linear-gradient(135deg,#16A085,#1ABC9C); }
+  .mode-card.blue-card { background:linear-gradient(135deg,#2980B9,#3498DB); }
+  .mode-card::after { content:''; position:absolute; top:-20px; right:-20px; width:70px; height:70px; border-radius:50%; background:rgba(255,255,255,0.1); }
+  .mode-icon { width:44px; height:44px; background:rgba(255,255,255,0.2); border-radius:14px; display:flex; align-items:center; justify-content:center; color:white; font-size:22px; margin-bottom:12px; }
+  .mode-name { color:white; font-size:15px; font-weight:700; font-family:'Noto Serif SC',serif; }
+  .mode-desc { color:rgba(255,255,255,0.8); font-size:11px; margin-top:4px; }
+  .mode-count { color:rgba(255,255,255,0.9); font-size:12px; margin-top:8px; font-weight:600; }
+
+  /* Quiz section */
+  .quiz-section { display:none; }
+  .quiz-section.active { display:block; }
+  .quiz-header { background:white; border-radius:16px; padding:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+  .quiz-progress { font-size:13px; color:var(--text2); }
+  .quiz-progress .current { color:var(--red); font-weight:700; font-size:18px; }
+  .quiz-timer { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text3); }
+  .quiz-timer i { color:var(--red); }
+  
+  .quiz-card { background:white; border-radius:16px; padding:20px; margin-bottom:12px; }
+  .quiz-type { display:inline-block; background:#FFF0EE; color:var(--red); font-size:11px; padding:3px 10px; border-radius:10px; margin-bottom:12px; }
+  .quiz-question { font-size:15px; color:var(--text); line-height:1.7; margin-bottom:20px; }
+  .quiz-options { display:flex; flex-direction:column; gap:10px; }
+  .quiz-option { padding:14px 16px; background:var(--bg); border-radius:12px; border:1.5px solid #EDE0C8; font-size:14px; color:var(--text2); cursor:pointer; transition:all 0.2s; }
+  .quiz-option:active { transform:scale(0.98); }
+  .quiz-option.selected { border-color:var(--red); background:#FFF0EE; color:var(--red); }
+  .quiz-option.correct { border-color:#27AE60; background:#E8FFF0; color:#27AE60; }
+  .quiz-option.wrong { border-color:var(--red); background:#FFF0EE; color:var(--red); }
+  
+  .quiz-btns { display:flex; gap:10px; }
+  .quiz-btn { flex:1; padding:14px; border-radius:12px; font-size:14px; font-weight:600; text-align:center; cursor:pointer; border:none; transition:all 0.2s; }
+  .quiz-btn:active { transform:scale(0.98); }
+  .quiz-btn.prev { background:var(--bg); color:var(--text2); border:1px solid #EDE0C8; }
+  .quiz-btn.next { background:linear-gradient(135deg,var(--red),#A02020); color:white; }
+  .quiz-btn.submit { background:linear-gradient(135deg,#27AE60,#2ECC71); color:white; }
+
+  /* Result section */
+  .result-section { display:none; text-align:center; padding-top:20px; }
+  .result-section.active { display:block; }
+  .result-circle { width:140px; height:140px; border-radius:50%; margin:0 auto 20px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .result-circle.good { background:linear-gradient(135deg,#27AE60,#2ECC71); }
+  .result-circle.bad { background:linear-gradient(135deg,#E74C3C,#C0392B); }
+  .result-score { color:white; font-size:42px; font-weight:700; font-family:'Noto Serif SC',serif; }
+  .result-label { color:rgba(255,255,255,0.9); font-size:12px; }
+  .result-stats { display:flex; justify-content:center; gap:30px; margin-bottom:24px; }
+  .result-stat { text-align:center; }
+  .result-stat .num { font-size:24px; font-weight:700; color:var(--text); font-family:'Noto Serif SC',serif; }
+  .result-stat .num.good { color:#27AE60; }
+  .result-stat .num.bad { color:var(--red); }
+  .result-stat .txt { font-size:11px; color:var(--text3); margin-top:4px; }
+  .result-actions { display:flex; flex-direction:column; gap:10px; }
+  .result-btn { padding:14px 20px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; border:none; transition:all 0.2s; }
+  .result-btn:active { transform:scale(0.98); }
+  .result-btn.primary { background:linear-gradient(135deg,var(--red),#A02020); color:white; }
+  .result-btn.secondary { background:var(--bg); color:var(--text2); border:1px solid #EDE0C8; }
+
+  /* Category practice */
+  .cat-practice { display:flex; flex-direction:column; gap:10px; }
+  .cat-item { background:white; border-radius:14px; border:1px solid #F0E8D8; overflow:hidden; display:flex; cursor:pointer; text-decoration:none; box-shadow:0 2px 8px rgba(44,24,16,0.06); }
+  .cat-item:active { transform:scale(0.98); }
+  .cat-item .ci-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin:10px 12px; font-size:20px; color:white; }
+  .cat-item .ci-info { padding:10px 12px; flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .cat-item .ci-name { font-size:13px; font-weight:700; color:var(--text); font-family:'Noto Serif SC',serif; }
+  .cat-item .ci-meta { font-size:11px; color:var(--text3); margin-top:3px; }
+  .cat-item .ci-bar { height:4px; background:#F0E8D8; border-radius:2px; margin-top:6px; overflow:hidden; }
+  .cat-item .ci-fill { height:100%; border-radius:2px; background:linear-gradient(to right,var(--red),var(--gold)); }
+
+  /* History list */
+  .history-item { background:white; border-radius:14px; padding:14px; margin-bottom:10px; border:1px solid #F0E8D8; box-shadow:0 2px 8px rgba(44,24,16,0.06); display:flex; align-items:center; gap:12px; cursor:pointer; }
+  .history-item:active { transform:scale(0.98); }
+  .hist-icon { width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .hist-icon.pass { background:#E8FFF0; color:#27AE60; }
+  .hist-icon.fail { background:#FFF0EE; color:var(--red); }
+  .hist-info { flex:1; }
+  .hist-name { font-size:13px; font-weight:600; color:var(--text); }
+  .hist-meta { font-size:11px; color:var(--text3); margin-top:3px; }
+  .hist-score { text-align:right; }
+  .hist-score .score { font-size:20px; font-weight:700; font-family:'Noto Serif SC',serif; }
+  .hist-score .score.good { color:#27AE60; }
+  .hist-score .score.bad { color:var(--red); }
+  .hist-score .rank { font-size:10px; color:var(--text3); }
+
+  /* Bottom nav */
+  .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width: 100%; background:white; border-top:1px solid #EDE0C8; display:flex; padding:8px 0 20px; box-shadow:0 -4px 20px rgba(44,24,16,0.08); z-index:100; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; text-decoration:none; padding:4px 0; }
+  .nav-item i { font-size:20px; color:#BDB0A0; }
+  .nav-item span { font-size:10px; color:#BDB0A0; font-weight:500; }
+  .nav-item.active i { color:var(--red); }
+  .nav-item.active span { color:var(--red); font-weight:700; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  
+  <div class="page-header">
+    <div class="header-top">
+      <a href="index.html" class="back-btn"><i class="fa fa-arrow-left"></i></a>
+      <div class="page-title">考试练习</div>
+    </div>
+    <div class="score-row">
+      <div class="score-card"><div class="v">89%</div><div class="l">平均正确率</div></div>
+      <div class="score-card highlight"><div class="v">156</div><div class="l">已答题数</div></div>
+      <div class="score-card"><div class="v">12</div><div class="l">练习次数</div></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- 答题界面 -->
+    <div id="quiz-view" class="quiz-section active">
+      <div class="section-title">选择练习模式</div>
+      <div class="mode-grid">
+        <div class="mode-card red-card" onclick="startQuiz('random')">
+          <div class="mode-icon"><i class="fa-solid fa-shuffle"></i></div>
+          <div class="mode-name">随机练习</div>
+          <div class="mode-desc">随机抽题快速练习</div>
+          <div class="mode-count">共 320 道题</div>
+        </div>
+        <div class="mode-card gold-card" onclick="startQuiz('special')">
+          <div class="mode-icon"><i class="fa-solid fa-bullseye"></i></div>
+          <div class="mode-name">专项练习</div>
+          <div class="mode-desc">按舞种分类专练</div>
+          <div class="mode-count">6 个专项</div>
+        </div>
+        <div class="mode-card teal-card" onclick="startQuiz('simulate')">
+          <div class="mode-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+          <div class="mode-name">模拟考试</div>
+          <div class="mode-desc">完整模拟正式考试</div>
+          <div class="mode-count">60 分钟限时</div>
+        </div>
+        <div class="mode-card blue-card" onclick="showResult()">
+          <div class="mode-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+          <div class="mode-name">错题回顾</div>
+          <div class="mode-desc">巩固薄弱知识点</div>
+          <div class="mode-count">18 道错题</div>
+        </div>
+      </div>
+
+      <div class="section-title">按类别练习</div>
+      <div class="cat-practice">
+        <div class="cat-item" onclick="startQuiz('classical')">
+          <div class="ci-icon" style="background:linear-gradient(135deg,#C0392B,#8B1A1A);"><i class="fa-solid fa-dragon"></i></div>
+          <div class="ci-info">
+            <div class="ci-name">中国古典舞</div>
+            <div class="ci-meta">120道题 · 已答 80道 · 正确率 91%</div>
+            <div class="ci-bar"><div class="ci-fill" style="width:67%"></div></div>
+          </div>
+        </div>
+        <div class="cat-item" onclick="startQuiz('folk')">
+          <div class="ci-icon" style="background:linear-gradient(135deg,#27AE60,#1ABC9C);"><i class="fa-solid fa-mountain-sun"></i></div>
+          <div class="ci-info">
+            <div class="ci-name">民族民间舞</div>
+            <div class="ci-meta">95道题 · 已答 46道 · 正确率 87%</div>
+            <div class="ci-bar"><div class="ci-fill" style="width:48%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px"></div>
+      <div class="section-title">最近练习记录</div>
+      <div class="history-item" onclick="showResult()">
+        <div class="hist-icon pass"><i class="fa fa-check"></i></div>
+        <div class="hist-info">
+          <div class="hist-name">中国古典舞专项练习 · 第3套</div>
+          <div class="hist-meta">今天 09:15 · 用时18分钟</div>
+        </div>
+        <div class="hist-score"><div class="score good">94</div><div class="rank">分</div></div>
+      </div>
+      <div class="history-item" onclick="showResult()">
+        <div class="hist-icon pass"><i class="fa fa-check"></i></div>
+        <div class="hist-info">
+          <div class="hist-name">随机综合练习 · 20题</div>
+          <div class="hist-meta">昨天 20:30 · 用时12分钟</div>
+        </div>
+        <div class="hist-score"><div class="score good">85</div><div class="rank">分</div></div>
+      </div>
+      <div class="history-item" onclick="showResult()">
+        <div class="hist-icon fail"><i class="fa fa-times"></i></div>
+        <div class="hist-info">
+          <div class="hist-name">模拟考试 · 第1套</div>
+          <div class="hist-meta">前天 14:00 · 用时55分钟</div>
+        </div>
+        <div class="hist-score"><div class="score bad">62</div><div class="rank">分</div></div>
+      </div>
+    </div>
+
+    <!-- 答题中界面 -->
+    <div id="quizdoing-view" class="quiz-section">
+      <div class="quiz-header">
+        <div class="quiz-progress">
+          <span class="current">3</span>/10
+        </div>
+        <div class="quiz-timer">
+          <i class="fa fa-clock"></i>
+          <span>12:34</span>
+        </div>
+      </div>
+
+      <div class="quiz-card">
+        <span class="quiz-type">单选题</span>
+        <div class="quiz-question">《雀之灵》的创作者是？</div>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="selectOption(this)">A. 杨丽萍</div>
+          <div class="quiz-option" onclick="selectOption(this)">B. 邰丽华</div>
+          <div class="quiz-option" onclick="selectOption(this)">C. 陈爱莲</div>
+          <div class="quiz-option" onclick="selectOption(this)">D. 赵青</div>
+        </div>
+      </div>
+
+      <div class="quiz-btns">
+        <div class="quiz-btn prev" onclick="prevQuestion()">上一题</div>
+        <div class="quiz-btn next" onclick="nextQuestion()">下一题</div>
+      </div>
+    </div>
+
+    <!-- 结果界面 -->
+    <div id="result-view" class="quiz-section">
+      <div class="result-section active">
+        <div class="result-circle good">
+          <div class="result-score">85</div>
+          <div class="result-label">分</div>
+        </div>
+        <div style="font-size:16px;color:var(--text);font-weight:600;margin-bottom:4px;">答题完成！</div>
+        <div style="font-size:13px;color:var(--text3);margin-bottom:20px;">用时 12 分 34 秒</div>
+        
+        <div class="result-stats">
+          <div class="result-stat">
+            <div class="num good">17</div>
+            <div class="txt">答对</div>
+          </div>
+          <div class="result-stat">
+            <div class="num bad">3</div>
+            <div class="txt">答错</div>
+          </div>
+          <div class="result-stat">
+            <div class="num">20</div>
+            <div class="txt">总题数</div>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <div class="result-btn primary" onclick="startQuiz('retry')">再练一次</div>
+          <div class="result-btn secondary" onclick="showWrongQuestions()">查看错题 (3道)</div>
+          <div class="result-btn secondary" onclick="backToList()">返回列表</div>
+        </div>
+      </div>
+
+      <!-- 错题列表 -->
+      <div id="wrong-questions" style="display:none;margin-top:20px;">
+        <div class="section-title">错题回顾</div>
+        <div class="quiz-card">
+          <span class="quiz-type">单选题</span>
+          <div class="quiz-question">《雀之灵》首演于哪一年？</div>
+          <div class="quiz-options">
+            <div class="quiz-option wrong">A. 1984年</div>
+            <div class="quiz-option correct">B. 1986年 ✓</div>
+            <div class="quiz-option">C. 1988年</div>
+            <div class="quiz-option">D. 1990年</div>
+          </div>
+        </div>
+        <div class="quiz-card">
+          <span class="quiz-type">单选题</span>
+          <div class="quiz-question">傣族孔雀舞的核心特征是？</div>
+          <div class="quiz-options">
+            <div class="quiz-option">A. 旋转</div>
+            <div class="quiz-option correct">B. 三道弯 ✓</div>
+            <div class="quiz-option wrong">C. 跳跃</div>
+            <div class="quiz-option">D. 翻身</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>首页</span></a>
+    <a href="repertoire.html" class="nav-item"><i class="fa-solid fa-film"></i><span>剧目</span></a>
+    <a href="study.html" class="nav-item"><i class="fa-solid fa-graduation-cap"></i><span>学习</span></a>
+    <a href="exam.html" class="nav-item active"><i class="fa-solid fa-pen-to-square"></i><span>练习</span></a>
+    <a href="profile.html" class="nav-item"><i class="fa-regular fa-circle-user"></i><span>我的</span></a>
+  </div>
+</div>
+
+<script>
+let currentQuestion = 3;
+let selectedOption = null;
+
+function startQuiz(type) {
+  document.getElementById('quiz-view').classList.remove('active');
+  document.getElementById('quizdoing-view').classList.add('active');
+  document.getElementById('result-view').classList.remove('active');
+  showToast('开始答题');
+}
+
+function selectOption(el) {
+  document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedOption = el;
+}
+
+function nextQuestion() {
+  currentQuestion++;
+  document.querySelector('.quiz-progress .current').textContent = currentQuestion;
+  document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+  
+  if (currentQuestion >= 10) {
+    showResult();
+  }
+}
+
+function prevQuestion() {
+  if (currentQuestion > 1) {
+    currentQuestion--;
+    document.querySelector('.quiz-progress .current').textContent = currentQuestion;
+    document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz-view').classList.remove('active');
+  document.getElementById('quizdoing-view').classList.remove('active');
+  document.getElementById('result-view').classList.add('active');
+  document.getElementById('wrong-questions').style.display = 'none';
+}
+
+function showWrongQuestions() {
+  document.getElementById('wrong-questions').style.display = 'block';
+}
+
+function backToList() {
+  document.getElementById('quiz-view').classList.add('active');
+  document.getElementById('quizdoing-view').classList.remove('active');
+  document.getElementById('result-view').classList.remove('active');
+  currentQuestion = 3;
+  document.querySelector('.quiz-progress .current').textContent = currentQuestion;
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeIn 0.3s';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 1500);
+}
+</script>
+<style>
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.8); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+</style>
+</body>
+</html>

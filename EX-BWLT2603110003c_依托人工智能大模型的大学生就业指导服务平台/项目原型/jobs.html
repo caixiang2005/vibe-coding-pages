@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>职位 - 依托人工智能大模型的大学生就业指导服务平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans SC', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: #f0f2f5; overscroll-behavior: none; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+        .android-status-bar { height: env(safe-area-inset-top, 0px); min-height: 24px; background: linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0)); }
+        .android-container { width: 100%; max-width: 480px; height: 100vh; max-height: 926px; margin: 0 auto; background: #f0f2f5; position: relative; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .nav-active { color: #1976d2; }
+        .ripple { position: relative; overflow: hidden; }
+        .ripple::after { content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; background-image: radial-gradient(circle, rgba(25, 118, 210, 0.15) 10%, transparent 10%); background-repeat: no-repeat; background-position: 50% 50%; transform: scale(0); opacity: 0; transition: transform 0.4s ease-out, opacity 0.4s ease-out; }
+        .ripple:active::after { transform: scale(2); opacity: 1; transition: 0s; }
+        .card-touch { transition: all 0.15s ease-out; }
+        .card-touch:active { transform: scale(0.98); background-color: #f5f5f5; }
+        .btn-touch { transition: all 0.1s ease-out; }
+        .btn-touch:active { transform: scale(0.95); opacity: 0.9; }
+        .tab-ripple::after { background-image: radial-gradient(circle, rgba(25, 118, 210, 0.2) 10%, transparent 10%); }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0); z-index: 100; pointer-events: none; transition: background 0.2s ease; }
+        .modal-overlay.active { background: rgba(0,0,0,0.5); pointer-events: auto; }
+        .draggable-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 101; cursor: move; touch-action: none; border-radius: 24px 24px 0 0; }
+        @media (min-width: 480px) { .draggable-modal { border-radius: 24px; max-width: 400px; } }
+        .bottom-sheet { border-radius: 24px 24px 0 0; }
+        @media (min-width: 480px) { .bottom-sheet { border-radius: 24px; } }
+        .android-nav-bar { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    </style>
+</head>
+<body>
+    <div class="android-status-bar"></div>
+    <div class="android-container flex flex-col">
+        <div class="flex-shrink-0 px-4 pt-2 pb-3 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 shadow-lg">
+            <h1 class="text-white text-lg font-bold leading-relaxed">为你精选职位</h1>
+            <div class="flex items-center gap-2 mt-3">
+                <div class="flex-1 bg-white/95 shadow-sm rounded-xl px-3 py-2.5 flex items-center space-x-2.5">
+                    <span class="iconify text-gray-400 text-lg" data-icon="material-symbols:search"></span>
+                    <input class="text-[13px] text-gray-700 outline-none w-full bg-transparent" placeholder="搜索岗位 / 公司" type="text" />
+                </div>
+                <button onclick="openFilterModal()" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center btn-touch">
+                    <span class="iconify text-white text-xl" data-icon="material-symbols:tune-rounded"></span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto hide-scrollbar overscroll-contain pb-16">
+            <div class="px-4 pt-4">
+                <div class="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-2">
+                    <button class="filter-tag px-4 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap btn-touch bg-blue-600 text-white" onclick="filterJobs('全部', this)">全部</button>
+                    <button class="filter-tag px-4 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap btn-touch bg-white text-gray-600 border border-gray-200" onclick="filterJobs('技术', this)">技术</button>
+                    <button class="filter-tag px-4 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap btn-touch bg-white text-gray-600 border border-gray-200" onclick="filterJobs('产品', this)">产品</button>
+                    <button class="filter-tag px-4 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap btn-touch bg-white text-gray-600 border border-gray-200" onclick="filterJobs('运营', this)">运营</button>
+                    <button class="filter-tag px-4 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap btn-touch bg-white text-gray-600 border border-gray-200" onclick="filterJobs('设计', this)">设计</button>
+                </div>
+            </div>
+
+            <div class="px-4 mt-3 space-y-3" id="jobsList">
+                <div class="job-item" data-category="技术">
+                    <a href="job-detail.html" class="card-touch block bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img alt="Company Logo" class="w-12 h-12 rounded-xl object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/56e5b1e5fe514a6ba696c9240bb03161.jpg" />
+                                <div>
+                                    <h4 class="text-[14px] font-bold text-gray-800">前端开发工程师</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">字节跳动 · 上海 · 校招</p>
+                                </div>
+                            </div>
+                            <span class="text-orange-500 font-bold text-[14px]">20-35K·15薪</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">Vue</span>
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">React</span>
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[11px]">AI匹配 95%</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="job-item" data-category="技术">
+                    <a href="job-detail.html" class="card-touch block bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img alt="Company Logo" class="w-12 h-12 rounded-xl object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/56e5b1e5fe514a6ba696c9240bb03161.jpg" />
+                                <div>
+                                    <h4 class="text-[14px] font-bold text-gray-800">后端开发工程师 (Go)</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">阿里巴巴 · 杭州 · 校招</p>
+                                </div>
+                            </div>
+                            <span class="text-orange-500 font-bold text-[14px]">22-40K·16薪</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">Go</span>
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">微服务</span>
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[11px]">AI匹配 92%</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="job-item" data-category="产品">
+                    <a href="job-detail.html" class="card-touch block bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img alt="Company Logo" class="w-12 h-12 rounded-xl object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/56e5b1e5fe514a6ba696c9240bb03161.jpg" />
+                                <div>
+                                    <h4 class="text-[14px] font-bold text-gray-800">产品经理</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">腾讯科技 · 深圳 · 校招</p>
+                                </div>
+                            </div>
+                            <span class="text-orange-500 font-bold text-[14px]">18-30K·14薪</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">需求分析</span>
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">项目管理</span>
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[11px]">AI匹配 88%</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="job-item" data-category="设计">
+                    <a href="job-detail.html" class="card-touch block bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img alt="Company Logo" class="w-12 h-12 rounded-xl object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/56e5b1e5fe514a6ba696c9240bb03161.jpg" />
+                                <div>
+                                    <h4 class="text-[14px] font-bold text-gray-800">UI设计师</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">网易 · 杭州 · 校招</p>
+                                </div>
+                            </div>
+                            <span class="text-orange-500 font-bold text-[14px]">15-25K·13薪</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">Figma</span>
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">Sketch</span>
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[11px]">AI匹配 85%</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="job-item" data-category="技术">
+                    <a href="job-detail.html" class="card-touch block bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img alt="Company Logo" class="w-12 h-12 rounded-xl object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/56e5b1e5fe514a6ba696c9240bb03161.jpg" />
+                                <div>
+                                    <h4 class="text-[14px] font-bold text-gray-800">算法工程师 (NLP)</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">百度 · 北京 · 校招</p>
+                                </div>
+                            </div>
+                            <span class="text-orange-500 font-bold text-[14px]">25-45K·15薪</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">Python</span>
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">TensorFlow</span>
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[11px]">AI匹配 97%</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="job-item" data-category="运营">
+                    <a href="job-detail.html" class="card-touch block bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img alt="Company Logo" class="w-12 h-12 rounded-xl object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/56e5b1e5fe514a6ba696c9240bb03161.jpg" />
+                                <div>
+                                    <h4 class="text-[14px] font-bold text-gray-800">用户运营专员</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">美团 · 北京 · 校招</p>
+                                </div>
+                            </div>
+                            <span class="text-orange-500 font-bold text-[14px]">12-20K·14薪</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">用户增长</span>
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">数据分析</span>
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[11px]">AI匹配 82%</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="job-item" data-category="运营">
+                    <a href="job-detail.html" class="card-touch block bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img alt="Company Logo" class="w-12 h-12 rounded-xl object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/56e5b1e5fe514a6ba696c9240bb03161.jpg" />
+                                <div>
+                                    <h4 class="text-[14px] font-bold text-gray-800">内容运营经理</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">小红书 · 上海 · 校招</p>
+                                </div>
+                            </div>
+                            <span class="text-orange-500 font-bold text-[14px]">15-25K·13薪</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">内容策划</span>
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">文案撰写</span>
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[11px]">AI匹配 79%</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="job-item" data-category="产品">
+                    <a href="job-detail.html" class="card-touch block bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img alt="Company Logo" class="w-12 h-12 rounded-xl object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/56e5b1e5fe514a6ba696c9240bb03161.jpg" />
+                                <div>
+                                    <h4 class="text-[14px] font-bold text-gray-800">产品设计师</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">字节跳动 · 深圳 · 校招</p>
+                                </div>
+                            </div>
+                            <span class="text-orange-500 font-bold text-[14px]">20-35K·15薪</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">交互设计</span>
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">用户研究</span>
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[11px]">AI匹配 91%</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="job-item" data-category="设计">
+                    <a href="job-detail.html" class="card-touch block bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img alt="Company Logo" class="w-12 h-12 rounded-xl object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/56e5b1e5fe514a6ba696c9240bb03161.jpg" />
+                                <div>
+                                    <h4 class="text-[14px] font-bold text-gray-800">视觉设计师</h4>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">阿里巴巴 · 杭州 · 校招</p>
+                                </div>
+                            </div>
+                            <span class="text-orange-500 font-bold text-[14px]">18-30K·16薪</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">品牌设计</span>
+                            <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-[11px]">插画</span>
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[11px]">AI匹配 87%</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="filterOverlay" onclick="closeFilterModal()"></div>
+        <div class="draggable-modal bg-white shadow-2xl w-[90%] max-w-sm bottom-sheet" id="filterModal" style="display:none;">
+            <div class="p-4 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-[15px] font-bold text-gray-800">筛选条件</h3>
+                    <button onclick="closeFilterModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center btn-touch">
+                        <span class="iconify text-gray-500" data-icon="material-symbols:close"></span>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 max-h-[50vh] overflow-y-auto">
+                <div class="mb-4">
+                    <p class="text-[13px] font-semibold text-gray-700 mb-2">薪资范围</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="salary-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectSalary(this)">不限</button>
+                        <button class="salary-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectSalary(this)">10K以下</button>
+                        <button class="salary-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectSalary(this)">10-20K</button>
+                        <button class="salary-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectSalary(this)">20-30K</button>
+                        <button class="salary-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectSalary(this)">30K以上</button>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <p class="text-[13px] font-semibold text-gray-700 mb-2">工作地点</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="location-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectLocation(this)">不限</button>
+                        <button class="location-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectLocation(this)">北京</button>
+                        <button class="location-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectLocation(this)">上海</button>
+                        <button class="location-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectLocation(this)">深圳</button>
+                        <button class="location-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectLocation(this)">杭州</button>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-[13px] font-semibold text-gray-700 mb-2">学历要求</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="edu-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectEdu(this)">不限</button>
+                        <button class="edu-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectEdu(this)">本科</button>
+                        <button class="edu-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectEdu(this)">硕士</button>
+                        <button class="edu-btn px-3 py-1.5 rounded-full text-[12px] border border-gray-200 bg-white text-gray-600 btn-touch" onclick="selectEdu(this)">博士</button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-100 flex gap-3">
+                <button onclick="resetFilter()" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-[13px] font-medium btn-touch">重置</button>
+                <button onclick="applyFilter()" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-medium btn-touch">确定</button>
+            </div>
+        </div>
+
+        <div class="android-nav-bar absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200/50 px-2 flex justify-around items-center z-20">
+            <a href="./home.html" class="ripple tab-ripple flex flex-col items-center py-2 px-4 text-gray-400">
+                <span class="iconify text-2xl" data-icon="material-symbols:home-rounded"></span>
+                <span class="text-[10px] mt-0.5 font-medium">首页</span>
+            </a>
+            <a href="./jobs.html" class="ripple tab-ripple flex flex-col items-center py-2 px-4 nav-active">
+                <span class="iconify text-2xl" data-icon="material-symbols:work-outline"></span>
+                <span class="text-[10px] mt-0.5 font-medium">职位</span>
+            </a>
+            <div class="relative -mt-6">
+                <a href="ai-assistant.html" class="w-14 h-14 bg-gradient-to-tr from-blue-500 via-blue-600 to-indigo-600 rounded-2xl shadow-lg flex items-center justify-center btn-touch border-[3px] border-white">
+                    <span class="iconify text-white text-3xl" data-icon="material-symbols:smart-toy"></span>
+                </a>
+            </div>
+            <a href="./messages.html" class="ripple tab-ripple flex flex-col items-center py-2 px-4 text-gray-400 relative">
+                <span class="iconify text-2xl" data-icon="material-symbols:chat-bubble-outline"></span>
+                <span class="text-[10px] mt-0.5 font-medium">消息</span>
+                <span class="absolute top-1 right-3 w-2 h-2 bg-red-500 rounded-full"></span>
+            </a>
+            <a href="./mine.html" class="ripple tab-ripple flex flex-col items-center py-2 px-4 text-gray-400">
+                <span class="iconify text-2xl" data-icon="material-symbols:person-outline"></span>
+                <span class="text-[10px] mt-0.5 font-medium">我的</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        const modal = document.getElementById('filterModal');
+        const overlay = document.getElementById('filterOverlay');
+
+        modal.addEventListener('mousedown', startDrag);
+        modal.addEventListener('touchstart', startDrag, { passive: false });
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag, { passive: false });
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+
+        function startDrag(e) {
+            isDragging = true;
+            const rect = modal.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            dragOffsetX = clientX - rect.left;
+            dragOffsetY = clientY - rect.top;
+            modal.style.transition = 'none';
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            modal.style.left = (clientX - dragOffsetX) + 'px';
+            modal.style.top = (clientY - dragOffsetY) + 'px';
+            modal.style.transform = 'none';
+        }
+
+        function endDrag() {
+            isDragging = false;
+            modal.style.transition = '';
+        }
+
+        function openFilterModal() {
+            overlay.classList.add('active');
+            modal.style.display = 'block';
+            modal.style.left = '50%';
+            modal.style.top = '50%';
+            modal.style.transform = 'translate(-50%, -50%)';
+        }
+
+        function closeFilterModal() {
+            overlay.classList.remove('active');
+            modal.style.display = 'none';
+        }
+
+        function selectSalary(btn) {
+            document.querySelectorAll('.salary-btn').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            });
+            btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+            btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        }
+
+        function selectLocation(btn) {
+            document.querySelectorAll('.location-btn').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            });
+            btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+            btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        }
+
+        function selectEdu(btn) {
+            document.querySelectorAll('.edu-btn').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            });
+            btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+            btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+        }
+
+        function resetFilter() {
+            document.querySelectorAll('.salary-btn, .location-btn, .edu-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            });
+            document.querySelector('.salary-btn').classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+            document.querySelector('.salary-btn').classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+        }
+
+        let currentCategory = '全部';
+
+        function filterJobs(category, btn) {
+            currentCategory = category;
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.classList.remove('bg-blue-600', 'text-white');
+                tag.classList.add('bg-white', 'text-gray-600', 'border', 'border-gray-200');
+            });
+            btn.classList.remove('bg-white', 'text-gray-600', 'border', 'border-gray-200');
+            btn.classList.add('bg-blue-600', 'text-white');
+
+            const jobItems = document.querySelectorAll('.job-item');
+            jobItems.forEach(item => {
+                if (category === '全部' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function applyFilter() {
+            const salaryBtns = document.querySelectorAll('.salary-btn');
+            const locationBtns = document.querySelectorAll('.location-btn');
+            const eduBtns = document.querySelectorAll('.edu-btn');
+
+            let selectedSalary = '不限';
+            let selectedLocation = '不限';
+            let selectedEdu = '不限';
+
+            salaryBtns.forEach(btn => {
+                if (btn.classList.contains('bg-blue-600')) {
+                    selectedSalary = btn.textContent;
+                }
+            });
+
+            locationBtns.forEach(btn => {
+                if (btn.classList.contains('bg-blue-600')) {
+                    selectedLocation = btn.textContent;
+                }
+            });
+
+            eduBtns.forEach(btn => {
+                if (btn.classList.contains('bg-blue-600')) {
+                    selectedEdu = btn.textContent;
+                }
+            });
+
+            closeFilterModal();
+        }
+    </script>
+</body>
+</html>

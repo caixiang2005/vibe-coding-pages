@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>质量统计 - 水利工程质量问题整改督办系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        :root { color-scheme: light; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        .desktop-shell { width: min(1720px, 100vw); height: min(1080px, 100vh); padding: 16px; box-sizing: border-box; }
+        .mac-window { height: 100%; border-radius: 18px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.55); background: rgba(248, 250, 253, 0.78); backdrop-filter: blur(20px) saturate(150%); box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08); }
+        .window-titlebar { height: 44px; border-bottom: 1px solid rgba(15, 23, 42, 0.08); background: linear-gradient(180deg, rgba(249, 251, 255, 0.92) 0%, rgba(240, 245, 252, 0.78) 100%); backdrop-filter: blur(22px); }
+        .sidebar-blur { background: linear-gradient(180deg, rgba(243, 247, 251, 0.88) 0%, rgba(236, 242, 249, 0.78) 100%); backdrop-filter: blur(24px); border-right: 1px solid rgba(148, 163, 184, 0.18); }
+        .glass-card { background: linear-gradient(165deg, rgba(255, 255, 255, 0.78), rgba(251, 253, 255, 0.62)); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.7); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); transition: transform 180ms ease, box-shadow 220ms ease, border-color 180ms ease; }
+        .glass-card:hover { transform: translateY(-2px); border-color: rgba(148, 163, 184, 0.28); box-shadow: 0 16px 30px rgba(15, 23, 42, 0.1); }
+        .toolbar-surface { background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(16px); border: 1px solid rgba(148, 163, 184, 0.12); }
+        .active-nav { background: linear-gradient(135deg, rgba(0, 87, 146, 0.18), rgba(0, 122, 255, 0.14)); color: #0b3d71; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(0, 87, 146, 0.08); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.36); border-radius: 999px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .modal-box { background: white; border-radius: 16px; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25); min-width: 600px; max-width: 800px; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid rgba(148, 163, 184, 0.2); display: flex; justify-content: space-between; align-items: center; cursor: move; }
+        .modal-header-center { padding: 14px 20px; border-bottom: 1px solid rgba(148, 163, 184, 0.2); display: flex; align-items: center; cursor: move; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid rgba(148, 163, 184, 0.2); display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #005792, #0074d9); color: white; padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 150ms ease; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 87, 146, 0.3); }
+        .btn-secondary { background: rgba(148, 163, 184, 0.15); color: #475569; padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(148, 163, 184, 0.3); cursor: pointer; transition: all 150ms ease; }
+        .btn-secondary:hover { background: rgba(148, 163, 184, 0.25); }
+    </style>
+</head>
+<body class="min-h-screen overflow-hidden">
+    <div class="desktop-shell">
+        <div class="mac-window">
+            <header class="window-titlebar px-5 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                    </div>
+                </div>
+            </header>
+            <div class="h-[calc(100%-44px)] flex overflow-hidden">
+                <aside class="w-72 sidebar-blur flex flex-col h-full flex-shrink-0">
+                    <div class="p-6 pb-2">
+                        <div class="flex items-center space-x-3 mb-8">
+                            <div class="w-11 h-11 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                                <img alt="系统Logo" class="w-11 h-11 object-contain" src="./static/logo.png" />
+                            </div>
+                            <div>
+                                <h1 class="text-[13px] font-bold text-slate-800 tracking-tight">水利工程质量问题</h1>
+                                <h1 class="text-[13px] font-bold text-slate-800 tracking-tight">整改督办系统</h1>
+                                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">macOS 客户端</p>
+                            </div>
+                        </div>
+                        <nav class="space-y-1">
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="dashboard.html">
+                                <i class="fa-solid fa-chart-line text-lg"></i>
+                                <span class="text-sm">综合态势</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="task-assignment.html">
+                                <i class="fa-solid fa-list-check text-lg"></i>
+                                <span class="text-sm">任务分派</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="rectification-tracking.html">
+                                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                                <span class="text-sm">整改跟踪</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg active-nav transition-all" href="#">
+                                <i class="fa-solid fa-chart-pie text-lg"></i>
+                                <span class="text-sm">质量统计</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="project-distribution.html">
+                                <i class="fa-solid fa-map-location-dot text-lg"></i>
+                                <span class="text-sm">项目分布</span>
+                            </a>
+                            <a class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition-all" href="system-security.html">
+                                <i class="fa-solid fa-shield-halved text-lg"></i>
+                                <span class="text-sm">系统安全</span>
+                            </a>
+                        </nav>
+                    </div>
+                    <div class="mt-auto p-4 border-t border-slate-200/70 bg-white/40">
+                        <div class="flex items-center space-x-3">
+                            <img alt="User Profile" class="w-9 h-9 rounded-full ring-2 ring-white shadow-sm" src="https://i01piccdn.sogoucdn.com/6de4845d273e3386" />
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold text-slate-800 truncate">文丹</p>
+                                <p class="text-[10px] text-[#005792]">管理员</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+                <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+                    <header class="h-12 border-b border-slate-200/70 flex items-center justify-between px-4 toolbar-surface sticky top-0 z-10">
+                        <div class="flex items-center space-x-3">
+                            <div class="px-3 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-semibold tracking-wide">
+                                质量统计
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-semibold text-slate-700">质量数据分析</h2>
+                                <p class="text-[10px] text-slate-500">多维统计 · 趋势分析 · 报表导出</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input class="pl-9 pr-4 py-1.5 bg-white/72 border border-slate-300 rounded-xl text-xs w-64 transition-all outline-none" placeholder="搜索统计维度..." type="text" />
+                            </div>
+                            <select class="bg-white/72 border border-slate-300 rounded-xl px-3 py-1.5 text-xs outline-none">
+                                <option>近30天</option>
+                                <option>近90天</option>
+                                <option>本季度</option>
+                                <option>本年</option>
+                            </select>
+                            <button onclick="openExportModal()" class="flex items-center space-x-2 px-4 py-1.5 bg-[#005792] text-white rounded-lg text-xs font-semibold hover:bg-[#004a7a] transition-colors">
+                                <i class="fa-solid fa-file-export"></i>
+                                <span>导出报表</span>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="flex-1 overflow-y-hidden p-4 space-y-4 bg-[#f2f5fa]">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="glass-card p-4 rounded-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-clipboard-list text-blue-600"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">+12.5%</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium">累计排查问题项</p>
+                                <h4 class="text-xl font-bold text-slate-800 mt-1">1,284</h4>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-exclamation-triangle text-orange-600"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">高危</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium">重大隐患数量</p>
+                                <h4 class="text-xl font-bold text-slate-800 mt-1">12</h4>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-check-circle text-green-600"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-green-600">稳定</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium">整改闭环率</p>
+                                <h4 class="text-xl font-bold text-slate-800 mt-1">94.2%</h4>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-clock text-purple-600"></i>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-400">正常</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium">平均整改周期</p>
+                                <h4 class="text-xl font-bold text-slate-800 mt-1">12.5天</h4>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div class="glass-card p-4 rounded-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h5 class="text-sm font-bold text-slate-800">月度问题趋势</h5>
+                                    <select class="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none">
+                                        <option>近6个月</option>
+                                        <option>近12个月</option>
+                                    </select>
+                                </div>
+                                <div class="w-full h-52" id="trendChart"></div>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h5 class="text-sm font-bold text-slate-800">问题类型分布</h5>
+                                    <select class="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none">
+                                        <option>全部类型</option>
+                                        <option>基础施工</option>
+                                        <option>配套设施</option>
+                                        <option>堤坝裂缝</option>
+                                    </select>
+                                </div>
+                                <div class="w-full h-52" id="typeChart"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                            <div class="glass-card p-4 rounded-2xl">
+                                <h5 class="text-sm font-bold text-slate-800 mb-3">各市问题数量排名</h5>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="w-5 h-5 rounded bg-[#005792] text-white text-[10px] font-bold flex items-center justify-center">1</span>
+                                            <span class="text-xs text-slate-700">西安市</span>
+                                        </div>
+                                        <span class="text-xs font-bold text-slate-800">286</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                        <div class="bg-[#005792] h-1.5 rounded-full" style="width: 85%"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="w-5 h-5 rounded bg-[#0074d9] text-white text-[10px] font-bold flex items-center justify-center">2</span>
+                                            <span class="text-xs text-slate-700">宝鸡市</span>
+                                        </div>
+                                        <span class="text-xs font-bold text-slate-800">218</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                        <div class="bg-[#0074d9] h-1.5 rounded-full" style="width: 65%"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="w-5 h-5 rounded bg-[#28C840] text-white text-[10px] font-bold flex items-center justify-center">3</span>
+                                            <span class="text-xs text-slate-700">咸阳市</span>
+                                        </div>
+                                        <span class="text-xs font-bold text-slate-800">176</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                        <div class="bg-[#28C840] h-1.5 rounded-full" style="width: 52%"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="w-5 h-5 rounded bg-[#FFBD2E] text-white text-[10px] font-bold flex items-center justify-center">4</span>
+                                            <span class="text-xs text-slate-700">渭南市</span>
+                                        </div>
+                                        <span class="text-xs font-bold text-slate-800">142</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                        <div class="bg-[#FFBD2E] h-1.5 rounded-full" style="width: 42%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl">
+                                <h5 class="text-sm font-bold text-slate-800 mb-3">问题严重程度分布</h5>
+                                <div class="w-full h-44" id="severityChart"></div>
+                                <div class="mt-3 space-y-2">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="flex items-center text-slate-600"><span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span>重大隐患</span>
+                                        <span class="font-bold">12</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="flex items-center text-slate-600"><span class="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>一般问题</span>
+                                        <span class="font-bold">89</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="flex items-center text-slate-600"><span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>轻微缺陷</span>
+                                        <span class="font-bold">183</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl">
+                                <h5 class="text-sm font-bold text-slate-800 mb-3">整改进度分布</h5>
+                                <div class="w-full h-44" id="progressChart"></div>
+                                <div class="mt-3 space-y-2">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="flex items-center text-slate-600"><span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>已完成</span>
+                                        <span class="font-bold">1,210</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="flex items-center text-slate-600"><span class="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>整改中</span>
+                                        <span class="font-bold">156</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="flex items-center text-slate-600"><span class="w-2 h-2 rounded-full bg-slate-400 mr-2"></span>待整改</span>
+                                        <span class="font-bold">74</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="h-8 border-t border-slate-200/70 px-4 flex items-center justify-between bg-white/75 backdrop-blur text-[10px] text-slate-500">
+                        <div class="flex items-center space-x-4">
+                            <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>数据中心连接正常</span>
+                            <span>最后同步: 2026-03-19 14:32:01</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span>版本: V1.0.0</span>
+                        </div>
+                    </footer>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <div id="exportModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header-center" id="exportModalHeader">
+                <div class="flex space-x-2 mr-4">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E] ring-1 ring-black/5"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840] ring-1 ring-black/5"></div>
+                </div>
+                <h3 class="text-sm font-bold text-slate-800 flex-1 text-center pr-8">导出统计报表</h3>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">报表类型</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div id="pdfType" class="p-3 border-2 border-[#005792] bg-blue-50/50 rounded-xl cursor-pointer" onclick="selectExportType('pdf')">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-file-pdf text-red-500"></i>
+                                    <span class="text-sm font-semibold text-slate-700">PDF 格式</span>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1">适合存档和打印</p>
+                            </div>
+                            <div id="excelType" class="p-3 border border-slate-200 rounded-xl cursor-pointer hover:border-[#005792] transition-colors" onclick="selectExportType('excel')">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-file-excel text-green-500"></i>
+                                    <span class="text-sm font-semibold text-slate-700">Excel 格式</span>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1">适合数据处理</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">时间范围</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="date" id="exportStartDate" class="w-full bg-white/72 border border-slate-300 rounded-xl px-3 py-2 text-sm outline-none" value="2026-02-19" />
+                            <input type="date" id="exportEndDate" class="w-full bg-white/72 border border-slate-300 rounded-xl px-3 py-2 text-sm outline-none" value="2026-03-19" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">统计维度</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="dimType" checked class="w-4 h-4 text-[#005792] rounded" />
+                                <span class="text-sm text-slate-600">问题类型分布</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="dimCity" checked class="w-4 h-4 text-[#005792] rounded" />
+                                <span class="text-sm text-slate-600">各市区问题数量</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="dimRate" checked class="w-4 h-4 text-[#005792] rounded" />
+                                <span class="text-sm text-slate-600">整改闭环率统计</span>
+                            </label>
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="dimDetail" class="w-4 h-4 text-[#005792] rounded" />
+                                <span class="text-sm text-slate-600">详细问题清单</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">备注信息</label>
+                        <textarea id="exportNote" class="w-full bg-white/72 border border-slate-300 rounded-xl px-3 py-2 text-sm outline-none resize-none" rows="2" placeholder="可选：添加报表备注..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeExportModal()" class="btn-secondary">取消</button>
+                <button onclick="submitExport()" class="btn-primary"><i class="fa-solid fa-download mr-2"></i>确认导出</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isDraggingExport = false;
+        let exportOffsetX, exportOffsetY;
+        let selectedExportType = 'pdf';
+
+        function openExportModal() {
+            document.getElementById('exportModal').classList.remove('hidden');
+            isDraggingExport = false;
+            selectedExportType = 'pdf';
+            document.getElementById('pdfType').className = 'p-3 border-2 border-[#005792] bg-blue-50/50 rounded-xl cursor-pointer';
+            document.getElementById('excelType').className = 'p-3 border border-slate-200 rounded-xl cursor-pointer hover:border-[#005792] transition-colors';
+            document.getElementById('exportStartDate').value = '2026-02-19';
+            document.getElementById('exportEndDate').value = '2026-03-19';
+            document.getElementById('dimType').checked = true;
+            document.getElementById('dimCity').checked = true;
+            document.getElementById('dimRate').checked = true;
+            document.getElementById('dimDetail').checked = false;
+            document.getElementById('exportNote').value = '';
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+
+        function selectExportType(type) {
+            selectedExportType = type;
+            if (type === 'pdf') {
+                document.getElementById('pdfType').className = 'p-3 border-2 border-[#005792] bg-blue-50/50 rounded-xl cursor-pointer';
+                document.getElementById('excelType').className = 'p-3 border border-slate-200 rounded-xl cursor-pointer hover:border-[#005792] transition-colors';
+            } else {
+                document.getElementById('excelType').className = 'p-3 border-2 border-[#005792] bg-blue-50/50 rounded-xl cursor-pointer';
+                document.getElementById('pdfType').className = 'p-3 border border-slate-200 rounded-xl cursor-pointer hover:border-[#005792] transition-colors';
+            }
+        }
+
+        function submitExport() {
+            const startDate = document.getElementById('exportStartDate').value;
+            const endDate = document.getElementById('exportEndDate').value;
+            const dims = [];
+            if (document.getElementById('dimType').checked) dims.push('问题类型分布');
+            if (document.getElementById('dimCity').checked) dims.push('各市区问题数量');
+            if (document.getElementById('dimRate').checked) dims.push('整改闭环率统计');
+            if (document.getElementById('dimDetail').checked) dims.push('详细问题清单');
+            const note = document.getElementById('exportNote').value;
+
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('开始日期不能晚于结束日期！');
+                return;
+            }
+            if (dims.length === 0) {
+                alert('请至少选择一个统计维度！');
+                return;
+            }
+
+            alert('报表导出成功！\n\n格式：' + (selectedExportType === 'pdf' ? 'PDF' : 'Excel') + '\n时间范围：' + startDate + ' 至 ' + endDate + '\n统计维度：' + dims.join('、') + '\n备注：' + (note || '无'));
+            closeExportModal();
+        }
+
+        document.getElementById('exportModalHeader').addEventListener('mousedown', function(e) {
+            isDraggingExport = true;
+            exportOffsetX = e.clientX - this.parentElement.getBoundingClientRect().left;
+            exportOffsetY = e.clientY - this.parentElement.getBoundingClientRect().top;
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (isDraggingExport) {
+                const modal = document.querySelector('#exportModal .modal-box');
+                modal.style.margin = '0';
+                modal.style.position = 'fixed';
+                modal.style.left = (e.clientX - exportOffsetX) + 'px';
+                modal.style.top = (e.clientY - exportOffsetY) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDraggingExport = false;
+        });
+
+        window.addEventListener('load', function() {
+            const trendDom = document.getElementById('trendChart');
+            const trendChart = echarts.init(trendDom);
+            const trendOption = {
+                tooltip: { trigger: 'axis' },
+                grid: { left: '2%', right: '4%', bottom: '5%', top: '10%', containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['10月', '11月', '12月', '01月', '02月', '03月'],
+                    axisLine: { lineStyle: { color: '#E5E7EB' } },
+                    axisLabel: { color: '#9CA3AF', fontSize: 10 }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitLine: { lineStyle: { type: 'dashed', color: '#F3F4F6' } },
+                    axisLabel: { color: '#9CA3AF', fontSize: 10 }
+                },
+                series: [{
+                    name: '发现问题',
+                    data: [125, 158, 142, 186, 165, 128],
+                    type: 'line',
+                    smooth: true,
+                    symbol: 'circle',
+                    symbolSize: 6,
+                    lineStyle: { width: 3, color: '#005792' },
+                    itemStyle: { color: '#005792' },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(0, 87, 146, 0.2)' },
+                            { offset: 1, color: 'rgba(0, 87, 146, 0)' }
+                        ])
+                    }
+                }, {
+                    name: '完成整改',
+                    data: [118, 145, 158, 172, 155, 128],
+                    type: 'line',
+                    smooth: true,
+                    symbol: 'circle',
+                    symbolSize: 6,
+                    lineStyle: { width: 3, color: '#28C840' },
+                    itemStyle: { color: '#28C840' }
+                }]
+            };
+            trendChart.setOption(trendOption);
+
+            const typeDom = document.getElementById('typeChart');
+            const typeChart = echarts.init(typeDom);
+            const typeOption = {
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['50%', '75%'],
+                    center: ['50%', '50%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: { borderRadius: 6 },
+                    label: { show: false },
+                    data: [
+                        { value: 42, name: '基础施工', itemStyle: { color: '#005792' } },
+                        { value: 28, name: '配套设施', itemStyle: { color: '#28C840' } },
+                        { value: 30, name: '堤坝裂缝', itemStyle: { color: '#FFBD2E' } }
+                    ]
+                }]
+            };
+            typeChart.setOption(typeOption);
+
+            const severityDom = document.getElementById('severityChart');
+            const severityChart = echarts.init(severityDom);
+            const severityOption = {
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['45%', '70%'],
+                    center: ['50%', '50%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: { borderRadius: 4 },
+                    label: { show: false },
+                    data: [
+                        { value: 12, name: '重大', itemStyle: { color: '#ef4444' } },
+                        { value: 89, name: '一般', itemStyle: { color: '#f59e0b' } },
+                        { value: 183, name: '轻微', itemStyle: { color: '#22c55e' } }
+                    ]
+                }]
+            };
+            severityChart.setOption(severityOption);
+
+            const progressDom = document.getElementById('progressChart');
+            const progressChart = echarts.init(progressDom);
+            const progressOption = {
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['45%', '70%'],
+                    center: ['50%', '50%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: { borderRadius: 4 },
+                    label: { show: false },
+                    data: [
+                        { value: 1210, name: '已完成', itemStyle: { color: '#3b82f6' } },
+                        { value: 156, name: '整改中', itemStyle: { color: '#f59e0b' } },
+                        { value: 74, name: '待整改', itemStyle: { color: '#94a3b8' } }
+                    ]
+                }]
+            };
+            progressChart.setOption(progressOption);
+
+            window.addEventListener('resize', function() {
+                trendChart.resize();
+                typeChart.resize();
+                severityChart.resize();
+                progressChart.resize();
+            });
+        });
+    </script>
+</body>
+</html>

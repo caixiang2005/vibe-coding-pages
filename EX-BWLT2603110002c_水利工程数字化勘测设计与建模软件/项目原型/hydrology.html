@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>水文推演 - 水利工程数字化勘测设计与建模软件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --accent: #0a84ff;
+            --surface-0: #12151b;
+            --surface-1: rgba(32, 36, 45, 0.78);
+            --surface-2: rgba(44, 49, 60, 0.72);
+            --surface-3: rgba(22, 26, 34, 0.68);
+            --border-soft: rgba(255, 255, 255, 0.08);
+            --text-main: #e9edf5;
+            --text-subtle: #98a3b8;
+            --shadow-main: 0 20px 40px rgba(0, 0, 0, 0.38);
+            --radius-window: 18px;
+            --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px;
+            letter-spacing: 0.01em;
+            background: url('https://fd.co188.com/group1/M02/8D/B8/rBBhH19EnsmAYlDbAAHfSFltjL4040-1.jpg!610c.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        .window-shell { width: 1680px; height: 100%; margin: 0 auto; border-radius: var(--radius-window); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 40px 80px rgba(3, 6, 13, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12); background: rgba(12, 15, 21, 0.56); backdrop-filter: blur(6px); }
+        .sidebar { width: 260px; background: var(--surface-1); backdrop-filter: blur(26px) saturate(1.2); border-right: 1px solid var(--border-soft); }
+        .toolbar { height: 56px; background: var(--surface-2); backdrop-filter: blur(30px) saturate(1.1); border-bottom: 1px solid var(--border-soft); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35); }
+        .control-dot { width: 12px; height: 12px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, 0.25); transition: transform 0.2s ease; }
+        .window-controls { gap: 8px; }
+        .mac-content { background: radial-gradient(circle at 10% 10%, #30374a 0%, transparent 40%), radial-gradient(circle at 90% 0%, #263753 0%, transparent 32%), linear-gradient(155deg, #0f1117, #161a22 45%, #10141b); }
+        .glass-chip { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-soft); border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+        .segmented-control { background: rgba(9, 12, 17, 0.45); border: 1px solid var(--border-soft); border-radius: 10px; padding: 3px; }
+        .segmented-item { color: var(--text-subtle); transition: all 0.2s var(--ease-out-quint); border-radius: 7px; text-decoration: none; display: inline-block; }
+        .segmented-item.active { background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08)); color: var(--text-main); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 14px rgba(0, 0, 0, 0.32); }
+        .segmented-item:hover { color: #cdd6e8; background: rgba(255, 255, 255, 0.06); }
+        .floating-card { background: var(--surface-3); border: 1px solid var(--border-soft); backdrop-filter: blur(18px) saturate(1.15); box-shadow: var(--shadow-main); }
+        .primary-action { background: linear-gradient(150deg, #3da0ff, #0a84ff 55%, #0a74df); border: 1px solid rgba(126, 193, 255, 0.5); box-shadow: 0 10px 20px rgba(10, 132, 255, 0.38); cursor: pointer; transition: all 0.22s var(--ease-out-quint); }
+        .primary-action:hover { transform: translateY(-1px); filter: brightness(1.06); }
+        .mac-button { transition: all 0.22s var(--ease-out-quint); border: 1px solid transparent; border-radius: 10px; text-decoration: none; display: block; }
+        .mac-button:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--border-soft); transform: translateY(-1px); }
+        .active-tab { background: linear-gradient(145deg, rgba(10, 132, 255, 0.28), rgba(10, 132, 255, 0.12)); color: #9eccff; border: 1px solid rgba(10, 132, 255, 0.32); }
+        input, select, textarea { background: rgba(16, 19, 26, 0.84) !important; border: 1px solid var(--border-soft) !important; color: var(--text-main) !important; border-radius: 8px; transition: all 0.2s ease; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(10, 132, 255, 0.7) !important; box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.18); }
+        footer { background: rgba(25, 29, 36, 0.74) !important; border-top: 1px solid var(--border-soft) !important; backdrop-filter: blur(20px); color: #a6b0c3 !important; }
+        .status-pill { background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-soft); border-radius: 999px; padding: 2px 8px; }
+        .compliance-pill { background: rgba(24, 199, 126, 0.12); border: 1px solid rgba(24, 199, 126, 0.35); color: #8de7be; border-radius: 999px; padding: 2px 8px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: rgba(182, 198, 226, 0.2); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 16px; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5); min-width: 520px; max-width: 90%; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border-soft); cursor: move; display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.2); }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border-soft); display: flex; justify-content: flex-end; gap: 12px; background: rgba(0, 0, 0, 0.1); }
+
+        .simulation-card { transition: all 0.22s var(--ease-out-quint); border: 1px solid var(--border-soft); }
+        .simulation-card:hover { transform: translateY(-2px); border-color: rgba(10, 132, 255, 0.4); box-shadow: 0 12px 32px rgba(10, 132, 255, 0.2); }
+        
+        .tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 500; }
+        .tag-green { background: rgba(24, 199, 126, 0.2); color: #8de7be; }
+        .tag-yellow { background: rgba(254, 188, 46, 0.2); color: #fedc6a; }
+        .tag-red { background: rgba(255, 82, 82, 0.2); color: #ff8585; }
+        .tag-blue { background: rgba(10, 132, 255, 0.2); color: #5eb3ff; }
+        .tag-purple { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+
+        .action-btn { padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        .action-btn-primary { background: linear-gradient(150deg, #3da0ff, #0a84ff 55%, #0a74df); color: white; border-color: rgba(126, 193, 255, 0.5); }
+        .action-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .action-btn-secondary { background: rgba(255, 255, 255, 0.08); color: var(--text-main); border-color: var(--border-soft); }
+        .action-btn-secondary:hover { background: rgba(255, 255, 255, 0.12); }
+
+        .progress-bar { height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #0a84ff, #3da0ff); border-radius: 3px; transition: width 0.3s ease; }
+    </style>
+</head>
+
+<body class="h-screen overflow-hidden">
+    <div class="window-shell h-full flex flex-col">
+        <header class="toolbar flex items-center justify-between px-5 z-50">
+            <div class="flex items-center space-x-3">
+                <div class="window-controls flex pr-4">
+                    <div class="control-dot bg-[#ff5f57]"></div>
+                    <div class="control-dot bg-[#febc2e]"></div>
+                    <div class="control-dot bg-[#28c840]"></div>
+                </div>
+                <div class="glass-chip flex items-center space-x-1 px-3 py-1">
+                    <i class="fas fa-folder text-blue-400"></i>
+                    <span class="text-xs font-medium tracking-wide whitespace-nowrap">水利工程数字化勘测设计与建模软件</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-5">
+                <div class="segmented-control flex">
+                    <a href="scheme.html" class="segmented-item px-3.5 py-1 text-xs">设计</a>
+                    <a href="hydrology.html" class="segmented-item px-3.5 py-1 text-xs active">推演</a>
+                    <a href="archive.html" class="segmented-item px-3.5 py-1 text-xs">报表</a>
+                </div>
+                <div class="h-6 w-[1px] bg-white/10"></div>
+                <button onclick="openModal('runSimModal')" class="primary-action px-4 py-1.5 rounded-lg text-xs font-medium text-white flex items-center space-x-2">
+                    <i class="fas fa-play"></i>
+                    <span>运行水力模拟</span>
+                </button>
+                <div class="flex items-center -space-x-2">
+                    <img alt="User" class="w-7 h-7 rounded-full border border-gray-800" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/88a6f9a501ac49469ebc7601944e76a8.jpg" />
+                    <div class="w-7 h-7 rounded-full bg-gray-700 border border-gray-800 flex items-center justify-center text-[10px] text-white">+3</div>
+                </div>
+            </div>
+        </header>
+        <div class="mac-content flex-1 flex overflow-hidden">
+            <aside class="sidebar flex flex-col border-right border-black/40">
+                <div class="p-4">
+                    <div class="relative mb-5">
+                        <i class="fas fa-search absolute left-3 top-2.5 text-gray-500"></i>
+                        <input class="w-full bg-black/20 border border-white/5 rounded-lg py-2 pl-9 pr-3 text-xs focus:outline-none focus:border-blue-500/50" placeholder="搜索推演任务..." type="text" />
+                    </div>
+                    <nav class="space-y-1">
+                        <a href="scheme.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button">
+                            <i class="fas fa-lightbulb text-cyan-300"></i>
+                            <span>方案设计</span>
+                        </a>
+                        <a href="point-cloud.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button">
+                            <i class="fas fa-cloud text-blue-300"></i>
+                            <span>点云质检</span>
+                        </a>
+                        <a href="hydrology.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button active-tab">
+                            <i class="fas fa-water text-indigo-300"></i>
+                            <span>水文推演</span>
+                        </a>
+                        <a href="archive.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button">
+                            <i class="fas fa-archive text-violet-300"></i>
+                            <span>成果归档</span>
+                        </a>
+                    </nav>
+                </div>
+                <div class="mt-auto p-4 border-t border-black/20 bg-black/10">
+                    <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2">
+                        <span>协同与版本状态</span>
+                        <span class="text-blue-400">3 人在线 · 自动保存</span>
+                    </div>
+                    <div class="glass-chip w-full h-1 rounded-full overflow-hidden">
+                        <div class="bg-blue-500 h-full w-[86%] shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
+                    </div>
+                </div>
+            </aside>
+            <main class="flex-1 viewport grid-bg flex flex-col p-6 overflow-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 class="text-xl font-semibold text-white mb-1">水文推演</h1>
+                        <p class="text-xs text-gray-500">基于HEC-RAS引擎进行水流模拟与洪水演进分析</p>
+                    </div>
+                    <button onclick="openModal('newTaskModal')" class="action-btn action-btn-primary flex items-center space-x-2">
+                        <i class="fas fa-plus"></i>
+                        <span>新建推演任务</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="floating-card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-[10px] text-gray-500 uppercase">运行中任务</div>
+                            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                        </div>
+                        <div class="text-2xl font-semibold text-white">3</div>
+                        <div class="text-[10px] text-gray-500 mt-1">HEC-RAS 计算中</div>
+                    </div>
+                    <div class="floating-card rounded-xl p-4">
+                        <div class="text-[10px] text-gray-500 uppercase mb-2">本月累计计算</div>
+                        <div class="text-2xl font-semibold text-white">156</div>
+                        <div class="text-[10px] text-green-400 mt-1"><i class="fas fa-arrow-up"></i> 较上月 +24%</div>
+                    </div>
+                    <div class="floating-card rounded-xl p-4">
+                        <div class="text-[10px] text-gray-500 uppercase mb-2">平均计算耗时</div>
+                        <div class="text-2xl font-semibold text-white">4.2h</div>
+                        <div class="text-[10px] text-blue-400 mt-1"><i class="fas fa-bolt"></i> GPU加速</div>
+                    </div>
+                    <div class="floating-card rounded-xl p-4">
+                        <div class="text-[10px] text-gray-500 uppercase mb-2">模型精度</div>
+                        <div class="text-2xl font-semibold text-white">95.8%</div>
+                        <div class="text-[10px] text-purple-400 mt-1"><i class="fas fa-check-circle"></i> 校核验证</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="floating-card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm font-semibold text-white">实时流量过程线</span>
+                            <span class="text-[10px] text-gray-500">更新于 14:32:15</span>
+                        </div>
+                        <div class="h-48" id="flowChart"></div>
+                    </div>
+                    <div class="floating-card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm font-semibold text-white">水库水位变化</span>
+                            <span class="text-[10px] text-gray-500">更新于 14:32:15</span>
+                        </div>
+                        <div class="h-48" id="levelChart"></div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 mb-4">
+                    <button class="filter-sim-btn px-3 py-1.5 text-xs rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30" onclick="filterSims('all')">全部任务</button>
+                    <button class="filter-sim-btn px-3 py-1.5 text-xs rounded-lg bg-transparent text-gray-400 border border-transparent hover:border-gray-600" onclick="filterSims('running')">运行中</button>
+                    <button class="filter-sim-btn px-3 py-1.5 text-xs rounded-lg bg-transparent text-gray-400 border border-transparent hover:border-gray-600" onclick="filterSims('completed')">已完成</button>
+                    <button class="filter-sim-btn px-3 py-1.5 text-xs rounded-lg bg-transparent text-gray-400 border border-transparent hover:border-gray-600" onclick="filterSims('failed')">已失败</button>
+                </div>
+                <div class="space-y-3">
+                    <div class="simulation-card floating-card rounded-xl p-4 sim-card" data-status="running">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                    <i class="fas fa-wave-square text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-white">2026年洪水演进模拟</div>
+                                    <div class="text-[10px] text-gray-500">创建于 2026-03-19 09:15</div>
+                                </div>
+                            </div>
+                            <span class="tag tag-green">运行中 45%</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="flex justify-between text-[10px] text-gray-500 mb-1">
+                                <span>计算进度</span>
+                                <span>1,240 / 2,756 迭代</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4 text-[10px] text-gray-500">
+                                <span><i class="fas fa-clock mr-1"></i> 预计剩余 2h 15m</span>
+                                <span><i class="fas fa-microchip mr-1"></i> GPU: 85%</span>
+                                <span><i class="fas fa-user mr-1"></i> 张建国</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 bg-red-500/20 text-red-400 rounded text-xs hover:bg-red-500/30" onclick="openModal('stopSimModal')"><i class="fas fa-stop mr-1"></i> 停止</button>
+                                <button class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded text-xs hover:bg-blue-500/30" onclick="viewSimulation(1)"><i class="fas fa-eye mr-1"></i> 查看</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="simulation-card floating-card rounded-xl p-4 sim-card" data-status="queued">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center">
+                                    <i class="fas fa-water text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-white">水库调洪演算</div>
+                                    <div class="text-[10px] text-gray-500">创建于 2026-03-18 14:30</div>
+                                </div>
+                            </div>
+                            <span class="tag tag-yellow">排队中</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] text-gray-500 mb-3">
+                            <span><i class="fas fa-layer-group mr-1"></i> 5个调度方案</span>
+                            <span><i class="fas fa-clock mr-1"></i> 预计开始 15:30</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4 text-[10px] text-gray-500">
+                                <span><i class="fas fa-database mr-1"></i> 1.2 GB 数据</span>
+                                <span><i class="fas fa-user mr-1"></i> 李明华</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 bg-gray-500/20 text-gray-400 rounded text-xs hover:bg-gray-500/30" onclick="editSimulation(2)"><i class="fas fa-edit mr-1"></i> 编辑</button>
+                                <button class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded text-xs hover:bg-blue-500/30" onclick="viewSimulation(2)"><i class="fas fa-eye mr-1"></i> 查看</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="simulation-card floating-card rounded-xl p-4 sim-card" data-status="completed">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-white">P=0.1% 洪水标准复核</div>
+                                    <div class="text-[10px] text-gray-500">完成于 2026-03-17 18:45</div>
+                                </div>
+                            </div>
+                            <span class="tag tag-green">已完成</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] text-gray-500 mb-3">
+                            <span><i class="fas fa-clock mr-1"></i> 计算耗时 3h 24m</span>
+                            <span><i class="fas fa-database mr-1"></i> 输出 24 个结果文件</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4 text-[10px] text-gray-500">
+                                <span><i class="fas fa-chart-line mr-1"></i> 最高水位 178.5m</span>
+                                <span><i class="fas fa-user mr-1"></i> 王建国</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 bg-purple-500/20 text-purple-400 rounded text-xs hover:bg-purple-500/30" onclick="exportSimulation(3)"><i class="fas fa-download mr-1"></i> 导出</button>
+                                <button class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded text-xs hover:bg-blue-500/30" onclick="viewSimulation(3)"><i class="fas fa-eye mr-1"></i> 查看</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="simulation-card floating-card rounded-xl p-4 sim-card" data-status="completed">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                                    <i class="fas fa-random text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-white">溃坝洪水模拟</div>
+                                    <div class="text-[10px] text-gray-500">创建于 2026-03-16 10:20</div>
+                                </div>
+                            </div>
+                            <span class="tag tag-green">已完成</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] text-gray-500 mb-3">
+                            <span><i class="fas fa-clock mr-1"></i> 计算耗时 5h 12m</span>
+                            <span><i class="fas fa-bell mr-1"></i> 3 处超标准区域</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4 text-[10px] text-gray-500">
+                                <span><i class="fas fa-exclamation-triangle mr-1 text-red-400"></i> 需关注下游</span>
+                                <span><i class="fas fa-user mr-1"></i> 赵晓莉</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 bg-red-500/20 text-red-400 rounded text-xs hover:bg-red-500/30" onclick="showAlert(4)"><i class="fas fa-exclamation-circle mr-1"></i> 警报</button>
+                                <button class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded text-xs hover:bg-blue-500/30" onclick="viewSimulation(4)"><i class="fas fa-eye mr-1"></i> 查看</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <footer class="h-7 bg-[#252525] border-t border-black/40 flex items-center justify-between px-4 text-[10px] text-gray-500">
+            <div class="flex items-center space-x-3">
+                <div class="status-pill flex items-center space-x-1">
+                    <i class="fas fa-wifi"></i>
+                    <span>加密隧道已开启</span>
+                </div>
+                <span class="text-white">GPU:</span>
+                <span class="text-white">Metal 3.2 (M3 Max 128GB)</span>
+                <span class="status-pill">FPS 120.4</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="compliance-pill flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span>SL/T73.1 合规校验: 正常</span>
+                </div>
+                <span class="status-pill font-mono">X: 25.112 Y: 8.490 Z: 204.11</span>
+                <span class="text-gray-500">UTF-8 · MacOS UI Kit 1.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <div class="modal-overlay" id="newTaskModal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalHeader1">
+                <div class="flex items-center space-x-2">
+                    <div class="flex space-x-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-semibold text-white absolute left-1/2 transform -translate-x-1/2">新建推演任务</span>
+                <button onclick="closeModal('newTaskModal')" class="text-gray-400 hover:text-white ml-auto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1.5">任务名称</label>
+                        <input type="text" id="taskName" class="w-full px-3 py-2 text-xs" placeholder="请输入推演任务名称" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1.5">推演类型</label>
+                            <select id="simType" class="w-full px-3 py-2 text-xs">
+                                <option>洪水演进</option>
+                                <option>调洪演算</option>
+                                <option>溃坝模拟</option>
+                                <option>泥沙输移</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1.5">计算引擎</label>
+                            <select id="simEngine" class="w-full px-3 py-2 text-xs">
+                                <option>HEC-RAS 6.0</option>
+                                <option>MIKE 11</option>
+                                <option>SWAT</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1.5">洪水频率 (%)</label>
+                            <select id="floodFreq" class="w-full px-3 py-2 text-xs">
+                                <option>P=0.1% (千年一遇)</option>
+                                <option>P=0.2% (五百年一遇)</option>
+                                <option>P=0.5% (二百年一遇)</option>
+                                <option>P=1% (一百年一遇)</option>
+                                <option>P=2% (五十年一遇)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1.5">入库流量 (m³/s)</label>
+                            <input type="number" id="inflowRate" class="w-full px-3 py-2 text-xs" placeholder="如: 3500" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1.5">起始时间</label>
+                        <input type="datetime-local" id="startTime" class="w-full px-3 py-2 text-xs" />
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1.5">备注说明</label>
+                        <textarea id="taskRemark" class="w-full px-3 py-2 text-xs" rows="2" placeholder="请输入备注信息"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('newTaskModal')" class="action-btn action-btn-secondary">取消</button>
+                <button onclick="createSimulation()" class="action-btn action-btn-primary"><i class="fas fa-rocket mr-1"></i> 启动推演</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="runSimModal">
+        <div class="modal-content" style="min-width: 400px;">
+            <div class="modal-header" id="modalHeader2">
+                <div class="flex items-center space-x-2">
+                    <div class="flex space-x-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-semibold text-white absolute left-1/2 transform -translate-x-1/2"><i class="fas fa-spinner fa-spin mr-2"></i>正在运行水力模拟</span>
+                <button onclick="closeModal('runSimModal')" class="text-gray-400 hover:text-white ml-auto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body text-center py-6">
+                <div class="w-20 h-20 mx-auto mb-4 relative">
+                    <svg class="progress-ring" width="80" height="80">
+                        <circle stroke="rgba(255,255,255,0.1)" stroke-width="6" fill="transparent" r="35" cx="40" cy="40"/>
+                        <circle class="progress-ring-circle" stroke="#0a84ff" stroke-width="6" fill="transparent" r="35" cx="40" cy="40" stroke-dasharray="220" stroke-dashoffset="121"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center text-lg font-semibold text-white">45%</div>
+                </div>
+                <div class="text-sm text-white mb-2">2026年洪水演进模拟</div>
+                <div class="text-xs text-gray-500 mb-4">正在计算第 1,240 / 2,756 迭代</div>
+                <div class="progress-bar mb-2">
+                    <div class="progress-bar-fill" style="width: 45%"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-gray-500">
+                    <span>预计剩余时间: 2h 15m</span>
+                    <span>GPU: 85%</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('runSimModal')" class="action-btn action-btn-secondary"><i class="fas fa-eye mr-1"></i> 查看详情</button>
+                <button onclick="closeModal('runSimModal')" class="action-btn bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"><i class="fas fa-stop mr-1"></i> 停止</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="stopSimModal">
+        <div class="modal-content" style="min-width: 360px;">
+            <div class="modal-header" id="modalHeader3">
+                <div class="flex items-center space-x-2">
+                    <div class="flex space-x-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-semibold text-white absolute left-1/2 transform -translate-x-1/2">确认停止推演</span>
+                <button onclick="closeModal('stopSimModal')" class="text-gray-400 hover:text-white ml-auto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body text-center py-6">
+                <i class="fas fa-exclamation-triangle text-4xl text-yellow-400 mb-3"></i>
+                <div class="text-sm text-white mb-2">确定要停止当前推演任务吗？</div>
+                <div class="text-xs text-gray-500">已完成的计算结果将被保留</div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('stopSimModal')" class="action-btn action-btn-secondary">取消</button>
+                <button onclick="confirmStopSim()" class="action-btn bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"><i class="fas fa-stop mr-1"></i> 确认停止</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="viewSimModal">
+        <div class="modal-content" style="min-width: 600px;">
+            <div class="modal-header" id="modalHeader4">
+                <div class="flex items-center space-x-2">
+                    <div class="flex space-x-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-semibold text-white absolute left-1/2 transform -translate-x-1/2">推演详情</span>
+                <button onclick="closeModal('viewSimModal')" class="text-gray-400 hover:text-white ml-auto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="viewSimId" />
+                <div class="flex items-start space-x-4 mb-4">
+                    <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-wave-square text-white text-xl" id="viewSimIcon"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-base font-semibold text-white mb-1" id="viewSimName">推演任务名称</div>
+                        <div class="flex items-center space-x-3 text-xs">
+                            <span id="viewSimStatus" class="tag tag-green">已完成</span>
+                            <span class="text-gray-500" id="viewSimType">洪水演进</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="glass-chip p-3">
+                        <div class="text-[10px] text-gray-500 uppercase mb-2">基本信息</div>
+                        <div class="space-y-2 text-xs" id="viewSimBasic">
+                        </div>
+                    </div>
+                    <div class="glass-chip p-3">
+                        <div class="text-[10px] text-gray-500 uppercase mb-2">计算结果</div>
+                        <div class="space-y-2 text-xs" id="viewSimResult">
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-chip p-3 mb-4">
+                    <div class="text-[10px] text-gray-500 uppercase mb-2">计算参数</div>
+                    <div class="space-y-2 text-xs" id="viewSimParams">
+                    </div>
+                </div>
+                <div class="glass-chip p-3" id="viewSimAlertSection" style="display: none;">
+                    <div class="text-[10px] text-gray-500 uppercase mb-2">警报信息</div>
+                    <div class="text-xs text-red-400" id="viewSimAlert">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('viewSimModal')" class="action-btn action-btn-secondary">关闭</button>
+                <button onclick="exportSimResult()" class="action-btn action-btn-primary"><i class="fas fa-download mr-1"></i> 导出结果</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal-content" style="min-width: 420px;">
+            <div class="modal-header" id="modalHeader5">
+                <div class="flex items-center space-x-2">
+                    <div class="flex space-x-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-semibold text-white absolute left-1/2 transform -translate-x-1/2">导出计算结果</span>
+                <button onclick="closeModal('exportModal')" class="text-gray-400 hover:text-white ml-auto"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <div class="text-xs text-gray-400 mb-1">导出文件</div>
+                    <div class="text-sm text-white" id="exportFileName">-</div>
+                </div>
+                <div class="mb-4">
+                    <label class="text-xs text-gray-400 block mb-1.5">导出格式</label>
+                    <select id="exportFormat" class="w-full px-3 py-2 text-xs">
+                        <option>CSV 表格</option>
+                        <option>Excel (XLSX)</option>
+                        <option>PDF 报告</option>
+                        <option>NetCDF 科学数据</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="text-xs text-gray-400 block mb-1.5">导出内容</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="exportGeometry" class="rounded" checked />
+                            <span class="text-xs text-gray-400">几何数据</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="exportResult" class="rounded" checked />
+                            <span class="text-xs text-gray-400">计算结果</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="exportReport" class="rounded" checked />
+                            <span class="text-xs text-gray-400">分析报告</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('exportModal')" class="action-btn action-btn-secondary">取消</button>
+                <button onclick="doExport()" class="action-btn action-btn-primary"><i class="fas fa-download mr-1"></i> 开始导出</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const simData = {
+            1: { name: '2026年洪水演进模拟', type: '洪水演进', engine: 'HEC-RAS 6.0', status: 'running', statusText: '运行中 45%', creator: '张建国', createDate: '2026-03-19 09:15', progress: 45, iterations: '1,240 / 2,756', remainTime: '2h 15m', gpu: '85%', floodFreq: 'P=0.1%', inflow: '3500 m³/s', maxLevel: '-', resultFiles: '-' },
+            2: { name: '水库调洪演算', type: '调洪演算', engine: 'HEC-RAS 6.0', status: 'queued', statusText: '排队中', creator: '李明华', createDate: '2026-03-18 14:30', progress: 0, iterations: '-', remainTime: '预计15:30', gpu: '-', floodFreq: 'P=0.5%', inflow: '2800 m³/s', schemes: '5个调度方案', resultFiles: '-' },
+            3: { name: 'P=0.1% 洪水标准复核', type: '洪水演进', engine: 'HEC-RAS 6.0', status: 'completed', statusText: '已完成', creator: '王建国', createDate: '2026-03-17 18:45', progress: 100, iterations: '2,756 / 2,756', duration: '3h 24m', maxLevel: '178.5m', floodFreq: 'P=0.1%', inflow: '4200 m³/s', resultFiles: '24个结果文件' },
+            4: { name: '溃坝洪水模拟', type: '溃坝模拟', engine: 'MIKE 11', status: 'completed', statusText: '已完成', creator: '赵晓莉', createDate: '2026-03-16 10:20', progress: 100, iterations: '5,120 / 5,120', duration: '5h 12m', alerts: '3处超标准区域', alertDetail: '桩号K2+350、K5+200、K8+100处洪水位超过堤顶高程，建议加强巡查。', downstream: '需关注下游', resultFiles: '36个结果文件' }
+        };
+
+        function getSimStatusClass(status) {
+            const classes = { 'running': 'tag-green', 'queued': 'tag-yellow', 'completed': 'tag-green', 'failed': 'tag-red' };
+            return classes[status] || 'tag-green';
+        }
+
+        function getSimIcon(type) {
+            const icons = { '洪水演进': 'fa-wave-square', '调洪演算': 'fa-water', '溃坝模拟': 'fa-random', '泥沙输移': 'fa-layer-group' };
+            return icons[type] || 'fa-wave-square';
+        }
+
+        function viewSimulation(id) {
+            const data = simData[id];
+            if (!data) return;
+
+            document.getElementById('viewSimId').value = id;
+            document.getElementById('viewSimName').textContent = data.name;
+            document.getElementById('viewSimIcon').className = 'fas ' + getSimIcon(data.type) + ' text-white text-xl';
+            document.getElementById('viewSimStatus').textContent = data.statusText;
+            document.getElementById('viewSimStatus').className = 'tag ' + getSimStatusClass(data.status);
+            document.getElementById('viewSimType').textContent = data.type;
+
+            let basicHtml = '';
+            basicHtml += `<div class="flex justify-between"><span class="text-gray-400">计算引擎</span><span class="text-white">${data.engine}</span></div>`;
+            basicHtml += `<div class="flex justify-between"><span class="text-gray-400">创建者</span><span class="text-white">${data.creator}</span></div>`;
+            basicHtml += `<div class="flex justify-between"><span class="text-gray-400">创建时间</span><span class="text-white">${data.createDate}</span></div>`;
+            if (data.floodFreq) basicHtml += `<div class="flex justify-between"><span class="text-gray-400">洪水频率</span><span class="text-white">${data.floodFreq}</span></div>`;
+            if (data.inflow) basicHtml += `<div class="flex justify-between"><span class="text-gray-400">入库流量</span><span class="text-white">${data.inflow}</span></div>`;
+            document.getElementById('viewSimBasic').innerHTML = basicHtml;
+
+            let resultHtml = '';
+            if (data.status === 'running') {
+                resultHtml += `<div class="flex justify-between"><span class="text-gray-400">计算进度</span><span class="text-blue-400">${data.progress}%</span></div>`;
+                resultHtml += `<div class="flex justify-between"><span class="text-gray-400">迭代次数</span><span class="text-white">${data.iterations}</span></div>`;
+                resultHtml += `<div class="flex justify-between"><span class="text-gray-400">预计剩余</span><span class="text-white">${data.remainTime}</span></div>`;
+                resultHtml += `<div class="flex justify-between"><span class="text-gray-400">GPU占用</span><span class="text-white">${data.gpu}</span></div>`;
+            } else if (data.status === 'queued') {
+                resultHtml += `<div class="flex justify-between"><span class="text-gray-400">调度方案</span><span class="text-white">${data.schemes}</span></div>`;
+                resultHtml += `<div class="flex justify-between"><span class="text-gray-400">预计开始</span><span class="text-white">${data.remainTime}</span></div>`;
+            } else {
+                resultHtml += `<div class="flex justify-between"><span class="text-gray-400">计算耗时</span><span class="text-white">${data.duration}</span></div>`;
+                resultHtml += `<div class="flex justify-between"><span class="text-gray-400">最高水位</span><span class="text-green-400">${data.maxLevel}</span></div>`;
+                resultHtml += `<div class="flex justify-between"><span class="text-gray-400">结果文件</span><span class="text-white">${data.resultFiles}</span></div>`;
+            }
+            document.getElementById('viewSimResult').innerHTML = resultHtml;
+
+            let paramsHtml = '';
+            paramsHtml += `<div class="flex justify-between"><span class="text-gray-400">洪水频率</span><span class="text-white">${data.floodFreq || '-'}</span></div>`;
+            paramsHtml += `<div class="flex justify-between"><span class="text-gray-400">入库流量</span><span class="text-white">${data.inflow || '-'}</span></div>`;
+            paramsHtml += `<div class="flex justify-between"><span class="text-gray-400">计算引擎</span><span class="text-white">${data.engine}</span></div>`;
+            document.getElementById('viewSimParams').innerHTML = paramsHtml;
+
+            if (data.alerts) {
+                document.getElementById('viewSimAlertSection').style.display = '';
+                document.getElementById('viewSimAlert').textContent = data.alerts + '：' + data.alertDetail;
+            } else {
+                document.getElementById('viewSimAlertSection').style.display = 'none';
+            }
+
+            openModal('viewSimModal');
+        }
+
+        function exportSimulation(id) {
+            const data = simData[id];
+            if (!data) return;
+            document.getElementById('exportFileName').textContent = data.name;
+            document.getElementById('viewSimId').value = id;
+            openModal('exportModal');
+        }
+
+        function doExport() {
+            const format = document.getElementById('exportFormat').value;
+            const name = document.getElementById('exportFileName').textContent;
+            let content = [];
+            if (document.getElementById('exportGeometry').checked) content.push('几何数据');
+            if (document.getElementById('exportResult').checked) content.push('计算结果');
+            if (document.getElementById('exportReport').checked) content.push('分析报告');
+            if (content.length === 0) { alert('请至少选择一项导出内容'); return; }
+            alert(`正在导出 "${name}"\n格式: ${format}\n内容: ${content.join(', ')}\n\n导出功能需要后端支持，当前为演示版本。`);
+            closeModal('exportModal');
+        }
+
+        function exportSimResult() {
+            const id = parseInt(document.getElementById('viewSimId').value);
+            closeModal('viewSimModal');
+            exportSimulation(id);
+        }
+
+        function editSimulation(id) {
+            const data = simData[id];
+            if (!data) return;
+            document.getElementById('taskName').value = data.name;
+            if (data.type === '洪水演进') document.getElementById('simType').selectedIndex = 0;
+            else if (data.type === '调洪演算') document.getElementById('simType').selectedIndex = 1;
+            else if (data.type === '溃坝模拟') document.getElementById('simType').selectedIndex = 2;
+            else document.getElementById('simType').selectedIndex = 3;
+            openModal('newTaskModal');
+        }
+
+        function showAlert(id) {
+            const data = simData[id];
+            if (!data) return;
+            alert(`警报信息：${data.name}\n\n${data.alerts}\n\n${data.alertDetail}\n\n建议：立即组织人员巡查相关区域，做好应急准备。`);
+        }
+
+        function filterSims(filterType) {
+            const buttons = document.querySelectorAll('.filter-sim-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-blue-500/20', 'text-blue-400', 'border-blue-500/30');
+                btn.classList.add('bg-transparent', 'text-gray-400', 'border-transparent');
+            });
+            event.target.classList.remove('bg-transparent', 'text-gray-400', 'border-transparent');
+            event.target.classList.add('bg-blue-500/20', 'text-blue-400', 'border-blue-500/30');
+
+            const cards = document.querySelectorAll('.sim-card');
+            cards.forEach(card => {
+                const status = card.dataset.status;
+                let show = true;
+                if (filterType === 'running' && status !== 'running' && status !== 'queued') show = false;
+                else if (filterType === 'completed' && status !== 'completed') show = false;
+                else if (filterType === 'failed' && status !== 'failed') show = false;
+                card.style.display = show ? '' : 'none';
+            });
+        }
+
+        const flowChart = echarts.init(document.getElementById('flowChart'), 'dark');
+        flowChart.setOption({
+            backgroundColor: 'transparent',
+            grid: { left: 40, right: 20, top: 10, bottom: 25 },
+            xAxis: { type: 'category', data: ['0h', '6h', '12h', '18h', '24h', '30h', '36h', '42h', '48h'], axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8490a8', fontSize: 10 } },
+            yAxis: { type: 'value', axisLine: { show: false }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }, axisLabel: { color: '#8490a8', fontSize: 10 } },
+            series: [{ data: [1200, 1850, 2100, 2400, 2350, 2100, 1800, 1500, 1280], type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#0a84ff', width: 2 }, areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{offset: 0, color: 'rgba(10, 132, 255, 0.4)'}, {offset: 1, color: 'rgba(10, 132, 255, 0)'}])} }]
+        });
+
+        const levelChart = echarts.init(document.getElementById('levelChart'), 'dark');
+        levelChart.setOption({
+            backgroundColor: 'transparent',
+            grid: { left: 40, right: 20, top: 10, bottom: 25 },
+            xAxis: { type: 'category', data: ['0h', '6h', '12h', '18h', '24h', '30h', '36h', '42h', '48h'], axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }, axisLabel: { color: '#8490a8', fontSize: 10 } },
+            yAxis: { type: 'value', min: 165, max: 180, axisLine: { show: false }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } }, axisLabel: { color: '#8490a8', fontSize: 10 } },
+            series: [{ data: [168.5, 172.3, 175.8, 178.2, 178.5, 177.8, 176.2, 174.5, 173.2], type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#8b5cf6', width: 2 }, areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{offset: 0, color: 'rgba(139, 92, 246, 0.4)'}, {offset: 1, color: 'rgba(139, 92, 246, 0)'}])} }]
+        });
+
+        window.addEventListener('resize', function() { flowChart.resize(); levelChart.resize(); });
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.querySelectorAll('.modal-content').forEach(m => m.style.transform = 'translate(0, 0)');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+        });
+
+        function setupDragModal(modalId, headerId) {
+            const modal = document.getElementById(modalId);
+            const header = document.getElementById(headerId);
+            let isDragging = false, currentX = 0, currentY = 0, initialX = 0, initialY = 0, xOffset = 0, yOffset = 0;
+            header.addEventListener('mousedown', function(e) {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                if (e.target === header || header.contains(e.target)) isDragging = true;
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    modal.querySelector('.modal-content').style.transform = `translate(${currentX}px, ${currentY}px)`;
+                }
+            });
+            document.addEventListener('mouseup', function() {
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+            });
+        }
+
+        setupDragModal('newTaskModal', 'modalHeader1');
+        setupDragModal('runSimModal', 'modalHeader2');
+        setupDragModal('stopSimModal', 'modalHeader3');
+        setupDragModal('viewSimModal', 'modalHeader4');
+        setupDragModal('exportModal', 'modalHeader5');
+
+        function createSimulation() {
+            const taskName = document.getElementById('taskName').value;
+            const simType = document.getElementById('simType').value;
+            const simEngine = document.getElementById('simEngine').value;
+            const floodFreq = document.getElementById('floodFreq').value;
+            const inflowRate = document.getElementById('inflowRate').value;
+            const startTime = document.getElementById('startTime').value;
+            const taskRemark = document.getElementById('taskRemark').value;
+            
+            if (!taskName) {
+                alert('请输入任务名称');
+                return;
+            }
+            
+            alert('推演任务创建成功！\n\n任务名称: ' + taskName + '\n推演类型: ' + simType + '\n计算引擎: ' + simEngine + '\n洪水频率: ' + floodFreq + '\n入库流量: ' + (inflowRate || '未填写') + ' m³/s');
+            
+            document.getElementById('taskName').value = '';
+            document.getElementById('inflowRate').value = '';
+            document.getElementById('startTime').value = '';
+            document.getElementById('taskRemark').value = '';
+            
+            closeModal('newTaskModal');
+            openModal('runSimModal');
+        }
+
+        function confirmStopSim() {
+            alert('推演任务已停止');
+            closeModal('stopSimModal');
+            closeModal('runSimModal');
+        }
+    </script>
+</body>
+
+</html>

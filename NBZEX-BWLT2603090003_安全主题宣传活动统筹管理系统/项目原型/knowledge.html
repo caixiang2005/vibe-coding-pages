@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>知识库 - 安全主题宣传活动统筹管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --mac-accent: #0A84FF;
+            --mac-text: #1C1C1E;
+            --mac-text-secondary: rgba(60, 60, 67, 0.78);
+            --mac-separator: rgba(60, 60, 67, 0.18);
+            --mac-window-bg: rgba(255, 255, 255, 0.7);
+            --mac-titlebar-bg: rgba(250, 250, 252, 0.65);
+            --mac-sidebar-bg: rgba(246, 246, 248, 0.7);
+            --mac-content-bg: #F2F2F7;
+            --mac-shadow: 0 28px 80px rgba(0, 0, 0, 0.18);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--mac-text);
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+        .mac-window { background: var(--mac-window-bg); border: 1px solid var(--mac-separator); border-radius: 18px; box-shadow: var(--mac-shadow); }
+        .mac-titlebar { background: var(--mac-titlebar-bg); backdrop-filter: blur(22px) saturate(1.6); -webkit-backdrop-filter: blur(22px) saturate(1.6); border-bottom: 1px solid var(--mac-separator); }
+        .mac-sidebar { background: var(--mac-sidebar-bg); backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5); border-right: 1px solid var(--mac-separator); }
+        .mac-content-toolbar { background: rgba(250, 250, 252, 0.72); backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6); border-bottom: 1px solid var(--mac-separator); box-shadow: 0 10px 22px rgba(0, 0, 0, 0.04); }
+        .traffic-lights { display: flex; gap: 8px; align-items: center; }
+        .traffic-light { width: 12px; height: 12px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14); }
+        .traffic-light-red { background: #FF5F57; }
+        .traffic-light-yellow { background: #FEBC2E; }
+        .traffic-light-green { background: #28C840; }
+        .sidebar-item-active { background: color-mix(in srgb, var(--mac-accent) 14%, transparent); color: var(--mac-accent); font-weight: 600; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #D1D1D6; border-radius: 10px; }
+        .card-shadow { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); }
+        .status-badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .mac-modal { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(30px); border-radius: 16px; box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25); min-width: 400px; max-width: 600px; transform: scale(0.9) translateY(20px); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); overflow: hidden; }
+        .modal-overlay.active .mac-modal { transform: scale(1) translateY(0); }
+        .modal-titlebar { background: rgba(246, 246, 248, 0.8); padding: 14px 16px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--mac-separator); position: relative; }
+        .modal-titlebar .traffic-lights { position: absolute; left: 16px; }
+        .modal-content { padding: 24px; }
+        .btn-primary { background: var(--mac-accent); color: white; padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { background: #0077ED; transform: translateY(-1px); }
+        .btn-secondary { background: rgba(120, 120, 128, 0.12); color: var(--mac-text); padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-secondary:hover { background: rgba(120, 120, 128, 0.2); }
+        .action-btn { padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 6px; }
+        .action-btn-blue { background: rgba(10, 132, 255, 0.1); color: #0A84FF; }
+        .action-btn-blue:hover { background: rgba(10, 132, 255, 0.2); }
+        .form-input { width: 100%; padding: 10px 14px; border: 1px solid var(--mac-separator); border-radius: 8px; font-size: 14px; background: white; transition: all 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--mac-accent); box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1); }
+        .doc-card { background: white; border-radius: 12px; padding: 16px; border: 1px solid #f0f0f0; transition: all 0.2s; cursor: pointer; }
+        .doc-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="h-screen">
+    <div class="h-full w-full flex items-center justify-center p-6">
+        <div class="mac-window w-full max-w-[1400px] h-[900px] flex flex-col overflow-hidden">
+            <header class="mac-titlebar h-14 relative flex items-center justify-center px-4 md:px-6">
+                <div class="traffic-lights absolute left-4 md:left-6">
+                    <div class="traffic-light traffic-light-red" onclick="window.location.href='main.html'"></div>
+                    <div class="traffic-light traffic-light-yellow"></div>
+                    <div class="traffic-light traffic-light-green"></div>
+                </div>
+                <div class="text-[13px] font-semibold tracking-tight text-[color:var(--mac-text)] text-center">
+                    安全主题宣传活动统筹管理系统
+                </div>
+            </header>
+            <div class="flex flex-1 min-h-0">
+                <aside class="mac-sidebar w-56 flex flex-col min-h-0 pt-4">
+                    <div class="px-4 mb-4">
+                        <a href="main.html" class="flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all">
+                            <i class="fas fa-arrow-left mr-3 text-lg"></i>
+                            返回工作台
+                        </a>
+                    </div>
+                    <div class="px-6 mb-4 flex items-center justify-between">
+                        <h1 class="text-sm font-bold tracking-tight leading-tight">功能菜单</h1>
+                    </div>
+                    <nav class="flex-1 px-3 space-y-1">
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="main.html">
+                            <i class="fas fa-th-large mr-3 text-lg"></i>
+                            工作台
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="activities.html">
+                            <i class="fas fa-calendar-alt mr-3 text-lg"></i>
+                            活动中心
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="tasks.html">
+                            <i class="fas fa-tasks mr-3 text-lg"></i>
+                            任务管理
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="resources.html">
+                            <i class="fas fa-folder-open mr-3 text-lg"></i>
+                            资源管理
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="reports.html">
+                            <i class="fas fa-chart-bar mr-3 text-lg"></i>
+                            报表统计
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm rounded-lg transition-all sidebar-item-active" href="knowledge.html">
+                            <i class="fas fa-book-open mr-3 text-lg"></i>
+                            知识库
+                        </a>
+                    </nav>
+                    <div class="p-4 border-t border-[color:var(--mac-separator)]">
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="settings.html">
+                            <i class="fas fa-cog mr-3 text-lg"></i>
+                            系统设置
+                        </a>
+                    </div>
+                </aside>
+                <main class="flex-1 flex flex-col min-h-0 bg-[color:var(--mac-content-bg)] overflow-hidden">
+                    <div class="mac-content-toolbar flex items-center justify-between gap-4 px-6 py-3">
+                        <div class="flex items-center text-[13px] font-semibold text-[color:var(--mac-text)]">
+                            <i class="fas fa-book-open mr-2 text-blue-500"></i>
+                            <span>知识库</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button class="action-btn action-btn-blue" onclick="showAddDocModal()">
+                                <i class="fas fa-plus"></i> 添加文档
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                        <div class="bg-white p-4 rounded-2xl border border-gray-100 card-shadow mb-6">
+                            <div class="flex gap-4">
+                                <div class="flex-1 relative">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    <input type="text" placeholder="搜索文档..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                </div>
+                                <select class="px-4 py-2 border border-gray-200 rounded-lg text-sm">
+                                    <option>全部分类</option>
+                                    <option>安全生产</option>
+                                    <option>消防安全</option>
+                                    <option>网络安全</option>
+                                    <option>职业健康</option>
+                                </select>
+                                <select class="px-4 py-2 border border-gray-200 rounded-lg text-sm">
+                                    <option>全部类型</option>
+                                    <option>制度文档</option>
+                                    <option>操作指南</option>
+                                    <option>培训资料</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="col-span-2 space-y-4">
+                                <div class="doc-card" onclick="showDocDetail('安全生产管理制度')">
+                                    <div class="flex items-start gap-4">
+                                        <div class="p-3 bg-blue-50 rounded-lg">
+                                            <i class="fas fa-bookmark text-blue-600 text-xl"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <h4 class="font-bold text-gray-800">安全生产管理制度</h4>
+                                                <span class="status-badge bg-blue-50 text-blue-600">制度文档</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mb-3 line-clamp-2">包含安全生产责任制、安全操作规程、应急预案等核心管理制度文档。</p>
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-4 text-xs text-gray-400">
+                                                    <span><i class="fas fa-eye mr-1"></i> 1,234</span>
+                                                    <span><i class="fas fa-download mr-1"></i> 567</span>
+                                                    <span><i class="fas fa-clock mr-1"></i> 3月15日</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="doc-card" onclick="showDocDetail('消防设施操作指南')">
+                                    <div class="flex items-start gap-4">
+                                        <div class="p-3 bg-red-50 rounded-lg">
+                                            <i class="fas fa-fire-extinguisher text-red-600 text-xl"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <h4 class="font-bold text-gray-800">消防设施操作指南</h4>
+                                                <span class="status-badge bg-red-50 text-red-600">操作指南</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mb-3 line-clamp-2">各类消防设施的正确使用方法和日常维护注意事项。</p>
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-4 text-xs text-gray-400">
+                                                    <span><i class="fas fa-eye mr-1"></i> 892</span>
+                                                    <span><i class="fas fa-download mr-1"></i> 345</span>
+                                                    <span><i class="fas fa-clock mr-1"></i> 3月10日</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="doc-card" onclick="showDocDetail('网络安全防护手册')">
+                                    <div class="flex items-start gap-4">
+                                        <div class="p-3 bg-green-50 rounded-lg">
+                                            <i class="fas fa-shield-alt text-green-600 text-xl"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <h4 class="font-bold text-gray-800">网络安全防护手册</h4>
+                                                <span class="status-badge bg-green-50 text-green-600">操作指南</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mb-3 line-clamp-2">企业网络安全防护知识、常见威胁及应对措施。</p>
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-4 text-xs text-gray-400">
+                                                    <span><i class="fas fa-eye mr-1"></i> 1,567</span>
+                                                    <span><i class="fas fa-download mr-1"></i> 723</span>
+                                                    <span><i class="fas fa-clock mr-1"></i> 3月8日</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="doc-card" onclick="showDocDetail('应急响应预案')">
+                                    <div class="flex items-start gap-4">
+                                        <div class="p-3 bg-orange-50 rounded-lg">
+                                            <i class="fas fa-exclamation-triangle text-orange-600 text-xl"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <h4 class="font-bold text-gray-800">应急响应预案</h4>
+                                                <span class="status-badge bg-orange-50 text-orange-600">制度文档</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mb-3 line-clamp-2">突发事件应急响应流程、处置措施和责任分工。</p>
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-4 text-xs text-gray-400">
+                                                    <span><i class="fas fa-eye mr-1"></i> 756</span>
+                                                    <span><i class="fas fa-download mr-1"></i> 234</span>
+                                                    <span><i class="fas fa-clock mr-1"></i> 3月5日</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="doc-card" onclick="showDocDetail('职业病防护知识')">
+                                    <div class="flex items-start gap-4">
+                                        <div class="p-3 bg-purple-50 rounded-lg">
+                                            <i class="fas fa-heartbeat text-purple-600 text-xl"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <h4 class="font-bold text-gray-800">职业病防护知识</h4>
+                                                <span class="status-badge bg-purple-50 text-purple-600">培训资料</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mb-3 line-clamp-2">职业病危害因素识别、防护措施和健康监护要求。</p>
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-4 text-xs text-gray-400">
+                                                    <span><i class="fas fa-eye mr-1"></i> 423</span>
+                                                    <span><i class="fas fa-download mr-1"></i> 156</span>
+                                                    <span><i class="fas fa-clock mr-1"></i> 2月28日</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                                    <h3 class="font-bold text-gray-800 mb-4">热门标签</h3>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs cursor-pointer hover:bg-blue-100">安全生产</span>
+                                        <span class="px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs cursor-pointer hover:bg-red-100">消防安全</span>
+                                        <span class="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs cursor-pointer hover:bg-green-100">网络安全</span>
+                                        <span class="px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-xs cursor-pointer hover:bg-purple-100">应急处理</span>
+                                        <span class="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs cursor-pointer hover:bg-orange-100">职业健康</span>
+                                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs cursor-pointer hover:bg-gray-200">操作规程</span>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                                    <h3 class="font-bold text-gray-800 mb-4">最近访问</h3>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center gap-3 text-sm text-gray-600 cursor-pointer hover:text-blue-500" onclick="showDocDetail('安全检查清单')">
+                                            <i class="fas fa-clock text-gray-400"></i>
+                                            <span class="truncate">安全检查清单</span>
+                                        </div>
+                                        <div class="flex items-center gap-3 text-sm text-gray-600 cursor-pointer hover:text-blue-500" onclick="showDocDetail('隐患排查标准')">
+                                            <i class="fas fa-clock text-gray-400"></i>
+                                            <span class="truncate">隐患排查标准</span>
+                                        </div>
+                                        <div class="flex items-center gap-3 text-sm text-gray-600 cursor-pointer hover:text-blue-500" onclick="showDocDetail('安全培训课件')">
+                                            <i class="fas fa-clock text-gray-400"></i>
+                                            <span class="truncate">安全培训课件</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                                    <h3 class="font-bold text-gray-800 mb-4">文档统计</h3>
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-500">总文档数</span>
+                                            <span class="font-semibold">156</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-500">本月新增</span>
+                                            <span class="font-semibold text-green-500">+12</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-500">总下载量</span>
+                                            <span class="font-semibold">8,456</span>
+                                        </div>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-500">总浏览量</span>
+                                            <span class="font-semibold">23,890</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-gray-100 card-shadow">
+                                    <h3 class="font-bold text-gray-800 mb-4">快速入口</h3>
+                                    <div class="space-y-2">
+                                        <button class="w-full py-2 px-3 text-left text-sm text-gray-600 hover:bg-gray-50 rounded-lg" onclick="showAddDocModal()">
+                                            <i class="fas fa-plus-circle mr-2 text-blue-500"></i>新建文档
+                                        </button>
+                                        <button class="w-full py-2 px-3 text-left text-sm text-gray-600 hover:bg-gray-50 rounded-lg" onclick="showUploadModal()">
+                                            <i class="fas fa-upload mr-2 text-green-500"></i>上传文档
+                                        </button>
+                                        <button class="w-full py-2 px-3 text-left text-sm text-gray-600 hover:bg-gray-50 rounded-lg">
+                                            <i class="fas fa-folder mr-2 text-orange-500"></i>我的收藏
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+    <div id="modal-container"></div>
+    <script>
+        function showModal(title, content, buttons = []) {
+            const container = document.getElementById('modal-container');
+            let buttonsHtml = '';
+            buttons.forEach(btn => {
+                buttonsHtml += `<button class="${btn.class || 'btn-secondary'}" onclick="${btn.onclick}">${btn.text}</button>`;
+            });
+            container.innerHTML = `
+                <div class="modal-overlay active" onclick="closeModal(event)">
+                    <div class="mac-modal" onclick="event.stopPropagation()">
+                        <div class="modal-titlebar">
+                            <div class="traffic-lights">
+                                <div class="traffic-light traffic-light-red" onclick="closeModal()"></div>
+                                <div class="traffic-light traffic-light-yellow"></div>
+                                <div class="traffic-light traffic-light-green"></div>
+                            </div>
+                            <div class="text-[13px] font-semibold tracking-tight text-[color:var(--mac-text)] ml-4">${title}</div>
+                        </div>
+                        <div class="modal-content">
+                            ${content}
+                            <div class="flex justify-center gap-3 mt-6">
+                                ${buttonsHtml}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const container = document.getElementById('modal-container');
+            const overlay = container.querySelector('.modal-overlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+                setTimeout(() => container.innerHTML = '', 300);
+            }
+        }
+        function showDocDetail(docName) {
+            showModal('文档详情', `
+                <div class="text-left space-y-4">
+                    <div class="flex items-center gap-4">
+                        <div class="p-4 bg-blue-50 rounded-xl">
+                            <i class="fas fa-bookmark text-2xl text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-xl">${docName}</h3>
+                            <span class="status-badge bg-blue-50 text-blue-600">制度文档</span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">包含安全生产责任制、安全操作规程、应急预案等核心管理制度文档。是企业安全管理的重要参考依据。</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <p class="text-gray-500 text-xs">创建时间</p>
+                            <p class="font-medium">2026-03-15</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <p class="text-gray-500 text-xs">更新时间</p>
+                            <p class="font-medium">2026-03-15</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <p class="text-gray-500 text-xs">浏览次数</p>
+                            <p class="font-medium">1,234 次</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <p class="text-gray-500 text-xs">下载次数</p>
+                            <p class="font-medium">567 次</p>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-xs mb-2">标签</p>
+                        <div class="flex gap-2 flex-wrap">
+                            <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">安全生产</span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">管理制度</span>
+                        </div>
+                    </div>
+                </div>
+            `, [
+                { text: '关闭', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '下载', class: 'btn-primary', onclick: 'closeModal(); showDownloadSuccess()' }
+            ]);
+        }
+        function showAddDocModal() {
+            showModal('新建文档', `
+                <div class="text-left space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">文档标题 <span class="text-red-500">*</span></label>
+                        <input type="text" class="form-input" placeholder="请输入文档标题" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1">文档分类</label>
+                            <select class="form-input">
+                                <option>请选择分类</option>
+                                <option>安全生产</option>
+                                <option>消防安全</option>
+                                <option>网络安全</option>
+                                <option>职业健康</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1">文档类型</label>
+                            <select class="form-input">
+                                <option>请选择类型</option>
+                                <option>制度文档</option>
+                                <option>操作指南</option>
+                                <option>培训资料</option>
+                                <option>表单模板</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">文档描述</label>
+                        <textarea class="form-input" rows="3" placeholder="请输入文档描述"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">标签</label>
+                        <input type="text" class="form-input" placeholder="请输入标签，用逗号分隔" />
+                    </div>
+                </div>
+            `, [
+                { text: '取消', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '创建', class: 'btn-primary', onclick: 'closeModal(); showSuccessModal()' }
+            ]);
+        }
+        function showUploadModal() {
+            showModal('上传文档', `
+                <div class="text-left space-y-4">
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-sm text-gray-500">拖拽文件到此处上传</p>
+                        <p class="text-xs text-gray-400 mt-2">支持 PDF、Word、PPT 等文档格式</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">文档标题</label>
+                        <input type="text" class="form-input" placeholder="请输入文档标题" />
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">标签</label>
+                        <input type="text" class="form-input" placeholder="请输入标签，用逗号分隔" />
+                    </div>
+                </div>
+            `, [
+                { text: '取消', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '上传', class: 'btn-primary', onclick: 'closeModal(); showSuccessModal()' }
+            ]);
+        }
+        function showDownloadSuccess() {
+            showModal('下载提示', `
+                <div class="text-center">
+                    <i class="fas fa-download text-4xl text-blue-500 mb-4"></i>
+                    <p class="text-gray-600">文档已开始下载</p>
+                </div>
+            `, [{ text: '确定', class: 'btn-primary', onclick: 'closeModal()' }]);
+        }
+        function showSuccessModal() {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="modal-overlay active" onclick="closeModal(event)">
+                    <div class="mac-modal" onclick="event.stopPropagation()" style="min-width: 320px;">
+                        <div class="modal-titlebar">
+                            <div class="traffic-lights">
+                                <div class="traffic-light traffic-light-red" onclick="closeModal()"></div>
+                                <div class="traffic-light traffic-light-yellow"></div>
+                                <div class="traffic-light traffic-light-green"></div>
+                            </div>
+                            <div class="text-[13px] font-semibold tracking-tight text-[color:var(--mac-text)] ml-4">操作成功</div>
+                        </div>
+                        <div class="modal-content text-center">
+                            <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+                            <p class="text-gray-600 mb-4">操作已完成</p>
+                            <button class="btn-primary" onclick="closeModal()">确定</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

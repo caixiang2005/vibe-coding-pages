@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佳晔新能源物联网终端管控系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: #0a1628; color: #fff; overflow: hidden; height: 100vh; }
+        .title-bar { height: 32px; background: linear-gradient(180deg, #1a2a4a 0%, #0d1a30 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #1e3a5f; }
+        .title-bar-left { display: flex; align-items: center; gap: 8px; }
+        .title-bar-icon { width: 16px; height: 16px; background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); border-radius: 2px; }
+        .title-bar-text { font-size: 12px; color: #a0c4e8; }
+        .title-bar-controls { display: flex; height: 100%; }
+        .title-bar-btn { width: 46px; height: 100%; border: none; background: transparent; color: #a0c4e8; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .title-bar-btn:hover { background: rgba(255,255,255,0.1); }
+        .title-bar-btn.close:hover { background: #e81123; color: #fff; }
+        .title-bar-btn svg { width: 10px; height: 10px; }
+        .maximize-icon { width: 10px; height: 10px; border: 1px solid #a0c4e8; background: transparent; }
+        .main-container { height: calc(100vh - 32px); display: flex; flex-direction: column; }
+        .nav-bar { height: 50px; background: linear-gradient(180deg, #0d2040 0%, #081830 100%); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #1e4a7a; position: relative; }
+        .nav-tabs { display: flex; gap: 4px; }
+        .nav-tab { padding: 8px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px 4px 0 0; color: #7ab8e0; cursor: pointer; font-size: 14px; transition: all 0.2s; text-decoration: none; }
+        .nav-tab:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); color: #9ad8ff; }
+        .nav-tab.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 15px; }
+        .nav-btn { padding: 6px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .nav-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; color: #9ad8ff; }
+        .content-area { flex: 1; display: flex; overflow: hidden; }
+        .left-panel { width: 200px; padding: 15px 10px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #1e4a7a; }
+        .menu-btn { padding: 12px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .menu-btn i { width: 16px; text-align: center; }
+        .menu-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; }
+        .menu-btn.active { background: linear-gradient(180deg, #006699 0%, #004466 100%); border-color: #00aadd; color: #fff; }
+        .main-content { flex: 1; padding: 15px; overflow: auto; background: linear-gradient(90deg, rgba(0,170,220,0.03) 1px, transparent 1px), linear-gradient(rgba(0,170,220,0.03) 1px, transparent 1px); background-size: 30px 30px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #2a5a8a; border-radius: 8px; width: 650px; max-height: 80vh; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-header { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-bottom: 1px solid #2a5a8a; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 16px; color: #00d4ff; font-weight: bold; text-align: center; flex: 1; }
+        .modal-close { width: 28px; height: 28px; background: transparent; border: 1px solid #3a5a7a; border-radius: 4px; color: #7ab8e0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .modal-close:hover { background: #e81123; border-color: #e81123; color: #fff; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; color: #7ab8e0; margin-bottom: 6px; }
+        .form-label .required { color: #ff4444; }
+        .form-input { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: #00aadd; }
+        .form-select { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; cursor: pointer; }
+        .form-select:focus { outline: none; border-color: #00aadd; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .modal-footer { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-top: 1px solid #2a5a8a; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { padding: 10px 25px; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all 0.2s; border: 1px solid; }
+        .btn-primary { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .btn-primary:hover { background: linear-gradient(180deg, #00b8f6 0%, #0098d6 100%); }
+        .btn-secondary { background: linear-gradient(180deg, #3a5a7a 0%, #2a4a6a 100%); border-color: #4a7a9a; color: #a0c4e8; }
+        .btn-secondary:hover { background: linear-gradient(180deg, #4a6a8a 0%, #3a5a7a 100%); color: #fff; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 15px; }
+        .search-input { flex: 1; max-width: 250px; padding: 8px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; }
+        .search-input:focus { outline: none; border-color: #00aadd; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a1628; }
+        ::-webkit-scrollbar-thumb { background: #2a5a8a; border-radius: 4px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 18px; color: #00d4ff; }
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #1e4a7a; border-radius: 6px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #00d4ff; margin-bottom: 5px; }
+        .stat-label { font-size: 13px; color: #7a9ab8; }
+        .report-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+        .report-card { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #1e4a7a; border-radius: 6px; padding: 15px; cursor: pointer; transition: all 0.2s; }
+        .report-card:hover { border-color: #00aadd; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,170,220,0.2); }
+        .report-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .report-card-icon { font-size: 24px; color: #00d4ff; }
+        .report-card-title { font-size: 15px; color: #fff; font-weight: bold; }
+        .report-card-desc { font-size: 12px; color: #7a9ab8; margin-bottom: 10px; }
+        .report-card-stats { display: flex; justify-content: space-between; }
+        .report-stat { text-align: center; }
+        .report-stat-value { font-size: 18px; font-weight: bold; color: #00ff88; }
+        .report-stat-label { font-size: 11px; color: #5a7a9a; margin-top: 4px; }
+        .chart-placeholder { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #1e4a7a; border-radius: 6px; padding: 15px; height: 280px; margin-bottom: 15px; }
+        .chart-title { font-size: 14px; color: #00d4ff; margin-bottom: 15px; }
+        .chart-area { display: flex; align-items: flex-end; gap: 8px; height: 220px; padding: 10px 0; }
+        .chart-bar { flex: 1; background: linear-gradient(180deg, #00aadd 0%, #006699 100%); border-radius: 3px 3px 0 0; min-height: 20px; position: relative; transition: all 0.2s; }
+        .chart-bar:hover { background: linear-gradient(180deg, #00ccff 0%, #0088bb 100%); }
+        .chart-bar-label { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #7a9ab8; white-space: nowrap; }
+        .chart-bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #00d4ff; }
+        .report-type-tag { display: inline-block; padding: 2px 8px; background: rgba(0,170,220,0.2); border: 1px solid #00aadd; border-radius: 3px; font-size: 11px; color: #00d4ff; margin-left: 8px; }
+        .table-btn { padding: 4px 10px; background: linear-gradient(180deg, #1a4a6a 0%, #0d3555 100%); border: 1px solid #2a6a9a; border-radius: 3px; color: #7ab8e0; cursor: pointer; font-size: 11px; margin-right: 5px; }
+        .table-btn:hover { background: linear-gradient(180deg, #2a5a7a 0%, #1a4565 100%); color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <div class="title-bar-icon"></div>
+            <span class="title-bar-text">佳晔新能源物联网终端管控系统</span>
+        </div>
+        <div class="title-bar-controls">
+            <button class="title-bar-btn minimize" onclick="showMessage('窗口最小化')"><svg viewBox="0 0 10 10" fill="currentColor"><rect x="0" y="4.5" width="10" height="1"/></svg></button>
+            <button class="title-bar-btn maximize" onclick="showMessage('窗口最大化')"><div class="maximize-icon"></div></button>
+            <button class="title-bar-btn close" onclick="showMessage('系统关闭中...')"><svg viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2"><line x1="0" y1="0" x2="10" y2="10"/><line x1="10" y1="0" x2="0" y2="10"/></svg></button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="nav-bar">
+            <div class="nav-tabs">
+                <a href="index.html" class="nav-tab">主界面</a>
+                <a href="device-registry.html" class="nav-tab">设备台账</a>
+                <a href="alarm-center.html" class="nav-tab">告警中心</a>
+                <a href="data-report.html" class="nav-tab active">数据报表</a>
+                <a href="user-management.html" class="nav-tab">用户管理</a>
+                <a href="role-permission.html" class="nav-tab">角色权限</a>
+                <a href="system-log.html" class="nav-tab">系统日志</a>
+                <a href="system-setting.html" class="nav-tab">系统设置</a>
+            </div>
+            <div class="nav-right">
+                <button class="nav-btn" onclick="showMessage('跳转到告警管理')"><i class="fas fa-bell"></i> 告警管理</button>
+                <button class="nav-btn" onclick="showMessage('跳转到数据查询')"><i class="fas fa-search"></i> 数据查询</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="left-panel">
+                <button class="menu-btn active" onclick="switchTab('report-query', this)"><i class="fas fa-chart-bar"></i> 报表查询</button>
+            </div>
+
+            <div class="main-content">
+                <div id="report-query">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-chart-bar"></i> 数据报表中心</h2>
+                        <button class="btn btn-primary" onclick="showExportModal()"><i class="fas fa-download"></i> 导出报表</button>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card"><div class="stat-value">45,678</div><div class="stat-label">总发电量 (kWh)</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#00ff88;">12,345</div><div class="stat-label">今日发电量 (kWh)</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#ffaa00;">89.5%</div><div class="stat-label">设备利用率</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#00d4ff;">98.2%</div><div class="stat-label">数据完整率</div></div>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="搜索报表名称...">
+                        <select class="form-select" style="width:150px;">
+                            <option value="">全部类型</option>
+                            <option value="daily">日报表</option>
+                            <option value="weekly">周报表</option>
+                            <option value="monthly">月报表</option>
+                            <option value="yearly">年报表</option>
+                        </select>
+                        <select class="form-select" style="width:150px;">
+                            <option value="">全部设备</option>
+                            <option value="storage">储能终端</option>
+                            <option value="charging">充电桩</option>
+                            <option value="solar">光伏逆变器</option>
+                            <option value="all">全部设备</option>
+                        </select>
+                        <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                        <button class="nav-btn"><i class="fas fa-redo"></i> 重置</button>
+                    </div>
+
+                    <div class="report-grid">
+                        <div class="report-card" onclick="showReportDetail('发电量统计报表')">
+                            <div class="report-card-header">
+                                <i class="fas fa-solar-panel report-card-icon"></i>
+                                <div>
+                                    <div class="report-card-title">发电量统计报表 <span class="report-type-tag">日报</span></div>
+                                    <div class="report-card-desc">统计各设备每日发电量数据</div>
+                                </div>
+                            </div>
+                            <div class="report-card-stats">
+                                <div class="report-stat"><div class="report-stat-value">45.6M</div><div class="report-stat-label">总发电量</div></div>
+                                <div class="report-stat"><div class="report-stat-value">12.3M</div><div class="report-stat-label">今日发电</div></div>
+                                <div class="report-stat"><div class="report-stat-value">+5.2%</div><div class="report-stat-label">环比增长</div></div>
+                            </div>
+                        </div>
+
+                        <div class="report-card" onclick="showReportDetail('设备运行效率报表')">
+                            <div class="report-card-header">
+                                <i class="fas fa-tachometer-alt report-card-icon"></i>
+                                <div>
+                                    <div class="report-card-title">设备运行效率报表 <span class="report-type-tag">周报</span></div>
+                                    <div class="report-card-desc">分析设备运行效率和利用率</div>
+                                </div>
+                            </div>
+                            <div class="report-card-stats">
+                                <div class="report-stat"><div class="report-stat-value">89.5%</div><div class="report-stat-label">平均效率</div></div>
+                                <div class="report-stat"><div class="report-stat-value">95.2%</div><div class="report-stat-label">最高效率</div></div>
+                                <div class="report-stat"><div class="report-stat-value">48h</div><div class="report-stat-label">运行时长</div></div>
+                            </div>
+                        </div>
+
+                        <div class="report-card" onclick="showReportDetail('能耗分析报表')">
+                            <div class="report-card-header">
+                                <i class="fas fa-bolt report-card-icon"></i>
+                                <div>
+                                    <div class="report-card-title">能耗分析报表 <span class="report-type-tag">月报</span></div>
+                                    <div class="report-card-desc">分析系统能耗和节能效果</div>
+                                </div>
+                            </div>
+                            <div class="report-card-stats">
+                                <div class="report-stat"><div class="report-stat-value">23.4M</div><div class="report-stat-label">总能耗</div></div>
+                                <div class="report-stat"><div class="report-stat-value">15.6M</div><div class="report-stat-label">节能量</div></div>
+                                <div class="report-stat"><div class="report-stat-value">33.2%</div><div class="report-stat-label">节能率</div></div>
+                            </div>
+                        </div>
+
+                        <div class="report-card" onclick="showReportDetail('告警统计报表')">
+                            <div class="report-card-header">
+                                <i class="fas fa-exclamation-triangle report-card-icon"></i>
+                                <div>
+                                    <div class="report-card-title">告警统计报表 <span class="report-type-tag">月报</span></div>
+                                    <div class="report-card-desc">统计告警数量和处理情况</div>
+                                </div>
+                            </div>
+                            <div class="report-card-stats">
+                                <div class="report-stat"><div class="report-stat-value" style="color:#ff4444;">156</div><div class="report-stat-label">告警总数</div></div>
+                                <div class="report-stat"><div class="report-stat-value" style="color:#00ff88;">98.5%</div><div class="report-stat-label">处理率</div></div>
+                                <div class="report-stat"><div class="report-stat-value">2.3h</div><div class="report-stat-label">平均处理</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-placeholder">
+                        <div class="chart-title"><i class="fas fa-chart-area"></i> 近 12 个月发电量趋势 (kWh)</div>
+                        <div class="chart-area">
+                            <div class="chart-bar" style="height:60%;"><span class="chart-bar-value">3200</span><span class="chart-bar-label">1 月</span></div>
+                            <div class="chart-bar" style="height:75%;"><span class="chart-bar-value">4100</span><span class="chart-bar-label">2 月</span></div>
+                            <div class="chart-bar" style="height:55%;"><span class="chart-bar-value">2900</span><span class="chart-bar-label">3 月</span></div>
+                            <div class="chart-bar" style="height:85%;"><span class="chart-bar-value">4650</span><span class="chart-bar-label">4 月</span></div>
+                            <div class="chart-bar" style="height:70%;"><span class="chart-bar-value">3800</span><span class="chart-bar-label">5 月</span></div>
+                            <div class="chart-bar" style="height:90%;"><span class="chart-bar-value">5100</span><span class="chart-bar-label">6 月</span></div>
+                            <div class="chart-bar" style="height:65%;"><span class="chart-bar-value">3500</span><span class="chart-bar-label">7 月</span></div>
+                            <div class="chart-bar" style="height:80%;"><span class="chart-bar-value">4350</span><span class="chart-bar-label">8 月</span></div>
+                            <div class="chart-bar" style="height:72%;"><span class="chart-bar-value">3900</span><span class="chart-bar-label">9 月</span></div>
+                            <div class="chart-bar" style="height:88%;"><span class="chart-bar-value">4800</span><span class="chart-bar-label">10 月</span></div>
+                            <div class="chart-bar" style="height:78%;"><span class="chart-bar-value">4200</span><span class="chart-bar-label">11 月</span></div>
+                            <div class="chart-bar" style="height:45%;"><span class="chart-bar-value">2400</span><span class="chart-bar-label">12 月</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">数据导出</span>
+                <button class="modal-close" onclick="closeModal('exportModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">报表类型 <span class="required">*</span></label>
+                        <select class="form-select"><option value="">请选择报表类型</option><option value="power">发电量统计</option><option value="efficiency">设备效率</option><option value="energy">能耗分析</option><option value="alarm">告警统计</option></select>
+                    </div>
+                    <div class="form-group"><label class="form-label">设备范围 <span class="required">*</span></label>
+                        <select class="form-select"><option value="all">全部设备</option><option value="storage">储能终端</option><option value="charging">充电桩</option><option value="solar">光伏逆变器</option></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">开始时间 <span class="required">*</span></label><input type="date" class="form-input" value="2024-03-01"></div>
+                    <div class="form-group"><label class="form-label">结束时间 <span class="required">*</span></label><input type="date" class="form-input" value="2024-03-31"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">数据粒度</label><select class="form-select"><option value="day">按天</option><option value="week">按周</option><option value="month" selected>按月</option></select></div>
+                    <div class="form-group"><label class="form-label">导出格式 <span class="required">*</span></label>
+                        <select class="form-select"><option value="excel" selected>Excel (.xlsx)</option><option value="csv">CSV (.csv)</option><option value="pdf">PDF 报表</option></select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('exportModal')">取消</button>
+                <button class="btn btn-primary" onclick="executeExport()">导出</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal" style="width:750px;">
+            <div class="modal-header">
+                <span class="modal-title" id="reportDetailTitle">报表详情</span>
+                <button class="modal-close" onclick="closeModal('detailModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">报表名称</label><input type="text" class="form-input" value="发电量统计报表" readonly></div>
+                    <div class="form-group"><label class="form-label">报表类型</label><input type="text" class="form-input" value="日报表" readonly></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">统计周期</label><input type="text" class="form-input" value="2024-03-01 至 2024-03-31" readonly></div>
+                    <div class="form-group"><label class="form-label">设备范围</label><input type="text" class="form-input" value="全部设备" readonly></div>
+                </div>
+                <div class="form-group"><label class="form-label">报表摘要</label><textarea class="form-input" style="min-height:100px;resize:vertical;" readonly>本月总发电量 45,678 kWh，环比增长 5.2%。其中光伏逆变器贡献 28,456 kWh，储能系统贡献 12,345 kWh，充电桩回收能量 4,877 kWh。设备平均运行效率 89.5%，数据完整率 98.2%。</textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('detailModal')">关闭</button>
+                <button class="btn btn-primary" onclick="showMessage('报表已导出')">导出报表</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.main-content > div').forEach(div => { div.style.display = 'none'; });
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function showExportModal() { openModal('exportModal'); }
+        function showReportDetail(title) { document.getElementById('reportDetailTitle').textContent = title + ' - 详情'; openModal('detailModal'); }
+        function executeExport() { showMessage('报表导出成功'); closeModal('exportModal'); }
+        function showMessage(text) { var msg = document.createElement('div'); msg.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#00a8e6 0%,#0088c6 100%);color:#fff;padding:12px 30px;border-radius:4px;z-index:2000;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);'; msg.textContent = text; document.body.appendChild(msg); setTimeout(function() { msg.style.opacity = '0'; msg.style.transition = 'opacity 0.3s'; setTimeout(function() { msg.remove(); }, 300); }, 2000); }
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) { overlay.addEventListener('click', function(e) { if (e.target === this) { this.classList.remove('show'); } }); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.show').forEach(function(modal) { modal.classList.remove('show'); }); } });
+    </script>
+</body>
+</html>

@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播观看 - 智能普法多人联机互动学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#0EA5E9',
+                        accent: '#38BDF8',
+                        dark: '#020617',
+                        surface: '#020617',
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .macos-window {
+            width: 1440px;
+            min-height: 900px;
+            background: #020617;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        }
+        .traffic-lights { width: 12px; height: 12px; border-radius: 50%; }
+        .online-indicator { width: 8px; height: 8px; background: #10B981; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes live-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .live-dot { animation: live-dot 1.5s infinite; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+        @keyframes float-up {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-60px) scale(1.5); }
+        }
+        .float-anim {
+            animation: float-up 1s ease-out forwards;
+            pointer-events: none;
+            position: absolute;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .quality-dropdown {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            margin-bottom: 4px;
+        }
+        .quality-dropdown.show { display: block; }
+        .chat-msg {
+            animation: msg-in 0.3s ease-out;
+        }
+        @keyframes msg-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            animation: toast-in 0.3s ease-out, toast-out 0.3s ease-in 2.7s forwards;
+        }
+        @keyframes toast-in { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes toast-out { from { opacity: 1; } to { opacity: 0; } }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+    <div class="macos-window rounded-xl overflow-hidden">
+        <!-- macOS 标题栏 -->
+        <div class="bg-surface/80 backdrop-blur-xl px-5 py-3 flex items-center border-b border-white/5">
+            <div class="flex gap-2">
+                <div class="traffic-lights bg-red-500"></div>
+                <div class="traffic-lights bg-yellow-500"></div>
+                <div class="traffic-lights bg-green-500"></div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="text-sm font-medium text-white/80">智能普法多人联机互动学习系统</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10">
+                    <div class="online-indicator"></div>
+                    <span class="text-xs text-green-400 font-medium">1,247 人在线</span>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- 次级标题栏：返回 + 直播标题 -->
+        <div class="bg-dark/95 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="live.html" class="flex items-center gap-2 text-white/60 hover:text-white transition text-sm">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span>返回直播大厅</span>
+                </a>
+                <div class="w-px h-5 bg-white/10"></div>
+                <h1 class="text-white font-semibold text-sm truncate max-w-[500px]">《民法典》人格权编：个人信息保护的法律边界</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="px-3 py-1 bg-red-500 text-white text-xs rounded-full font-semibold flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 bg-white rounded-full live-dot"></span>
+                    直播中
+                </span>
+            </div>
+        </div>
+
+        <!-- 主内容区：左视频 + 右聊天 -->
+        <div class="flex" style="height: 812px;">
+            <!-- 左侧：视频 + 互动 -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- 视频区域 -->
+                <div class="relative bg-black" style="aspect-ratio: 16/9; max-height: 440px;">
+                    <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center" style="background-image: url(./static/live_cover.png); background-size: contain; background-repeat: no-repeat; background-position: center;">
+                        <div class="text-center" style="background-color: rgba(0, 0, 0, 0.8);border-radius: 10px; padding: 20px 0;">
+                            <i data-lucide="video" class="w-16 h-16 text-white/20 mx-auto mb-4"></i>
+                            <p class="text-white/60 text-lg font-medium">《民法典》人格权编：个人信息保护的法律边界</p>
+                            <p class="text-white/40 text-sm mt-2">王教授 · 北京大学法学院</p>
+                        </div>
+                    </div>
+                    <!-- 左上：直播标记 -->
+                    <div class="absolute top-4 left-4">
+                        <span class="px-3 py-1.5 bg-red-500/90 backdrop-blur-sm text-white text-xs rounded-full font-semibold flex items-center gap-1.5">
+                            <span class="w-2 h-2 bg-white rounded-full live-dot"></span>
+                            直播中
+                        </span>
+                    </div>
+                    <!-- 右上：观看人数 -->
+                    <div class="absolute top-4 right-4">
+                        <span class="px-3 py-1.5 bg-black/60 backdrop-blur-sm text-white text-xs rounded-full flex items-center gap-1.5">
+                            <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            3,456人正在观看
+                        </span>
+                    </div>
+                    <!-- 底部讲师信息 -->
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                        <div class="flex items-center gap-3">
+                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-10 h-10 rounded-full border-2 border-white/30" alt="王教授">
+                            <div>
+                                <p class="text-white font-semibold text-sm">王教授</p>
+                                <p class="text-white/60 text-xs">北京大学法学院 · 民法学教授</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 互动栏 -->
+                <div class="border-b border-white/5 px-6 py-3 flex items-center justify-between bg-dark/80">
+                    <div class="flex items-center gap-4">
+                        <button id="likeBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-primary/20 transition text-white/70 hover:text-primary text-sm">
+                            <i data-lucide="thumbs-up" class="w-4 h-4"></i>
+                            <span id="likeCount">1.2K</span>
+                        </button>
+                        <button id="favBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-yellow-500/20 transition text-white/70 hover:text-yellow-400 text-sm">
+                            <i data-lucide="star" class="w-4 h-4" id="favIcon"></i>
+                            <span>收藏</span>
+                        </button>
+                        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition text-white/70 hover:text-white text-sm">
+                            <i data-lucide="share-2" class="w-4 h-4"></i>
+                            <span>分享</span>
+                        </button>
+                        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 transition text-white/70 hover:text-red-400 text-sm">
+                            <i data-lucide="flag" class="w-4 h-4"></i>
+                            <span>举报</span>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <button id="qualityBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition text-white/70 text-sm">
+                            <i data-lucide="settings" class="w-4 h-4"></i>
+                            <span id="qualityLabel">高清</span>
+                            <i data-lucide="chevron-up" class="w-3 h-3"></i>
+                        </button>
+                        <div id="qualityDropdown" class="quality-dropdown glass-card rounded-lg py-1 min-w-[100px]">
+                            <div class="quality-option px-4 py-2 text-sm text-white/60 hover:bg-white/10 hover:text-white cursor-pointer transition" data-quality="标清">标清</div>
+                            <div class="quality-option px-4 py-2 text-sm text-white font-medium bg-primary/20 cursor-pointer" data-quality="高清">高清</div>
+                            <div class="quality-option px-4 py-2 text-sm text-white/60 hover:bg-white/10 hover:text-white cursor-pointer transition" data-quality="超清">超清</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 标签页 -->
+                <div class="border-b border-white/5 px-6 flex gap-6 bg-dark/60">
+                    <button class="content-tab active px-1 py-3 text-sm font-semibold text-primary border-b-2 border-primary" data-tab="intro">直播简介</button>
+                    <button class="content-tab px-1 py-3 text-sm font-medium text-white/60 border-b-2 border-transparent hover:text-white/80 transition" data-tab="qa">互动问答</button>
+                    <button class="content-tab px-1 py-3 text-sm font-medium text-white/60 border-b-2 border-transparent hover:text-white/80 transition" data-tab="notes">课程笔记</button>
+                </div>
+
+                <!-- 标签页内容 -->
+                <div class="flex-1 overflow-y-auto scrollbar-thin p-6">
+                    <!-- 直播简介 -->
+                    <div id="tab-intro" class="tab-content active">
+                        <div class="space-y-5">
+                            <div>
+                                <h3 class="text-white font-bold text-base mb-3">课程简介</h3>
+                                <p class="text-white/60 text-sm leading-relaxed">本次直播课程深入解读《中华人民共和国民法典》人格权编中关于个人信息保护的核心条款，结合最新司法实践案例，系统分析个人信息的法律定义、收集与处理规则、知情同意原则以及信息主体的各项权利。帮助学员全面理解个人信息保护的法律边界与实务要点。</p>
+                            </div>
+                            <div class="border-t border-white/5 pt-5">
+                                <h3 class="text-white font-bold text-base mb-3">讲师介绍</h3>
+                                <div class="flex items-start gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-14 h-14 rounded-full border-2 border-primary/50" alt="王教授">
+                                    <div>
+                                        <p class="text-white font-semibold">王教授</p>
+                                        <p class="text-white/50 text-sm mt-1">北京大学法学院教授、博士生导师，中国民法学研究会常务理事。长期从事民法典人格权领域研究，主持多项国家级课题，出版专著《人格权法研究》等。</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border-t border-white/5 pt-5">
+                                <h3 class="text-white font-bold text-base mb-3">涉及法律条文</h3>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/8 transition cursor-pointer">
+                                        <i data-lucide="file-text" class="w-4 h-4 text-primary flex-shrink-0"></i>
+                                        <span class="text-sm text-white/80">《民法典》第一千零三十二条 — 隐私权定义</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/8 transition cursor-pointer">
+                                        <i data-lucide="file-text" class="w-4 h-4 text-primary flex-shrink-0"></i>
+                                        <span class="text-sm text-white/80">《民法典》第一千零三十四条 — 个人信息的定义</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/8 transition cursor-pointer">
+                                        <i data-lucide="file-text" class="w-4 h-4 text-primary flex-shrink-0"></i>
+                                        <span class="text-sm text-white/80">《民法典》第一千零三十五条 — 个人信息处理原则</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/8 transition cursor-pointer">
+                                        <i data-lucide="file-text" class="w-4 h-4 text-primary flex-shrink-0"></i>
+                                        <span class="text-sm text-white/80">《个人信息保护法》第十三条 — 合法性基础</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/8 transition cursor-pointer">
+                                        <i data-lucide="file-text" class="w-4 h-4 text-primary flex-shrink-0"></i>
+                                        <span class="text-sm text-white/80">《个人信息保护法》第十七条 — 告知义务</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 互动问答 -->
+                    <div id="tab-qa" class="tab-content">
+                        <div id="qaList" class="space-y-4 mb-5">
+                            <!-- Q1 已回答 -->
+                            <div class="glass-card rounded-xl p-4">
+                                <div class="flex items-start gap-3">
+                                    <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-8 h-8 rounded-full flex-shrink-0" alt="">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-sm text-white font-medium">张明</span>
+                                            <span class="text-xs text-white/30">15:23</span>
+                                        </div>
+                                        <p class="text-sm text-white/80">个人信息和隐私权的区别是什么？</p>
+                                    </div>
+                                </div>
+                                <div class="mt-3 ml-11 p-3 bg-primary/10 rounded-lg border-l-2 border-primary">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-sm text-primary font-semibold">王教授</span>
+                                        <span class="px-1.5 py-0.5 bg-primary/20 text-primary text-[10px] rounded">讲师</span>
+                                    </div>
+                                    <p class="text-sm text-white/70">隐私权侧重于保护个人的私密空间、私密活动和私密信息不被他人知悉；而个人信息权益的保护范围更广，包含了可识别特定自然人的各种信息。两者存在交叉但不完全重合，私密信息同时受隐私权和个人信息保护规则的双重保护。</p>
+                                </div>
+                            </div>
+                            <!-- Q2 已回答 -->
+                            <div class="glass-card rounded-xl p-4">
+                                <div class="flex items-start gap-3">
+                                    <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-8 h-8 rounded-full flex-shrink-0" alt="">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-sm text-white font-medium">李芳</span>
+                                            <span class="text-xs text-white/30">15:31</span>
+                                        </div>
+                                        <p class="text-sm text-white/80">企业收集用户数据需要满足哪些条件？</p>
+                                    </div>
+                                </div>
+                                <div class="mt-3 ml-11 p-3 bg-primary/10 rounded-lg border-l-2 border-primary">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-sm text-primary font-semibold">王教授</span>
+                                        <span class="px-1.5 py-0.5 bg-primary/20 text-primary text-[10px] rounded">讲师</span>
+                                    </div>
+                                    <p class="text-sm text-white/70">根据民法典和个人信息保护法，企业收集个人信息需遵循合法、正当、必要和诚信原则，须明示处理目的、方式和范围，并取得个人的同意。同时要注意，收集的信息应与处理目的直接相关，采取对个人权益影响最小的方式。</p>
+                                </div>
+                            </div>
+                            <!-- Q3 待回答 -->
+                            <div class="glass-card rounded-xl p-4">
+                                <div class="flex items-start gap-3">
+                                    <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-8 h-8 rounded-full flex-shrink-0" alt="">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-sm text-white font-medium">王磊</span>
+                                            <span class="text-xs text-white/30">15:45</span>
+                                            <span class="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 text-[10px] rounded">待回答</span>
+                                        </div>
+                                        <p class="text-sm text-white/80">如何界定"合理使用"个人信息的范围？</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 提问输入 -->
+                        <div class="flex gap-3">
+                            <input id="qaInput" type="text" placeholder="输入您的问题..." class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-primary/50 transition">
+                            <button id="qaSubmit" class="px-5 py-2.5 bg-primary hover:bg-primary/80 text-white text-sm rounded-lg font-medium transition flex items-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                提问
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 课程笔记 -->
+                    <div id="tab-notes" class="tab-content">
+                        <div class="mb-4">
+                            <h3 class="text-white font-bold text-base mb-3">我的笔记</h3>
+                            <p class="text-white/40 text-sm mb-4">记录课程要点，方便课后复习</p>
+                        </div>
+                        <textarea id="noteArea" class="w-full h-48 bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white placeholder-white/30 resize-none focus:outline-none focus:border-primary/50 transition" placeholder="在此输入课程笔记...&#10;&#10;提示：可以记录重要知识点、法条引用、个人思考等"></textarea>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-xs text-white/30" id="noteCharCount">0 字</span>
+                            <button id="saveNoteBtn" class="px-5 py-2 bg-primary hover:bg-primary/80 text-white text-sm rounded-lg font-medium transition flex items-center gap-2">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                                保存笔记
+                            </button>
+                        </div>
+                        <div id="savedNotes" class="mt-6 space-y-3">
+                            <div class="glass-card rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs text-white/40">15:20 保存</span>
+                                </div>
+                                <p class="text-sm text-white/70">民法典1034条：个人信息是以电子或者其他方式记录的能够单独或者与其他信息结合识别特定自然人的各种信息。注意"可识别性"是核心判断标准。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：实时聊天 -->
+            <div class="w-80 border-l border-white/5 flex flex-col bg-surface/40">
+                <!-- 聊天头部 -->
+                <div class="px-5 py-3 border-b border-white/5 flex items-center justify-between">
+                    <h3 class="text-white font-bold text-sm flex items-center gap-2">
+                        <i data-lucide="message-circle" class="w-4 h-4 text-primary"></i>
+                        实时互动
+                    </h3>
+                    <span class="text-xs text-white/40 flex items-center gap-1">
+                        <i data-lucide="users" class="w-3 h-3"></i>
+                        3,456
+                    </span>
+                </div>
+
+                <!-- 聊天消息列表 -->
+                <div id="chatList" class="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
+                    <div class="chat-msg text-center">
+                        <span class="text-xs text-white/30 bg-white/5 px-3 py-1 rounded-full">欢迎来到直播间</span>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">陈</div>
+                            <div>
+                                <span class="text-xs text-cyan-400 font-medium">陈同学</span>
+                                <p class="text-xs text-white/70 mt-0.5">王教授讲得太好了，终于搞清楚个人信息和隐私的区别了</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg text-center">
+                        <span class="text-xs text-yellow-400/60 bg-yellow-500/10 px-3 py-1 rounded-full">欢迎 刘律师 进入直播间</span>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">林</div>
+                            <div>
+                                <span class="text-xs text-purple-400 font-medium">林小雨</span>
+                                <p class="text-xs text-white/70 mt-0.5">请问老师，手机号算不算个人信息？</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">赵</div>
+                            <div>
+                                <span class="text-xs text-green-400 font-medium">赵法务</span>
+                                <p class="text-xs text-white/70 mt-0.5">手机号当然算，属于可识别个人身份的信息</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-red-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">周</div>
+                            <div>
+                                <span class="text-xs text-orange-400 font-medium">周同学</span>
+                                <p class="text-xs text-white/70 mt-0.5">这个案例分析太经典了，记笔记中</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg text-center">
+                        <span class="text-xs text-yellow-400/60 bg-yellow-500/10 px-3 py-1 rounded-full">欢迎 张明 进入直播间</span>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-blue-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">吴</div>
+                            <div>
+                                <span class="text-xs text-indigo-400 font-medium">吴律师</span>
+                                <p class="text-xs text-white/70 mt-0.5">实务中知情同意的标准确实是个难点，期待老师展开讲</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-pink-500 to-rose-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">孙</div>
+                            <div>
+                                <span class="text-xs text-pink-400 font-medium">孙研究员</span>
+                                <p class="text-xs text-white/70 mt-0.5">GDPR和我国个保法在"合法性基础"上的差异值得关注</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-teal-500 to-cyan-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">黄</div>
+                            <div>
+                                <span class="text-xs text-teal-400 font-medium">黄同学</span>
+                                <p class="text-xs text-white/70 mt-0.5">大数据时代，个人信息保护真的太重要了</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-yellow-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">郑</div>
+                            <div>
+                                <span class="text-xs text-amber-400 font-medium">郑法官</span>
+                                <p class="text-xs text-white/70 mt-0.5">司法实践中对"必要性原则"的认定标准还需进一步统一</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg text-center">
+                        <span class="text-xs text-yellow-400/60 bg-yellow-500/10 px-3 py-1 rounded-full">欢迎 王磊 进入直播间</span>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">马</div>
+                            <div>
+                                <span class="text-xs text-violet-400 font-medium">马实习生</span>
+                                <p class="text-xs text-white/70 mt-0.5">学到了！原来敏感个人信息和一般个人信息的处理规则不一样</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-sky-500 to-blue-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">杨</div>
+                            <div>
+                                <span class="text-xs text-sky-400 font-medium">杨同学</span>
+                                <p class="text-xs text-white/70 mt-0.5">人脸识别信息属于敏感个人信息，商场采集需要单独同意吗？</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">刘</div>
+                            <div>
+                                <span class="text-xs text-emerald-400 font-medium">刘律师</span>
+                                <p class="text-xs text-white/70 mt-0.5">是的，生物识别信息属于敏感信息，必须取得单独同意</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-rose-500 to-pink-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">许</div>
+                            <div>
+                                <span class="text-xs text-rose-400 font-medium">许同学</span>
+                                <p class="text-xs text-white/70 mt-0.5">王教授的课总是干货满满，每次都有收获</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-msg">
+                        <div class="flex items-start gap-2">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-400 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">何</div>
+                            <div>
+                                <span class="text-xs text-blue-400 font-medium">何法务</span>
+                                <p class="text-xs text-white/70 mt-0.5">企业合规部门必须要重视个人信息保护的制度建设</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 聊天输入 -->
+                <div class="p-4 border-t border-white/5">
+                    <div class="flex gap-2">
+                        <input id="chatInput" type="text" placeholder="发送弹幕..." class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/40 focus:outline-none focus:border-primary/50 transition">
+                        <button class="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition text-white/60 hover:text-white">
+                            <i data-lucide="smile" class="w-4 h-4"></i>
+                        </button>
+                        <button id="chatSendBtn" class="px-4 py-2 bg-primary hover:bg-primary/80 text-white text-sm rounded-lg font-medium transition">
+                            发送
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 打赏区域 -->
+                <div class="p-4 border-t border-white/5">
+                    <p class="text-xs text-white/40 mb-3">为讲师打赏</p>
+                    <div class="flex gap-2 relative" id="giftArea">
+                        <button class="gift-btn flex-1 flex flex-col items-center gap-1 py-2.5 rounded-lg bg-white/5 hover:bg-red-500/20 transition cursor-pointer relative" data-gift="点赞">
+                            <span class="text-lg">👍</span>
+                            <span class="text-[10px] text-white/50">点赞</span>
+                            <span class="gift-count text-[10px] text-red-400 font-medium">2.3K</span>
+                        </button>
+                        <button class="gift-btn flex-1 flex flex-col items-center gap-1 py-2.5 rounded-lg bg-white/5 hover:bg-pink-500/20 transition cursor-pointer relative" data-gift="鲜花">
+                            <span class="text-lg">🌸</span>
+                            <span class="text-[10px] text-white/50">鲜花</span>
+                            <span class="gift-count text-[10px] text-pink-400 font-medium">856</span>
+                        </button>
+                        <button class="gift-btn flex-1 flex flex-col items-center gap-1 py-2.5 rounded-lg bg-white/5 hover:bg-yellow-500/20 transition cursor-pointer relative" data-gift="掌声">
+                            <span class="text-lg">👏</span>
+                            <span class="text-[10px] text-white/50">掌声</span>
+                            <span class="gift-count text-[10px] text-yellow-400 font-medium">1.1K</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+
+            // ===== Tab switching =====
+            const tabs = document.querySelectorAll('.content-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => {
+                        t.classList.remove('active', 'text-primary', 'font-semibold', 'border-primary');
+                        t.classList.add('text-white/60', 'font-medium', 'border-transparent');
+                    });
+                    this.classList.add('active', 'text-primary', 'font-semibold', 'border-primary');
+                    this.classList.remove('text-white/60', 'font-medium', 'border-transparent');
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+                });
+            });
+
+            // ===== Like button =====
+            let likeCount = 1200;
+            let liked = false;
+            const likeBtn = document.getElementById('likeBtn');
+            const likeCountEl = document.getElementById('likeCount');
+            likeBtn.addEventListener('click', function() {
+                if (!liked) {
+                    likeCount++;
+                    liked = true;
+                    this.classList.add('bg-primary/20', 'text-primary');
+                    this.classList.remove('bg-white/5', 'text-white/70');
+                } else {
+                    likeCount--;
+                    liked = false;
+                    this.classList.remove('bg-primary/20', 'text-primary');
+                    this.classList.add('bg-white/5', 'text-white/70');
+                }
+                likeCountEl.textContent = likeCount >= 1000 ? (likeCount / 1000).toFixed(1) + 'K' : likeCount;
+            });
+
+            // ===== Favorite button =====
+            let faved = false;
+            const favBtn = document.getElementById('favBtn');
+            favBtn.addEventListener('click', function() {
+                faved = !faved;
+                if (faved) {
+                    this.classList.add('bg-yellow-500/20', 'text-yellow-400');
+                    this.classList.remove('bg-white/5', 'text-white/70');
+                    this.querySelector('span').textContent = '已收藏';
+                } else {
+                    this.classList.remove('bg-yellow-500/20', 'text-yellow-400');
+                    this.classList.add('bg-white/5', 'text-white/70');
+                    this.querySelector('span').textContent = '收藏';
+                }
+            });
+
+            // ===== Quality selector =====
+            const qualityBtn = document.getElementById('qualityBtn');
+            const qualityDropdown = document.getElementById('qualityDropdown');
+            const qualityLabel = document.getElementById('qualityLabel');
+            qualityBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                qualityDropdown.classList.toggle('show');
+            });
+            document.querySelectorAll('.quality-option').forEach(opt => {
+                opt.addEventListener('click', function() {
+                    qualityLabel.textContent = this.dataset.quality;
+                    document.querySelectorAll('.quality-option').forEach(o => {
+                        o.classList.remove('text-white', 'font-medium', 'bg-primary/20');
+                        o.classList.add('text-white/60');
+                    });
+                    this.classList.add('text-white', 'font-medium', 'bg-primary/20');
+                    this.classList.remove('text-white/60');
+                    qualityDropdown.classList.remove('show');
+                });
+            });
+            document.addEventListener('click', function() {
+                qualityDropdown.classList.remove('show');
+            });
+
+            // ===== Chat =====
+            const chatList = document.getElementById('chatList');
+            const chatInput = document.getElementById('chatInput');
+            const chatSendBtn = document.getElementById('chatSendBtn');
+
+            function scrollChatToBottom() {
+                chatList.scrollTop = chatList.scrollHeight;
+            }
+            scrollChatToBottom();
+
+            function addChatMessage(name, text, color) {
+                const initial = name.charAt(0);
+                const div = document.createElement('div');
+                div.className = 'chat-msg';
+                div.innerHTML = '<div class="flex items-start gap-2">' +
+                    '<div class="w-6 h-6 rounded-full bg-gradient-to-br ' + color + ' flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">' + initial + '</div>' +
+                    '<div><span class="text-xs font-medium" style="color: var(--chat-color, #60a5fa)">' + name + '</span>' +
+                    '<p class="text-xs text-white/70 mt-0.5">' + escapeHtml(text) + '</p></div></div>';
+                const nameEl = div.querySelector('span');
+                const colorMap = {
+                    'from-blue-500 to-cyan-400': '#22d3ee',
+                    'from-purple-500 to-pink-400': '#c084fc',
+                    'from-green-500 to-emerald-400': '#34d399',
+                    'from-orange-500 to-red-400': '#fb923c',
+                    'from-indigo-500 to-blue-400': '#818cf8',
+                    'from-pink-500 to-rose-400': '#f472b6',
+                    'from-teal-500 to-cyan-400': '#2dd4bf',
+                    'from-amber-500 to-yellow-400': '#fbbf24',
+                    'from-violet-500 to-purple-400': '#a78bfa',
+                    'from-sky-500 to-blue-400': '#38bdf8',
+                    'from-emerald-500 to-green-400': '#34d399',
+                    'from-rose-500 to-pink-400': '#fb7185',
+                };
+                nameEl.style.color = colorMap[color] || '#60a5fa';
+                chatList.appendChild(div);
+                scrollChatToBottom();
+            }
+
+            function addSystemMessage(text) {
+                const div = document.createElement('div');
+                div.className = 'chat-msg text-center';
+                div.innerHTML = '<span class="text-xs text-yellow-400/60 bg-yellow-500/10 px-3 py-1 rounded-full">' + escapeHtml(text) + '</span>';
+                chatList.appendChild(div);
+                scrollChatToBottom();
+            }
+
+            function escapeHtml(str) {
+                const d = document.createElement('div');
+                d.textContent = str;
+                return d.innerHTML;
+            }
+
+            function sendChat() {
+                const text = chatInput.value.trim();
+                if (!text) return;
+                addChatMessage('我', text, 'from-blue-500 to-cyan-400');
+                chatInput.value = '';
+            }
+            chatSendBtn.addEventListener('click', sendChat);
+            chatInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') sendChat();
+            });
+
+            // Auto chat messages
+            const autoMessages = [
+                { name: '陈同学', text: '这个知情同意的案例太有启发了', color: 'from-blue-500 to-cyan-400' },
+                { name: '赵法务', text: '我们公司正在做隐私合规，这次课太及时了', color: 'from-green-500 to-emerald-400' },
+                { name: '林小雨', text: '请问APP弹窗式的隐私协议是否有效？', color: 'from-purple-500 to-pink-400' },
+                { name: '郑法官', text: '实践中概括同意往往被认定无效', color: 'from-amber-500 to-yellow-400' },
+                { name: '吴律师', text: '建议讲一下跨境数据传输的规定', color: 'from-indigo-500 to-blue-400' },
+                { name: '马实习生', text: '原来cookie也涉及个人信息收集', color: 'from-violet-500 to-purple-400' },
+                { name: '杨同学', text: '数据可携带权在实务中怎么行使？', color: 'from-sky-500 to-blue-400' },
+                { name: '孙研究员', text: '匿名化处理后的信息不再属于个人信息', color: 'from-pink-500 to-rose-400' },
+                { name: '何法务', text: '教授讲的删除权的例外情形很重要', color: 'from-blue-500 to-indigo-400' },
+                { name: '黄同学', text: '这个知识点考试会考吗？', color: 'from-teal-500 to-cyan-400' },
+                { name: '刘律师', text: '数据处理者和数据控制者的区分也需要注意', color: 'from-emerald-500 to-green-400' },
+                { name: '许同学', text: '我有个问题：员工监控是否需要告知？', color: 'from-rose-500 to-pink-400' },
+            ];
+            const welcomeNames = ['李芳', '赵磊', '陈小明', '周律师', '吴助理', '孙法务', '钱同学'];
+            let msgIdx = 0;
+
+            function scheduleNextMessage() {
+                const delay = 5000 + Math.random() * 3000;
+                setTimeout(function() {
+                    if (Math.random() < 0.2 && welcomeNames.length > 0) {
+                        const name = welcomeNames.splice(Math.floor(Math.random() * welcomeNames.length), 1)[0];
+                        addSystemMessage('欢迎 ' + name + ' 进入直播间');
+                    } else {
+                        const msg = autoMessages[msgIdx % autoMessages.length];
+                        addChatMessage(msg.name, msg.text, msg.color);
+                        msgIdx++;
+                    }
+                    scheduleNextMessage();
+                }, delay);
+            }
+            scheduleNextMessage();
+
+            // ===== Q&A Submit =====
+            const qaInput = document.getElementById('qaInput');
+            const qaSubmit = document.getElementById('qaSubmit');
+            const qaList = document.getElementById('qaList');
+
+            function submitQuestion() {
+                const text = qaInput.value.trim();
+                if (!text) return;
+                const now = new Date();
+                const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                const html = '<div class="glass-card rounded-xl p-4">' +
+                    '<div class="flex items-start gap-3">' +
+                    '<img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-8 h-8 rounded-full flex-shrink-0" alt="">' +
+                    '<div class="flex-1">' +
+                    '<div class="flex items-center gap-2 mb-1">' +
+                    '<span class="text-sm text-white font-medium">我</span>' +
+                    '<span class="text-xs text-white/30">' + timeStr + '</span>' +
+                    '<span class="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 text-[10px] rounded">待回答</span>' +
+                    '</div>' +
+                    '<p class="text-sm text-white/80">' + escapeHtml(text) + '</p>' +
+                    '</div></div></div>';
+                qaList.insertAdjacentHTML('beforeend', html);
+                qaInput.value = '';
+            }
+            qaSubmit.addEventListener('click', submitQuestion);
+            qaInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') submitQuestion();
+            });
+
+            // ===== Gift/打赏 buttons =====
+            document.querySelectorAll('.gift-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const countEl = this.querySelector('.gift-count');
+                    let countText = countEl.textContent.trim();
+                    let count;
+                    if (countText.includes('K')) {
+                        count = parseFloat(countText) * 1000;
+                    } else {
+                        count = parseInt(countText);
+                    }
+                    count++;
+                    if (count >= 1000) {
+                        countEl.textContent = (count / 1000).toFixed(1) + 'K';
+                    } else {
+                        countEl.textContent = count;
+                    }
+                    // +1 float animation
+                    const floater = document.createElement('span');
+                    floater.className = 'float-anim text-lg';
+                    floater.textContent = '+1';
+                    floater.style.color = '#f87171';
+                    floater.style.left = (this.offsetLeft + this.offsetWidth / 2 - 10) + 'px';
+                    floater.style.bottom = (this.offsetHeight + 5) + 'px';
+                    this.parentElement.appendChild(floater);
+                    setTimeout(() => floater.remove(), 1000);
+                });
+            });
+
+            // ===== Notes =====
+            const noteArea = document.getElementById('noteArea');
+            const noteCharCount = document.getElementById('noteCharCount');
+            const saveNoteBtn = document.getElementById('saveNoteBtn');
+            const savedNotes = document.getElementById('savedNotes');
+
+            noteArea.addEventListener('input', function() {
+                noteCharCount.textContent = this.value.length + ' 字';
+            });
+
+            saveNoteBtn.addEventListener('click', function() {
+                const text = noteArea.value.trim();
+                if (!text) return;
+                const now = new Date();
+                const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                const noteHtml = '<div class="glass-card rounded-lg p-4">' +
+                    '<div class="flex items-center justify-between mb-2">' +
+                    '<span class="text-xs text-white/40">' + timeStr + ' 保存</span>' +
+                    '</div>' +
+                    '<p class="text-sm text-white/70">' + escapeHtml(text) + '</p></div>';
+                savedNotes.insertAdjacentHTML('afterbegin', noteHtml);
+                noteArea.value = '';
+                noteCharCount.textContent = '0 字';
+                showToast('笔记保存成功');
+            });
+
+            function showToast(msg) {
+                const toast = document.createElement('div');
+                toast.className = 'toast-notification';
+                toast.innerHTML = '<div class="flex items-center gap-2 px-5 py-3 bg-green-500 text-white text-sm rounded-lg shadow-lg shadow-green-500/30">' +
+                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' +
+                    msg + '</div>';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        });
+    </script>
+</body>
+</html>

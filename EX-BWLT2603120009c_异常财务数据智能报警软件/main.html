@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>异常财务数据智能报警系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            min-height: 100vh;
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .main-content { margin-left: 260px; flex: 1; min-height: 100vh; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 2px;
+            color: #4b4b4b;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .nav-item:hover:not(.active) { background: rgba(0, 0, 0, 0.05); }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.12);
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .nav-item.active i { color: #2563eb; }
+
+        .traffic-lights { display: flex; gap: 8px; padding: 12px 16px; }
+
+        .light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: transform 0.1s; }
+        .light:hover { transform: scale(1.1); }
+        .light-red { background: #ff5f57; }
+        .light-yellow { background: #febc2e; }
+        .light-green { background: #28c840; }
+
+        .kpi-card {
+            background: white;
+            border: 0.5px solid rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+        }
+
+        .risk-active { animation: pulse-red 2s infinite; }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .scroll-v::-webkit-scrollbar { width: 6px; }
+        .scroll-v::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
+
+        .header-action { position: relative; }
+
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 360px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.25s ease;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .notification-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notification-header h4 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            padding: 14px 18px;
+            border-bottom: 1px solid #f9fafb;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover { background: #f9fafb; }
+        .notification-item:last-child { border-bottom: none; }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-content { flex: 1; min-width: 0; }
+
+        .notification-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .notification-desc {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 11px;
+            color: #9ca3af;
+            flex-shrink: 0;
+        }
+
+        .notification-footer {
+            padding: 12px 18px;
+            border-top: 1px solid #f0f0f0;
+            text-align: center;
+        }
+
+        .notification-footer a {
+            font-size: 13px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .notification-footer a:hover { text-decoration: underline; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 520px;
+            max-height: 85vh;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-dots {
+            display: flex;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .modal-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .modal-dots span:nth-child(1) { background: #ff5f57; }
+        .modal-dots span:nth-child(2) { background: #febc2e; }
+        .modal-dots span:nth-child(3) { background: #28c840; }
+
+        .modal-dots:hover span {
+            transform: scale(1.1);
+        }
+
+        .modal-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            flex: 1;
+        }
+
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="traffic-lights">
+            <div class="light light-red"></div>
+            <div class="light light-yellow"></div>
+            <div class="light light-green"></div>
+        </div>
+        <div class="px-4 mb-6">
+            <div class="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-black/5">
+                <div class="w-11 h-11 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center">
+                    <img src="static/bg.jpeg" alt="高子豪头像" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <div class="text-[11px] text-gray-400">当前账号</div>
+                    <div class="text-sm font-semibold">高子豪</div>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-3">
+            <div class="text-[10px] uppercase tracking-wider text-gray-400 font-bold px-3 mb-3">主菜单</div>
+            <a href="dashboard.html" class="nav-item active">
+                <i class="fa-solid fa-grip text-base w-7"></i>
+                <span class="text-sm">控制面板</span>
+            </a>
+            <a href="alerts.html" class="nav-item">
+                <i class="fa-solid fa-triangle-exclamation text-base w-7"></i>
+                <span class="text-sm">异常中心</span>
+                <span class="ml-auto bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">12</span>
+            </a>
+            <a href="analysis.html" class="nav-item">
+                <i class="fa-solid fa-chart-line text-base w-7"></i>
+                <span class="text-sm">数据可视化</span>
+            </a>
+            <a href="history.html" class="nav-item">
+                <i class="fa-solid fa-clock-rotate-left text-base w-7"></i>
+                <span class="text-sm">历史审计</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <i class="fa-solid fa-gear text-base w-7"></i>
+                <span class="text-sm">报警设置</span>
+            </a>
+        </nav>
+        <div class="mx-3 mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100/50">
+            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span class="text-[12px] font-bold">AI 实时监控中</span>
+            </div>
+            <div class="text-[11px] text-blue-400">上次扫描: 2026-03-21 09:30:15</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="h-16 border-b border-black/5 flex items-center justify-between px-8 bg-white/60 backdrop-blur-xl sticky top-0 z-50">
+            <div class="flex items-center gap-5">
+                <div class="flex gap-1">
+                    <button class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-black/5 transition-colors">
+                        <i class="fa-solid fa-chevron-left text-gray-400 text-xs"></i>
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-black/5 transition-colors">
+                        <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
+                    </button>
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold">控制面板</h1>
+                    <p class="text-[11px] text-gray-400 mt-0.5">异常财务数据智能报警系统</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input class="bg-black/5 border-none rounded-lg py-2 pl-9 pr-4 text-xs w-64 focus:ring-2 focus:ring-blue-400 outline-none transition-all" placeholder="搜索流水、规则或档案..." type="text" />
+                </div>
+                <div class="header-action">
+                    <button class="w-9 h-9 flex items-center justify-center hover:bg-black/5 rounded-full relative transition-colors" onclick="toggleNotification()">
+                        <i class="fa-regular fa-bell text-gray-600 text-lg"></i>
+                        <div class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></div>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h4>通知中心</h4>
+                            <span class="text-xs text-blue-500 cursor-pointer" onclick="markAllRead()">全部已读</span>
+                        </div>
+                        <div class="notification-list">
+                            <div class="notification-item" onclick="openModal('detailModal')">
+                                <div class="notification-icon bg-red-50">
+                                    <i class="fa-solid fa-bell text-red-500"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">特级风险预警</div>
+                                    <div class="notification-desc">检测到张晓明疑似虚假报销，金额达 ¥14,200.00</div>
+                                </div>
+                                <div class="notification-time">刚刚</div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-icon bg-amber-50">
+                                    <i class="fa-solid fa-exclamation-triangle text-amber-500"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">高风险预警</div>
+                                    <div class="notification-desc">资金池偏离均值 45%，可能影响现金流</div>
+                                </div>
+                                <div class="notification-time">8分钟前</div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-icon bg-blue-50">
+                                    <i class="fa-solid fa-sync text-blue-500"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">数据同步完成</div>
+                                    <div class="notification-desc">工行账户今日流水 42 条已同步</div>
+                                </div>
+                                <div class="notification-time">15分钟前</div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-icon bg-purple-50">
+                                    <i class="fa-solid fa-building text-purple-500"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">供应商变更提醒</div>
+                                    <div class="notification-desc">[顺通物流] 负责人变更为李明</div>
+                                </div>
+                                <div class="notification-time">35分钟前</div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-icon bg-green-50">
+                                    <i class="fa-solid fa-check-circle text-green-500"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">预警已处置</div>
+                                    <div class="notification-desc">发票重复扫描风险已标记为误报</div>
+                                </div>
+                                <div class="notification-time">1小时前</div>
+                            </div>
+                        </div>
+                        <div class="notification-footer">
+                            <a href="alerts.html">查看全部通知</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8">
+            <div class="grid grid-cols-4 gap-5 mb-6">
+                <div class="kpi-card border-l-4 border-l-red-500">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="text-gray-400 text-xs">待处置特级预警</div>
+                        <i class="fa-solid fa-bell text-red-400 text-sm"></i>
+                    </div>
+                    <div class="text-3xl font-bold flex items-baseline gap-2">
+                        03 <span class="text-xs text-red-500 font-normal">需即刻处理</span>
+                    </div>
+                    <div class="mt-3 flex items-center gap-2 text-[11px] text-gray-500">
+                        <span class="w-2 h-2 rounded-full bg-red-500 risk-active"></span>
+                        较昨日 +2
+                    </div>
+                </div>
+                <div class="kpi-card border-l-4 border-l-blue-500">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="text-gray-400 text-xs">今日流水同步数</div>
+                        <i class="fa-solid fa-arrows-rotate text-blue-400 text-sm"></i>
+                    </div>
+                    <div class="text-3xl font-bold">1,248</div>
+                    <div class="mt-3 flex items-center gap-2 text-[11px] text-green-600">
+                        <i class="fa-solid fa-check"></i> 同步完成
+                    </div>
+                </div>
+                <div class="kpi-card border-l-4 border-l-orange-500">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="text-gray-400 text-xs">异常金额总计 (¥)</div>
+                        <i class="fa-solid fa-triangle-exclamation text-orange-400 text-sm"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-orange-500">42,850</div>
+                    <div class="mt-3 flex items-center gap-2 text-[11px] text-gray-500">
+                        涉及 8 笔交易
+                    </div>
+                </div>
+                <div class="kpi-card border-l-4 border-l-green-500">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="text-gray-400 text-xs">财务合规性评分</div>
+                        <i class="fa-solid fa-shield-check text-green-400 text-sm"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-green-500">94.2</div>
+                    <div class="mt-3 flex items-center gap-2 text-[11px] text-green-600">
+                        <i class="fa-solid fa-arrow-up"></i> 较上月 +2.1
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6">
+                <div class="col-span-2 space-y-6">
+                    <div class="bg-white rounded-2xl p-5 border border-black/5">
+                        <div class="flex items-center justify-between mb-5">
+                            <h3 class="text-sm font-semibold flex items-center gap-2">
+                                <i class="fa-solid fa-chart-area text-blue-500"></i>
+                                近 24 小时风险指数曲线
+                            </h3>
+                            <span class="text-[10px] text-blue-500 bg-blue-50 px-2 py-1 rounded">Metal 加速</span>
+                        </div>
+                        <div class="w-full h-[280px]" id="riskChart"></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 border border-black/5">
+                        <div class="flex items-center justify-between mb-5">
+                            <h3 class="text-sm font-semibold flex items-center gap-2">
+                                <i class="fa-solid fa-fire text-orange-500"></i>
+                                高频异常类型 TOP5
+                            </h3>
+                            <a href="alerts.html" class="text-xs text-blue-500 hover:text-blue-700 transition-colors">查看全部</a>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 text-xs text-gray-500">虚报冒领</div>
+                                <div class="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-red-400 to-red-500 rounded-full" style="width: 78%"></div>
+                                </div>
+                                <div class="w-12 text-xs font-semibold text-right">78%</div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 text-xs text-gray-500">跨期入账</div>
+                                <div class="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full" style="width: 62%"></div>
+                                </div>
+                                <div class="w-12 text-xs font-semibold text-right">62%</div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 text-xs text-gray-500">供应商违规</div>
+                                <div class="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" style="width: 45%"></div>
+                                </div>
+                                <div class="w-12 text-xs font-semibold text-right">45%</div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 text-xs text-gray-500">税收合规</div>
+                                <div class="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full" style="width: 38%"></div>
+                                </div>
+                                <div class="w-12 text-xs font-semibold text-right">38%</div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 text-xs text-gray-500">资金挪用</div>
+                                <div class="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-purple-400 to-purple-500 rounded-full" style="width: 25%"></div>
+                                </div>
+                                <div class="w-12 text-xs font-semibold text-right">25%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-span-1">
+                    <div class="bg-white rounded-2xl border border-black/5 flex flex-col h-full">
+                        <div class="p-4 border-b border-black/5 flex justify-between items-center">
+                            <h3 class="text-sm font-semibold">实时动态抓取</h3>
+                            <span class="text-[10px] text-blue-500 bg-blue-50 px-2 py-1 rounded">FSSC 模式</span>
+                        </div>
+                        <div class="p-3 space-y-2 flex-1 overflow-y-auto max-h-[520px] scroll-v">
+                            <div class="activity-item border-b border-gray-50 last:border-0" onclick="openModal('detailModal')">
+                                <div class="w-2.5 h-2.5 mt-2 rounded-full bg-green-500 flex-shrink-0"></div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-medium text-xs text-gray-800">同步银行流水 - 工行(0412)</span>
+                                        <span class="text-[10px] text-gray-400 flex-shrink-0 ml-2">刚刚</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 leading-relaxed">新增 42 条流水记录，未发现显著风险点。</p>
+                                </div>
+                            </div>
+                            <div class="activity-item border-b border-gray-50 last:border-0" onclick="openModal('detailModal')">
+                                <div class="w-2.5 h-2.5 mt-2 rounded-full bg-orange-400 flex-shrink-0"></div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-medium text-xs text-gray-800">AI 扫描发票影像</span>
+                                        <span class="text-[10px] text-gray-400 flex-shrink-0 ml-2">8分钟前</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 leading-relaxed">发票号 #[INV-2900] 可能存在重复报销风险。</p>
+                                </div>
+                            </div>
+                            <div class="activity-item border-b border-gray-50 last:border-0 risk-active" onclick="openModal('detailModal')">
+                                <div class="w-2.5 h-2.5 mt-2 rounded-full bg-red-500 flex-shrink-0"></div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-medium text-xs text-red-600">系统异常报警</span>
+                                        <span class="text-[10px] text-gray-400 flex-shrink-0 ml-2">22分钟前</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 leading-relaxed">识别到一笔高额离岸资金转移 (¥87,000.00)。</p>
+                                </div>
+                            </div>
+                            <div class="activity-item border-b border-gray-50 last:border-0" onclick="openModal('detailModal')">
+                                <div class="w-2.5 h-2.5 mt-2 rounded-full bg-blue-500 flex-shrink-0"></div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-medium text-xs text-gray-800">供应商工商变更</span>
+                                        <span class="text-[10px] text-gray-400 flex-shrink-0 ml-2">35分钟前</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 leading-relaxed">[顺通物流] 负责人变更为 李明。</p>
+                                </div>
+                            </div>
+                            <div class="activity-item border-b border-gray-50 last:border-0" onclick="openModal('detailModal')">
+                                <div class="w-2.5 h-2.5 mt-2 rounded-full bg-purple-500 flex-shrink-0"></div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-medium text-xs text-gray-800">跨境资金异常</span>
+                                        <span class="text-[10px] text-gray-400 flex-shrink-0 ml-2">1小时前</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 leading-relaxed">检测到与名单国家的不明资金往来。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-white rounded-2xl p-5 border border-black/5">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-sm font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-users text-indigo-500"></i>
+                        部门风险排行榜
+                    </h3>
+                    <button class="text-xs text-blue-500 hover:text-blue-700 transition-colors">导出报告</button>
+                </div>
+                <div class="grid grid-cols-5 gap-4">
+                    <div class="text-center p-4 bg-red-50 rounded-xl border border-red-100">
+                        <div class="w-10 h-10 mx-auto mb-2 bg-red-100 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-building text-red-500"></i>
+                        </div>
+                        <div class="text-xs font-medium text-gray-600">市场拓展部</div>
+                        <div class="text-lg font-bold text-red-600 mt-1">12</div>
+                        <div class="text-[10px] text-gray-400">异常次数</div>
+                    </div>
+                    <div class="text-center p-4 bg-orange-50 rounded-xl border border-orange-100">
+                        <div class="w-10 h-10 mx-auto mb-2 bg-orange-100 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-cart-shopping text-orange-500"></i>
+                        </div>
+                        <div class="text-xs font-medium text-gray-600">采购部</div>
+                        <div class="text-lg font-bold text-orange-600 mt-1">8</div>
+                        <div class="text-[10px] text-gray-400">异常次数</div>
+                    </div>
+                    <div class="text-center p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+                        <div class="w-10 h-10 mx-auto mb-2 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-truck text-yellow-600"></i>
+                        </div>
+                        <div class="text-xs font-medium text-gray-600">物流部</div>
+                        <div class="text-lg font-bold text-yellow-600 mt-1">5</div>
+                        <div class="text-[10px] text-gray-400">异常次数</div>
+                    </div>
+                    <div class="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <div class="w-10 h-10 mx-auto mb-2 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-cogs text-blue-500"></i>
+                        </div>
+                        <div class="text-xs font-medium text-gray-600">运维部</div>
+                        <div class="text-lg font-bold text-blue-600 mt-1">3</div>
+                        <div class="text-[10px] text-gray-400">异常次数</div>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-xl border border-green-100">
+                        <div class="w-10 h-10 mx-auto mb-2 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-user-tie text-green-500"></i>
+                        </div>
+                        <div class="text-xs font-medium text-gray-600">人力资源</div>
+                        <div class="text-lg font-bold text-green-600 mt-1">2</div>
+                        <div class="text-[10px] text-gray-400">异常次数</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-dots" onclick="closeModal('detailModal')">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <h3>预警详情</h3>
+                <button onclick="closeModal('detailModal')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa-solid fa-xmark text-gray-400"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="p-4 bg-red-50 rounded-xl border border-red-100 mb-5">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-1 bg-red-500 text-white text-[10px] rounded font-bold">特级风险</span>
+                        <span class="text-xs text-gray-500">ALR-2026-0321-001</span>
+                    </div>
+                    <h4 class="font-semibold text-sm">疑似虚假报销：同一地点短时间内多张连号发票</h4>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-5">
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <div class="text-[11px] text-gray-400 mb-1">部门</div>
+                        <div class="text-sm font-medium">市场拓展部</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <div class="text-[11px] text-gray-400 mb-1">报销人</div>
+                        <div class="text-sm font-medium">张晓明</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <div class="text-[11px] text-gray-400 mb-1">涉及金额</div>
+                        <div class="text-sm font-bold text-red-600">¥14,200.00</div>
+                    </div>
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <div class="text-[11px] text-gray-400 mb-1">发生时间</div>
+                        <div class="text-sm font-medium">2026-03-20 09:15</div>
+                    </div>
+                </div>
+                <div class="mb-5">
+                    <div class="text-sm font-medium text-gray-700 mb-2">AI 分析结果</div>
+                    <div class="text-sm text-gray-700 leading-relaxed p-4 bg-gray-50 rounded-lg">
+                        系统检测到该员工在同一天（2026-03-20）、同一地点（北京市朝阳区建国路88号）提交了3张连号发票（#INV-2897、#INV-2898、#INV-2899），金额共计 ¥14,200.00。发票抬头均为"北京盛世会议服务有限公司"，开票时间间隔仅15分钟，存在明显异常。
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-gray-100 flex gap-3">
+                <button class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors" onclick="closeModal('detailModal')">关闭</button>
+                <button class="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">标记已处置</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function initRiskChart() {
+            const chart = echarts.init(document.getElementById('riskChart'));
+            const option = {
+                tooltip: { trigger: 'axis', backgroundColor: 'rgba(255,255,255,0.95)', borderColor: '#e5e7eb', textStyle: { color: '#374151' } },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
+                    axisLine: { lineStyle: { color: '#e5e7eb' } },
+                    axisLabel: { color: '#9ca3af', fontSize: 11 }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitLine: { lineStyle: { type: 'dashed', color: '#f3f4f6' } },
+                    axisLabel: { color: '#9ca3af', fontSize: 11 }
+                },
+                series: [{
+                    name: '风险指数',
+                    type: 'line',
+                    smooth: true,
+                    data: [12, 18, 15, 65, 42, 38, 55, 48],
+                    lineStyle: { color: '#3b82f6', width: 3 },
+                    itemStyle: { color: '#3b82f6' },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(59, 130, 246, 0.25)' },
+                            { offset: 1, color: 'rgba(59, 130, 246, 0)' }
+                        ])
+                    }
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.querySelectorAll('.activity-item').forEach(item => {
+            item.addEventListener('click', function() {
+                openModal('detailModal');
+            });
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        function toggleNotification() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function markAllRead() {
+            const items = document.querySelectorAll('.notification-item');
+            items.forEach(item => {
+                item.style.opacity = '0.6';
+            });
+            const badge = document.querySelector('.header-action .bg-red-500');
+            if (badge) badge.style.display = 'none';
+            alert('已全部标记为已读');
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const trigger = document.querySelector('.header-action');
+            if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            const chart = echarts.getInstanceByDom(document.getElementById('riskChart'));
+            if (chart) chart.resize();
+        });
+
+        window.onload = () => {
+            initRiskChart();
+            setInterval(() => {
+                const badge = document.querySelector('.bg-red-500.rounded-full');
+                if (badge) badge.classList.toggle('opacity-50');
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

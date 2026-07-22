@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>统计分析 - 河湖治理施工进度监控系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+        :root { --macos-bg-light: #F2F2F7; }
+        body { font-family: 'SF Pro Display', -apple-system, sans-serif; background: url('./static/bg.jpeg') no-repeat center center; background-size: cover; height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; overflow: hidden; }
+        .macos-window { position: relative; width: 1200px; height: 800px; background: var(--macos-bg-light); border-radius: 12px; box-shadow: 0 50px 100px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; overflow: hidden; border: 0.5px solid rgba(0, 0, 0, 0.1); }
+        .sidebar-blur { backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.6); }
+        .traffic-lights .light { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .light-red { background: #FF5F57; } .light-yellow { background: #FEBC2E; } .light-green { background: #28C840; }
+        .nav-item.active { background: rgba(0, 0, 0, 0.05); border-radius: 6px; }
+        .dark-mode .macos-window { background: #1C1C1E; color: #FFFFFF; }
+        .dark-mode .sidebar-blur { background: rgba(44, 44, 46, 0.7); }
+        .dark-mode .bg-white { background: #2C2C2E !important; color: white; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%); transition: all 0.2s; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3); }
+        .macos-modal { position: absolute; background: white; border-radius: 12px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25); z-index: 1000; display: none; }
+        .macos-modal.active { display: block; }
+        .modal-header { background: #EBEBEB; padding: 10px 16px; cursor: move; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #d1d1d1; }
+        .modal-body { padding: 20px; } .modal-footer { padding: 12px 20px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(0, 0, 0, 0.8); color: white; padding: 12px 24px; border-radius: 8px; z-index: 2000; transition: transform 0.3s ease; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+
+<body>
+    <div class="macos-window flex flex-row">
+        <aside class="w-64 sidebar-blur border-r border-black/5 flex flex-col pt-4">
+            <div class="traffic-lights flex px-5 mb-8">
+                <div class="light light-red"></div><div class="light light-yellow"></div><div class="light light-green"></div>
+            </div>
+            <nav class="flex-1 px-3 space-y-1">
+                <div class="text-[11px] font-bold text-gray-400 px-3 py-2 uppercase">主菜单</div>
+                <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600" href="./main.html"><i class="fa-solid fa-house mr-3 w-4"></i>工作台</a>
+                <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600" href="./engineering.html"><i class="fa-solid fa-droplet mr-3 w-4"></i>工程管理</a>
+                <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600" href="./tasks.html"><i class="fa-solid fa-list-check mr-3 w-4"></i>施工任务</a>
+                <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600" href="./schedule.html"><i class="fa-solid fa-calendar-days mr-3 w-4"></i>工期计划</a>
+                <a class="nav-item active flex items-center px-3 py-2 text-sm text-gray-700 font-medium" href="./statistics.html"><i class="fa-solid fa-chart-pie mr-3 w-4"></i>统计分析</a>
+            </nav>
+            <div class="p-4 border-t border-black/5 flex items-center justify-between">
+                <div class="flex items-center">
+                    <img class="w-8 h-8 rounded-full" src="https://modao.cc/agent-py/media/generated_images/2026-03-10/5a6f55023b5e47f4927f4295928d2c2f.jpg" />
+                    <div class="ml-2"><div class="text-[12px] font-semibold">郭颖</div><div class="text-[10px] text-gray-500">专业版账户</div></div>
+                </div>
+                <button class="p-1.5 rounded hover:bg-black/10 transition-colors" onclick="toggleDarkMode()">
+                    <i class="fa-solid fa-moon text-gray-500"></i>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-14 border-b border-black/5 flex items-center justify-between px-6 bg-white/50">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-lg font-bold text-gray-800">统计分析</h1>
+                    <span class="text-[11px] font-semibold text-gray-600 bg-black/5 px-2 py-0.5 rounded">河湖治理施工进度监控系统</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <select class="bg-white border border-gray-200 rounded-md px-3 py-1 text-xs">
+                        <option>2026年3月</option>
+                        <option>2026年2月</option>
+                        <option>2026年1月</option>
+                    </select>
+                    <button class="p-2 rounded-full hover:bg-black/5 transition-colors relative" onclick="openModal('notificationModal')">
+                        <i class="fa-solid fa-bell text-gray-500"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <button class="btn-primary px-4 py-1.5 rounded-md text-white text-sm" onclick="openModal('exportModal')">
+                        <i class="fa-solid fa-download mr-1"></i>导出报表
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#F2F2F7]/50">
+                <!-- 统计卡片 -->
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-black/5">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-layer-group"></i></div>
+                            <span class="text-xs text-gray-500">在建工程</span>
+                        </div>
+                        <div class="text-3xl font-bold">12</div>
+                        <div class="text-xs text-green-500 mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>较上月 +2</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-black/5">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <div class="p-2 bg-purple-50 text-purple-600 rounded-lg"><i class="fa-solid fa-chart-line"></i></div>
+                            <span class="text-xs text-gray-500">平均进度</span>
+                        </div>
+                        <div class="text-3xl font-bold">68.5%</div>
+                        <div class="text-xs text-green-500 mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>较上月 +5.2%</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-black/5">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <div class="p-2 bg-orange-50 text-orange-600 rounded-lg"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <span class="text-xs text-gray-500">预警工程</span>
+                        </div>
+                        <div class="text-3xl font-bold">3</div>
+                        <div class="text-xs text-red-500 mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>较上月 +1</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-black/5">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <div class="p-2 bg-green-50 text-green-600 rounded-lg"><i class="fa-solid fa-users"></i></div>
+                            <span class="text-xs text-gray-500">监管人员</span>
+                        </div>
+                        <div class="text-3xl font-bold">38</div>
+                        <div class="text-xs text-green-500 mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>较上月 +4</div>
+                    </div>
+                </div>
+
+                <!-- 图表区 -->
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-black/5">
+                        <h3 class="font-bold text-sm mb-4">各标段施工进度对比</h3>
+                        <div id="progressCompareChart" style="height: 250px; width: 100%;"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-black/5">
+                        <h3 class="font-bold text-sm mb-4">工序完成占比</h3>
+                        <div id="processChart" style="height: 250px; width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- 详细数据表 -->
+                <div class="bg-white rounded-xl shadow-sm border border-black/5 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <h3 class="font-bold text-gray-800">各标段统计明细</h3>
+                    </div>
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3">标段名称</th>
+                                <th class="px-6 py-3">工程数</th>
+                                <th class="px-6 py-3">计划进度</th>
+                                <th class="px-6 py-3">实际进度</th>
+                                <th class="px-6 py-3">偏差</th>
+                                <th class="px-6 py-3">状态</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-3 font-medium">河道一标段</td>
+                                <td class="px-6 py-3">8</td>
+                                <td class="px-6 py-3">80%</td>
+                                <td class="px-6 py-3 text-green-600">75%</td>
+                                <td class="px-6 py-3 text-red-500">-5%</td>
+                                <td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-700">预警</span></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-3 font-medium">河道二标段</td>
+                                <td class="px-6 py-3">6</td>
+                                <td class="px-6 py-3">60%</td>
+                                <td class="px-6 py-3 text-green-600">45%</td>
+                                <td class="px-6 py-3 text-red-500">-15%</td>
+                                <td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs bg-red-100 text-red-700">严重滞后</span></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-3 font-medium">河道三标段</td>
+                                <td class="px-6 py-3">5</td>
+                                <td class="px-6 py-3">55%</td>
+                                <td class="px-6 py-3 text-green-600">58%</td>
+                                <td class="px-6 py-3 text-green-600">+3%</td>
+                                <td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs bg-green-100 text-green-700">正常</span></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-3 font-medium">湖泊区域</td>
+                                <td class="px-6 py-3">5</td>
+                                <td class="px-6 py-3">90%</td>
+                                <td class="px-6 py-3 text-green-600">92%</td>
+                                <td class="px-6 py-3 text-green-600">+2%</td>
+                                <td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs bg-green-100 text-green-700">正常</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <footer class="h-6 border-t border-black/5 bg-[#F2F2F7]/80 flex items-center justify-between px-3 text-[10px] text-gray-500">
+                <div>数据更新时间：2026-03-17 14:05</div>
+            </footer>
+        </main>
+
+    <div class="macos-modal" id="notificationModal" style="width: 380px;">
+        <div class="modal-header">
+            <div class="flex items-center space-x-2"><div class="w-3 h-3 rounded-full bg-[#FF5F57]"></div><div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div><div class="w-3 h-3 rounded-full bg-[#28C840]"></div></div>
+            <span class="text-xs font-medium text-gray-600">通知消息</span>
+            <button onclick="closeModal('notificationModal')" class="text-gray-400"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+            <div class="space-y-3">
+                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border-l-4 border-red-500">
+                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-triangle-exclamation text-red-600"></i></div>
+                    <div><div class="text-sm font-medium">进度预警提醒</div><div class="text-xs text-gray-500 mt-1">河道二标段滞后5天</div><div class="text-xs text-gray-400 mt-1">5分钟前</div></div>
+                </div>
+                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border-l-4 border-blue-500">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-check-circle text-blue-600"></i></div>
+                    <div><div class="text-sm font-medium">任务完成</div><div class="text-xs text-gray-500 mt-1">清淤二区验收通过</div><div class="text-xs text-gray-400 mt-1">30分钟前</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="macos-modal" id="exportModal" style="width: 400px;">
+        <div class="modal-header">
+            <div class="flex items-center space-x-2"><div class="w-3 h-3 rounded-full bg-[#FF5F57]"></div><div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div><div class="w-3 h-3 rounded-full bg-[#28C840]"></div></div>
+            <span class="text-xs font-medium text-gray-600">导出报表</span>
+            <button onclick="closeModal('exportModal')" class="text-gray-400"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="space-y-4">
+                <div><label class="block text-xs text-gray-500 mb-1">报表类型</label><select class="w-full px-3 py-2 border rounded-lg text-sm"><option>月度进度报表</option><option>季度汇总报表</option><option>年度统计报表</option></select></div>
+                <div><label class="block text-xs text-gray-500 mb-1">时间范围</label><select class="w-full px-3 py-2 border rounded-lg text-sm"><option>2026年3月</option><option>2026年Q1</option><option>2026年1月-3月</option></select></div>
+                <div><label class="block text-xs text-gray-500 mb-1">导出格式</label><select class="w-full px-3 py-2 border rounded-lg text-sm"><option>PDF</option><option>Excel</option><option>Word</option></select></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('exportModal')" class="px-4 py-1.5 rounded-md bg-gray-100 text-gray-600 text-sm">取消</button>
+            <button onclick="handleSubmit('exportModal', '报表导出成功')" class="px-4 py-1.5 rounded-md btn-primary text-white text-sm">导出</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"><i class="fa-solid fa-circle-check text-green-400 mr-2"></i><span id="toastMsg">操作成功</span></div>
+
+    <script>
+        let isDragging = false, currentModal = null, dragOffsetX, dragOffsetY;
+
+        function toggleDarkMode() { 
+            document.body.classList.toggle('dark-mode'); 
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            showToast('深色模式切换'); 
+        }
+        
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        function initCharts() {
+            const compareDom = document.getElementById('progressCompareChart');
+            if (compareDom) {
+                const compareChart = echarts.init(compareDom);
+                compareChart.setOption({
+                    tooltip: { trigger: 'axis' },
+                    legend: { data: ['计划进度', '实际进度'], bottom: 0, textStyle: { fontSize: 10 } },
+                    grid: { top: 10, right: 10, bottom: 30, left: 40 },
+                    xAxis: { type: 'category', data: ['河道一标段', '河道二标段', '河道三标段', '湖泊区域'], axisLabel: { fontSize: 10 } },
+                    yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%', fontSize: 10 } },
+                    series: [
+                        { name: '计划进度', type: 'bar', data: [80, 60, 55, 90], itemStyle: { color: '#E5E7EB' }, barWidth: 20 },
+                        { name: '实际进度', type: 'bar', data: [75, 45, 58, 92], itemStyle: { color: '#007AFF' }, barWidth: 20 }
+                    ]
+                });
+            }
+
+            const processDom = document.getElementById('processChart');
+            if (processDom) {
+                const processChart = echarts.init(processDom);
+                processChart.setOption({
+                    tooltip: { trigger: 'item' },
+                    legend: { bottom: 0, textStyle: { fontSize: 10 }, itemWidth: 8, itemHeight: 8 },
+                    series: [{
+                        type: 'pie',
+                        radius: ['45%', '75%'],
+                        center: ['50%', '45%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: { borderRadius: 5, borderColor: '#fff', borderWidth: 2 },
+                        label: { show: false },
+                        data: [
+                            { value: 1048, name: '清淤疏浚', itemStyle: { color: '#007AFF' } },
+                            { value: 735, name: '护岸加固', itemStyle: { color: '#5856D6' } },
+                            { value: 580, name: '生态修复', itemStyle: { color: '#34C759' } },
+                            { value: 484, name: '巡查保洁', itemStyle: { color: '#FF9500' } },
+                            { value: 300, name: '其他', itemStyle: { color: '#8E8E93' } }
+                        ]
+                    }]
+                });
+            }
+        }
+
+        function openModal(id) {
+            const m = document.getElementById(id);
+            
+            if (id === 'notificationModal') {
+                const btn = document.querySelector('button[onclick*="notificationModal"]');
+                if (btn) {
+                    const rect = btn.getBoundingClientRect();
+                    const windowEl = document.querySelector('.macos-window');
+                    const windowRect = windowEl.getBoundingClientRect();
+                    let relativeTop = rect.bottom - windowRect.top + 8;
+                    let relativeRight = windowRect.right - rect.right;
+                    
+                    const modalWidth = 400;
+                    const modalHeight = m.scrollHeight || 400;
+                    
+                    if (relativeRight + modalWidth > windowRect.width) {
+                        relativeRight = windowRect.width - modalWidth - 10;
+                    }
+                    
+                    if (relativeTop + modalHeight > windowRect.height) {
+                        relativeTop = rect.top - windowRect.top - modalHeight - 8;
+                    }
+                    
+                    m.style.top = relativeTop + 'px';
+                    m.style.right = relativeRight + 'px';
+                    m.style.left = 'auto';
+                    m.style.transform = 'none';
+                }
+            } else {
+                m.style.top = '50%'; m.style.left = '50%'; m.style.transform = 'translate(-50%, -50%)';
+            }
+            m.classList.add('active');
+            currentModal = m;
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); currentModal = null; }
+        function closeAllModals() { document.querySelectorAll('.macos-modal').forEach(m => m.classList.remove('active')); }
+        function handleSubmit(id, msg) { closeModal(id); const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+
+        document.querySelectorAll('.modal-header').forEach(h => {
+            h.addEventListener('mousedown', e => {
+                if (e.target.tagName === 'BUTTON') return;
+                const m = h.parentElement;
+                if (m.id === 'notificationModal') return;
+                isDragging = true;
+                const r = m.getBoundingClientRect();
+                dragOffsetX = e.clientX - r.left; dragOffsetY = e.clientY - r.top;
+                m.style.transform = 'none';
+            });
+        });
+        document.addEventListener('mousemove', e => { if (isDragging && currentModal) { currentModal.style.left = (e.clientX - dragOffsetX) + 'px'; currentModal.style.top = (e.clientY - dragOffsetY) + 'px'; } });
+        document.addEventListener('mouseup', () => isDragging = false);
+
+        window.onload = initCharts;
+    </script>
+</body>
+
+</html>

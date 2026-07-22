@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>工作台 - 建筑装饰工程进度智能调度系统</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --mac-titlebar: #F6F6F6;
+      --mac-titlebar-active: #E8E8E8;
+      --surface: #FFFFFF;
+      --bg: #F5F5F7;
+      --sidebar-bg: #F0F0F2;
+      --text-primary: #1D1D1F;
+      --text-secondary: #86868B;
+      --text-tertiary: #AEAEB2;
+      --accent: #0071E3;
+      --green: #34C759;
+      --orange: #FF9500;
+      --red: #FF3B30;
+      --yellow: #FFCC00;
+      --border: #E5E5EA;
+      --shadow-window: 0 22px 70px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpg') center/cover no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      padding: 20px;
+    }
+
+    .mac-window {
+      width: 1120px;
+      height: 720px;
+      background: var(--bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-window);
+      display: flex;
+      flex-direction: column;
+      animation: windowAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes windowAppear {
+      from {
+        opacity: 0;
+        transform: scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .titlebar {
+      height: 52px;
+      min-height: 52px;
+      background: linear-gradient(180deg, #FAFAFA 0%, #ECECEC 100%);
+      border-bottom: 1px solid #D5D5D5;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      position: relative;
+      -webkit-user-select: none;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tl {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .tl-close {
+      background: #FF5F57;
+      border: 0.5px solid #E14942;
+    }
+
+    .tl-min {
+      background: #FFBD2E;
+      border: 0.5px solid #DEA123;
+    }
+
+    .tl-max {
+      background: #28C840;
+      border: 0.5px solid #1DAD2B;
+    }
+
+    .titlebar-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: #6E6E73;
+    }
+
+    .titlebar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .titlebar-action {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: white;
+      border: 1px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .titlebar-action:hover {
+      background: #0077ED;
+    }
+    .titlebar-action svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6E6E73;
+    }
+
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: linear-gradient(135deg, var(--accent), #40A0FF);
+      display: block;
+    }
+
+    .main-layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(0, 0, 0, 0.04);
+      color: var(--text-primary);
+    }
+
+    .sidebar-item.active {
+      background: rgba(0, 113, 227, 0.1);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .sidebar-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sidebar-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .project-selector {
+      font-size: 12px;
+      padding: 8px 10px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .project-selector .proj-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .project-selector .proj-id {
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+    .project-switch {
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .project-switch svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Content */
+    .content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      height: 32px;
+      padding: 0 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text-primary);
+    }
+
+    .btn:hover {
+      background: #F5F5F7;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: #0077ED;
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 10px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 6px;
+      letter-spacing: -0.03em;
+    }
+
+    .stat-change {
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .stat-change.up {
+      color: var(--green);
+    }
+
+    .stat-change.down {
+      color: var(--red);
+    }
+
+    /* Two Column */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .card-action {
+      font-size: 11px;
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    .card-body {
+      padding: 14px 18px;
+    }
+
+    /* Progress bars for projects */
+    .project-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #F5F5F7;
+    }
+
+    .project-row:last-child {
+      border: none;
+    }
+
+    .proj-info {
+      flex: 1;
+    }
+
+    .proj-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .proj-bar-bg {
+      height: 6px;
+      background: #F0F0F2;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .proj-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .proj-percent {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      min-width: 44px;
+      text-align: right;
+      margin-left: 14px;
+    }
+
+    /* Task list */
+    .task-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #F5F5F7;
+      gap: 10px;
+    }
+
+    .task-item:last-child {
+      border: none;
+    }
+
+    .task-priority {
+      width: 4px;
+      height: 28px;
+      border-radius: 2px;
+    }
+
+    .task-content {
+      flex: 1;
+    }
+
+    .task-name {
+      font-size: 13px;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .task-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .task-status {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .status-progress {
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+
+    .status-delay {
+      background: #FFF3E0;
+      color: #E65100;
+    }
+
+    .status-pending {
+      background: #F5F5F7;
+      color: var(--text-secondary);
+    }
+
+    .status-urgent {
+      background: #FFEBEE;
+      color: #C62828;
+    }
+
+    /* Timeline mini chart */
+    .mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 60px;
+      padding: 10px 0;
+    }
+
+    .chart-bar {
+      flex: 1;
+      border-radius: 3px 3px 0 0;
+      transition: height 0.3s ease;
+      min-width: 0;
+    }
+
+    .chart-labels {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .chart-labels span {
+      flex: 1;
+      text-align: center;
+      font-size: 9px;
+      color: var(--text-tertiary);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      min-width: 400px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+      overflow: hidden;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: linear-gradient(180deg, #FAFAFA 0%, #F0F0F2 100%);
+    }
+
+    .modal-traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #FF5F57;
+      border: 0.5px solid #E14942;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #FFBD2E;
+      border: 0.5px solid #DEA123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28C840;
+      border: 0.5px solid #1DAD2B;
+    }
+
+    .modal-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #FAFAFA;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid var(--border);
+    }
+
+    .modal-btn-secondary {
+      background: white;
+      color: var(--text-primary);
+    }
+
+    .modal-btn-secondary:hover {
+      background: #F5F5F7;
+    }
+
+    .modal-btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .modal-btn-primary:hover {
+      background: #0077ED;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: white;
+      cursor: pointer;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <div class="tl tl-close"></div>
+        <div class="tl tl-min"></div>
+        <div class="tl tl-max"></div>
+      </div>
+      <span class="titlebar-center">建筑装饰工程进度智能调度系统</span>
+      <div class="titlebar-right">
+        <div class="user-info">
+          <img class="user-avatar" src="https://i02piccdn.sogoucdn.com/4ae40945067239b4" alt="许作舟" />
+          许作舟
+        </div>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">导航</div>
+          <div class="sidebar-item active" onclick="window.location.href='dashboard.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zM13 4v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z" />
+              </svg></div>
+            工作台
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='gantt.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z" />
+              </svg></div>
+            进度总览
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='schedule.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
+              </svg></div>
+            施工计划
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='tasks.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg></div>
+            任务调度
+            <span class="sidebar-badge">5</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='personnel.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+              </svg></div>
+            人员管理
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='ai_alerts.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+              </svg></div>
+            智能预警
+            <span class="sidebar-badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='resources.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z" />
+              </svg></div>
+            资源优化
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='reports.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+              </svg></div>
+            报表中心
+          </div>
+        </div>
+
+        <div class="sidebar-bottom">
+          <div class="project-selector" id="projectSelector">
+            <div>
+              <div class="proj-name" id="projName">杭州绿城·翡翠湖项目</div>
+              <div class="proj-id" id="projId">项目编号 HZFC-2025-0318</div>
+            </div>
+            <div class="project-switch" id="projectSwitchInlineBtn" aria-label="切换项目">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7h5l-1.5-1.5L9 4l4 4-4 4-1.5-1.5L9 9H4V7zm16 10h-5l1.5 1.5L15 20l-4-4 4-4 1.5 1.5L15 13h5v2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content Area -->
+      <div class="content">
+        <div class="content-header">
+          <div class="page-title">工作台</div>
+          <div class="header-actions">
+            <button class="btn">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+              </svg>
+              刷新数据
+            </button>
+            <button class="btn btn-primary">
+              <svg viewBox="0 0 24 24">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="white" />
+              </svg>
+              新建任务
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label"><span class="stat-dot" style="background:var(--accent)"></span> 在建项目</div>
+            <div class="stat-value">12</div>
+            <div class="stat-change up">+2 本月新增</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><span class="stat-dot" style="background:var(--green)"></span> 总体进度</div>
+            <div class="stat-value">67.8%</div>
+            <div class="stat-change up">+3.2% 较上周</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><span class="stat-dot" style="background:var(--orange)"></span> 延期风险</div>
+            <div class="stat-value">3</div>
+            <div class="stat-change down">需要关注</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><span class="stat-dot" style="background:var(--red)"></span> 待处理预警</div>
+            <div class="stat-value">5</div>
+            <div class="stat-change down">+2 今日新增</div>
+          </div>
+        </div>
+
+        <!-- Two Column -->
+        <div class="two-col">
+          <!-- Project Progress -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">重点项目进度</span>
+              <span class="card-action">查看全部</span>
+            </div>
+            <div class="card-body">
+              <div class="project-row">
+                <div class="proj-info">
+                  <div class="proj-title">A区大堂精装修</div>
+                  <div class="proj-bar-bg">
+                    <div class="proj-bar-fill" style="width:82%;background:var(--green)"></div>
+                  </div>
+                </div>
+                <span class="proj-percent">82%</span>
+              </div>
+              <div class="project-row">
+                <div class="proj-info">
+                  <div class="proj-title">B区外立面幕墙</div>
+                  <div class="proj-bar-bg">
+                    <div class="proj-bar-fill" style="width:65%;background:var(--accent)"></div>
+                  </div>
+                </div>
+                <span class="proj-percent">65%</span>
+              </div>
+              <div class="project-row">
+                <div class="proj-info">
+                  <div class="proj-title">C区地下车库涂装</div>
+                  <div class="proj-bar-bg">
+                    <div class="proj-bar-fill" style="width:43%;background:var(--orange)"></div>
+                  </div>
+                </div>
+                <span class="proj-percent">43%</span>
+              </div>
+              <div class="project-row">
+                <div class="proj-info">
+                  <div class="proj-title">景观园林绿化工程</div>
+                  <div class="proj-bar-bg">
+                    <div class="proj-bar-fill" style="width:28%;background:var(--red)"></div>
+                  </div>
+                </div>
+                <span class="proj-percent">28%</span>
+              </div>
+
+              <div style="margin-top:12px">
+                <div class="mini-chart">
+                  <div class="chart-bar" style="height:30%;background:var(--accent);opacity:0.3"></div>
+                  <div class="chart-bar" style="height:45%;background:var(--accent);opacity:0.4"></div>
+                  <div class="chart-bar" style="height:35%;background:var(--accent);opacity:0.5"></div>
+                  <div class="chart-bar" style="height:60%;background:var(--accent);opacity:0.6"></div>
+                  <div class="chart-bar" style="height:55%;background:var(--accent);opacity:0.7"></div>
+                  <div class="chart-bar" style="height:78%;background:var(--accent);opacity:0.8"></div>
+                  <div class="chart-bar" style="height:90%;background:var(--accent)"></div>
+                </div>
+                <div class="chart-labels">
+                  <span>3/19</span><span>3/20</span><span>3/21</span><span>3/22</span><span>3/23</span><span>3/24</span><span>3/25</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tasks -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">今日待办任务</span>
+              <span class="card-action">全部任务</span>
+            </div>
+            <div class="card-body">
+              <div class="task-item">
+                <div class="task-priority" style="background:var(--red)"></div>
+                <div class="task-content">
+                  <div class="task-name">A区大堂石材铺贴验收</div>
+                  <div class="task-meta">负责人: 李明 / 截止: 今日 17:00</div>
+                </div>
+                <span class="task-status status-urgent">紧急</span>
+              </div>
+              <div class="task-item">
+                <div class="task-priority" style="background:var(--orange)"></div>
+                <div class="task-content">
+                  <div class="task-name">B区幕墙龙骨安装进度确认</div>
+                  <div class="task-meta">负责人: 王建华 / 截止: 今日 18:00</div>
+                </div>
+                <span class="task-status status-progress">进行中</span>
+              </div>
+              <div class="task-item">
+                <div class="task-priority" style="background:var(--orange)"></div>
+                <div class="task-content">
+                  <div class="task-name">材料进场 — 意大利灰大理石</div>
+                  <div class="task-meta">负责人: 张伟 / 预计: 明日 09:00</div>
+                </div>
+                <span class="task-status status-delay">延期</span>
+              </div>
+              <div class="task-item">
+                <div class="task-priority" style="background:var(--accent)"></div>
+                <div class="task-content">
+                  <div class="task-name">C区车库环氧地坪方案评审</div>
+                  <div class="task-meta">负责人: 许作舟 / 截止: 明日 14:00</div>
+                </div>
+                <span class="task-status status-pending">待开始</span>
+              </div>
+              <div class="task-item">
+                <div class="task-priority" style="background:var(--green)"></div>
+                <div class="task-content">
+                  <div class="task-name">园林景观苗木采购清单复核</div>
+                  <div class="task-meta">负责人: 陈雪梅 / 截止: 03/27</div>
+                </div>
+                <span class="task-status status-progress">进行中</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+<script>
+  (function () {
+    var btn = document.getElementById('projectSwitchBtn');
+      var inlineBtn = document.getElementById('projectSwitchInlineBtn');
+    var nameEl = document.getElementById('projName');
+    var idEl = document.getElementById('projId');
+    var projects = [
+      { name: '杭州绿城·翡翠湖项目', id: '项目编号 HZFC-2025-0318' },
+      { name: '上海万科·云栖项目', id: '项目编号 SHWK-2025-0421' },
+      { name: '成都保利·锦城项目', id: '项目编号 CDPL-2025-0507' }
+    ];
+    var idx = 0;
+    if (btn && nameEl && idEl) {
+      btn.addEventListener('click', function () {
+        idx = (idx + 1) % projects.length;
+        nameEl.textContent = projects[idx].name;
+        idEl.textContent = projects[idx].id;
+      });
+    }
+      if (inlineBtn && nameEl && idEl) {
+        inlineBtn.addEventListener('click', function () {
+          idx = (idx + 1) % projects.length;
+          nameEl.textContent = projects[idx].name;
+          idEl.textContent = projects[idx].id;
+        });
+      }
+
+    var modalOverlay = document.getElementById('modalOverlay');
+    var modalTitle = document.getElementById('modalTitle');
+    var modalBody = document.getElementById('modalBody');
+    var modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    window.closeModal = closeModal;
+
+    modalOverlay.addEventListener('click', function(e) {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.querySelectorAll('.btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        if (this.textContent.includes('刷新数据')) {
+          openModal(
+            '刷新数据',
+            '<div style="text-align:center;padding:20px;"><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px;">正在刷新数据...</div><div style="color:var(--text-secondary);font-size:12px;">数据更新于 2026-03-26 10:30</div></div>',
+            '<button class="modal-btn modal-btn-primary" onclick="closeModal()">确定</button>'
+          );
+        } else if (this.textContent.includes('新建任务')) {
+          openModal(
+            '新建任务',
+            '<div class="form-group"><label class="form-label">任务名称</label><input type="text" class="form-input" placeholder="请输入任务名称"></div><div class="form-row"><div class="form-group"><label class="form-label">开始日期</label><input type="date" class="form-input" value="2026-03-26"></div><div class="form-group"><label class="form-label">结束日期</label><input type="date" class="form-input" value="2026-03-30"></div></div><div class="form-group"><label class="form-label">负责人</label><select class="form-select"><option>李明</option><option>王建华</option><option>张伟</option><option>许作舟</option></select></div><div class="form-group"><label class="form-label">优先级</label><select class="form-select"><option>紧急</option><option>高</option><option>中</option><option>低</option></select></div>',
+            '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button><button class="modal-btn modal-btn-primary">创建</button>'
+          );
+        }
+      });
+    });
+
+    document.querySelectorAll('.card-action').forEach(function(action) {
+      action.style.cursor = 'pointer';
+      action.addEventListener('click', function() {
+        var text = this.textContent.trim();
+        if (text === '查看全部') {
+          openModal('重点项目列表', '<div style="max-height:400px;overflow-y:auto"><div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F5F5F7"><div style="width:60%;font-size:13px;font-weight:500">A区大堂精装修</div><div style="width:25%;font-size:12px;color:var(--text-secondary)">82%</div><div style="font-size:12px;color:var(--green)">正常</div></div><div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F5F5F7"><div style="width:60%;font-size:13px;font-weight:500">B区外立面幕墙</div><div style="width:25%;font-size:12px;color:var(--text-secondary)">65%</div><div style="font-size:12px;color:var(--orange)">有风险</div></div><div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F5F5F7"><div style="width:60%;font-size:13px;font-weight:500">C区地下车库涂装</div><div style="width:25%;font-size:12px;color:var(--text-secondary)">43%</div><div style="font-size:12px;color:var(--orange)">有风险</div></div><div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F5F5F7"><div style="width:60%;font-size:13px;font-weight:500">景观园林绿化工程</div><div style="width:25%;font-size:12px;color:var(--text-secondary)">28%</div><div style="font-size:12px;color:var(--red)">延期</div></div></div>', '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">关闭</button>');
+        } else if (text === '全部任务') {
+          openModal('今日待办任务', '<div style="max-height:400px;overflow-y:auto"><div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #F5F5F7"><div style="width:4px;height:28px;background:var(--red);border-radius:2px"></div><div style="flex:1"><div style="font-size:13px;font-weight:500">A区大堂石材铺贴验收</div><div style="font-size:11px;color:var(--text-tertiary)">负责人: 李明 / 截止: 今日 17:00</div></div><span style="font-size:11px;padding:3px 8px;border-radius:4px;background:#FFEBEE;color:#C62828;font-weight:500">紧急</span></div><div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #F5F5F7"><div style="width:4px;height:28px;background:var(--orange);border-radius:2px"></div><div style="flex:1"><div style="font-size:13px;font-weight:500">B区幕墙龙骨安装进度确认</div><div style="font-size:11px;color:var(--text-tertiary)">负责人: 王建华 / 截止: 今日 18:00</div></div><span style="font-size:11px;padding:3px 8px;border-radius:4px;background:#E3F2FD;color:#1565C0;font-weight:500">进行中</span></div><div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #F5F5F7"><div style="width:4px;height:28px;background:var(--orange);border-radius:2px"></div><div style="flex:1"><div style="font-size:13px;font-weight:500">材料进场 — 意大利灰大理石</div><div style="font-size:11px;color:var(--text-tertiary)">负责人: 张伟 / 预计: 明日 09:00</div></div><span style="font-size:11px;padding:3px 8px;border-radius:4px;background:#FFF3E0;color:#E65100;font-weight:500">延期</span></div></div>', '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">关闭</button><button class="modal-btn modal-btn-primary" onclick="closeModal()">新建任务</button>');
+        }
+      });
+    });
+
+    document.querySelectorAll('.project-row').forEach(function(row) {
+      row.style.cursor = 'pointer';
+      row.addEventListener('click', function() {
+        var title = this.querySelector('.proj-title').textContent;
+        var percent = this.querySelector('.proj-percent').textContent;
+        openModal(
+          '项目详情 - ' + title,
+          '<div style="margin-bottom:16px"><div style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:8px">'+title+'</div><div style="display:flex;align-items:center;gap:16px"><div style="flex:1"><div style="height:8px;background:#F0F0F2;border-radius:4px;overflow:hidden"><div style="height:100%;width:'+percent+';background:var(--accent);border-radius:4px"></div></div></div><span style="font-size:20px;font-weight:700;color:var(--text-primary)">'+percent+'</span></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div style="background:#F8F6FF;padding:12px;border-radius:8px"><div style="font-size:11px;color:var(--purple);margin-bottom:4px">负责人</div><div style="font-size:13px;font-weight:500">李明</div></div><div style="background:#F8F6FF;padding:12px;border-radius:8px"><div style="font-size:11px;color:var(--purple);margin-bottom:4px">计划完成</div><div style="font-size:13px;font-weight:500">2026-04-15</div></div><div style="background:#F8F6FF;padding:12px;border-radius:8px"><div style="font-size:11px;color:var(--purple);margin-bottom:4px">当前状态</div><div style="font-size:13px;font-weight:500;color:var(--green)">进展顺利</div></div><div style="background:#F8F6FF;padding:12px;border-radius:8px"><div style="font-size:11px;color:var(--purple);margin-bottom:4px">剩余天数</div><div style="font-size:13px;font-weight:500">21天</div></div></div>',
+          '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button><button class="modal-btn modal-btn-primary" onclick="closeModal()">查看详情</button>'
+        );
+      });
+    });
+
+    document.querySelectorAll('.task-item').forEach(function(item) {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', function() {
+        var taskName = this.querySelector('.task-name').textContent;
+        var taskMeta = this.querySelector('.task-meta').textContent;
+        var taskStatus = this.querySelector('.task-status').textContent;
+        var priority = this.querySelector('.task-priority');
+        var priorityColor = priority ? getComputedStyle(priority).backgroundColor : 'var(--red)';
+        openModal(
+          '任务详情 - ' + taskName,
+          '<div style="margin-bottom:16px;padding:12px;background:#F8F6FF;border-radius:8px"><div style="font-size:12px;color:var(--purple);margin-bottom:4px">当前状态</div><div style="font-size:14px;font-weight:600">'+taskStatus+'</div></div><div class="form-group"><label class="form-label">任务名称</label><input type="text" class="form-input" value="'+taskName+'"></div><div class="form-group"><label class="form-label">任务描述</label><textarea class="form-input" style="height:60px;resize:none">按照施工图纸完成石材铺贴工作，确保平整度和缝隙均匀。</textarea></div><div class="form-row"><div class="form-group" style="flex:1"><label class="form-label">开始日期</label><input type="date" class="form-input" value="2026-03-18"></div><div class="form-group" style="flex:1"><label class="form-label">截止日期</label><input type="date" class="form-input" value="2026-03-25"></div></div><div class="form-group"><label class="form-label">负责人</label><select class="form-select"><option selected>李明</option><option>王建华</option><option>张伟</option><option>许作舟</option></select></div><div class="form-group"><label class="form-label">优先级</label><select class="form-select"><option selected>紧急</option><option>高</option><option>中</option><option>低</option></select></div>',
+          '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button><button class="modal-btn modal-btn-primary" onclick="closeModal()">保存修改</button>'
+        );
+      });
+    });
+
+    document.querySelectorAll('.stat-card').forEach(function(card) {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', function() {
+        var label = this.querySelector('.stat-label').textContent.trim();
+        var value = this.querySelector('.stat-value').textContent;
+        openModal(
+          label + ' - 详情',
+          '<div style="text-align:center;padding:20px"><div style="font-size:48px;font-weight:700;color:var(--text-primary);margin-bottom:8px">'+value+'</div><div style="font-size:14px;color:var(--text-secondary)">'+label+'</div></div><div style="border-top:1px solid var(--border);padding-top:16px;margin-top:16px"><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">近7天趋势</div><div style="display:flex;align-items:flex-end;gap:8px;height:60px"><div style="flex:1;height:40%;background:var(--accent);opacity:0.4;border-radius:3px 3px 0 0"></div><div style="flex:1;height:55%;background:var(--accent);opacity:0.5;border-radius:3px 3px 0 0"></div><div style="flex:1;height:45%;background:var(--accent);opacity:0.5;border-radius:3px 3px 0 0"></div><div style="flex:1;height:70%;background:var(--accent);opacity:0.7;border-radius:3px 3px 0 0"></div><div style="flex:1;height:65%;background:var(--accent);opacity:0.7;border-radius:3px 3px 0 0"></div><div style="flex:1;height:85%;background:var(--accent);opacity:0.9;border-radius:3px 3px 0 0"></div><div style="flex:1;height:100%;background:var(--accent);border-radius:3px 3px 0 0"></div></div><div style="display:flex;justify-content:space-between;margin-top:8px"><span style="font-size:10px;color:var(--text-tertiary)">3/20</span><span style="font-size:10px;color:var(--text-tertiary)">3/21</span><span style="font-size:10px;color:var(--text-tertiary)">3/22</span><span style="font-size:10px;color:var(--text-tertiary)">3/23</span><span style="font-size:10px;color:var(--text-tertiary)">3/24</span><span style="font-size:10px;color:var(--text-tertiary)">3/25</span><span style="font-size:10px;color:var(--text-tertiary)">3/26</span></div></div>',
+          '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">关闭</button>'
+        );
+      });
+    });
+  })();
+</script>
+</body>

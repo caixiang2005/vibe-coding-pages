@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>车辆行驶轨迹分析系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Window Frame */
+        .window-frame {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            border: 1px solid #3a3a5a;
+        }
+
+        /* Title Bar - Win10 Style */
+        .title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #2d2d4a;
+            height: 32px;
+            padding: 0 8px;
+            user-select: none;
+        }
+
+        .title-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title-bar-icon {
+            width: 16px;
+            height: 16px;
+            color: #6c9fff;
+        }
+
+        .title-bar-text {
+            font-size: 12px;
+            color: #e0e0e0;
+        }
+
+        .window-controls {
+            display: flex;
+            height: 100%;
+        }
+
+        .window-btn {
+            width: 46px;
+            height: 100%;
+            border: none;
+            background: transparent;
+            color: #e0e0e0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .window-btn:hover {
+            background: #4a4a6a;
+        }
+
+        .window-btn.close:hover {
+            background: #e81123;
+        }
+
+        .window-btn i {
+            font-size: 10px;
+        }
+
+        .maximize-icon {
+            width: 10px;
+            height: 10px;
+            border: 1px solid #e0e0e0;
+            background: transparent;
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            background: #252542;
+            padding: 0 12px;
+            height: 42px;
+            gap: 4px;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: #b0b0c0;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: #3a3a5a;
+            color: #fff;
+        }
+
+        .nav-btn.active {
+            background: #4a7cff;
+            color: #fff;
+        }
+
+        .nav-divider {
+            width: 1px;
+            height: 24px;
+            background: #3a3a5a;
+            margin: 0 8px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Left Sidebar */
+        .sidebar {
+            width: 200px;
+            background: #1e1e36;
+            border-right: 1px solid #3a3a5a;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu {
+            padding: 8px 0;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: #b0b0c0;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 10px;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(74, 124, 255, 0.1);
+            color: #e0e0e0;
+        }
+
+        .sidebar-item.active {
+            background: rgba(74, 124, 255, 0.15);
+            color: #4a7cff;
+            border-left-color: #4a7cff;
+        }
+
+        .sidebar-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: #3a3a5a;
+            margin: 8px 16px;
+        }
+
+        .sidebar-submenu {
+            padding-left: 44px;
+        }
+
+        .sidebar-subitem {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            color: #9090a0;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 8px;
+        }
+
+        .sidebar-subitem:hover {
+            color: #e0e0e0;
+            background: rgba(74, 124, 255, 0.05);
+        }
+
+        .sidebar-subitem.active {
+            color: #6c9fff;
+        }
+
+        .sidebar-subitem i {
+            font-size: 10px;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .page-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            background: #222240;
+            gap: 12px;
+            border-bottom: 1px solid #3a3a5a;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-label {
+            font-size: 12px;
+            color: #9090a0;
+        }
+
+        .toolbar-input {
+            padding: 6px 10px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .toolbar-input:focus {
+            border-color: #4a7cff;
+        }
+
+        .toolbar-select {
+            padding: 6px 10px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .toolbar-btn {
+            padding: 6px 14px;
+            background: #4a7cff;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: #5a8cff;
+        }
+
+        .toolbar-btn.secondary {
+            background: #3a3a5a;
+        }
+
+        .toolbar-btn.secondary:hover {
+            background: #4a4a6a;
+        }
+
+        /* Map Container */
+        .map-container {
+            flex: 1;
+            position: relative;
+            background: #1e1e3a;
+            overflow: hidden;
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a2a3a 0%, #2a3a4a 100%);
+            position: relative;
+        }
+
+        .map-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(100, 150, 200, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(100, 150, 200, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Trajectory Path */
+        .trajectory-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Map Info Panel */
+        .map-info-panel {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(30, 30, 50, 0.95);
+            border: 1px solid #3a3a5a;
+            border-radius: 6px;
+            padding: 12px 16px;
+            min-width: 220px;
+        }
+
+        .map-info-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #6c9fff;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .map-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .map-info-label {
+            color: #9090a0;
+        }
+
+        .map-info-value {
+            color: #e0e0e0;
+            font-weight: 500;
+        }
+
+        .map-info-value.highlight {
+            color: #4ade80;
+        }
+
+        /* Map Legend */
+        .map-legend {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(30, 30, 50, 0.95);
+            border: 1px solid #3a3a5a;
+            border-radius: 6px;
+            padding: 12px 16px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.start {
+            background: #22c55e;
+        }
+
+        .legend-dot.end {
+            background: #ef4444;
+        }
+
+        .legend-dot.track {
+            background: #4a7cff;
+        }
+
+        .legend-dot.stop {
+            background: #f59e0b;
+        }
+
+        /* Playback Control Bar */
+        .playback-bar {
+            background: #252542;
+            padding: 12px 16px;
+            border-top: 1px solid #3a3a5a;
+        }
+
+        .playback-timeline {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .timeline-time {
+            font-size: 12px;
+            color: #9090a0;
+            min-width: 130px;
+        }
+
+        .timeline-slider {
+            flex: 1;
+            height: 6px;
+            background: #3a3a5a;
+            border-radius: 3px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .timeline-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: #4a7cff;
+            border-radius: 3px;
+            width: 35%;
+            transition: width 0.1s;
+        }
+
+        .timeline-handle {
+            position: absolute;
+            top: 50%;
+            left: 35%;
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            cursor: grab;
+        }
+
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .playback-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .play-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4a7cff;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .play-btn:hover {
+            background: #5a8cff;
+        }
+
+        .control-btn {
+            padding: 8px 14px;
+            background: #3a3a5a;
+            border: none;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #4a4a6a;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .speed-label {
+            font-size: 12px;
+            color: #9090a0;
+        }
+
+        .speed-value {
+            padding: 4px 10px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #4ade80;
+            font-size: 12px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1e1e36;
+            padding: 6px 16px;
+            font-size: 11px;
+            color: #7070a0;
+            border-top: 1px solid #3a3a5a;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #252542;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            min-width: 520px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: #2d2d4a;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .modal-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            color: #9090a0;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #e81123;
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 14px 20px;
+            background: #2d2d4a;
+            border-top: 1px solid #3a3a5a;
+        }
+
+        /* Form Styles */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 12px;
+            color: #9090a0;
+        }
+
+        .form-label .required {
+            color: #ef4444;
+        }
+
+        .form-input {
+            padding: 10px 12px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #4a7cff;
+        }
+
+        .form-select {
+            padding: 10px 12px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .form-textarea {
+            padding: 10px 12px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+            outline: none;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #b0b0c0;
+            cursor: pointer;
+        }
+
+        .form-checkbox input {
+            width: 16px;
+            height: 16px;
+            accent-color: #4a7cff;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4a7cff;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #5a8cff;
+        }
+
+        .btn-secondary {
+            background: #3a3a5a;
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #4a4a6a;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #ef4444;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th {
+            background: #2d2d4a;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #9090a0;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #3a3a5a;
+            color: #e0e0e0;
+        }
+
+        .data-table tr:hover {
+            background: rgba(74, 124, 255, 0.1);
+        }
+
+        .table-action {
+            padding: 4px 10px;
+            background: #3a3a5a;
+            border: none;
+            border-radius: 3px;
+            color: #e0e0e0;
+            font-size: 11px;
+            cursor: pointer;
+            margin-right: 6px;
+        }
+
+        .table-action:hover {
+            background: #4a7cff;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .badge-success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #9090a0;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a7cff;
+        }
+
+        .stat-unit {
+            font-size: 12px;
+            color: #9090a0;
+            margin-left: 4px;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #6c9fff;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3a3a5a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a4a6a;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-info {
+            background: rgba(74, 124, 255, 0.15);
+            border: 1px solid rgba(74, 124, 255, 0.3);
+            color: #6c9fff;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #3a3a5a;
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: #9090a0;
+            font-size: 12px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: #e0e0e0;
+        }
+
+        .tab-btn.active {
+            color: #4a7cff;
+            border-bottom-color: #4a7cff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .setting-section {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .setting-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .setting-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #6c9fff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .setting-label {
+            font-size: 12px;
+            color: #9090a0;
+        }
+
+        .setting-value {
+            font-size: 12px;
+            color: #e0e0e0;
+        }
+
+        .setting-select {
+            padding: 6px 10px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .setting-btn {
+            padding: 6px 12px;
+            background: #3a3a5a;
+            border: none;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+
+        .setting-btn:hover {
+            background: #4a7cff;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #3a3a5a;
+            transition: 0.3s;
+            border-radius: 22px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #e0e0e0;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4a7cff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+    </style>
+</head>
+<body>
+    <div class="window-frame">
+        <!-- Title Bar -->
+        <div class="title-bar">
+            <div class="title-bar-left">
+                <i class="fa-solid fa-route title-bar-icon"></i>
+                <span class="title-bar-text">车辆行驶轨迹分析系统</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn" title="最小化">
+                    <i class="fa-solid fa-minus"></i>
+                </button>
+                <button class="window-btn" title="最大化">
+                    <div class="maximize-icon"></div>
+                </button>
+                <button class="window-btn close" title="关闭">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <button class="nav-btn active" data-page="index.html">
+                <i class="fa-solid fa-map-location-dot"></i>
+                轨迹查询
+            </button>
+            <button class="nav-btn" data-page="trip.html">
+                <i class="fa-solid fa-route"></i>
+                行程记录
+            </button>
+            <button class="nav-btn" data-page="vehicle.html">
+                <i class="fa-solid fa-car"></i>
+                车辆管理
+            </button>
+            <button class="nav-btn" data-page="driver.html">
+                <i class="fa-solid fa-id-card"></i>
+                驾驶员管理
+            </button>
+            <button class="nav-btn" data-page="statistics.html">
+                <i class="fa-solid fa-chart-line"></i>
+                数据统计
+            </button>
+            <div class="nav-divider"></div>
+            <button class="nav-btn" data-page="alarm.html">
+                <i class="fa-solid fa-bell"></i>
+                报警记录
+            </button>
+            <button class="nav-btn" data-page="fence.html">
+                <i class="fa-solid fa-draw-polygon"></i>
+                电子围栏
+            </button>
+            <div class="nav-divider"></div>
+            <button class="nav-btn" onclick="navigateTo('settings.html')">
+                <i class="fa-solid fa-gear"></i>
+                系统设置
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="content-wrapper">
+                <!-- Left Sidebar -->
+                <div class="sidebar">
+                    <div class="sidebar-menu">
+                        <div class="sidebar-item active" onclick="navigateTo('index.html')">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <span>轨迹查询</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('trip.html')">
+                            <i class="fa-solid fa-route"></i>
+                            <span>行程记录</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('vehicle.html')">
+                            <i class="fa-solid fa-car"></i>
+                            <span>车辆管理</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('driver.html')">
+                            <i class="fa-solid fa-id-card"></i>
+                            <span>驾驶员管理</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('statistics.html')">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>数据统计</span>
+                        </div>
+                        <div class="sidebar-divider"></div>
+                        <div class="sidebar-item" onclick="navigateTo('alarm.html')">
+                            <i class="fa-solid fa-bell"></i>
+                            <span>报警记录</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('fence.html')">
+                            <i class="fa-solid fa-draw-polygon"></i>
+                            <span>电子围栏</span>
+                        </div>
+                        <div class="sidebar-divider"></div>
+                        <div class="sidebar-item" onclick="navigateTo('settings.html')">
+                            <i class="fa-solid fa-gear"></i>
+                            <span>系统设置</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page Content -->
+                <div class="page-content">
+                    <!-- Toolbar -->
+                    <div class="toolbar">
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">车牌号:</span>
+                            <input type="text" class="toolbar-input" id="vehiclePlate" value="京A88562" style="width: 100px;">
+                        </div>
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">开始时间:</span>
+                            <input type="datetime-local" class="toolbar-input" id="startTime" value="2024-03-15T08:30">
+                        </div>
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">结束时间:</span>
+                            <input type="datetime-local" class="toolbar-input" id="endTime" value="2024-03-15T17:45">
+                        </div>
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">轨迹类型:</span>
+                            <select class="toolbar-select" id="trackType">
+                                <option value="all">全部轨迹</option>
+                                <option value="normal">正常行驶</option>
+                                <option value="abnormal">异常行驶</option>
+                            </select>
+                        </div>
+                        <button class="toolbar-btn" onclick="queryTrack()">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            查询
+                        </button>
+                        <button class="toolbar-btn secondary" onclick="openModal('advancedQueryModal')">
+                            <i class="fa-solid fa-sliders"></i>
+                            高级筛选
+                        </button>
+                        <button class="toolbar-btn secondary" onclick="clearQuery()">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            重置
+                        </button>
+                    </div>
+
+                    <!-- Map Container -->
+                    <div class="map-container">
+                        <div class="map-placeholder">
+                            <div class="map-grid"></div>
+                            <canvas class="trajectory-canvas" id="trajectoryCanvas"></canvas>
+                        </div>
+
+                        <!-- Map Info Panel -->
+                        <div class="map-info-panel">
+                            <div class="map-info-title">
+                                <i class="fa-solid fa-car"></i> 当前车辆信息
+                            </div>
+                            <div class="map-info-row">
+                                <span class="map-info-label">车牌号</span>
+                                <span class="map-info-value">京A88562</span>
+                            </div>
+                            <div class="map-info-row">
+                                <span class="map-info-label">车辆类型</span>
+                                <span class="map-info-value">货运车辆</span>
+                            </div>
+                            <div class="map-info-row">
+                                <span class="map-info-label">所属部门</span>
+                                <span class="map-info-value">物流运输部</span>
+                            </div>
+                            <div class="map-info-row">
+                                <span class="map-info-label">行驶里程</span>
+                                <span class="map-info-value highlight">156.8 km</span>
+                            </div>
+                            <div class="map-info-row">
+                                <span class="map-info-label">行驶时长</span>
+                                <span class="map-info-value">4小时32分</span>
+                            </div>
+                            <div class="map-info-row">
+                                <span class="map-info-label">平均速度</span>
+                                <span class="map-info-value">52.6 km/h</span>
+                            </div>
+                            <div class="map-info-row">
+                                <span class="map-info-label">停留次数</span>
+                                <span class="map-info-value">3 次</span>
+                            </div>
+                        </div>
+
+                        <!-- Map Legend -->
+                        <div class="map-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot start"></span>
+                                <span>起点</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot end"></span>
+                                <span>终点</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot track"></span>
+                                <span>行驶轨迹</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot stop"></span>
+                                <span>停留点</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Playback Control Bar -->
+                    <div class="playback-bar">
+                        <div class="playback-timeline">
+                            <span class="timeline-time">2024-03-15 08:30:00</span>
+                            <div class="timeline-slider" id="timelineSlider">
+                                <div class="timeline-progress" id="timelineProgress"></div>
+                                <div class="timeline-handle" id="timelineHandle"></div>
+                            </div>
+                            <span class="timeline-time">2024-03-15 17:45:00</span>
+                        </div>
+                        <div class="playback-controls">
+                            <div class="playback-btns">
+                                <button class="control-btn" onclick="skipBackward()">
+                                    <i class="fa-solid fa-backward-step"></i>
+                                    上一段
+                                </button>
+                                <button class="control-btn" onclick="slowDown()">
+                                    <i class="fa-solid fa-backward"></i>
+                                    慢放
+                                </button>
+                                <button class="play-btn" id="playBtn" onclick="togglePlay()">
+                                    <i class="fa-solid fa-play" id="playIcon"></i>
+                                </button>
+                                <button class="control-btn" onclick="speedUp()">
+                                    <i class="fa-solid fa-forward"></i>
+                                    快进
+                                </button>
+                                <button class="control-btn" onclick="skipForward()">
+                                    <i class="fa-solid fa-forward-step"></i>
+                                    下一段
+                                </button>
+                            </div>
+                            <div class="speed-control">
+                                <span class="speed-label">播放速度:</span>
+                                <span class="speed-value" id="speedValue">1x</span>
+                            </div>
+                            <div class="playback-btns">
+                                <button class="control-btn" onclick="openModal('stopPointModal')">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                    停留点分析
+                                </button>
+                                <button class="control-btn" onclick="openModal('abnormalModal')">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    异常检测
+                                </button>
+                                <button class="control-btn" onclick="openModal('tripReportModal')">
+                                    <i class="fa-solid fa-file-lines"></i>
+                                    行程报告
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot"></span>
+                <span>GPS信号正常</span>
+            </div>
+            <div class="status-item">
+                <span>轨迹点数: 2,847</span>
+            </div>
+            <div class="status-item">
+                <span>数据更新周期: 10秒</span>
+            </div>
+            <div class="status-item">
+                <span>坐标系: WGS-84</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Query Modal -->
+    <div class="modal-overlay" id="advancedQueryModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">
+                    <i class="fa-solid fa-sliders"></i>
+                    高级筛选条件
+                </span>
+                <button class="modal-close" onclick="closeModal('advancedQueryModal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">车牌号 <span class="required">*</span></label>
+                        <input type="text" class="form-input" placeholder="请输入车牌号" value="京A88562">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">车辆类型</label>
+                        <select class="form-select">
+                            <option value="">全部类型</option>
+                            <option value="truck" selected>货运车辆</option>
+                            <option value="passenger">客运车辆</option>
+                            <option value="special">特种车辆</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">开始时间 <span class="required">*</span></label>
+                        <input type="datetime-local" class="form-input" value="2024-03-15T08:30">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">结束时间 <span class="required">*</span></label>
+                        <input type="datetime-local" class="form-input" value="2024-03-15T17:45">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">最小行驶速度 (km/h)</label>
+                        <input type="number" class="form-input" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">最大行驶速度 (km/h)</label>
+                        <input type="number" class="form-input" placeholder="120" value="120">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">所属部门</label>
+                        <select class="form-select">
+                            <option value="">全部部门</option>
+                            <option value="logistics" selected>物流运输部</option>
+                            <option value="sales">销售部</option>
+                            <option value="admin">行政部</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">驾驶员</label>
+                        <input type="text" class="form-input" placeholder="请输入驾驶员姓名" value="周建国">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">起点区域</label>
+                        <input type="text" class="form-input" placeholder="请输入起点区域" value="北京市朝阳区">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">终点区域</label>
+                        <input type="text" class="form-input" placeholder="请输入终点区域" value="北京市通州区">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">GPS信号质量</label>
+                        <select class="form-select">
+                            <option value="">不限</option>
+                            <option value="good" selected>良好</option>
+                            <option value="normal">一般</option>
+                            <option value="weak">较弱</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">采样间隔 (秒)</label>
+                        <select class="form-select">
+                            <option value="5">5秒</option>
+                            <option value="10" selected>10秒</option>
+                            <option value="30">30秒</option>
+                            <option value="60">60秒</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label class="form-label">轨迹筛选条件</label>
+                        <div class="form-checkbox-group">
+                            <label class="form-checkbox">
+                                <input type="checkbox" checked> 包含停留点
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" checked> 包含超速记录
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox"> 仅显示异常轨迹
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox"> 过滤漂移点
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('advancedQueryModal')">取消</button>
+                <button class="btn btn-primary" onclick="applyAdvancedQuery()">
+                    <i class="fa-solid fa-check"></i>
+                    应用筛选
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stop Point Analysis Modal -->
+    <div class="modal-overlay" id="stopPointModal">
+        <div class="modal" style="min-width: 700px;">
+            <div class="modal-header">
+                <span class="modal-title">
+                    <i class="fa-solid fa-location-dot"></i>
+                    停留点分析
+                </span>
+                <button class="modal-close" onclick="closeModal('stopPointModal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">停留次数</div>
+                        <div class="stat-value">3<span class="stat-unit">次</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">总停留时长</div>
+                        <div class="stat-value">1:25<span class="stat-unit">小时</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">最长停留</div>
+                        <div class="stat-value">48<span class="stat-unit">分钟</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">平均停留</div>
+                        <div class="stat-value">28<span class="stat-unit">分钟</span></div>
+                    </div>
+                </div>
+                <div class="section-title">停留点详情列表</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>停留位置</th>
+                            <th>到达时间</th>
+                            <th>离开时间</th>
+                            <th>停留时长</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>北京市朝阳区望京SOHO</td>
+                            <td>2024-03-15 09:15:32</td>
+                            <td>2024-03-15 09:38:45</td>
+                            <td>23分钟</td>
+                            <td>
+                                <button class="table-action" onclick="locatePoint(1)">定位</button>
+                                <button class="table-action" onclick="viewDetail(1)">详情</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>北京市朝阳区三里屯太古里</td>
+                            <td>2024-03-15 11:22:18</td>
+                            <td>2024-03-15 12:10:05</td>
+                            <td>48分钟</td>
+                            <td>
+                                <button class="table-action" onclick="locatePoint(2)">定位</button>
+                                <button class="table-action" onclick="viewDetail(2)">详情</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>北京市通州区万达广场</td>
+                            <td>2024-03-15 14:55:12</td>
+                            <td>2024-03-15 15:09:28</td>
+                            <td>14分钟</td>
+                            <td>
+                                <button class="table-action" onclick="locatePoint(3)">定位</button>
+                                <button class="table-action" onclick="viewDetail(3)">详情</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('stopPointModal')">关闭</button>
+                <button class="btn btn-primary" onclick="exportStopPoints()">
+                    <i class="fa-solid fa-download"></i>
+                    导出数据
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abnormal Detection Modal -->
+    <div class="modal-overlay" id="abnormalModal">
+        <div class="modal" style="min-width: 750px;">
+            <div class="modal-header">
+                <span class="modal-title">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    异常行为检测
+                </span>
+                <button class="modal-close" onclick="closeModal('abnormalModal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    本次行程检测到 4 条异常记录，请及时核实处理
+                </div>
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="switchTab('speedTab', this)">超速记录</button>
+                    <button class="tab-btn" onclick="switchTab('routeTab', this)">路线偏离</button>
+                    <button class="tab-btn" onclick="switchTab('stopTab', this)">异常停留</button>
+                    <button class="tab-btn" onclick="switchTab('signalTab', this)">信号异常</button>
+                </div>
+                <div class="tab-content active" id="speedTab">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>发生时间</th>
+                                <th>位置</th>
+                                <th>限速</th>
+                                <th>实际速度</th>
+                                <th>超速幅度</th>
+                                <th>持续时间</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2024-03-15 10:32:15</td>
+                                <td>京通快速路</td>
+                                <td>80 km/h</td>
+                                <td>98 km/h</td>
+                                <td>22.5%</td>
+                                <td>3分28秒</td>
+                                <td><span class="badge badge-warning">待处理</span></td>
+                            </tr>
+                            <tr>
+                                <td>2024-03-15 15:18:42</td>
+                                <td>朝阳北路</td>
+                                <td>60 km/h</td>
+                                <td>72 km/h</td>
+                                <td>20.0%</td>
+                                <td>1分52秒</td>
+                                <td><span class="badge badge-success">已确认</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-content" id="routeTab">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>发生时间</th>
+                                <th>偏离位置</th>
+                                <th>计划路线</th>
+                                <th>偏离距离</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2024-03-15 13:45:20</td>
+                                <td>东四环中路</td>
+                                <td>东三环中路</td>
+                                <td>2.3 km</td>
+                                <td><span class="badge badge-danger">未处理</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-content" id="stopTab">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>发生时间</th>
+                                <th>停留位置</th>
+                                <th>停留时长</th>
+                                <th>异常类型</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2024-03-15 12:05:33</td>
+                                <td>非规划区域</td>
+                                <td>35分钟</td>
+                                <td>超时停留</td>
+                                <td><span class="badge badge-warning">待核实</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-content" id="signalTab">
+                    <div class="alert alert-info">
+                        <i class="fa-solid fa-circle-info"></i>
+                        本次行程未检测到GPS信号异常
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('abnormalModal')">关闭</button>
+                <button class="btn btn-primary" onclick="handleAbnormal()">
+                    <i class="fa-solid fa-check-double"></i>
+                    批量处理
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip Report Modal -->
+    <div class="modal-overlay" id="tripReportModal">
+        <div class="modal" style="min-width: 650px;">
+            <div class="modal-header">
+                <span class="modal-title">
+                    <i class="fa-solid fa-file-lines"></i>
+                    行程分析报告
+                </span>
+                <button class="modal-close" onclick="closeModal('tripReportModal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">基本信息</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">车牌号</label>
+                        <input type="text" class="form-input" value="京A88562" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">驾驶员</label>
+                        <input type="text" class="form-input" value="周建国" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">行程起点</label>
+                        <input type="text" class="form-input" value="北京市朝阳区望京科技园" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">行程终点</label>
+                        <input type="text" class="form-input" value="北京市通州区物流园区" readonly>
+                    </div>
+                </div>
+                <div class="section-title">行程统计</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">行驶里程</div>
+                        <div class="stat-value">156.8<span class="stat-unit">km</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">行驶时长</div>
+                        <div class="stat-value">4:32<span class="stat-unit">小时</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">平均速度</div>
+                        <div class="stat-value">52.6<span class="stat-unit">km/h</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">最高速度</div>
+                        <div class="stat-value">98<span class="stat-unit">km/h</span></div>
+                    </div>
+                </div>
+                <div class="section-title">时段分布</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">出发时间</label>
+                        <input type="text" class="form-input" value="2024-03-15 08:30:00" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">到达时间</label>
+                        <input type="text" class="form-input" value="2024-03-15 17:45:00" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">有效行驶时长</label>
+                        <input type="text" class="form-input" value="3小时07分" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">停留总时长</label>
+                        <input type="text" class="form-input" value="1小时25分" readonly>
+                    </div>
+                </div>
+                <div class="section-title">异常汇总</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">超速次数</label>
+                        <input type="text" class="form-input" value="2次" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">路线偏离</label>
+                        <input type="text" class="form-input" value="1次" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">异常停留</label>
+                        <input type="text" class="form-input" value="1次" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">信号中断</label>
+                        <input type="text" class="form-input" value="0次" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('tripReportModal')">关闭</button>
+                <button class="btn btn-secondary" onclick="printReport()">
+                    <i class="fa-solid fa-print"></i>
+                    打印报告
+                </button>
+                <button class="btn btn-primary" onclick="exportReport()">
+                    <i class="fa-solid fa-download"></i>
+                    导出PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">
+                    <i class="fa-solid fa-file-export"></i>
+                    数据导出
+                </span>
+                <button class="modal-close" onclick="closeModal('exportModal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">导出范围</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">车牌号 <span class="required">*</span></label>
+                        <input type="text" class="form-input" value="京A88562">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">车辆类型</label>
+                        <select class="form-select">
+                            <option value="">全部类型</option>
+                            <option value="truck" selected>货运车辆</option>
+                            <option value="passenger">客运车辆</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">开始时间 <span class="required">*</span></label>
+                        <input type="datetime-local" class="form-input" value="2024-03-15T08:30">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">结束时间 <span class="required">*</span></label>
+                        <input type="datetime-local" class="form-input" value="2024-03-15T17:45">
+                    </div>
+                </div>
+                <div class="section-title">导出设置</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">导出格式 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option value="excel" selected>Excel (.xlsx)</option>
+                            <option value="csv">CSV (.csv)</option>
+                            <option value="json">JSON (.json)</option>
+                            <option value="kml">KML (.kml)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">坐标格式</label>
+                        <select class="form-select">
+                            <option value="wgs84" selected>WGS-84</option>
+                            <option value="gcj02">GCJ-02</option>
+                            <option value="bd09">BD-09</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">数据精简</label>
+                        <select class="form-select">
+                            <option value="none">不精简 (全部数据)</option>
+                            <option value="10" selected>每10点取1点</option>
+                            <option value="50">每50点取1点</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">时间格式</label>
+                        <select class="form-select">
+                            <option value="datetime" selected>日期时间</option>
+                            <option value="timestamp">时间戳</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label class="form-label">导出字段</label>
+                        <div class="form-checkbox-group">
+                            <label class="form-checkbox">
+                                <input type="checkbox" checked> 经纬度
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" checked> 时间
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" checked> 速度
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" checked> 方向
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox"> 海拔
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox"> 里程
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('exportModal')">取消</button>
+                <button class="btn btn-primary" onclick="executeExport()">
+                    <i class="fa-solid fa-download"></i>
+                    开始导出
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Trajectory data simulation
+        let trajectoryPoints = [];
+        let currentPointIndex = 0;
+        let isPlaying = false;
+        let playInterval = null;
+        let playSpeed = 1;
+        let canvas, ctx;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            canvas = document.getElementById('trajectoryCanvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            generateTrajectory();
+            drawTrajectory();
+            
+            window.addEventListener('resize', function() {
+                resizeCanvas();
+                drawTrajectory();
+            });
+
+            // Timeline slider interaction
+            const slider = document.getElementById('timelineSlider');
+            slider.addEventListener('click', function(e) {
+                const rect = slider.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                updateProgress(percent * 100);
+            });
+        });
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+
+        function generateTrajectory() {
+            trajectoryPoints = [];
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const pointCount = 50;
+            
+            for (let i = 0; i < pointCount; i++) {
+                const angle = (i / pointCount) * Math.PI * 1.5;
+                const radius = 100 + i * 3;
+                const x = centerX - 150 + Math.sin(angle) * radius + (Math.random() - 0.5) * 20;
+                const y = centerY + 150 - i * 6 + (Math.random() - 0.5) * 20;
+                trajectoryPoints.push({ x, y });
+            }
+        }
+
+        function drawTrajectory() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (trajectoryPoints.length < 2) return;
+
+            // Draw path
+            ctx.beginPath();
+            ctx.strokeStyle = '#4a7cff';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            ctx.moveTo(trajectoryPoints[0].x, trajectoryPoints[0].y);
+            for (let i = 1; i < trajectoryPoints.length; i++) {
+                ctx.lineTo(trajectoryPoints[i].x, trajectoryPoints[i].y);
+            }
+            ctx.stroke();
+
+            // Draw points
+            trajectoryPoints.forEach((point, index) => {
+                ctx.beginPath();
+                if (index === 0) {
+                    ctx.fillStyle = '#22c55e';
+                    ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
+                } else if (index === trajectoryPoints.length - 1) {
+                    ctx.fillStyle = '#ef4444';
+                    ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
+                } else {
+                    ctx.fillStyle = '#6c9fff';
+                    ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+                }
+                ctx.fill();
+            });
+
+            // Draw stop points
+            const stopPoints = [
+                { index: 15, label: '1' },
+                { index: 30, label: '2' },
+                { index: 42, label: '3' }
+            ];
+
+            stopPoints.forEach(stop => {
+                if (stop.index < trajectoryPoints.length) {
+                    const point = trajectoryPoints[stop.index];
+                    ctx.beginPath();
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 10px Microsoft YaHei';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(stop.label, point.x, point.y);
+                }
+            });
+
+            // Draw current position marker if playing
+            if (currentPointIndex > 0 && currentPointIndex < trajectoryPoints.length) {
+                const currentPoint = trajectoryPoints[currentPointIndex];
+                ctx.beginPath();
+                ctx.fillStyle = '#fff';
+                ctx.strokeStyle = '#4a7cff';
+                ctx.lineWidth = 3;
+                ctx.arc(currentPoint.x, currentPoint.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        function updateProgress(percent) {
+            percent = Math.max(0, Math.min(100, percent));
+            document.getElementById('timelineProgress').style.width = percent + '%';
+            document.getElementById('timelineHandle').style.left = percent + '%';
+            currentPointIndex = Math.floor((percent / 100) * (trajectoryPoints.length - 1));
+            drawTrajectory();
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const icon = document.getElementById('playIcon');
+            
+            if (isPlaying) {
+                icon.className = 'fa-solid fa-pause';
+                startPlayback();
+            } else {
+                icon.className = 'fa-solid fa-play';
+                stopPlayback();
+            }
+        }
+
+        function startPlayback() {
+            if (playInterval) clearInterval(playInterval);
+            
+            playInterval = setInterval(function() {
+                currentPointIndex++;
+                if (currentPointIndex >= trajectoryPoints.length) {
+                    currentPointIndex = 0;
+                }
+                const percent = (currentPointIndex / (trajectoryPoints.length - 1)) * 100;
+                updateProgress(percent);
+            }, 200 / playSpeed);
+        }
+
+        function stopPlayback() {
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+        }
+
+        function slowDown() {
+            if (playSpeed > 0.25) {
+                playSpeed /= 2;
+                document.getElementById('speedValue').textContent = playSpeed + 'x';
+                if (isPlaying) startPlayback();
+            }
+        }
+
+        function speedUp() {
+            if (playSpeed < 8) {
+                playSpeed *= 2;
+                document.getElementById('speedValue').textContent = playSpeed + 'x';
+                if (isPlaying) startPlayback();
+            }
+        }
+
+        function skipBackward() {
+            currentPointIndex = Math.max(0, currentPointIndex - 10);
+            const percent = (currentPointIndex / (trajectoryPoints.length - 1)) * 100;
+            updateProgress(percent);
+        }
+
+        function skipForward() {
+            currentPointIndex = Math.min(trajectoryPoints.length - 1, currentPointIndex + 10);
+            const percent = (currentPointIndex / (trajectoryPoints.length - 1)) * 100;
+            updateProgress(percent);
+        }
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const page = this.dataset.page;
+                if (page) {
+                    navigateTo(page);
+                }
+            });
+        });
+
+        // Tab switching
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Query functions
+        function queryTrack() {
+            const plate = document.getElementById('vehiclePlate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            
+            if (!plate || !startTime || !endTime) {
+                alert('请填写完整的查询条件');
+                return;
+            }
+            
+            // Regenerate trajectory for demo
+            generateTrajectory();
+            drawTrajectory();
+            updateProgress(0);
+            alert('查询成功，已加载 ' + trajectoryPoints.length + ' 个轨迹点');
+        }
+
+        function clearQuery() {
+            document.getElementById('vehiclePlate').value = '';
+            document.getElementById('startTime').value = '';
+            document.getElementById('endTime').value = '';
+            document.getElementById('trackType').value = 'all';
+        }
+
+        function applyAdvancedQuery() {
+            closeModal('advancedQueryModal');
+            generateTrajectory();
+            drawTrajectory();
+            updateProgress(0);
+            alert('高级筛选条件已应用');
+        }
+
+        // Point functions
+        function locatePoint(index) {
+            const stopIndexMap = { 1: 15, 2: 30, 3: 42 };
+            const pointIndex = stopIndexMap[index];
+            if (pointIndex && pointIndex < trajectoryPoints.length) {
+                currentPointIndex = pointIndex;
+                const percent = (currentPointIndex / (trajectoryPoints.length - 1)) * 100;
+                updateProgress(percent);
+            }
+        }
+
+        function viewDetail(index) {
+            alert('停留点 ' + index + ' 详情信息');
+        }
+
+        // Export functions
+        function exportStopPoints() {
+            alert('停留点数据导出成功');
+            closeModal('stopPointModal');
+        }
+
+        function handleAbnormal() {
+            alert('异常记录已批量处理');
+            closeModal('abnormalModal');
+        }
+
+        function exportReport() {
+            alert('行程报告PDF导出成功');
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function executeExport() {
+            alert('数据导出任务已开始，请稍候...');
+            setTimeout(function() {
+                alert('数据导出完成');
+                closeModal('exportModal');
+            }, 1500);
+        }
+
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        // Window controls (demo only)
+        document.querySelector('.window-btn.close').addEventListener('click', function() {
+            if (confirm('确定要关闭系统吗？')) {
+                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#666;">系统已关闭</div>';
+            }
+        });
+    </script>
+</body>
+</html>

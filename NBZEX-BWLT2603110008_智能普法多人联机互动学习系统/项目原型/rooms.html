@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多人房间 - 智能普法多人联机互动学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#0EA5E9',
+                        accent: '#38BDF8',
+                        dark: '#020617',
+                        surface: '#020617',
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .macos-window {
+            width: 1440px;
+            min-height: 900px;
+            background: #020617;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        }
+        .traffic-lights {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background: rgba(37, 99, 235, 0.16);
+            transform: translateX(4px);
+        }
+        .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.32), transparent);
+        }
+        .room-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .room-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.35);
+            border-color: rgba(37, 99, 235, 0.5);
+        }
+        .online-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563EB 0%, #0EA5E9 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        .tag-live {
+            animation: tagPulse 1.5s infinite;
+        }
+        @keyframes tagPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .modal-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .modal-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .room-hidden { display: none; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+    <div class="macos-window rounded-xl overflow-hidden">
+        <div class="bg-surface/80 backdrop-blur-xl px-5 py-3 flex items-center border-b border-white/5 relative z-[1000]">
+            <div class="flex gap-2">
+                <div class="traffic-lights bg-red-500"></div>
+                <div class="traffic-lights bg-yellow-500"></div>
+                <div class="traffic-lights bg-green-500"></div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="text-sm font-medium text-white/80">智能普法多人联机互动学习系统</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10">
+                    <div class="online-indicator"></div>
+                    <span class="text-xs text-green-400 font-medium">1,247 人在线</span>
+                </div>
+                <div class="relative">
+                    <button onclick="toggleNotification()" class="relative">
+                        <i class="fa-regular fa-bell w-5 h-5 text-white/60 cursor-pointer hover:text-white transition"></i>
+                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">3</span>
+                    </button>
+                    <div id="notificationDropdown" class="hidden absolute right-0 top-full mt-2 w-80 glass-card rounded-xl overflow-hidden shadow-xl z-[9999]">
+                        <div class="p-4 border-b border-white/10">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-white font-bold">通知中心</h3>
+                                <button class="text-xs text-primary hover:underline">全部已读</button>
+                            </div>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto">
+                            <div class="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-video text-red-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">《民法典》专题直播即将开始</p>
+                                        <p class="text-xs text-white/40 mt-1">2分钟前</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-users text-green-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">您被邀请加入"劳动法答疑室"</p>
+                                        <p class="text-xs text-white/40 mt-1">30分钟前</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-comment text-blue-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">您的提问有了新回复</p>
+                                        <p class="text-xs text-white/40 mt-1">1小时前</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex h-[856px]">
+            <div class="w-64 bg-surface/40 border-r border-white/5 p-4">
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" 
+                             class="w-12 h-12 rounded-full border-2 border-primary/50" alt="用户头像">
+                        <div class="flex-1">
+                            <p class="text-white font-semibold text-sm">张明</p>
+                            <p class="text-xs text-white/50">中级学员 · Lv.8</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-white/5">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-white/60">学习进度</span>
+                            <span class="text-primary font-semibold">68%</span>
+                        </div>
+                        <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-primary to-secondary w-[68%] rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="space-y-1">
+                    <a href="main.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-home w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">学习大厅</span>
+                    </a>
+                    <div class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-users w-5 h-5 text-primary"></i>
+                        <span class="text-sm font-medium text-white">多人房间</span>
+                        <span class="ml-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">3</span>
+                    </div>
+                    <a href="live.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-video w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">直播课堂</span>
+                    </a>
+                    <a href="laws.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-book-open w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">法规库</span>
+                    </a>
+                    <a href="discussion.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-comments w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">案例讨论</span>
+                    </a>
+                    <a href="achievements.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-trophy w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">成就中心</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="flex-1 overflow-y-auto scrollbar-thin">
+                <div class="sticky top-0 bg-dark/95 backdrop-blur-xl border-b border-white/5 px-8 py-4 z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 class="text-2xl font-bold text-white">多人房间</h1>
+                            <p class="text-sm text-white/60 mt-1">与学友一起在线学习、讨论法律知识</p>
+                        </div>
+                        <button onclick="openCreateModal()" class="btn-primary px-5 py-2.5 rounded-lg text-white text-sm font-semibold">
+                            <i class="fa-solid fa-plus mr-2"></i>创建房间
+                        </button>
+                    </div>
+                    <div class="flex gap-6">
+                        <button onclick="switchTab('all')" id="tab-all" class="tab-btn px-1 py-2 text-sm font-semibold text-primary border-b-2 border-primary">全部房间</button>
+                        <button onclick="switchTab('mine')" id="tab-mine" class="tab-btn px-1 py-2 text-sm font-medium text-white/60 hover:text-white transition">我的房间</button>
+                        <button onclick="switchTab('joinable')" id="tab-joinable" class="tab-btn px-1 py-2 text-sm font-medium text-white/60 hover:text-white transition">可加入</button>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <div id="room-list" class="grid grid-cols-2 gap-6">
+                        <div class="room-card glass-card rounded-xl p-5 cursor-pointer room-item" data-category="all joinable" onclick="openRoomModal('民法典研讨室', '王教授', 12, 20, '进行中')">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-xl">
+                                    <div>
+                                        <h3 class="text-white font-bold">民法典研讨室</h3>
+                                        <p class="text-xs text-white/60">创建者：王教授</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full tag-live">
+                                    <i class="fa-solid fa-circle text-[6px] mr-1"></i>进行中
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-white/60 mb-4">
+                                <span><i class="fa-solid fa-user mr-1"></i>12/20人</span>
+                                <span><i class="fa-solid fa-book mr-1"></i>婚姻家庭编</span>
+                                <span><i class="fa-solid fa-clock mr-1"></i>进行45分钟</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex -space-x-2 gap-2">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-8 h-8 rounded-full border-2 border-surface">
+                                    <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-8 h-8 rounded-full border-2 border-surface">
+                                    <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-8 h-8 rounded-full border-2 border-surface">
+                                    <div class="w-8 h-8 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-xs text-white/60">+9</div>
+                                </div>
+                                <span class="text-primary text-sm font-medium">进入房间 <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="room-card glass-card rounded-xl p-5 cursor-pointer room-item" data-category="all mine" onclick="openRoomModal('刑法案例分析', '李检察官', 8, 15, '讨论中')">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-12 h-12 rounded-xl">
+                                    <div>
+                                        <h3 class="text-white font-bold">刑法案例分析</h3>
+                                        <p class="text-xs text-white/60">创建者：李检察官</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+                                    <i class="fa-solid fa-comments mr-1"></i>讨论中
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-white/60 mb-4">
+                                <span><i class="fa-solid fa-user mr-1"></i>8/15人</span>
+                                <span><i class="fa-solid fa-book mr-1"></i>刑事诉讼法</span>
+                                <span><i class="fa-solid fa-clock mr-1"></i>进行32分钟</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex -space-x-2 gap-2">
+                                    <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-8 h-8 rounded-full border-2 border-surface">
+                                    <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-8 h-8 rounded-full border-2 border-surface">
+                                    <div class="w-8 h-8 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-xs text-white/60">+6</div>
+                                </div>
+                                <span class="text-primary text-sm font-medium">进入房间 <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="room-card glass-card rounded-xl p-5 cursor-pointer room-item" data-category="all joinable" onclick="openRoomModal('合同法务课堂', '陈律师', 18, 25, '进行中')">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-12 h-12 rounded-xl">
+                                    <div>
+                                        <h3 class="text-white font-bold">合同法务课堂</h3>
+                                        <p class="text-xs text-white/60">创建者：陈律师</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full tag-live">
+                                    <i class="fa-solid fa-circle text-[6px] mr-1"></i>进行中
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-white/60 mb-4">
+                                <span><i class="fa-solid fa-user mr-1"></i>18/25人</span>
+                                <span><i class="fa-solid fa-book mr-1"></i>合同法</span>
+                                <span><i class="fa-solid fa-clock mr-1"></i>进行58分钟</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex -space-x-2 gap-2">
+                                    <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-8 h-8 rounded-full border-2 border-surface">
+                                    <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-8 h-8 rounded-full border-2 border-surface">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-8 h-8 rounded-full border-2 border-surface">
+                                    <div class="w-8 h-8 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-xs text-white/60">+15</div>
+                                </div>
+                                <span class="text-primary text-sm font-medium">进入房间 <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="room-card glass-card rounded-xl p-5 cursor-pointer room-item" data-category="all mine joinable" onclick="openRoomModal('劳动法答疑室', '赵法官', 5, 10, '答疑中')">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-xl">
+                                    <div>
+                                        <h3 class="text-white font-bold">劳动法答疑室</h3>
+                                        <p class="text-xs text-white/60">创建者：赵法官</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                                    <i class="fa-solid fa-question mr-1"></i>答疑中
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-white/60 mb-4">
+                                <span><i class="fa-solid fa-user mr-1"></i>5/10人</span>
+                                <span><i class="fa-solid fa-book mr-1"></i>劳动法</span>
+                                <span><i class="fa-solid fa-clock mr-1"></i>进行20分钟</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex -space-x-2 gap-2">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-8 h-8 rounded-full border-2 border-surface">
+                                    <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-8 h-8 rounded-full border-2 border-surface">
+                                    <div class="w-8 h-8 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-xs text-white/60">+3</div>
+                                </div>
+                                <span class="text-primary text-sm font-medium">进入房间 <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-80 bg-surface/40 border-l border-white/5 p-6 overflow-y-auto scrollbar-thin">
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-gamepad w-5 h-5 text-primary"></i>
+                        学习任务
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-primary/10 rounded-lg border-l-2 border-primary">
+                            <p class="text-sm text-white/80">完成房间学习</p>
+                            <p class="text-xs text-white/40 mt-1">获得10经验值</p>
+                        </div>
+                        <div class="p-3 bg-white/5 rounded-lg">
+                            <p class="text-sm text-white/80">参与讨论</p>
+                            <p class="text-xs text-white/40 mt-1">获得5经验值</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-fire w-5 h-5 text-orange-500"></i>
+                        热门话题
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                <i class="fa-solid fa-fire text-red-400 text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">民法典热点问题</p>
+                                <p class="text-xs text-white/40">326人参与</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <div class="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                                <i class="fa-solid fa-bolt text-orange-400 text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">劳动争议处理</p>
+                                <p class="text-xs text-white/40">218人参与</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                <i class="fa-solid fa-gavel text-blue-400 text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">刑事案件实务</p>
+                                <p class="text-xs text-white/40">189人参与</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-star w-5 h-5 text-yellow-500"></i>
+                        房间推荐
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-gradient-to-r from-primary/20 to-transparent rounded-lg border border-primary/30">
+                            <p class="text-sm text-white font-medium">新开：知识产权专题</p>
+                            <p class="text-xs text-white/60 mt-1">周律师 · 适合中级学员</p>
+                        </div>
+                        <div class="p-3 bg-white/5 rounded-lg">
+                            <p class="text-sm text-white font-medium">新开：企业合规管理</p>
+                            <p class="text-xs text-white/60 mt-1">吴律师 · 适合高级学员</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="createModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+        <div class="modal-content glass-card rounded-2xl p-6 w-[480px]">
+            <div class="flex items-center justify-between mb-6">
+                <div class="modal-dots">
+                    <span class="bg-red-500"></span>
+                    <span class="bg-yellow-500"></span>
+                    <span class="bg-green-500"></span>
+                </div>
+                <h3 class="text-xl font-bold text-white text-center flex-1">创建学习房间</h3>
+                <button onclick="closeCreateModal()" class="text-white/60 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">房间名称</label>
+                    <input type="text" placeholder="请输入房间名称" 
+                           class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-primary transition">
+                </div>
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">学习主题</label>
+                    <select id="createTheme" onchange="updateTheme()" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition">
+                        <option value="">请选择学习主题</option>
+                        <option value="civil">民法典</option>
+                        <option value="criminal">刑法</option>
+                        <option value="labor">劳动法</option>
+                        <option value="contract">合同法</option>
+                        <option value="administrative">行政法</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">房间人数上限</label>
+                    <select id="createCapacity" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition">
+                        <option value="10">10人</option>
+                        <option value="15" selected>15人</option>
+                        <option value="20">20人</option>
+                        <option value="30">30人</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">房间简介</label>
+                    <textarea placeholder="请输入房间简介（选填）" rows="3"
+                              class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-primary transition resize-none"></textarea>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeCreateModal()" class="btn-secondary flex-1 py-3 rounded-lg text-white font-medium">
+                    取消
+                </button>
+                <button onclick="createRoom()" class="btn-primary flex-1 py-3 rounded-lg text-white font-semibold">
+                    创建房间
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="roomModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+        <div class="modal-content glass-card rounded-2xl p-6 w-[520px]">
+            <div class="flex items-center justify-between mb-6">
+                <div class="modal-dots">
+                    <span class="bg-red-500"></span>
+                    <span class="bg-yellow-500"></span>
+                    <span class="bg-green-500"></span>
+                </div>
+                <h3 id="roomModalTitle" class="text-xl font-bold text-white text-center flex-1">房间详情</h3>
+                <button onclick="closeRoomModal()" class="text-white/60 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center gap-4 p-4 bg-white/5 rounded-xl">
+                    <div id="roomIcon" class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                        <i class="fa-solid fa-scale-of-justice text-white text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 id="roomName" class="text-white font-bold text-lg">民法典研讨室</h4>
+                        <p id="roomCreator" class="text-sm text-white/60">创建者：王教授</p>
+                    </div>
+                    <span id="roomStatus" class="px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full">
+                        进行中
+                    </span>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="p-4 bg-white/5 rounded-xl text-center">
+                        <p id="roomCurrent" class="text-2xl font-bold text-primary">12</p>
+                        <p class="text-xs text-white/60 mt-1">当前人数</p>
+                    </div>
+                    <div class="p-4 bg-white/5 rounded-xl text-center">
+                        <p id="roomMinutes" class="text-2xl font-bold text-secondary">45</p>
+                        <p class="text-xs text-white/60 mt-1">分钟</p>
+                    </div>
+                    <div class="p-4 bg-white/5 rounded-xl text-center">
+                        <p id="roomSubject" class="text-2xl font-bold text-accent">婚姻</p>
+                        <p class="text-xs text-white/60 mt-1">学习主题</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-sm text-white/60 mb-2">参与者</p>
+                    <div id="roomParticipants" class="flex flex-wrap gap-2">
+                        <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-10 h-10 rounded-full border-2 border-primary/50">
+                        <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-10 h-10 rounded-full border-2 border-white/20">
+                        <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-10 h-10 rounded-full border-2 border-white/20">
+                        <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-10 h-10 rounded-full border-2 border-white/20">
+                        <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-10 h-10 rounded-full border-2 border-white/20">
+                        <div class="w-10 h-10 rounded-full border-2 border-dashed border-white/30 flex items-center justify-center text-xs text-white/60">+7</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeRoomModal()" class="btn-secondary flex-1 py-3 rounded-lg text-white font-medium">
+                    返回
+                </button>
+                <button onclick="joinRoom()" class="btn-primary flex-1 py-3 rounded-lg text-white font-semibold">
+                    加入房间
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openCreateModal() {
+            document.getElementById('createModal').classList.remove('hidden');
+            document.getElementById('createModal').classList.add('flex');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.add('hidden');
+            document.getElementById('createModal').classList.remove('flex');
+        }
+
+        function createRoom() {
+            const theme = document.getElementById('createTheme').value;
+            const capacity = document.getElementById('createCapacity').value;
+            if (!theme) {
+                alert('请选择学习主题！');
+                return;
+            }
+            alert('房间创建成功！');
+            closeCreateModal();
+        }
+
+        function updateTheme() {
+            const theme = document.getElementById('createTheme').value;
+        }
+
+        function openRoomModal(name, creator, current, max, status) {
+            document.getElementById('roomName').textContent = name;
+            document.getElementById('roomCreator').textContent = '创建者：' + creator;
+            document.getElementById('roomModalTitle').textContent = name;
+            document.getElementById('roomCurrent').textContent = current;
+            
+            const statusEl = document.getElementById('roomStatus');
+            if (status === '进行中') {
+                statusEl.className = 'px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full';
+                statusEl.innerHTML = '<i class="fa-solid fa-circle text-[6px] mr-1"></i>进行中';
+            } else if (status === '讨论中') {
+                statusEl.className = 'px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full';
+                statusEl.innerHTML = '<i class="fa-solid fa-comments mr-1"></i>讨论中';
+            } else {
+                statusEl.className = 'px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded-full';
+                statusEl.innerHTML = '<i class="fa-solid fa-question mr-1"></i>答疑中';
+            }
+            
+            document.getElementById('roomModal').classList.remove('hidden');
+            document.getElementById('roomModal').classList.add('flex');
+        }
+
+        function closeRoomModal() {
+            document.getElementById('roomModal').classList.add('hidden');
+            document.getElementById('roomModal').classList.remove('flex');
+        }
+
+        function joinRoom() {
+            alert('成功加入房间！');
+            closeRoomModal();
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+                btn.classList.add('text-white/60', 'font-medium');
+            });
+            document.getElementById('tab-' + tab).classList.remove('text-white/60', 'font-medium');
+            document.getElementById('tab-' + tab).classList.add('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+            
+            document.querySelectorAll('.room-item').forEach(item => {
+                const categories = item.dataset.category;
+                if (tab === 'all' || categories.includes(tab)) {
+                    item.classList.remove('room-hidden');
+                } else {
+                    item.classList.add('room-hidden');
+                }
+            });
+        }
+
+        document.getElementById('createModal').addEventListener('click', function(e) {
+            if (e.target === this) closeCreateModal();
+        });
+
+        document.getElementById('roomModal').addEventListener('click', function(e) {
+            if (e.target === this) closeRoomModal();
+        });
+
+        function toggleNotification() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const bell = e.target.closest('.fa-bell');
+            if (!bell && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4A6CF7">
+  <title>错题本 - 中职数学课程辅助学习软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    :root{--primary:#4A6CF7;--primary-light:#6B8AFF;--primary-dark:#3451D1;--accent:#FF6B6B;--accent-orange:#FF9F43;--accent-green:#2ED573;--accent-purple:#A66CFF;--bg:#F5F7FB;--card:#FFFFFF;--text:#1E293B;--text-sec:#64748B;--text-light:#94A3B8;--border:#E2E8F0;--shadow:0 2px 12px rgba(74,108,247,0.08);--shadow-lg:0 8px 32px rgba(74,108,247,0.12);--radius:16px}
+    html,body{font-family:'Noto Sans SC',sans-serif;background:#1a1a2e;height:100%;overflow:hidden}
+    .phone-frame{width:100%;height:100vh;background:var(--bg);overflow:hidden;position:relative}
+    .page{height:100%;overflow-y:auto;overflow-x:hidden;background:var(--bg);-webkit-overflow-scrolling:touch;padding-bottom:16px}
+    .page::-webkit-scrollbar{display:none}
+    .sub-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+    .sub-back{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+    .sub-back:active{transform:scale(0.9)}
+    .sub-title{color:#fff;font-size:17px;font-weight:700;flex:1}
+    .sub-action{color:rgba(255,255,255,0.85);font-size:18px;cursor:pointer;padding:4px}
+    .sub-body{padding:16px}
+    .tabs{display:flex;gap:0;background:var(--card);padding:4px;border-radius:12px;margin-bottom:16px;box-shadow:var(--shadow)}
+    .tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;color:var(--text-light);border-radius:10px;cursor:pointer;transition:all 0.3s}
+    .tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(74,108,247,0.3)}
+    .stats-row{display:flex;gap:10px;margin-bottom:16px}
+    .stat-card{flex:1;background:linear-gradient(135deg,var(--accent),#FF9999);border-radius:14px;padding:14px;color:#fff;text-align:center}
+    .stat-card.green{background:linear-gradient(135deg,var(--accent-green),#7BF0A5)}
+    .stat-card.blue{background:linear-gradient(135deg,var(--primary),var(--primary-light))}
+    .stat-num{font-size:24px;font-weight:900}
+    .stat-label{font-size:11px;opacity:0.85}
+    .wrong-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;transition:all 0.25s;position:relative}
+    .wrong-card:active{transform:scale(0.98)}
+    .wrong-card.mastered{opacity:0.6}
+    .wrong-card.mastered::after{content:'已掌握';position:absolute;top:12px;right:12px;background:var(--accent-green);color:#fff;font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px}
+    .wrong-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .diff-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600}
+    .diff-easy{background:#DCFCE7;color:#16A34A}
+    .diff-medium{background:#FEF3C7;color:#D97706}
+    .diff-hard{background:#FEE2E2;color:#DC2626}
+    .wrong-count{font-size:11px;color:var(--text-light)}
+    .wrong-question{font-size:14px;color:var(--text);line-height:1.7;margin-bottom:10px}
+    .wrong-footer{display:flex;justify-content:space-between;align-items:center}
+    .wrong-source{font-size:12px;color:var(--text-light);display:flex;align-items:center;gap:4px}
+    .wrong-action{font-size:12px;color:var(--primary);font-weight:600;display:flex;align-items:center;gap:2px}
+    .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#1E293B;color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;font-weight:500;z-index:1000;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:all 0.3s}
+    .modal-overlay.show{opacity:1;pointer-events:auto}
+    .modal{background:var(--card);border-radius:var(--radius);width:90%;max-width:340px;transform:scale(0.9);transition:all 0.3s}
+    .modal.show{transform:scale(1)}
+    .modal-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:16px;border-radius:var(--radius) var(--radius) 0 0;text-align:center}
+    .modal-title{color:#fff;font-size:16px;font-weight:700}
+    .modal-body{padding:20px}
+    .modal-question{font-size:14px;color:var(--text);line-height:1.7;margin-bottom:16px;padding:12px;background:var(--bg);border-radius:10px}
+    .modal-section{margin-bottom:16px}
+    .modal-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+    .modal-answer{font-size:14px;color:var(--accent-green);font-weight:600;padding:10px;background:#ECFDF5;border-radius:8px}
+    .modal-analysis{font-size:13px;color:var(--text-sec);line-height:1.6}
+    .modal-btn{display:block;width:100%;padding:12px;background:var(--primary);color:#fff;font-size:14px;font-weight:600;border:none;border-radius:10px;cursor:pointer;font-family:inherit;transition:all 0.2s;margin-top:12px}
+    .modal-btn:active{background:var(--primary-dark)}
+    .modal-btn.green{background:var(--accent-green)}
+    .modal-btns{display:flex;gap:10px}
+    .modal-btns .modal-btn{flex:1;margin:0}
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="page">
+      <div class="sub-header">
+        <div class="sub-back" onclick="location.href='home.html'"><i class="ri-arrow-left-s-line"></i></div>
+        <div class="sub-title">错题本</div>
+        <div class="sub-action"><i class="ri-filter-3-line" onclick="showToast('筛选功能')"></i></div>
+      </div>
+      <div class="sub-body">
+        <div class="tabs" id="statusTabs">
+          <div class="tab active" onclick="switchStatus(this,'all')">全部</div>
+          <div class="tab" onclick="switchStatus(this,'review')">待复习</div>
+          <div class="tab" onclick="switchStatus(this,'mastered')">已掌握</div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-num">23</div>
+            <div class="stat-label">待复习</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-num">45</div>
+            <div class="stat-label">已掌握</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-num">68</div>
+            <div class="stat-label">总错题</div>
+          </div>
+        </div>
+        <div class="wrong-card" onclick="showWrongDetail(this,'已知 f(x) = x² - 2x + 1，求 f(x) 的最小值。','f(x) = (x-1)²，因此最小值为 0。','本题考察二次函数的最值问题。f(x) = x² - 2x + 1 = (x-1)²，由于 (x-1)² ≥ 0，所以最小值为 0。','中等',3,'函数 · 二次函数')">
+          <div class="wrong-header">
+            <span class="diff-tag diff-medium">中等</span>
+            <span class="wrong-count">错误 3 次</span>
+          </div>
+          <div class="wrong-question">已知 f(x) = x² - 2x + 1，求 f(x) 的最小值。</div>
+          <div class="wrong-footer">
+            <span class="wrong-source"><i class="ri-book-line"></i> 函数 · 二次函数</span>
+            <span class="wrong-action">查看解析 <i class="ri-arrow-right-s-line"></i></span>
+          </div>
+        </div>
+        <div class="wrong-card" onclick="showWrongDetail(this,'解不等式：x² - 5x + 6 < 0','(x-2)(x-3) < 0，解得 2 < x < 3。','将不等式左边因式分解为 (x-2)(x-3)，根据二次函数的图像性质，不等式 < 0 的解集为两根之间。','困难',2,'不等式 · 一元二次')">
+          <div class="wrong-header">
+            <span class="diff-tag diff-hard">困难</span>
+            <span class="wrong-count">错误 2 次</span>
+          </div>
+          <div class="wrong-question">解不等式：x² - 5x + 6 < 0</div>
+          <div class="wrong-footer">
+            <span class="wrong-source"><i class="ri-book-line"></i> 不等式 · 一元二次</span>
+            <span class="wrong-action">查看解析 <i class="ri-arrow-right-s-line"></i></span>
+          </div>
+        </div>
+        <div class="wrong-card" onclick="showWrongDetail(this,'已知等差数列 {aₙ} 中，a₁=3，d=2，求 a₁₀。','a₁₀ = a₁ + 9d = 3 + 18 = 21。','等差数列通项公式：aₙ = a₁ + (n-1)d。代入 a₁=3，d=2，n=10 得 a₁₀ = 3 + 9×2 = 21。','基础',1,'数列 · 等差数列')">
+          <div class="wrong-header">
+            <span class="diff-tag diff-easy">基础</span>
+            <span class="wrong-count">错误 1 次</span>
+          </div>
+          <div class="wrong-question">已知等差数列 {aₙ} 中，a₁=3，d=2，求 a₁₀。</div>
+          <div class="wrong-footer">
+            <span class="wrong-source"><i class="ri-book-line"></i> 数列 · 等差数列</span>
+            <span class="wrong-action">查看解析 <i class="ri-arrow-right-s-line"></i></span>
+          </div>
+        </div>
+        <div class="wrong-card" onclick="showWrongDetail(this,'计算：log₂8 + log₃9','log₂8 + log₃9 = 3 + 2 = 5。','log₂8 = log₂(2³) = 3，log₃9 = log₃(3²) = 2。','中等',1,'函数 · 对数函数')">
+          <div class="wrong-header">
+            <span class="diff-tag diff-medium">中等</span>
+            <span class="wrong-count">错误 1 次</span>
+          </div>
+          <div class="wrong-question">计算：log₂8 + log₃9</div>
+          <div class="wrong-footer">
+            <span class="wrong-source"><i class="ri-book-line"></i> 函数 · 对数函数</span>
+            <span class="wrong-action">查看解析 <i class="ri-arrow-right-s-line"></i></span>
+          </div>
+        </div>
+        <div class="wrong-card mastered" onclick="showWrongDetail(this,'已知 sinθ = 3/5，且 θ 为锐角，求 cosθ。','cosθ = √(1-sin²θ) = √(1-9/25) = 4/5。','利用同角三角函数基本关系式 sin²θ + cos²θ = 1，注意 θ 为锐角时 cosθ > 0。','中等',4,'三角函数 · 同角关系')">
+          <div class="wrong-header">
+            <span class="diff-tag diff-medium">中等</span>
+            <span class="wrong-count">已掌握</span>
+          </div>
+          <div class="wrong-question">已知 sinθ = 3/5，且 θ 为锐角，求 cosθ。</div>
+          <div class="wrong-footer">
+            <span class="wrong-source"><i class="ri-book-line"></i> 三角函数 · 同角关系</span>
+            <span class="wrong-action">查看解析 <i class="ri-arrow-right-s-line"></i></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title">错题解析</div>
+        </div>
+        <div class="modal-body">
+          <div class="modal-question" id="modalQuestion"></div>
+          <div class="modal-section">
+            <div class="modal-section-title"><i class="ri-check-line" style="color:var(--accent-green)"></i>正确答案</div>
+            <div class="modal-answer" id="modalAnswer"></div>
+          </div>
+          <div class="modal-section">
+            <div class="modal-section-title"><i class="ri-lightbulb-line" style="color:var(--accent-orange)"></i>详细解析</div>
+            <div class="modal-analysis" id="modalAnalysis"></div>
+          </div>
+          <div class="modal-btns">
+            <button class="modal-btn" onclick="doPractice()">再做一遍</button>
+            <button class="modal-btn green" onclick="markMastered()">已掌握</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    let currentWrongCard=null;
+    function switchStatus(el,status){
+      el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+      showToast('已切换到'+status);
+    }
+    function showWrongDetail(el,question,answer,analysis,diff,count,source){
+      currentWrongCard=el;
+      document.getElementById('modalQuestion').textContent=question;
+      document.getElementById('modalAnswer').textContent=answer;
+      document.getElementById('modalAnalysis').textContent=analysis;
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+    function closeModal(e){
+      if(e&&e.target!==document.getElementById('modalOverlay'))return;
+      document.getElementById('modalOverlay').classList.remove('show');
+    }
+    function doPractice(){
+      closeModal();
+      showToast('正在加载练习...');
+    }
+    function markMastered(){
+      if(currentWrongCard){
+        currentWrongCard.classList.add('mastered');
+        currentWrongCard.querySelector('.wrong-count').textContent='已掌握';
+      }
+      closeModal();
+      showToast('已标记为掌握');
+    }
+    function showToast(msg){
+      const t=document.getElementById('toast');
+      t.textContent=msg;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'),2000);
+    }
+  </script>
+</body>
+</html>

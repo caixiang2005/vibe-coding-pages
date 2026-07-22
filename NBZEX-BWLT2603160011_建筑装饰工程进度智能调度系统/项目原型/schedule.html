@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>施工计划 - 建筑装饰工程进度智能调度系统</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --surface: #FFFFFF;
+      --bg: #F5F5F7;
+      --sidebar-bg: #F0F0F2;
+      --text-primary: #1D1D1F;
+      --text-secondary: #86868B;
+      --text-tertiary: #AEAEB2;
+      --accent: #0071E3;
+      --green: #34C759;
+      --orange: #FF9500;
+      --red: #FF3B30;
+      --purple: #5856D6;
+      --border: #E5E5EA;
+      --shadow-window: 0 22px 70px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: url('./static/bg.jpg') center/cover no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      padding: 20px;
+    }
+
+    .mac-window {
+      width: 1120px;
+      height: 720px;
+      background: var(--bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-window);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .titlebar {
+      height: 52px;
+      min-height: 52px;
+      background: linear-gradient(180deg, #FAFAFA 0%, #ECECEC 100%);
+      border-bottom: 1px solid #D5D5D5;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tl {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .tl-close {
+      background: #FF5F57;
+    }
+
+    .tl-min {
+      background: #FFBD2E;
+    }
+
+    .tl-max {
+      background: #28C840;
+    }
+
+    .titlebar-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: #6E6E73;
+      white-space: nowrap;
+    }
+
+    .titlebar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6E6E73;
+    }
+
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: linear-gradient(135deg, var(--accent), #40A0FF);
+      display: block;
+    }
+
+    .main-layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+      margin-bottom: 16px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .sidebar-item.active {
+      background: rgba(0, 113, 227, 0.1);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .sidebar-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .project-selector {
+      font-size: 12px;
+      padding: 8px 10px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .project-selector .proj-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .project-selector .proj-id {
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+
+    .project-switch {
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .project-switch svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .content-header {
+      padding: 20px 24px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      height: 32px;
+      padding: 0 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: #F5F5F7;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: #0077ED;
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    .phase-card {
+      background: white;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .phase-header {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .phase-header:hover {
+      background: #FAFAFA;
+    }
+
+    .phase-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .phase-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .phase-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .phase-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .phase-status {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .status-not-start {
+      background: #F5F5F7;
+      color: var(--text-secondary);
+    }
+
+    .status-in-progress {
+      background: #E3F2FD;
+      color: #1565C0;
+    }
+
+    .status-done {
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+
+    .phase-body {
+      padding: 16px 18px;
+    }
+
+    .phase-progress {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .progress-bar {
+      flex: 1;
+      height: 8px;
+      background: #F0F0F2;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-text {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      min-width: 45px;
+      text-align: right;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #FAFAFA;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .task-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .task-check.checked {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .task-check.checked svg {
+      fill: white;
+    }
+
+    .task-info {
+      flex: 1;
+    }
+
+    .task-name {
+      font-size: 13px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .task-date {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .task-worker {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .worker-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #E5E5EA;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      min-width: 400px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+      overflow: hidden;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: linear-gradient(180deg, #FAFAFA 0%, #F0F0F2 100%);
+    }
+
+    .modal-traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #FF5F57;
+      border: 0.5px solid #E14942;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #FFBD2E;
+      border: 0.5px solid #DEA123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28C840;
+      border: 0.5px solid #1DAD2B;
+    }
+
+    .modal-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #FAFAFA;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid var(--border);
+    }
+
+    .modal-btn-secondary {
+      background: white;
+      color: var(--text-primary);
+    }
+
+    .modal-btn-secondary:hover {
+      background: #F5F5F7;
+    }
+
+    .modal-btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .modal-btn-primary:hover {
+      background: #0077ED;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: white;
+      cursor: pointer;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .summary-card {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .summary-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .summary-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .form-textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      transition: border-color 0.15s;
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .info-box {
+      background: #F8F6FF;
+      border: 1px solid #E8E4F5;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    .info-box-title {
+      font-size: 12px;
+      color: var(--purple);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .info-box-content {
+      font-size: 11px;
+      color: #6E6790;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <div class="tl tl-close"></div>
+        <div class="tl tl-min"></div>
+        <div class="tl tl-max"></div>
+      </div>
+      <span class="titlebar-center">建筑装饰工程进度智能调度系统</span>
+      <div class="titlebar-right">
+        <img class="user-avatar" src="https://i02piccdn.sogoucdn.com/4ae40945067239b4" alt="许作舟" />许作舟
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">导航</div>
+          <div class="sidebar-item" onclick="window.location.href='dashboard.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zM13 4v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z" />
+              </svg></div>
+            工作台
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='gantt.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z" />
+              </svg></div>
+            进度总览
+          </div>
+          <div class="sidebar-item active">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
+              </svg></div>
+            施工计划
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='tasks.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg></div>
+            任务调度
+            <span class="sidebar-badge">5</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='personnel.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+              </svg></div>
+            人员管理
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='ai_alerts.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+              </svg></div>
+            智能预警
+            <span class="sidebar-badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='resources.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z" />
+              </svg></div>
+            资源优化
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='reports.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+              </svg></div>
+            报表中心
+          </div>
+        </div>
+
+        <div class="sidebar-bottom">
+          <div class="project-selector" id="projectSelector">
+            <div>
+              <div class="proj-name" id="projName">杭州绿城·翡翠湖项目</div>
+              <div class="proj-id" id="projId">项目编号 HZFC-2025-0318</div>
+            </div>
+            <div class="project-switch" id="projectSwitchInlineBtn" aria-label="切换项目">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7h5l-1.5-1.5L9 4l4 4-4 4-1.5-1.5L9 9H4V7zm16 10h-5l1.5 1.5L15 20l-4-4 4-4 1.5 1.5L15 13h5v2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="content-header">
+          <div class="page-title">施工计划</div>
+          <div class="header-actions">
+            <button class="btn" id="btnExportPlan">
+              <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
+              导出计划
+            </button>
+            <button class="btn btn-primary" id="btnNewPlan">
+              <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="white" /></svg>
+              新建计划
+            </button>
+          </div>
+        </div>
+
+        <div class="content-body">
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="summary-value" style="color:var(--accent)">4</div>
+              <div class="summary-label">总施工阶段</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value" style="color:var(--green)">2</div>
+              <div class="summary-label">进行中</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-value" style="color:var(--orange)">1</div>
+              <div class="summary-label">待开始</div>
+            </div>
+          </div>
+
+          <div class="phase-card">
+            <div class="phase-header">
+              <div class="phase-title">
+                <div class="phase-num">1</div>
+                <div>
+                  <div class="phase-name">前期准备阶段</div>
+                  <div class="phase-meta">2026-03-01 至 2026-03-15</div>
+                </div>
+              </div>
+              <span class="phase-status status-done">已完成</span>
+            </div>
+            <div class="phase-body">
+              <div class="phase-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+                <span class="progress-text">100%</span>
+              </div>
+              <div class="task-list">
+                <div class="task-item">
+                  <div class="task-check checked"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                  <div class="task-info"><div class="task-name">现场勘查与测量</div><div class="task-date">03/01 - 03/05</div></div>
+                  <div class="task-worker"><div class="worker-avatar" style="background:#FF6B6B">李</div></div>
+                </div>
+                <div class="task-item">
+                  <div class="task-check checked"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                  <div class="task-info"><div class="task-name">施工方案设计与评审</div><div class="task-date">03/06 - 03/12</div></div>
+                  <div class="task-worker"><div class="worker-avatar" style="background:#4ECDC4">王</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phase-card">
+            <div class="phase-header">
+              <div class="phase-title">
+                <div class="phase-num">2</div>
+                <div>
+                  <div class="phase-name">主体装修阶段</div>
+                  <div class="phase-meta">2026-03-16 至 2026-04-30</div>
+                </div>
+              </div>
+              <span class="phase-status status-in-progress">进行中</span>
+            </div>
+            <div class="phase-body">
+              <div class="phase-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:45%;background:var(--accent)"></div></div>
+                <span class="progress-text">45%</span>
+              </div>
+              <div class="task-list">
+                <div class="task-item">
+                  <div class="task-check checked"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                  <div class="task-info"><div class="task-name">A区大堂精装修</div><div class="task-date">03/16 - 04/15</div></div>
+                  <div class="task-worker"><div class="worker-avatar" style="background:#FF6B6B">李</div></div>
+                </div>
+                <div class="task-item">
+                  <div class="task-check checked"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                  <div class="task-info"><div class="task-name">B区外立面幕墙</div><div class="task-date">03/18 - 04/20</div></div>
+                  <div class="task-worker"><div class="worker-avatar" style="background:#4ECDC4">王</div></div>
+                </div>
+                <div class="task-item">
+                  <div class="task-check"><svg width="12" height="12" viewBox="0 0 24 24"></svg></div>
+                  <div class="task-info"><div class="task-name">C区地下车库涂装</div><div class="task-date">03/25 - 04/30</div></div>
+                  <div class="task-worker"><div class="worker-avatar" style="background:#45B7D1">张</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phase-card">
+            <div class="phase-header">
+              <div class="phase-title">
+                <div class="phase-num">3</div>
+                <div>
+                  <div class="phase-name">景观绿化阶段</div>
+                  <div class="phase-meta">2026-04-15 至 2026-05-15</div>
+                </div>
+              </div>
+              <span class="phase-status status-in-progress">进行中</span>
+            </div>
+            <div class="phase-body">
+              <div class="phase-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:28%;background:var(--orange)"></div></div>
+                <span class="progress-text">28%</span>
+              </div>
+              <div class="task-list">
+                <div class="task-item">
+                  <div class="task-check checked"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                  <div class="task-info"><div class="task-name">苗木采购及进场</div><div class="task-date">04/15 - 04/25</div></div>
+                  <div class="task-worker"><div class="worker-avatar" style="background:#DDA0DD">陈</div></div>
+                </div>
+                <div class="task-item">
+                  <div class="task-check"><svg width="12" height="12" viewBox="0 0 24 24"></svg></div>
+                  <div class="task-info"><div class="task-name">园林绿化种植</div><div class="task-date">04/26 - 05/10</div></div>
+                  <div class="task-worker"><div class="worker-avatar" style="background:#96CEB4">周</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phase-card">
+            <div class="phase-header">
+              <div class="phase-title">
+                <div class="phase-num">4</div>
+                <div>
+                  <div class="phase-name">竣工验收阶段</div>
+                  <div class="phase-meta">2026-05-10 至 2026-05-30</div>
+                </div>
+              </div>
+              <span class="phase-status status-not-start">待开始</span>
+            </div>
+            <div class="phase-body">
+              <div class="phase-progress">
+                <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--text-tertiary)"></div></div>
+                <span class="progress-text">0%</span>
+              </div>
+              <div class="task-list">
+                <div class="task-item">
+                  <div class="task-check"><svg width="12" height="12" viewBox="0 0 24 24"></svg></div>
+                  <div class="task-info"><div class="task-name">整体验收与整改</div><div class="task-date">05/10 - 05/25</div></div>
+                  <div class="task-worker"><div class="worker-avatar" style="background:#F7DC6F">刘</div></div>
+                </div>
+                <div class="task-item">
+                  <div class="task-check"><svg width="12" height="12" viewBox="0 0 24 24"></svg></div>
+                  <div class="task-info"><div class="task-name">竣工资料归档</div><div class="task-date">05/20 - 05/30</div></div>
+                  <div class="task-worker"><div class="worker-avatar" style="background:#F7DC6F">刘</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    window.closeModal = closeModal;
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.getElementById('btnNewPlan').addEventListener('click', () => {
+      openModal(
+        '新建施工计划',
+        `<div class="form-group">
+          <label class="form-label">计划名称</label>
+          <input type="text" class="form-input" placeholder="请输入计划名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">计划描述</label>
+          <textarea class="form-input" placeholder="请输入计划描述" rows="3" style="resize:none"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">开始日期</label>
+            <input type="date" class="form-input" value="2026-03-01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">结束日期</label>
+            <input type="date" class="form-input" value="2026-05-30">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">施工阶段</label>
+            <select class="form-select">
+              <option>前期准备阶段</option>
+              <option>主体装修阶段</option>
+              <option>景观绿化阶段</option>
+              <option>竣工验收阶段</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">优先级</label>
+            <select class="form-select">
+              <option>紧急</option>
+              <option>高</option>
+              <option selected>中</option>
+              <option>低</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">负责人</label>
+          <select class="form-select">
+            <option>李明</option>
+            <option>王建华</option>
+            <option>张伟</option>
+            <option>许作舟</option>
+            <option>陈雪梅</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">参与人员</label>
+          <select class="form-select" multiple style="height:80px">
+            <option>李强 - 石材工</option>
+            <option>王磊 - 焊工</option>
+            <option>张磊 - 木工</option>
+            <option>刘洋 - 涂装工</option>
+            <option>赵敏 - 电工</option>
+          </select>
+        </div>`,
+        `<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button>
+         <button class="modal-btn modal-btn-primary" onclick="closeModal()">创建</button>`
+      );
+    });
+
+    document.getElementById('btnExportPlan').addEventListener('click', () => {
+      openModal(
+        '导出施工计划',
+        `<div class="form-group">
+          <label class="form-label">导出格式</label>
+          <select class="form-select">
+            <option>Excel 表格 (.xlsx)</option>
+            <option>PDF 文档 (.pdf)</option>
+            <option>Project 文件 (.mpp)</option>
+            <option>CSV 文件 (.csv)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">导出内容</label>
+          <select class="form-select">
+            <option>全部施工计划</option>
+            <option>当前阶段计划</option>
+            <option>甘特图视图</option>
+            <option>进度汇总表</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">日期范围</label>
+            <select class="form-select">
+              <option>全部日期</option>
+              <option>最近 30 天</option>
+              <option>最近 90 天</option>
+              <option>自定义</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">包含图片</label>
+            <select class="form-select">
+              <option>不包含</option>
+              <option>包含现场照片</option>
+              <option>包含进度截图</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">文件命名</label>
+          <input type="text" class="form-input" value="施工计划导出_20260327" placeholder="请输入文件名">
+        </div>
+        <div style="background:#F8F6FF;border:1px solid #E8E4F5;border-radius:8px;padding:12px;margin-top:12px">
+          <div style="font-size:12px;color:var(--purple);margin-bottom:6px;font-weight:600">导出说明</div>
+          <div style="font-size:11px;color:#6E6790;line-height:1.8">
+            <div>· 导出文件将包含所有选定阶段的详细信息</div>
+            <div>· Excel 格式支持直接编辑，PDF 格式适合打印</div>
+            <div>· Project 文件可在 Microsoft Project 中打开</div>
+            <div>· 导出完成后将自动下载到默认文件夹</div>
+          </div>
+        </div>`,
+        `<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button>
+         <button class="modal-btn modal-btn-primary" onclick="closeModal()">导出</button>`
+      );
+    });
+
+    document.querySelectorAll('.task-check').forEach(check => {
+      check.addEventListener('click', function(e) {
+        e.stopPropagation();
+        this.classList.toggle('checked');
+        if (this.classList.contains('checked')) {
+          this.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+        } else {
+          this.innerHTML = '';
+        }
+      });
+    });
+
+    document.querySelectorAll('.phase-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        var phaseName = this.querySelector('.phase-name').textContent;
+        var phaseNum = this.querySelector('.phase-num').textContent;
+        var phaseStatus = this.querySelector('.phase-status').textContent;
+        var progressText = this.querySelector('.progress-text').textContent;
+        var tasks = [];
+        this.querySelectorAll('.task-item').forEach(function(task) {
+          var taskName = task.querySelector('.task-name').textContent;
+          var taskDate = task.querySelector('.task-date').textContent;
+          var worker = task.querySelector('.worker-avatar').textContent;
+          var isChecked = task.querySelector('.task-check').classList.contains('checked');
+          tasks.push({name: taskName, date: taskDate, worker: worker, done: isChecked});
+        });
+        var taskListHtml = tasks.map(function(t) {
+          return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F5F5F7"><div style="width:18px;height:18px;border-radius:4px;border:2px solid '+(t.done ? 'var(--green)' : 'var(--border)')+';background:'+(t.done ? 'var(--green)' : 'transparent')+';display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div style="flex:1"><div style="font-size:13px;color:var(--text-primary);'+(t.done ? 'text-decoration:line-through;color:var(--text-tertiary)' : '')+'">'+t.name+'</div><div style="font-size:11px;color:var(--text-tertiary)">'+t.date+'</div></div><div style="font-size:12px;color:var(--text-secondary)">'+t.worker+'</div></div>';
+        }).join('');
+        var progressValue = parseFloat(progressText) || 0;
+        openModal(
+          '阶段详情 - ' + phaseName,
+          '<div style="margin-bottom:16px"><div style="display:flex;gap:12px;align-items:center;margin-bottom:12px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">'+phaseNum+'</div><div><div style="font-size:16px;font-weight:600;color:var(--text-primary)">'+phaseName+'</div><div style="font-size:12px;color:var(--text-secondary)">'+phaseStatus+'</div></div></div><div style="background:#F5F5F7;border-radius:8px;padding:12px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--text-secondary)">完成进度</span><span style="font-size:14px;font-weight:600;color:var(--accent)">'+progressText+'</span></div><div style="height:6px;background:#E5E5EA;border-radius:3px;overflow:hidden"><div style="height:100%;width:'+progressValue+'%;background:var(--accent);border-radius:3px"></div></div></div></div><div style="margin-bottom:8px;font-size:12px;font-weight:600;color:var(--text-secondary)">任务清单</div><div style="max-height:250px;overflow-y:auto">'+taskListHtml+'</div>',
+          '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">关闭</button><button class="modal-btn modal-btn-primary" onclick="closeModal()">查看甘特图</button>'
+        );
+      });
+    });
+
+    document.querySelectorAll('.task-item').forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        if (e.target.closest('.task-check')) return;
+        var taskName = this.querySelector('.task-name').textContent;
+        var taskDate = this.querySelector('.task-date').textContent;
+        var worker = this.querySelector('.worker-avatar').textContent;
+        openModal(
+          '任务详情 - ' + taskName,
+          '<div class="form-group"><label class="form-label">任务名称</label><input type="text" class="form-input" value="'+taskName+'"></div><div class="form-row"><div class="form-group" style="flex:1"><label class="form-label">计划日期</label><input type="text" class="form-input" value="'+taskDate+'"></div><div class="form-group" style="flex:1"><label class="form-label">负责人</label><input type="text" class="form-input" value="'+worker+'"></div></div><div class="form-group"><label class="form-label">状态</label><select class="form-select"><option>未开始</option><option>进行中</option><option>已完成</option></select></div>',
+          '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button><button class="modal-btn modal-btn-primary" onclick="closeModal()">保存</button>'
+        );
+      });
+    });
+  </script>
+
+</body>
+
+</html>

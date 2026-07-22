@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习播放 - 雀之灵</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --gold: #C9A84C;
+    --red: #C0392B;
+    --bg: #FDF8F0;
+    --bg2: #F5EFE0;
+    --text: #2C1810;
+    --text2: #6B4C3B;
+    --text3: #9C7B6B;
+    --white: #FFFFFF;
+  }
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #E8E0D0;
+    display: flex; justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh; padding: 20px;
+  }
+  .phone-frame {
+    width: 100%; min-height: 852px;
+    background: #1A0A06;
+    border-radius: 48px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.35), 0 0 0 10px #1a1a1a, 0 0 0 12px #333;
+    overflow: hidden;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+
+  /* Status bar - dark */
+  .status-bar {
+    background: #1A0A06;
+    color: rgba(255,255,255,0.8);
+    padding: 12px 24px 8px;
+    display: flex; justify-content: space-between;
+    align-items: center; font-size: 12px;
+  }
+  .status-bar .time { font-weight: 700; font-size: 15px; }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+
+  /* Video Area */
+  .video-wrapper {
+    position: relative;
+    width: 100%;
+    background: #000;
+  }
+  .video-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    display: block;
+    opacity: 0.85;
+  }
+  .video-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+  }
+  .video-top {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .vid-back {
+    width: 32px; height: 32px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 14px;
+    text-decoration: none;
+    border: none; cursor: pointer;
+  }
+  .vid-top-right { display: flex; gap: 8px; }
+  .vid-action-btn {
+    width: 32px; height: 32px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.85);
+    font-size: 14px; cursor: pointer; border: none;
+  }
+
+  /* Center play btn */
+  .vid-center {
+    display: flex; justify-content: center; align-items: center;
+    flex: 1;
+  }
+  .play-big {
+    width: 56px; height: 56px;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 22px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .play-big:hover { background: rgba(255,255,255,0.25); }
+
+  /* Video controls */
+  .video-bottom {}
+  .progress-area { margin-bottom: 8px; }
+  .progress-track {
+    width: 100%; height: 3px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 2px; position: relative; cursor: pointer;
+  }
+  .progress-fill {
+    width: 35%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--red));
+    border-radius: 2px;
+    position: relative;
+  }
+  .progress-dot {
+    position: absolute;
+    right: -5px; top: -4px;
+    width: 11px; height: 11px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 4px rgba(0,0,0,0.3);
+  }
+  .time-row {
+    display: flex; justify-content: space-between;
+    color: rgba(255,255,255,0.7); font-size: 11px;
+    margin-top: 6px;
+  }
+  .vid-controls {
+    display: flex; align-items: center; justify-content: center;
+    gap: 20px; margin-top: 6px;
+  }
+  .vc-btn {
+    color: rgba(255,255,255,0.8); font-size: 18px;
+    cursor: pointer; border: none; background: none;
+  }
+  .vc-btn.main {
+    width: 44px; height: 44px;
+    background: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text); font-size: 20px;
+  }
+
+  /* Mode tabs */
+  .mode-tabs {
+    background: #1A0A06;
+    display: flex;
+    padding: 14px 16px 10px;
+    gap: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .mtab {
+    flex: 1; text-align: center;
+    padding: 8px 4px;
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer; border: none; background: none;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .mtab.active {
+    color: var(--gold);
+  }
+  .mtab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 25%; right: 25%;
+    height: 2px;
+    background: var(--gold);
+    border-radius: 1px;
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* Content panel */
+  .panel {
+    flex: 1;
+    overflow-y: auto;
+    background: #1A0A06;
+    padding: 16px 16px 80px;
+    scrollbar-width: none;
+  }
+  .panel::-webkit-scrollbar { display: none; }
+
+  /* 简介 panel */
+  .vid-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px; font-weight: 700;
+    color: white; margin-bottom: 6px;
+  }
+  .vid-meta-row {
+    display: flex; gap: 12px; align-items: center;
+    margin-bottom: 14px;
+  }
+  .vid-badge {
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px; font-weight: 600;
+  }
+  .vid-badge.classical {
+    background: rgba(201,168,76,0.2);
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.3);
+  }
+  .vid-sub { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+  .vid-desc {
+    font-size: 13px; color: rgba(255,255,255,0.65);
+    line-height: 1.8; margin-bottom: 18px;
+  }
+
+  /* Key points */
+  .section-label {
+    font-size: 13px; font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-label::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: var(--gold);
+    border-radius: 2px;
+  }
+  .key-point {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 12px;
+    margin-bottom: 10px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .kp-num {
+    width: 22px; height: 22px;
+    background: var(--red);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .kp-text { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.6; }
+  .kp-title { font-weight: 700; color: rgba(255,255,255,0.9); margin-bottom: 3px; }
+
+  /* Chapters list */
+  .chapter-item {
+    display: flex; gap: 12px; align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer;
+  }
+  .chap-thumb {
+    width: 72px; height: 48px;
+    border-radius: 8px;
+    object-fit: cover; flex-shrink: 0;
+    position: relative;
+  }
+  .chap-thumb-wrap {
+    width: 72px; height: 48px;
+    border-radius: 8px; overflow: hidden;
+    flex-shrink: 0; position: relative;
+  }
+  .chap-thumb-wrap img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .chap-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 14px;
+  }
+  .chap-info { flex: 1; }
+  .chap-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); margin-bottom: 3px; }
+  .chap-dur { font-size: 11px; color: rgba(255,255,255,0.4); }
+  .chap-playing {
+    color: var(--gold); font-size: 12px;
+  }
+  .playing-badge {
+    display: flex; align-items: center; gap: 4px;
+    background: rgba(201,168,76,0.15);
+    color: var(--gold);
+    font-size: 11px; padding: 3px 8px;
+    border-radius: 8px;
+  }
+
+  /* Bottom nav - dark */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    background: #1A0A06;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex; padding: 8px 0 20px;
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    cursor: pointer; text-decoration: none; padding: 4px 0;
+    transition: all 0.2s;
+  }
+  .nav-item i { font-size: 20px; color: rgba(255,255,255,0.3); transition: all 0.2s; }
+  .nav-item span { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; }
+  .nav-item.active i { color: var(--gold); }
+  .nav-item.active span { color: var(--gold); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  
+
+  <!-- Video Player -->
+  <div class="video-wrapper">
+    <img class="video-thumb" src="https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&q=80" alt="雀之灵">
+    <div class="video-overlay">
+      <div class="video-top">
+        <a href="detail.html" class="vid-back"><i class="fa fa-arrow-left"></i></a>
+        <div class="vid-top-right">
+          <button class="vid-action-btn"><i class="fa fa-expand"></i></button>
+          <button class="vid-action-btn"><i class="fa fa-ellipsis-vertical"></i></button>
+        </div>
+      </div>
+      <div class="vid-center">
+        <div class="play-big"><i class="fa fa-play" style="margin-left:3px"></i></div>
+      </div>
+      <div class="video-bottom">
+        <div class="progress-area">
+          <div class="progress-track">
+            <div class="progress-fill">
+              <div class="progress-dot"></div>
+            </div>
+          </div>
+          <div class="time-row">
+            <span>3:24</span>
+            <span>9:47</span>
+          </div>
+        </div>
+        <div class="vid-controls">
+          <button class="vc-btn"><i class="fa fa-backward-step"></i></button>
+          <button class="vc-btn"><i class="fa fa-rotate-left"></i></button>
+          <button class="vc-btn main"><i class="fa fa-pause"></i></button>
+          <button class="vc-btn"><i class="fa fa-rotate-right"></i></button>
+          <button class="vc-btn"><i class="fa fa-forward-step"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode Tabs -->
+  <div class="mode-tabs">
+    <button class="mtab active" onclick="switchMtab(this,'intro')">简介</button>
+    <button class="mtab" onclick="switchMtab(this,'chapters')">章节</button>
+    <button class="mtab" onclick="switchMtab(this,'notes')">笔记</button>
+  </div>
+
+  <!-- Panel -->
+  <div class="panel">
+    <!-- 简介 Tab -->
+    <div id="tab-intro" class="tab-pane active">
+      <div class="vid-title">雀之灵</div>
+      <div class="vid-meta-row">
+        <span class="vid-badge classical">中国古典舞</span>
+        <span class="vid-sub">杨丽萍 · 时长 9:47</span>
+      </div>
+      <p class="vid-desc">
+        《雀之灵》是著名舞蹈艺术家杨丽萍的代表作，创作于1986年。该作品以孔雀为意象，通过细腻的肢体语言，表现了孔雀在晨曦中梳理羽翎、翩翩起舞的意境，被誉为中国民族舞蹈的经典之作。
+      </p>
+
+      <div class="section-label">学习要点</div>
+
+      <div class="key-point">
+        <div class="kp-num">1</div>
+        <div class="kp-text">
+          <div class="kp-title">三道弯造型</div>
+          头，腰、胯形成三个弯曲，是傣族舞蹈的标志性造型，体现柔韧之美。
+        </div>
+      </div>
+      <div class="key-point">
+        <div class="kp-num">2</div>
+        <div class="kp-text">
+          <div class="kp-title">手指技法</div>
+          手指的灵动是模拟孔雀羽毛的核心，需掌握"孔雀手"的基本形态。
+        </div>
+      </div>
+      <div class="key-point">
+        <div class="kp-num">3</div>
+        <div class="kp-text">
+          <div class="kp-title">眼神运用</div>
+          舞蹈中的眼神犹如孔雀灵魂，需随动作流转，神形合一。
+        </div>
+      </div>
+      <div class="key-point">
+        <div class="kp-num">4</div>
+        <div class="kp-text">
+          <div class="kp-title">节奏与呼吸</div>
+          舞蹈律动与呼吸深度配合，吸气时舒展，呼气时收合，形如孔雀开屏。
+        </div>
+      </div>
+    </div>
+
+    <!-- 章节 Tab -->
+    <div id="tab-chapters" class="tab-pane">
+      <div class="section-label">课程章节</div>
+      <div class="chapter-item" onclick="showToast('播放第1章')">
+        <div class="chap-thumb-wrap">
+          <img src="https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=200&q=80" alt="">
+          <div class="chap-overlay"><i class="fa fa-play"></i></div>
+        </div>
+        <div class="chap-info">
+          <div class="chap-title">第一幕：晨曦孔雀</div>
+          <div class="chap-dur">0:00 - 3:00</div>
+        </div>
+        <div class="playing-badge"><i class="fa fa-play"></i> 播放中</div>
+      </div>
+      <div class="chapter-item" onclick="showToast('播放第2章')">
+        <div class="chap-thumb-wrap">
+          <img src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=200&q=80" alt="">
+          <div class="chap-overlay"><i class="fa fa-play"></i></div>
+        </div>
+        <div class="chap-info">
+          <div class="chap-title">第二幕：羽翼舒展</div>
+          <div class="chap-dur">3:00 - 6:30</div>
+        </div>
+      </div>
+      <div class="chapter-item" onclick="showToast('播放第3章')">
+        <div class="chap-thumb-wrap">
+          <img src="https://images.unsplash.com/photo-1593510987459-9a1489817a3b?w=200&q=80" alt="">
+          <div class="chap-overlay"><i class="fa fa-play"></i></div>
+        </div>
+        <div class="chap-info">
+          <div class="chap-title">第三幕：翩翩起舞</div>
+          <div class="chap-dur">6:30 - 9:47</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 笔记 Tab -->
+    <div id="tab-notes" class="tab-pane">
+      <div class="section-label">我的笔记</div>
+      <div class="key-point" style="cursor:pointer" onclick="showToast('跳转到笔记位置')">
+        <div class="kp-num">1</div>
+        <div class="kp-text">
+          <div class="kp-title">三道弯造型要点</div>
+          头、腰、胯的三道弯是傣族舞蹈核心特征...
+        </div>
+      </div>
+      <div class="key-point" style="cursor:pointer" onclick="showToast('跳转到笔记位置')">
+        <div class="kp-num">2</div>
+        <div class="kp-text">
+          <div class="kp-title">手指技法记录</div>
+          孔雀手的形态需要反复练习才能掌握...
+        </div>
+      </div>
+      <div style="padding:16px;text-align:center;color:rgba(255,255,255,0.4);" onclick="showToast('添加笔记')">
+        <i class="fa fa-plus" style="font-size:24px;margin-bottom:8px;display:block;"></i>
+        添加笔记
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <i class="fa-solid fa-house"></i><span>首页</span>
+    </a>
+    <a href="repertoire.html" class="nav-item">
+      <i class="fa-solid fa-film"></i><span>剧目</span>
+    </a>
+    <a href="study.html" class="nav-item active">
+      <i class="fa-solid fa-graduation-cap"></i><span>学习</span>
+    </a>
+    <a href="exam.html" class="nav-item">
+      <i class="fa-solid fa-pen-to-square"></i><span>练习</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <i class="fa-regular fa-circle-user"></i><span>我的</span>
+    </a>
+  </div>
+</div>
+
+<script>
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeIn 0.3s';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 1500);
+}
+
+function switchMtab(el, id) {
+  document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+}
+</script>
+<style>
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.8); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+</style>
+</body>
+</html>

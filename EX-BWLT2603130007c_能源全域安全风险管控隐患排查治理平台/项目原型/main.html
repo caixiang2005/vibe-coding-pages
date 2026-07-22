@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>能源全域安全风险管控隐患排查治理平台</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #1a1c2e 0%, #2d1f3d 30%, #1a2a3a 70%, #0f1923 100%);
+      height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+      color: #333;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* macOS Window */
+    .mac-window {
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      background: #f5f5f7;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Title Bar */
+    .titlebar {
+      height: 52px;
+      background: linear-gradient(180deg, #e8e8ea 0%, #d4d4d8 100%);
+      border-bottom: 1px solid #b8b8bc;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      flex-shrink: 0;
+      position: relative;
+      -webkit-app-region: drag;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .traffic-light.close {
+      background: #ff5f57;
+      border: 0.5px solid #e0443e;
+    }
+
+    .traffic-light.minimize {
+      background: #febc2e;
+      border: 0.5px solid #dea123;
+    }
+
+    .traffic-light.maximize {
+      background: #28c840;
+      border: 0.5px solid #1aab29;
+    }
+
+    .titlebar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: #4a4a4a;
+      letter-spacing: 0.3px;
+    }
+
+    /* Main Layout */
+    .main-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      border-right: 1px solid #151d25;
+      min-height: 0;
+    }
+
+    .sidebar-header {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: white;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text {
+      font-size: 13px;
+      color: #ecf0f1;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      color: #7f8c8d;
+      font-weight: 400;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: white;
+      font-weight: 600;
+    }
+
+    .user-detail {
+      flex: 1;
+    }
+
+    .user-name {
+      font-size: 12px;
+      color: #ecf0f1;
+      font-weight: 500;
+    }
+
+    .user-role {
+      font-size: 10px;
+      color: #7f8c8d;
+    }
+
+    .online-dot {
+      width: 7px;
+      height: 7px;
+      background: #2ecc71;
+      border-radius: 50%;
+      box-shadow: 0 0 4px rgba(46, 204, 113, 0.5);
+    }
+
+    /* Nav */
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .nav-group {
+      margin-bottom: 4px;
+    }
+
+    .nav-group-title {
+      font-size: 10px;
+      color: #5a6a7a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 16px 4px;
+      font-weight: 600;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      color: #95a5a6;
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ecf0f1;
+    }
+
+    .nav-item.active {
+      background: rgba(52, 152, 219, 0.15);
+      color: #3498db;
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 4px;
+      bottom: 4px;
+      width: 3px;
+      background: #3498db;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: #e74c3c;
+      color: white;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .nav-badge.warn {
+      background: #f39c12;
+    }
+
+    .nav-badge.info {
+      background: #3498db;
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-footer-item {
+      font-size: 11px;
+      color: #5a6a7a;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .sidebar-footer-item:hover {
+      color: #95a5a6;
+    }
+
+    /* Content Area */
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #f0f1f3;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      height: 46px;
+      background: white;
+      border-bottom: 1px solid #e0e0e4;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .breadcrumb {
+      font-size: 13px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .breadcrumb span {
+      color: #999;
+    }
+
+    .breadcrumb .current {
+      color: #333;
+      font-weight: 500;
+    }
+
+    .toolbar-spacer {
+      flex: 1;
+    }
+
+    .toolbar-search {
+      display: flex;
+      align-items: center;
+      background: #f5f5f7;
+      border: 1px solid #e0e0e4;
+      border-radius: 6px;
+      padding: 5px 10px;
+      gap: 6px;
+      width: 200px;
+      transition: all 0.2s;
+    }
+
+    .toolbar-search:focus-within {
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+      background: white;
+    }
+
+    .toolbar-search input {
+      border: none;
+      background: none;
+      outline: none;
+      font-size: 12px;
+      color: #333;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .toolbar-search input::placeholder {
+      color: #aaa;
+    }
+
+    .search-icon {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .toolbar-btn {
+      padding: 5px 12px;
+      border: 1px solid #d0d0d4;
+      border-radius: 6px;
+      background: white;
+      font-size: 12px;
+      color: #555;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .toolbar-btn:hover {
+      background: #f5f5f7;
+      border-color: #bbb;
+    }
+
+    .toolbar-btn.primary {
+      background: #3498db;
+      color: white;
+      border-color: #2980b9;
+    }
+
+    .toolbar-btn.primary:hover {
+      background: #2980b9;
+    }
+
+    .toolbar .user-info {
+      padding: 5px 8px;
+    }
+
+    .toolbar .user-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: white;
+      font-weight: 600;
+    }
+
+    .toolbar .user-name {
+      color: #333;
+    }
+
+    .toolbar .user-role {
+      color: #777;
+    }
+
+    /* Page Content */
+    .page-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    /* Dashboard */
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .dash-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .dash-date {
+      font-size: 12px;
+      color: #888;
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 10px;
+      padding: 16px 18px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      border: 1px solid #eee;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .stat-card.red::after {
+      background: linear-gradient(90deg, #e74c3c, #c0392b);
+    }
+
+    .stat-card.orange::after {
+      background: linear-gradient(90deg, #f39c12, #e67e22);
+    }
+
+    .stat-card.blue::after {
+      background: linear-gradient(90deg, #3498db, #2980b9);
+    }
+
+    .stat-card.green::after {
+      background: linear-gradient(90deg, #2ecc71, #27ae60);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-card.red .stat-value {
+      color: #e74c3c;
+    }
+
+    .stat-card.orange .stat-value {
+      color: #e67e22;
+    }
+
+    .stat-card.blue .stat-value {
+      color: #2980b9;
+    }
+
+    .stat-card.green .stat-value {
+      color: #27ae60;
+    }
+
+    .stat-change {
+      font-size: 11px;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-change.up {
+      color: #e74c3c;
+    }
+
+    .stat-change.down {
+      color: #27ae60;
+    }
+
+    /* Grid Layout */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .content-grid.three {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    /* Card */
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      border: 1px solid #eee;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid #f0f0f2;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .card-action {
+      font-size: 11px;
+      color: #3498db;
+      cursor: pointer;
+    }
+
+    .card-action:hover {
+      text-decoration: underline;
+    }
+
+    .card-body {
+      padding: 14px 16px;
+    }
+
+    /* Risk Level Chart (CSS-only bar chart) */
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bar-label {
+      font-size: 12px;
+      color: #555;
+      width: 70px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 20px;
+      background: #f0f1f3;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+    }
+
+    .bar-fill span {
+      font-size: 11px;
+      color: white;
+      font-weight: 600;
+    }
+
+    .bar-fill.critical {
+      background: linear-gradient(90deg, #e74c3c, #c0392b);
+    }
+
+    .bar-fill.major {
+      background: linear-gradient(90deg, #e67e22, #d35400);
+    }
+
+    .bar-fill.moderate {
+      background: linear-gradient(90deg, #f1c40f, #f39c12);
+    }
+
+    .bar-fill.minor {
+      background: linear-gradient(90deg, #3498db, #2980b9);
+    }
+
+    .bar-fill.low {
+      background: linear-gradient(90deg, #2ecc71, #27ae60);
+    }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 8px 10px;
+      color: #666;
+      font-weight: 500;
+      border-bottom: 1px solid #eee;
+      background: #fafafa;
+    }
+
+    .data-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f5f5f5;
+      color: #333;
+    }
+
+    .data-table tr:hover td {
+      background: #f8f9fb;
+    }
+
+    /* Tags */
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .tag.critical {
+      background: #fde8e8;
+      color: #c0392b;
+    }
+
+    .tag.major {
+      background: #fef3e2;
+      color: #d35400;
+    }
+
+    .tag.moderate {
+      background: #fef9e7;
+      color: #b7950b;
+    }
+
+    .tag.normal {
+      background: #e8f6fd;
+      color: #2980b9;
+    }
+
+    .tag.resolved {
+      background: #e8f8f0;
+      color: #27ae60;
+    }
+
+    .tag.pending {
+      background: #fef3e2;
+      color: #e67e22;
+    }
+
+    .tag.processing {
+      background: #e8f0fe;
+      color: #2c3e9c;
+    }
+
+    /* Status dot */
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+
+    .status-dot.online {
+      background: #2ecc71;
+    }
+
+    .status-dot.warning {
+      background: #f39c12;
+    }
+
+    .status-dot.danger {
+      background: #e74c3c;
+    }
+
+    .status-dot.offline {
+      background: #bdc3c7;
+    }
+
+    /* Trend area (mini sparkline with CSS) */
+    .mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 40px;
+      padding: 4px 0;
+    }
+
+    .mini-bar {
+      flex: 1;
+      background: linear-gradient(180deg, #3498db, rgba(52, 152, 219, 0.3));
+      border-radius: 2px 2px 0 0;
+      min-width: 6px;
+      transition: height 0.5s ease;
+    }
+
+    /* Alert List */
+    .alert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .alert-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #fafafa;
+      border-left: 3px solid #ddd;
+      transition: all 0.15s;
+    }
+
+    .alert-item:hover {
+      background: #f0f4f8;
+    }
+
+    .alert-item.level-critical {
+      border-left-color: #e74c3c;
+    }
+
+    .alert-item.level-major {
+      border-left-color: #e67e22;
+    }
+
+    .alert-item.level-moderate {
+      border-left-color: #f1c40f;
+    }
+
+    .alert-item.level-normal {
+      border-left-color: #3498db;
+    }
+
+    .alert-time {
+      font-size: 10px;
+      color: #999;
+      white-space: nowrap;
+      padding-top: 2px;
+    }
+
+    .alert-content {
+      flex: 1;
+    }
+
+    .alert-title {
+      font-size: 12px;
+      color: #333;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .alert-desc {
+      font-size: 11px;
+      color: #888;
+    }
+
+    /* Progress circle */
+    .progress-ring {
+      width: 80px;
+      height: 80px;
+      position: relative;
+    }
+
+    .progress-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring .ring-bg {
+      fill: none;
+      stroke: #eee;
+      stroke-width: 6;
+    }
+
+    .progress-ring .ring-fill {
+      fill: none;
+      stroke-width: 6;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s ease;
+    }
+
+    .progress-ring .ring-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    .ring-label {
+      font-size: 11px;
+      color: #888;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    /* Task list */
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 12px;
+    }
+
+    .task-item:last-child {
+      border-bottom: none;
+    }
+
+    .task-priority {
+      width: 4px;
+      height: 24px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .task-priority.p1 {
+      background: #e74c3c;
+    }
+
+    .task-priority.p2 {
+      background: #e67e22;
+    }
+
+    .task-priority.p3 {
+      background: #f1c40f;
+    }
+
+    .task-priority.p4 {
+      background: #3498db;
+    }
+
+    .task-info {
+      flex: 1;
+    }
+
+    .task-name {
+      color: #333;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .task-meta {
+      font-size: 10px;
+      color: #999;
+    }
+
+    .task-due {
+      font-size: 11px;
+      color: #e74c3c;
+      white-space: nowrap;
+    }
+
+    /* Device monitor */
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .device-item {
+      padding: 8px 10px;
+      background: #f8f9fb;
+      border-radius: 6px;
+      border: 1px solid #eee;
+    }
+
+    .device-name {
+      font-size: 11px;
+      color: #555;
+      font-weight: 500;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .device-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    .device-unit {
+      font-size: 10px;
+      color: #999;
+      margin-left: 2px;
+    }
+
+    .device-status {
+      font-size: 10px;
+      margin-top: 2px;
+    }
+
+    /* Full-width card */
+    .card.full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* Map placeholder */
+    .map-container {
+      background: linear-gradient(135deg, #e8edf2, #d5dde5);
+      height: 200px;
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .map-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 1px;
+      opacity: 0.3;
+      padding: 10px;
+    }
+
+    .map-cell {
+      border: 0.5px solid #aab;
+      border-radius: 1px;
+    }
+
+    .map-point {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .map-point.red {
+      background: #e74c3c;
+    }
+
+    .map-point.orange {
+      background: #e67e22;
+    }
+
+    .map-point.blue {
+      background: #3498db;
+    }
+
+    .map-point.green {
+      background: #2ecc71;
+    }
+
+    .map-point::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      opacity: 0.3;
+    }
+
+    .map-point.red::after {
+      border-color: #e74c3c;
+    }
+
+    .map-point.orange::after {
+      border-color: #e67e22;
+    }
+
+    .map-label {
+      position: absolute;
+      font-size: 10px;
+      color: #555;
+      font-weight: 500;
+      white-space: nowrap;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    /* Status bar */
+    .statusbar {
+      height: 26px;
+      background: #e8e8ea;
+      border-top: 1px solid #d0d0d4;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+      flex-shrink: 0;
+      font-size: 11px;
+      color: #777;
+    }
+
+    .statusbar-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #2ecc71;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .statusbar-spacer {
+      flex: 1;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    /* Tab bar */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #e0e0e4;
+      padding: 0 16px;
+      background: white;
+    }
+
+    .tab-item {
+      padding: 10px 16px;
+      font-size: 12px;
+      color: #888;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .tab-item:hover {
+      color: #555;
+    }
+
+    .tab-item.active {
+      color: #3498db;
+      border-bottom-color: #3498db;
+      font-weight: 500;
+    }
+
+    /* Animations */
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stat-card {
+      animation: fadeIn 0.4s ease both;
+    }
+
+    .stat-card:nth-child(2) {
+      animation-delay: 0.05s;
+    }
+
+    .stat-card:nth-child(3) {
+      animation-delay: 0.1s;
+    }
+
+    .stat-card:nth-child(4) {
+      animation-delay: 0.15s;
+    }
+
+    .card {
+      animation: fadeIn 0.4s ease both;
+      animation-delay: 0.2s;
+    }
+
+    /* Compact styles */
+    .compact-list {
+      font-size: 12px;
+    }
+
+    .compact-list .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .compact-list .row:last-child {
+      border-bottom: none;
+    }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.2s; }
+    .modal-overlay.show { opacity: 1; visibility: visible; }
+    .modal { background: white; border-radius: 12px; width: 480px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); transform: scale(0.9); transition: transform 0.2s; }
+    .modal-overlay.show .modal { transform: scale(1); }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; background: #fafafa; border-radius: 12px 12px 0 0; position: relative; }
+    .modal-title { font-size: 15px; font-weight: 600; color: #1a1a1a; text-align: center; flex: 1; }
+    .modal-close { display: none; }
+    .modal-body { padding: 20px; overflow-y: auto; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 12px; color: #666; margin-bottom: 6px; display: block; font-weight: 500; }
+    .form-input { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; transition: all 0.15s; }
+    .form-input:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
+    .form-select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; background: white; cursor: pointer; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; background: #fafafa; border-radius: 0 0 12px 12px; }
+    .btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.15s; font-family: inherit; border: none; }
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: #f5f5f7; color: #555; border: 1px solid #ddd; }
+    .btn-secondary:hover { background: #eee; }
+    .btn-primary { background: #3498db; color: white; }
+    .btn-primary:hover { background: #2980b9; }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+
+    <!-- Title Bar -->
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <div class="titlebar-text">能源全域安全风险管控隐患排查治理平台</div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo">
+            <div class="logo-text">能源全域安全风险管控隐患排查治理平台</div>
+          </div>
+        </div>
+
+        <div class="sidebar-nav">
+          <div class="nav-group">
+            <div class="nav-group-title">总览</div>
+            <div class="nav-item active">
+              <div class="nav-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                  <rect x="1" y="1" width="5" height="5" rx="1" />
+                  <rect x="8" y="1" width="5" height="5" rx="1" />
+                  <rect x="1" y="8" width="5" height="5" rx="1" />
+                  <rect x="8" y="8" width="5" height="5" rx="1" />
+                </svg>
+              </div>
+              安全驾驶舱
+            </div>
+            <a href="risk-inspection.html" class="nav-item">
+              <div class="nav-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                  <circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+                  <line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" />
+                </svg>
+              </div>
+              隐患排查任务
+              <span class="nav-badge">5</span>
+            </a>
+            <a href="hazard-register.html" class="nav-item">
+              <div class="nav-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                  <path d="M3 2h8a1 1 0 011 1v8a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" fill="none"
+                    stroke="currentColor" stroke-width="1.5" />
+                  <line x1="5" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+                  <line x1="5" y1="7" x2="9" y2="7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+                  <line x1="5" y1="9" x2="7.5" y2="9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+                </svg>
+              </div>
+              隐患治理台账
+            </a>
+            <a href="rectification-tracking.html" class="nav-item">
+              <div class="nav-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                  <path d="M1 11l4-4 2 2 3-4 3 3" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              整改跟踪
+              <span class="nav-badge info">8</span>
+            </a>
+            <a href="risk-assessment.html" class="nav-item">
+              <div class="nav-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                  <path d="M7 1L1 12h12L7 1z" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linejoin="round" />
+                  <line x1="7" y1="5" x2="7" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                  <circle cx="7" cy="10" r="0.8" />
+                </svg>
+              </div>
+              风险辨识评估
+              <span class="nav-badge warn">12</span>
+            </a>
+            <a href="risk-control.html" class="nav-item">
+              <div class="nav-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                  <rect x="2" y="2" width="10" height="10" rx="1.5" fill="none" stroke="currentColor"
+                    stroke-width="1.5" />
+                  <path d="M5 7l1.5 1.5L9 5.5" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              风险分级管控
+            </a>
+            <a href="statistics.html" class="nav-item">
+              <div class="nav-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                  <circle cx="7" cy="7" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M4.5 7l1.5 2 3.5-4" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              统计报表
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Content -->
+      <div class="content-area">
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="breadcrumb">
+            <span>首页</span>
+            <span>/</span>
+            <span class="current">安全驾驶舱</span>
+          </div>
+          <div class="toolbar-spacer"></div>
+          <div class="toolbar-search">
+            <span class="search-icon">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <circle cx="5" cy="5" r="3.5" stroke="#999" stroke-width="1.2" />
+                <line x1="7.5" y1="7.5" x2="10.5" y2="10.5" stroke="#999" stroke-width="1.2" stroke-linecap="round" />
+              </svg>
+            </span>
+            <input type="text" placeholder="搜索隐患、设备、区域..." />
+          </div>
+          <button class="toolbar-btn" onclick="openModal('exportModal')">导出报表</button>
+          <button class="toolbar-btn primary" onclick="openModal('reportModal')">+ 上报隐患</button>
+          <div class="user-info">
+            <div class="user-avatar">包</div>
+            <div class="user-detail">
+              <div class="user-name">包倩倩</div>
+              <div class="user-role">安全管理部</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="page-content">
+          <!-- Dashboard Header -->
+          <div class="dashboard-header">
+            <div class="dash-title">安全驾驶舱</div>
+            <div class="dash-date">数据更新时间：2026-03-23 14:32:17</div>
+          </div>
+
+          <!-- Stats Row -->
+          <div class="stats-row">
+            <div class="stat-card red">
+              <div class="stat-label">重大隐患 (未整改)</div>
+              <div class="stat-value">7</div>
+              <div class="stat-change up">较上月 +2 项</div>
+            </div>
+            <div class="stat-card orange">
+              <div class="stat-label">一般隐患 (整改中)</div>
+              <div class="stat-value">38</div>
+              <div class="stat-change down">较上月 -5 项</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-label">本月排查次数</div>
+              <div class="stat-value">156</div>
+              <div class="stat-change up">完成率 87.3%</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-label">隐患整改闭环率</div>
+              <div class="stat-value">92.4%</div>
+              <div class="stat-change down">较上月 +3.1%</div>
+            </div>
+          </div>
+
+          <!-- Content Grid Row 1 -->
+          <div class="content-grid">
+            <!-- Risk Distribution -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">风险等级分布</div>
+                <div class="card-action">查看详情</div>
+              </div>
+              <div class="card-body">
+                <div class="bar-chart">
+                  <div class="bar-row">
+                    <div class="bar-label">重大风险</div>
+                    <div class="bar-track">
+                      <div class="bar-fill critical" style="width: 18%"><span>7</span></div>
+                    </div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-label">较大风险</div>
+                    <div class="bar-track">
+                      <div class="bar-fill major" style="width: 32%"><span>15</span></div>
+                    </div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-label">一般风险</div>
+                    <div class="bar-track">
+                      <div class="bar-fill moderate" style="width: 55%"><span>38</span></div>
+                    </div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-label">低风险</div>
+                    <div class="bar-track">
+                      <div class="bar-fill minor" style="width: 72%"><span>52</span></div>
+                    </div>
+                  </div>
+                  <div class="bar-row">
+                    <div class="bar-label">可忽略</div>
+                    <div class="bar-track">
+                      <div class="bar-fill low" style="width: 40%"><span>23</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Real-time Alerts -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">实时预警信息</div>
+                <div class="card-action">全部预警</div>
+              </div>
+              <div class="card-body">
+                <div class="alert-list">
+                  <div class="alert-item level-critical">
+                    <div class="alert-time">14:28</div>
+                    <div class="alert-content">
+                      <div class="alert-title">[重大] 3号储油罐区液位超高报警</div>
+                      <div class="alert-desc">罐区T-301液位达到92.3%，超过安全阈值90%</div>
+                    </div>
+                  </div>
+                  <div class="alert-item level-major">
+                    <div class="alert-time">13:45</div>
+                    <div class="alert-content">
+                      <div class="alert-title">[较大] 2号变电站温度异常</div>
+                      <div class="alert-desc">主变压器绕组温度68.5°C，接近预警值70°C</div>
+                    </div>
+                  </div>
+                  <div class="alert-item level-moderate">
+                    <div class="alert-time">11:20</div>
+                    <div class="alert-content">
+                      <div class="alert-title">[一般] 输气管道巡检超期提醒</div>
+                      <div class="alert-desc">西区DN300管段已超出计划巡检周期2天</div>
+                    </div>
+                  </div>
+                  <div class="alert-item level-normal">
+                    <div class="alert-time">10:05</div>
+                    <div class="alert-content">
+                      <div class="alert-title">[提示] 消防设备月检即将到期</div>
+                      <div class="alert-desc">B区灭火器及消火栓月检截止日期为3月25日</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Grid Row 2 -->
+          <div class="content-grid">
+            <!-- Equipment Monitor -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">关键设备运行监测</div>
+                <div class="card-action">全部设备</div>
+              </div>
+              <div class="card-body">
+                <div class="device-grid">
+                  <div class="device-item">
+                    <div class="device-name"><span class="status-dot online"></span>1号锅炉</div>
+                    <div class="device-val">165<span class="device-unit">°C</span></div>
+                    <div class="device-status" style="color:#27ae60">运行正常</div>
+                  </div>
+                  <div class="device-item">
+                    <div class="device-name"><span class="status-dot warning"></span>2号汽轮机</div>
+                    <div class="device-val">3,420<span class="device-unit">rpm</span></div>
+                    <div class="device-status" style="color:#e67e22">振动偏高</div>
+                  </div>
+                  <div class="device-item">
+                    <div class="device-name"><span class="status-dot online"></span>主变压器</div>
+                    <div class="device-val">68.5<span class="device-unit">°C</span></div>
+                    <div class="device-status" style="color:#27ae60">运行正常</div>
+                  </div>
+                  <div class="device-item">
+                    <div class="device-name"><span class="status-dot danger"></span>T-301储罐</div>
+                    <div class="device-val">92.3<span class="device-unit">%</span></div>
+                    <div class="device-status" style="color:#e74c3c">液位超高</div>
+                  </div>
+                  <div class="device-item">
+                    <div class="device-name"><span class="status-dot online"></span>空压机组</div>
+                    <div class="device-val">0.78<span class="device-unit">MPa</span></div>
+                    <div class="device-status" style="color:#27ae60">运行正常</div>
+                  </div>
+                  <div class="device-item">
+                    <div class="device-name"><span class="status-dot offline"></span>备用发电机</div>
+                    <div class="device-val">--<span class="device-unit"></span></div>
+                    <div class="device-status" style="color:#bdc3c7">待机状态</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Inspection Tasks -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">待办排查任务</div>
+                <div class="card-action">全部任务</div>
+              </div>
+              <div class="card-body">
+                <div class="task-item">
+                  <div class="task-priority p1"></div>
+                  <div class="task-info">
+                    <div class="task-name">3号罐区安全阀校验</div>
+                    <div class="task-meta">负责人：王建国 / 储运车间</div>
+                  </div>
+                  <div class="task-due">逾期1天</div>
+                </div>
+                <div class="task-item">
+                  <div class="task-priority p1"></div>
+                  <div class="task-info">
+                    <div class="task-name">高压配电室防火门整改复查</div>
+                    <div class="task-meta">负责人：李明辉 / 电气车间</div>
+                  </div>
+                  <div class="task-due">今日截止</div>
+                </div>
+                <div class="task-item">
+                  <div class="task-priority p2"></div>
+                  <div class="task-info">
+                    <div class="task-name">西区天然气管道泄漏检测</div>
+                    <div class="task-meta">负责人：张伟 / 输气车间</div>
+                  </div>
+                  <div class="task-due">剩余2天</div>
+                </div>
+                <div class="task-item">
+                  <div class="task-priority p3"></div>
+                  <div class="task-info">
+                    <div class="task-name">办公楼消防通道专项检查</div>
+                    <div class="task-meta">负责人：刘晓红 / 综合管理部</div>
+                  </div>
+                  <div class="task-due">剩余5天</div>
+                </div>
+                <div class="task-item">
+                  <div class="task-priority p4"></div>
+                  <div class="task-info">
+                    <div class="task-name">全厂安全标识标牌巡查</div>
+                    <div class="task-meta">负责人：包倩倩 / 安全管理部</div>
+                  </div>
+                  <div class="task-due">剩余7天</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hazard Register Table -->
+          <div class="card" style="margin-bottom: 14px;">
+            <div class="card-header">
+              <div class="card-title">最新隐患台账</div>
+              <div class="card-action">查看完整台账</div>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width:100px">编号</th>
+                    <th>隐患描述</th>
+                    <th style="width:80px">等级</th>
+                    <th style="width:90px">发现区域</th>
+                    <th style="width:80px">责任人</th>
+                    <th style="width:90px">状态</th>
+                    <th style="width:90px">截止日期</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>YH-2026-0347</td>
+                    <td>3号储油罐区防雷接地电阻超标，实测4.8欧姆</td>
+                    <td><span class="tag critical">重大</span></td>
+                    <td>罐区</td>
+                    <td>王建国</td>
+                    <td><span class="tag pending">待整改</span></td>
+                    <td>2026-03-25</td>
+                  </tr>
+                  <tr>
+                    <td>YH-2026-0345</td>
+                    <td>2号变电站电缆沟盖板缺失3处，存在坠落风险</td>
+                    <td><span class="tag critical">重大</span></td>
+                    <td>变电站</td>
+                    <td>李明辉</td>
+                    <td><span class="tag processing">整改中</span></td>
+                    <td>2026-03-28</td>
+                  </tr>
+                  <tr>
+                    <td>YH-2026-0342</td>
+                    <td>输气站场可燃气体探测器3台到期未检定</td>
+                    <td><span class="tag major">较大</span></td>
+                    <td>输气站</td>
+                    <td>张伟</td>
+                    <td><span class="tag processing">整改中</span></td>
+                    <td>2026-03-30</td>
+                  </tr>
+                  <tr>
+                    <td>YH-2026-0340</td>
+                    <td>锅炉房应急照明部分失效，覆盖率不足80%</td>
+                    <td><span class="tag moderate">一般</span></td>
+                    <td>锅炉房</td>
+                    <td>赵海峰</td>
+                    <td><span class="tag processing">整改中</span></td>
+                    <td>2026-04-02</td>
+                  </tr>
+                  <tr>
+                    <td>YH-2026-0338</td>
+                    <td>西厂区围墙外侧排水沟堵塞，雨季溢流隐患</td>
+                    <td><span class="tag normal">低风险</span></td>
+                    <td>厂区外围</td>
+                    <td>刘晓红</td>
+                    <td><span class="tag resolved">已闭环</span></td>
+                    <td>2026-03-20</td>
+                  </tr>
+                  <tr>
+                    <td>YH-2026-0335</td>
+                    <td>化学品库房MSDS张贴不全，缺少3种危化品信息</td>
+                    <td><span class="tag moderate">一般</span></td>
+                    <td>危化品库</td>
+                    <td>孙丽萍</td>
+                    <td><span class="tag resolved">已闭环</span></td>
+                    <td>2026-03-18</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Bottom Grid -->
+          <div class="content-grid three">
+            <!-- Completion Stats -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">整改完成情况</div>
+              </div>
+              <div class="card-body"
+                style="display: flex; justify-content: space-around; align-items: flex-start; padding-top: 18px;">
+                <div style="text-align: center;">
+                  <div class="progress-ring">
+                    <svg width="80" height="80" viewBox="0 0 80 80">
+                      <circle class="ring-bg" cx="40" cy="40" r="33" />
+                      <circle class="ring-fill" cx="40" cy="40" r="33" stroke="#e74c3c" stroke-dasharray="207.3"
+                        stroke-dashoffset="62.2" />
+                    </svg>
+                    <div class="ring-text">70%</div>
+                  </div>
+                  <div class="ring-label">重大隐患</div>
+                </div>
+                <div style="text-align: center;">
+                  <div class="progress-ring">
+                    <svg width="80" height="80" viewBox="0 0 80 80">
+                      <circle class="ring-bg" cx="40" cy="40" r="33" />
+                      <circle class="ring-fill" cx="40" cy="40" r="33" stroke="#3498db" stroke-dasharray="207.3"
+                        stroke-dashoffset="20.7" />
+                    </svg>
+                    <div class="ring-text">90%</div>
+                  </div>
+                  <div class="ring-label">一般隐患</div>
+                </div>
+                <div style="text-align: center;">
+                  <div class="progress-ring">
+                    <svg width="80" height="80" viewBox="0 0 80 80">
+                      <circle class="ring-bg" cx="40" cy="40" r="33" />
+                      <circle class="ring-fill" cx="40" cy="40" r="33" stroke="#27ae60" stroke-dasharray="207.3"
+                        stroke-dashoffset="15.5" />
+                    </svg>
+                    <div class="ring-text">92%</div>
+                  </div>
+                  <div class="ring-label">总体闭环</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Monthly Trend -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">月度隐患趋势</div>
+              </div>
+              <div class="card-body">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="font-size:10px;color:#888">新增隐患</span>
+                  <span style="font-size:10px;color:#888">近12个月</span>
+                </div>
+                <div class="mini-chart">
+                  <div class="mini-bar" style="height:55%"></div>
+                  <div class="mini-bar" style="height:70%"></div>
+                  <div class="mini-bar" style="height:45%"></div>
+                  <div class="mini-bar" style="height:60%"></div>
+                  <div class="mini-bar" style="height:80%"></div>
+                  <div class="mini-bar" style="height:50%"></div>
+                  <div class="mini-bar" style="height:65%"></div>
+                  <div class="mini-bar" style="height:40%"></div>
+                  <div class="mini-bar" style="height:55%"></div>
+                  <div class="mini-bar" style="height:75%"></div>
+                  <div class="mini-bar" style="height:60%"></div>
+                  <div class="mini-bar"
+                    style="height:48%;background:linear-gradient(180deg,#e74c3c,rgba(231,76,60,0.3))"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:4px">
+                  <span>4月</span><span>6月</span><span>8月</span><span>10月</span><span>12月</span><span>3月</span>
+                </div>
+                <div style="margin-top: 12px;">
+                  <div class="compact-list">
+                    <div class="row"><span style="color:#666">本月新增</span><span
+                        style="font-weight:600;color:#e74c3c">23项</span></div>
+                    <div class="row"><span style="color:#666">本月整改</span><span
+                        style="font-weight:600;color:#27ae60">31项</span></div>
+                    <div class="row"><span style="color:#666">存量隐患</span><span
+                        style="font-weight:600;color:#333">45项</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Area map -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">区域风险分布</div>
+              </div>
+              <div class="card-body" style="padding: 10px 14px;">
+                <div class="map-container">
+                  <div class="map-overlay">
+                    <div class="map-grid">
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                      <div class="map-cell"></div>
+                    </div>
+                  </div>
+                  <div class="map-point red" style="top:25%;left:20%"></div>
+                  <div class="map-label" style="top:18%;left:26%">罐区 (7)</div>
+                  <div class="map-point orange" style="top:55%;left:45%"></div>
+                  <div class="map-label" style="top:48%;left:51%">变电站 (4)</div>
+                  <div class="map-point blue" style="top:35%;left:70%"></div>
+                  <div class="map-label" style="top:28%;left:76%">输气站 (3)</div>
+                  <div class="map-point green" style="top:70%;left:25%"></div>
+                  <div class="map-label" style="top:73%;left:31%">锅炉房 (2)</div>
+                  <div class="map-point green" style="top:65%;left:72%"></div>
+                  <div class="map-label" style="top:68%;left:62%">办公区 (1)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 上报隐患弹窗 -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="traffic-lights">
+          <div class="traffic-light close"></div>
+          <div class="traffic-light minimize"></div>
+          <div class="traffic-light maximize"></div>
+        </div>
+        <div class="modal-title">上报隐患</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">隐患描述</label>
+          <textarea class="form-input" rows="3" placeholder="请详细描述发现的隐患情况"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">风险等级</label>
+            <select class="form-select">
+              <option>重大风险</option>
+              <option>较大风险</option>
+              <option>一般风险</option>
+              <option>低风险</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">发现区域</label>
+            <select class="form-select">
+              <option>罐区</option>
+              <option>变电站</option>
+              <option>输气站</option>
+              <option>锅炉房</option>
+              <option>危化品库</option>
+              <option>厂区外围</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">发现人</label>
+            <input type="text" class="form-input" value="包倩倩" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">发现日期</label>
+            <input type="date" class="form-input" value="2026-03-23" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">隐患图片</label>
+          <input type="file" class="form-input" accept="image/*" style="padding: 6px 12px;" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">备注说明</label>
+          <textarea class="form-input" rows="2" placeholder="补充其他信息"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('reportModal')">取消</button>
+        <button class="btn btn-primary" onclick="closeModal('reportModal')">确认上报</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 导出报表弹窗 -->
+  <div class="modal-overlay" id="exportModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="traffic-lights">
+          <div class="traffic-light close"></div>
+          <div class="traffic-light minimize"></div>
+          <div class="traffic-light maximize"></div>
+        </div>
+        <div class="modal-title">导出报表</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">报表类型</label>
+          <select class="form-select">
+            <option>月度隐患统计报表</option>
+            <option>季度隐患分析报表</option>
+            <option>年度安全总结报表</option>
+            <option>专项排查报告</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">统计周期</label>
+            <select class="form-select">
+              <option>2026年3月</option>
+              <option>2026年2月</option>
+              <option>2026年1月</option>
+              <option>2025年第四季度</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">导出格式</label>
+            <select class="form-select">
+              <option>Excel (.xlsx)</option>
+              <option>PDF (.pdf)</option>
+              <option>Word (.docx)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">包含内容</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+              <input type="checkbox" checked style="accent-color:#3498db;"> 隐患统计
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+              <input type="checkbox" checked style="accent-color:#3498db;"> 风险分析
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+              <input type="checkbox" checked style="accent-color:#3498db;"> 整改情况
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+              <input type="checkbox" style="accent-color:#3498db;"> 趋势图表
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+              <input type="checkbox" style="accent-color:#3498db;"> 部门对比
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">文件名</label>
+          <input type="text" class="form-input" value="安全隐患报表-2026-03" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('exportModal')">取消</button>
+        <button class="btn btn-primary" onclick="closeModal('exportModal')">确认导出</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openModal(id) { document.getElementById(id).classList.add('show'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
+    });
+  </script>
+
+</body>
+
+</html>

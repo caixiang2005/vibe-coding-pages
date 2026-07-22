@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习中心</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --gold: #C9A84C; --gold-light: #E8CC7A; --gold-dark: #A07830;
+    --red: #C0392B; --bg: #FDF8F0; --text: #2C1810; --text2: #6B4C3B; --text3: #9C7B6B;
+  }
+  body { font-family: 'Noto Sans SC', sans-serif; background: #E8E0D0; display: flex; justify-content: center; }
+  .phone-frame {
+    width: 100%; height: 100vh; background: var(--bg);
+    overflow: hidden; overflow-y: auto; display: flex; flex-direction: column;
+  }
+  .status-bar { background: linear-gradient(135deg,#8B1A1A,#C9A84C); color:white; padding:12px 24px 8px; display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+  .status-bar .time { font-weight:700; font-size:15px; }
+  .status-icons { display:flex; gap:6px; }
+  .page-header { background: linear-gradient(135deg,#8B1A1A 0%,#C0392B 50%,#C9A84C 100%); padding:14px 20px 20px; }
+  .header-top { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .back-btn { width:36px; height:36px; background:rgba(255,255,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; text-decoration:none; border:1px solid rgba(255,255,255,0.2); }
+  .page-title { color:white; font-size:18px; font-weight:700; font-family:'Noto Serif SC',serif; flex:1; }
+
+  /* Study stats card */
+  .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .stat-card { background:rgba(255,255,255,0.15); border-radius:14px; padding:12px 8px; text-align:center; border:1px solid rgba(201,168,76,0.3); }
+  .stat-card .val { color:white; font-size:22px; font-weight:700; font-family:'Noto Serif SC',serif; }
+  .stat-card .lbl { color:rgba(255,255,255,0.8); font-size:11px; margin-top:3px; }
+
+  /* Calendar streak */
+  .streak-card { background:rgba(255,255,255,0.12); border-radius:14px; padding:12px 14px; margin-top:12px; border:1px solid rgba(201,168,76,0.3); display:flex; align-items:center; gap:12px; }
+  .streak-icon { font-size:28px; color:var(--gold-light); }
+  .streak-info .t { color:white; font-size:14px; font-weight:600; }
+  .streak-info .s { color:rgba(255,255,255,0.75); font-size:12px; margin-top:2px; }
+  .streak-days { margin-left:auto; display:flex; gap:4px; }
+  .day-dot { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; }
+  .day-dot.done { background:var(--gold); color:white; }
+  .day-dot.today { background:var(--red); color:white; }
+  .day-dot.empty { background:rgba(255,255,255,0.2); color:rgba(255,255,255,0.6); }
+
+  /* Content */
+  .content { flex:1; overflow-y:auto; padding-bottom:80px; }
+  .content::-webkit-scrollbar { display:none; }
+
+  /* Plan section */
+  .plan-section { padding:16px 20px 0; }
+  .section-title { font-family:'Noto Serif SC',serif; font-size:16px; font-weight:700; color:var(--text); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .section-title::before { content:''; width:4px; height:18px; background:linear-gradient(to bottom,var(--red),var(--gold)); border-radius:2px; }
+
+  .plan-card {
+    background:white; border-radius:16px; padding:16px; margin-bottom:12px;
+    box-shadow:0 3px 15px rgba(44,24,16,0.1); border:1px solid #F0E8D8;
+  }
+  .plan-card .p-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .plan-num { width:32px; height:32px; border-radius:10px; background:linear-gradient(135deg,var(--red),#A02020); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
+  .plan-name { font-size:14px; font-weight:700; color:var(--text); font-family:'Noto Serif SC',serif; }
+  .plan-meta { font-size:11px; color:var(--text3); margin-top:2px; }
+  .plan-progress-bar { height:6px; background:#F0E8D8; border-radius:3px; overflow:hidden; margin-bottom:8px; }
+  .plan-progress-fill { height:100%; border-radius:3px; background:linear-gradient(to right,var(--red),var(--gold)); }
+  .plan-footer { display:flex; justify-content:space-between; align-items:center; }
+  .plan-pct { font-size:12px; color:var(--gold-dark); font-weight:600; }
+  .plan-btn {
+    padding:6px 16px; border-radius:20px; font-size:12px; font-weight:600;
+    background:linear-gradient(135deg,var(--red),#A02020); color:white;
+    text-decoration:none; display:inline-block;
+  }
+
+  /* Today tasks */
+  .task-list { display:flex; flex-direction:column; gap:10px; }
+  .task-item { background:white; border-radius:14px; padding:14px; border:1px solid #F0E8D8; box-shadow:0 2px 8px rgba(44,24,16,0.06); display:flex; align-items:center; gap:12px; cursor:pointer; text-decoration:none; }
+  .task-check { width:22px; height:22px; border-radius:50%; border:2px solid #EDE0C8; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+  .task-check.done { background:var(--gold); border-color:var(--gold); color:white; }
+  .task-check.active { border-color:var(--red); }
+  .task-img { width:52px; height:52px; border-radius:10px; object-fit:cover; flex-shrink:0; }
+  .task-info { flex:1; }
+  .task-name { font-size:13px; font-weight:600; color:var(--text); font-family:'Noto Serif SC',serif; }
+  .task-sub { font-size:11px; color:var(--text3); margin-top:3px; }
+  .task-tag { display:inline-block; margin-top:4px; font-size:10px; background:#FEF0E0; color:var(--gold-dark); padding:2px 8px; border-radius:8px; }
+  .task-arrow { color:var(--text3); font-size:14px; }
+
+  /* Weekly calendar */
+  .week-cal { display:flex; gap:6px; padding:0 20px 16px; overflow-x:auto; scrollbar-width:none; }
+  .week-cal::-webkit-scrollbar { display:none; }
+  .day-item { flex-shrink:0; width:44px; text-align:center; border-radius:14px; padding:8px 4px; cursor:pointer; }
+  .day-item .day-name { font-size:11px; color:var(--text3); margin-bottom:4px; }
+  .day-item .day-num { font-size:16px; font-weight:700; color:var(--text2); }
+  .day-item .day-dot2 { width:6px; height:6px; border-radius:50%; margin:4px auto 0; background:transparent; }
+  .day-item.today-cal { background:var(--red); }
+  .day-item.today-cal .day-name,.day-item.today-cal .day-num { color:white; }
+  .day-item.today-cal .day-dot2 { background:var(--gold-light); }
+  .day-item.has-dot .day-dot2 { background:var(--gold); }
+
+  /* Bottom nav */
+  .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width: 100%; background:white; border-top:1px solid #EDE0C8; display:flex; padding:8px 0 20px; box-shadow:0 -4px 20px rgba(44,24,16,0.08); z-index:100; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; text-decoration:none; padding:4px 0; }
+  .nav-item i { font-size:20px; color:#BDB0A0; }
+  .nav-item span { font-size:10px; color:#BDB0A0; font-weight:500; }
+  .nav-item.active i { color:var(--red); }
+  .nav-item.active span { color:var(--red); font-weight:700; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  
+
+  <div class="page-header">
+    <div class="header-top">
+      <a href="index.html" class="back-btn"><i class="fa fa-arrow-left"></i></a>
+      <div class="page-title">学习中心</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="val">23</div><div class="lbl">已学剧目</div></div>
+      <div class="stat-card"><div class="val">156</div><div class="lbl">学习分钟</div></div>
+      <div class="stat-card"><div class="val">7</div><div class="lbl">连续天数</div></div>
+    </div>
+    <div class="streak-card">
+      <div class="streak-icon"><i class="fa-solid fa-fire-flame-curved"></i></div>
+      <div class="streak-info">
+        <div class="t">冯龙，已连续学习 7 天！</div>
+        <div class="s">本周完成率 85%，继续保持</div>
+      </div>
+      <div class="streak-days">
+        <div class="day-dot done"><i class="fa fa-check" style="font-size:9px"></i></div>
+        <div class="day-dot done"><i class="fa fa-check" style="font-size:9px"></i></div>
+        <div class="day-dot done"><i class="fa fa-check" style="font-size:9px"></i></div>
+        <div class="day-dot done"><i class="fa fa-check" style="font-size:9px"></i></div>
+        <div class="day-dot done"><i class="fa fa-check" style="font-size:9px"></i></div>
+        <div class="day-dot done"><i class="fa fa-check" style="font-size:9px"></i></div>
+        <div class="day-dot today">今</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Week Calendar -->
+    <div style="padding:14px 20px 4px;">
+      <div class="section-title">本周日历</div>
+    </div>
+    <div class="week-cal">
+      <div class="day-item has-dot"><div class="day-name">一</div><div class="day-num">18</div><div class="day-dot2"></div></div>
+      <div class="day-item has-dot"><div class="day-name">二</div><div class="day-num">19</div><div class="day-dot2"></div></div>
+      <div class="day-item has-dot"><div class="day-name">三</div><div class="day-num">20</div><div class="day-dot2"></div></div>
+      <div class="day-item has-dot"><div class="day-name">四</div><div class="day-num">21</div><div class="day-dot2"></div></div>
+      <div class="day-item has-dot"><div class="day-name">五</div><div class="day-num">22</div><div class="day-dot2"></div></div>
+      <div class="day-item has-dot"><div class="day-name">六</div><div class="day-num">23</div><div class="day-dot2"></div></div>
+      <div class="day-item today-cal"><div class="day-name">日</div><div class="day-num">24</div><div class="day-dot2"></div></div>
+    </div>
+
+    <!-- Learning Plan -->
+    <div class="plan-section">
+      <div class="section-title">我的学习计划</div>
+      <div class="plan-card">
+        <div class="p-header">
+          <div class="plan-num">1</div>
+          <div>
+            <div class="plan-name">中国古典舞基础理论</div>
+            <div class="plan-meta">共12个章节 · 预计3周</div>
+          </div>
+        </div>
+        <div class="plan-progress-bar"><div class="plan-progress-fill" style="width:75%"></div></div>
+        <div class="plan-footer"><span class="plan-pct">已完成 75%</span><a href="detail.html" class="plan-btn">继续学习</a></div>
+      </div>
+      <div class="plan-card">
+        <div class="p-header">
+          <div class="plan-num" style="background:linear-gradient(135deg,var(--gold),var(--gold-dark))">2</div>
+          <div>
+            <div class="plan-name">世界芭蕾舞经典剧目鉴赏</div>
+            <div class="plan-meta">共8个章节 · 预计2周</div>
+          </div>
+        </div>
+        <div class="plan-progress-bar"><div class="plan-progress-fill" style="width:40%"></div></div>
+        <div class="plan-footer"><span class="plan-pct">已完成 40%</span><a href="detail.html" class="plan-btn">继续学习</a></div>
+      </div>
+      <div class="plan-card">
+        <div class="p-header">
+          <div class="plan-num" style="background:linear-gradient(135deg,#16A085,#1ABC9C)">3</div>
+          <div>
+            <div class="plan-name">中国民族民间舞风格流派</div>
+            <div class="plan-meta">共15个章节 · 预计4周</div>
+          </div>
+        </div>
+        <div class="plan-progress-bar"><div class="plan-progress-fill" style="width:20%; background:linear-gradient(to right,#16A085,#1ABC9C)"></div></div>
+        <div class="plan-footer"><span class="plan-pct" style="color:#16A085">已完成 20%</span><a href="detail.html" class="plan-btn" style="background:linear-gradient(135deg,#16A085,#1ABC9C)">开始学习</a></div>
+      </div>
+    </div>
+
+    <!-- Today Tasks -->
+    <div class="plan-section">
+      <div class="section-title">今日学习任务</div>
+      <div class="task-list">
+        <a href="detail.html?id=1" class="task-item">
+          <div class="task-check done"><i class="fa fa-check"></i></div>
+          <img class="task-img" src="https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=200&q=80" alt="">
+          <div class="task-info">
+            <div class="task-name">《雀之灵》赏析</div>
+            <div class="task-sub">已完成 · 用时12分钟</div>
+            <span class="task-tag">民族民间舞</span>
+          </div>
+          <i class="fa fa-check-circle task-arrow" style="color:var(--gold)"></i>
+        </a>
+        <a href="detail.html?id=2" class="task-item">
+          <div class="task-check done"><i class="fa fa-check"></i></div>
+          <img class="task-img" src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=200&q=80" alt="">
+          <div class="task-info">
+            <div class="task-name">《洛神水赋》知识要点</div>
+            <div class="task-sub">已完成 · 用时8分钟</div>
+            <span class="task-tag">中国古典舞</span>
+          </div>
+          <i class="fa fa-check-circle task-arrow" style="color:var(--gold)"></i>
+        </a>
+        <a href="detail.html?id=3" class="task-item" style="border:1.5px solid var(--red)">
+          <div class="task-check active"></div>
+          <img class="task-img" src="https://images.unsplash.com/photo-1547153760-18fc86324498?w=200&q=80" alt="">
+          <div class="task-info">
+            <div class="task-name">《天鹅湖》历史背景</div>
+            <div class="task-sub">进行中 · 约需15分钟</div>
+            <span class="task-tag" style="background:#FFF0EE;color:var(--red)">芭蕾舞</span>
+          </div>
+          <i class="fa fa-chevron-right task-arrow" style="color:var(--red)"></i>
+        </a>
+        <a href="detail.html?id=4" class="task-item" style="opacity:0.7">
+          <div class="task-check"></div>
+          <img class="task-img" src="https://ts1.tc.mm.bing.net/th/id/OIP-C.DwZNcNgU7fH0EYyz_U9JNwHaJg?w=300&h=400&c=1&ps=1&pid=ImgDetMain" alt="千手观音">
+          <div class="task-info">
+            <div class="task-name">《千手观音》舞蹈分析</div>
+            <div class="task-sub">未开始 · 约需20分钟</div>
+            <span class="task-tag">中国古典舞</span>
+          </div>
+          <i class="fa fa-chevron-right task-arrow"></i>
+        </a>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>首页</span></a>
+    <a href="repertoire.html" class="nav-item"><i class="fa-solid fa-film"></i><span>剧目</span></a>
+    <a href="study.html" class="nav-item active"><i class="fa-solid fa-graduation-cap"></i><span>学习</span></a>
+    <a href="exam.html" class="nav-item"><i class="fa-solid fa-pen-to-square"></i><span>练习</span></a>
+    <a href="profile.html" class="nav-item"><i class="fa-regular fa-circle-user"></i><span>我的</span></a>
+  </div>
+</div>
+</body>
+</html>

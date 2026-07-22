@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>工业机器人智能定位抓取控制系统</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#1a1a2e;--win:#1e1e2e;--tb:#2a2a3e;--sb:#232336;--cb:#2a2a40;--br:#3a3a55;--tp:#e0e0ec;--ts:#8888a8;--td:#5a5a78;--bl:#4a9eff;--gr:#34d399;--og:#f59e0b;--rd:#ef4444;--pr:#a78bfa;--cy:#22d3ee;--dv:#333350}
+body{font-family:'Noto Sans SC',sans-serif;background:url('./static/bg.jpg') no-repeat;background-size:cover;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.mac{width:1280px;max-width:96vw;background:var(--win);border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.5);overflow:hidden}
+.tb{height:52px;background:var(--tb);border-bottom:1px solid var(--dv);display:flex;align-items:center;padding:0 16px;position:relative}
+.tl{display:flex;gap:8px}.tl div{width:12px;height:12px;border-radius:50%;cursor:pointer}.tl .c{background:#ff5f57;border:.5px solid #e0443e}.tl .m{background:#febc2e}.tl .x{background:#28c840}
+.tt{position:absolute;left:50%;transform:translateX(-50%);color:var(--ts);font-size:13px;font-weight:500}
+.tbar{height:42px;background:linear-gradient(180deg,#2a2a3e,#252538);border-bottom:1px solid var(--dv);display:flex;align-items:center;padding:0 12px;gap:2px}
+.tbtn{display:flex;align-items:center;gap:5px;padding:5px 10px;color:var(--ts);font-size:11.5px;border:none;background:none;cursor:pointer;border-radius:5px;transition:all .15s}
+.tbtn:hover{background:rgba(255,255,255,.06);color:var(--tp)}
+.tbtn:active{transform:scale(.97)}
+.tbtn i{font-size:12px}
+.tsep{width:1px;height:20px;background:var(--dv);margin:0 6px}
+.tright{margin-left:auto}
+.ub{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 6px;background:rgba(74,158,255,.12);border:1px solid rgba(74,158,255,.25);border-radius:12px;color:var(--bl);font-size:11px}
+.ua{width:20px;height:20px;border-radius:50%;object-fit:cover}
+.ml{display:flex;height:620px}
+.sb{width:200px;background:var(--sb);border-right:1px solid var(--dv);display:flex;flex-direction:column}
+.sh{padding:14px 14px 10px;color:var(--td);font-size:10.5px;font-weight:600;text-transform:uppercase}
+.ni{padding:7px 12px;color:var(--ts);font-size:12px;cursor:pointer;border-radius:5px;transition:all .15s;display:flex;align-items:center;gap:8px;margin:0 6px 2px;text-decoration:none}
+.ni:hover{background:rgba(255,255,255,.04);color:var(--tp)}
+.ni.active{background:rgba(74,158,255,.15);color:var(--bl)}
+.ni i{width:14px;font-size:13px}
+.sft{margin-top:auto;padding:12px 14px;border-top:1px solid var(--dv)}
+.rs{background:rgba(255,255,255,.03);border-radius:6px;padding:10px}
+.rl{color:var(--td);font-size:10px;margin-bottom:4px}
+.rn{color:var(--tp);font-size:11.5px;font-weight:500;margin-bottom:6px}
+.rm{display:flex;gap:12px}
+.rm span{color:var(--td);font-size:10px}
+.ca{flex:1;overflow-y:auto;background:var(--win);display:block}
+.cb{padding:16px}
+.log-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.log-title{font-size:14px;font-weight:600;color:var(--tp)}
+.log-count{font-size:11px;color:var(--td)}
+.log-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.lfbtn{padding:5px 12px;border-radius:6px;font-size:11px;border:1px solid var(--br);background:transparent;color:var(--ts);cursor:pointer;transition:all .15s}
+.lfbtn.active{background:rgba(74,158,255,.12);color:var(--bl);border-color:rgba(74,158,255,.3)}
+.lfbtn .c{margin-left:4px;padding:1px 5px;border-radius:8px;font-size:9px;background:rgba(255,255,255,.1)}
+.lfbtn:hover:not(.active){background:rgba(255,255,255,.04)}
+.lsrc{width:180px;height:30px;padding:5px 10px;background:#1a1a2e;border:1px solid var(--br);border-radius:5px;color:var(--tp);font-size:12px}
+.lsrc:focus{outline:none;border-color:var(--bl)}
+.log-list{background:var(--cb);border:1px solid var(--br);border-radius:10px;overflow:hidden}
+.le{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.03);cursor:pointer;transition:background .15s}
+.le:last-child{border-bottom:none}
+.le:hover{background:rgba(255,255,255,.02)}
+.let{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--td);width:70px;flex-shrink:0}
+.ll{width:50px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0}
+.ll.ok{background:rgba(52,211,153,.15);color:var(--gr)}.ll.info{background:rgba(74,158,255,.15);color:var(--bl)}.ll.warn{background:rgba(245,158,11,.15);color:var(--og)}.ll.error{background:rgba(239,68,68,.15);color:var(--rd)}
+.lm{flex:1;min-width:0;font-size:12px;color:var(--ts);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lid{font-size:10px;color:var(--td);width:80px;text-align:right;flex-shrink:0}
+.sbar{height:26px;background:#222233;border-top:1px solid var(--dv);display:flex;align-items:center;padding:0 12px;gap:16px}
+.si{color:var(--td);font-size:10.5px;display:flex;align-items:center;gap:4px}
+.sd{width:5px;height:5px;border-radius:50%;background:var(--gr)}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;visibility:hidden;transition:all .25s}
+.modal.active{opacity:1;visibility:visible}
+.mwin{background:var(--cb);border-radius:10px;border:1px solid var(--br);box-shadow:0 20px 60px rgba(0,0,0,.5);min-width:380px;transform:scale(.9) translateY(-20px);transition:transform .25s}
+.modal.active .mwin{transform:scale(1) translateY(0)}
+.mhead{padding:12px 16px;border-bottom:1px solid var(--dv);display:flex;align-items:center;justify-content:center;position:relative;background:var(--tb);border-radius:10px 10px 0 0}
+.mtl{position:absolute;left:14px;display:flex;gap:8px}
+.mtld{width:12px;height:12px;border-radius:50%;cursor:pointer}
+.mtld.c{background:#ff5f57;border:.5px solid #e0443e}.mtld.m{background:#febc2e}.mtld.x{background:#28c840}
+.mtt{color:var(--tp);font-size:14px;font-weight:500}
+.mb{padding:16px}
+.mf{padding:12px 16px;border-top:1px solid var(--dv);display:flex;justify-content:flex-end;gap:8px}
+.btn{padding:6px 14px;border-radius:5px;font-size:12px;cursor:pointer;border:none;font-family:'Noto Sans SC',sans-serif;transition:all .15s}
+.btn:active{transform:scale(.97)}
+.bp{background:var(--bl);color:#fff}.bp:hover{background:#5aadff}
+.bs{background:var(--br);color:var(--ts)}.bs:hover{background:#444460}
+.brd{background:var(--rd);color:#fff}
+.fg{margin-bottom:12px}
+.fl{display:block;color:var(--td);font-size:11px;margin-bottom:5px}
+.fi{width:100%;padding:7px 10px;background:#1a1a2e;border:1px solid var(--br);border-radius:5px;color:var(--tp);font-size:12px}
+.fi:focus{outline:none;border-color:var(--bl)}
+.fs{width:100%;padding:7px 10px;background:#1a1a2e;border:1px solid var(--br);border-radius:5px;color:var(--tp);font-size:12px;cursor:pointer}
+.fr{display:flex;gap:10px}.fr .fg{flex:1}
+.cb-item{display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:6px}
+.cb-item input{accent-color:var(--bl)}
+.cb-item span{color:var(--ts);font-size:12px}
+.tbl{table-layout:fixed;width:100%;border-collapse:collapse}
+.tbl th,.tbl td{padding:8px 10px;text-align:left;font-size:11px;border-bottom:1px solid var(--dv)}
+.tbl th{color:var(--td);font-weight:500}
+.tbl td{color:var(--ts)}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.log-detail{background:#1a1a2e;border-radius:6px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ts);line-height:1.6;white-space:pre-wrap;max-height:200px;overflow-y:auto}
+.info-box{padding:10px;background:rgba(74,158,255,.1);border-radius:6px;border:1px solid rgba(74,158,255,.2);margin-bottom:12px}
+.info-box .ib{font-size:11px;color:var(--bl);margin-bottom:4px}
+.info-box .ic{font-size:10px;color:var(--ts)}
+</style>
+</head>
+<body>
+<div class="mac">
+<div class="tb"><div class="tl"><div class="c"></div><div class="m"></div><div class="x"></div></div><span class="tt">工业机器人智能定位抓取控制系统</span></div>
+<div class="tbar">
+<button class="tbtn" id="btnExport"><i class="fa-solid fa-file-export"></i>导出日志</button>
+<button class="tbtn" id="btnClear"><i class="fa-solid fa-trash"></i>清空日志</button>
+<button class="tbtn" id="btnFilter"><i class="fa-solid fa-filter"></i>筛选</button>
+<button class="tbtn" id="btnRefresh"><i class="fa-solid fa-rotate"></i>刷新</button>
+<div class="tsep"></div>
+<button class="tbtn" id="btnSettings"><i class="fa-solid fa-gear"></i>日志设置</button>
+<div class="tright"><div class="ub"><img class="ua" src="https://i02piccdn.sogoucdn.com/93b2fc982f88939f">王晓岚</div></div>
+</div>
+<div class="ml">
+<div class="sb">
+<div class="sh">功能导航</div>
+<nav>
+<a class="ni" href="./main.html"><i class="fa-solid fa-house"></i>系统概览</a>
+<a class="ni" href="./vision.html"><i class="fa-solid fa-eye"></i>视觉定位</a>
+<a class="ni" href="./control.html"><i class="fa-solid fa-gamepad"></i>运动控制</a>
+<a class="ni" href="./task.html"><i class="fa-solid fa-list-check"></i>任务编排</a>
+<a class="ni" href="./statistics.html"><i class="fa-solid fa-chart-bar"></i>数据统计</a>
+<a class="ni" href="./alarm.html"><i class="fa-solid fa-bell"></i>报警管理</a>
+<a class="ni" href="./maintenance.html"><i class="fa-solid fa-wrench"></i>维护管理</a>
+<a class="ni active" href="./log.html"><i class="fa-solid fa-file-lines"></i>运行日志</a>
+</nav>
+<div class="sft"><div class="rs"><div class="rl">当前机器人</div><div class="rn">FANUC M-20iD/25</div><div class="rm"><span>192.168.1.100</span><span>在线</span></div></div></div>
+</div>
+<div class="ca">
+<div class="cb">
+<div class="log-hdr">
+<span class="log-title">系统运行日志</span>
+<span class="log-count">共 2,841 条记录</span>
+</div>
+<div class="log-toolbar">
+<button class="lfbtn active" id="filterAll">全部<span class="c">2841</span></button>
+<button class="lfbtn" id="filterOk">OK<span class="c">1523</span></button>
+<button class="lfbtn" id="filterInfo">INFO<span class="c">987</span></button>
+<button class="lfbtn" id="filterWarn">WARN<span class="c">286</span></button>
+<button class="lfbtn" id="filterError">ERROR<span class="c">45</span></button>
+<input type="text" class="lsrc" placeholder="搜索日志内容..." id="searchInput">
+</div>
+<div class="log-list">
+<div class="le" id="log1">
+<span class="let">14:27:03</span>
+<span class="ll ok">OK</span>
+<span class="lm">抓取任务 #0847 执行中，TCP到达预定位姿 [412.5, 87.3, -156.8]</span>
+<span class="lid">#0847</span>
+</div>
+<div class="le" id="log2">
+<span class="let">14:26:58</span>
+<span class="ll info">INFO</span>
+<span class="lm">视觉定位完成，检测到目标 PCB-A，置信度 0.97，像素坐标 (648, 412)</span>
+<span class="lid">视觉</span>
+</div>
+<div class="le" id="log3">
+<span class="let">14:26:55</span>
+<span class="ll info">INFO</span>
+<span class="lm">ICP点云配准收敛，迭代 23 次，RMSE = 0.018mm，变换矩阵已更新</span>
+<span class="lid">算法</span>
+</div>
+<div class="le" id="log4">
+<span class="let">14:26:51</span>
+<span class="ll info">INFO</span>
+<span class="lm">深度图获取成功，有效点云 124,562 个，降采样后 31,140 个</span>
+<span class="lid">相机</span>
+</div>
+<div class="le" id="log5">
+<span class="let">14:26:48</span>
+<span class="ll ok">OK</span>
+<span class="lm">任务 #0846 完成，工件放置于工位 A3-07，位置偏差 0.03mm</span>
+<span class="lid">#0846</span>
+</div>
+<div class="le" id="log6">
+<span class="let">14:26:42</span>
+<span class="ll info">INFO</span>
+<span class="lm">夹爪松开，力传感器读数 0.2N，工件释放确认</span>
+<span class="lid">夹爪</span>
+</div>
+<div class="le" id="log7">
+<span class="let">14:26:38</span>
+<span class="ll warn">WARN</span>
+<span class="lm">J3 关节电流峰值 4.8A，接近报警阈值 5.0A，建议检查负载</span>
+<span class="lid">关节</span>
+</div>
+<div class="le" id="log8">
+<span class="let">14:26:30</span>
+<span class="ll info">INFO</span>
+<span class="lm">路径规划完成，RRT* 算法生成无碰撞轨迹，共 47 个路径点</span>
+<span class="lid">规划</span>
+</div>
+<div class="le" id="log9">
+<span class="let">14:26:22</span>
+<span class="ll info">INFO</span>
+<span class="lm">碰撞检测通过，安全距离最小值 12.4mm（阈值 10mm）</span>
+<span class="lid">安全</span>
+</div>
+<div class="le" id="log10">
+<span class="let">14:26:15</span>
+<span class="ll ok">OK</span>
+<span class="lm">夹爪闭合，力控抓取成功，抓持力 15.2N，滑动检测正常</span>
+<span class="lid">夹爪</span>
+</div>
+<div class="le" id="log11">
+<span class="let">14:26:08</span>
+<span class="ll info">INFO</span>
+<span class="lm">六轴力/力矩传感器校准完成，零漂补偿已更新</span>
+<span class="lid">传感器</span>
+</div>
+<div class="le" id="log12">
+<span class="let">14:25:55</span>
+<span class="ll warn">WARN</span>
+<span class="lm">视觉检测延迟 82ms，超过设定周期 50ms，可能影响节拍</span>
+<span class="lid">视觉</span>
+</div>
+<div class="le" id="log13">
+<span class="let">14:25:47</span>
+<span class="ll error">ERROR</span>
+<span class="lm">抓取任务 #0839 失败：工件姿态角超限 (Roll=32.4deg > Max=25deg)，已跳过</span>
+<span class="lid">#0839</span>
+</div>
+<div class="le" id="log14">
+<span class="let">14:25:40</span>
+<span class="ll info">INFO</span>
+<span class="lm">手眼标定矩阵载入成功，标定日期 2026-03-20，残差 0.032mm</span>
+<span class="lid">标定</span>
+</div>
+<div class="le" id="log15">
+<span class="let">14:25:33</span>
+<span class="ll ok">OK</span>
+<span class="lm">FANUC M-20iD/25 通信正常，EtherNet/IP 周期 2ms，丢包率 0.00%</span>
+<span class="lid">通信</span>
+</div>
+</div>
+</div>
+<div class="sbar"><div class="si"><span class="sd"></span>系统就绪</div><div class="si">日志总数：2,841</div><div class="si">未读：0</div></div>
+</div>
+<div class="modal" id="modal"><div class="mwin"><div class="mhead"><div class="mtl"><div class="mtld c" onclick="closeModal()"></div><div class="mtld m"></div><div class="mtld x"></div></div><span class="mtt" id="mtitle">弹窗标题</span></div><div class="mb" id="mbody"></div><div class="mf" id="mfoot"></div></div></div>
+<script>
+const modal=document.getElementById('modal'),mtitle=document.getElementById('mtitle'),mbody=document.getElementById('mbody'),mfoot=document.getElementById('mfoot');
+function openModal(t,b,f){mtitle.textContent=t;mbody.innerHTML=b;mfoot.innerHTML=f;modal.classList.add('active');}
+function closeModal(){modal.classList.remove('active');}
+modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
+document.getElementById('btnExport').onclick=()=>openModal('导出日志',`<div class="fg"><label class="fl">导出格式</label><select class="fs"><option selected>文本 (.txt)</option><option>CSV (.csv)</option><option>JSON (.json)</option></select></div><div class="fg"><label class="fl">时间范围</label><select class="fs"><option selected>今日</option><option>本周</option><option>本月</option><option>全部</option></select></div><div class="fg"><label class="fl">日志级别</label><div class="cb-item"><input type="checkbox" checked><span>OK</span></div><div class="cb-item"><input type="checkbox" checked><span>INFO</span></div><div class="cb-item"><input type="checkbox" checked><span>WARN</span></div><div class="cb-item"><input type="checkbox" checked><span>ERROR</span></div></div><div class="fg"><label class="fl">文件名</label><input type="text" class="fi" value="runtime_log_20260323"></div>`,`<button class="btn bs" onclick="closeModal()">取消</button><button class="btn bp" onclick="closeModal()">导出</button>`);
+document.getElementById('btnClear').onclick=()=>openModal('清空日志',`<div style="text-align:center;padding:10px"><i class="fa-solid fa-exclamation-triangle" style="font-size:48px;color:var(--rd);margin-bottom:16px"></i><div style="color:var(--tp);font-size:14px;margin-bottom:8px">确认清空所有日志记录？</div><div style="color:var(--rd);font-size:12px">此操作不可恢复！</div></div>`,`<button class="btn bs" onclick="closeModal()">取消</button><button class="btn brd" onclick="closeModal()">确认清空</button>`);
+document.getElementById('btnFilter').onclick=()=>openModal('日志筛选',`<div class="fg"><label class="fl">日志级别</label><div class="cb-item"><input type="checkbox" checked><span>OK</span></div><div class="cb-item"><input type="checkbox" checked><span>INFO</span></div><div class="cb-item"><input type="checkbox" checked><span>WARN</span></div><div class="cb-item"><input type="checkbox" checked><span>ERROR</span></div></div><div class="fg"><label class="fl">时间范围</label><select class="fs"><option selected>全部时间</option><option>最近1小时</option><option>最近24小时</option><option>最近7天</option></select></div><div class="fg"><label class="fl">模块来源</label><div class="cb-item"><input type="checkbox" checked><span>视觉定位</span></div><div class="cb-item"><input type="checkbox" checked><span>运动控制</span></div><div class="cb-item"><input type="checkbox" checked><span>任务管理</span></div><div class="cb-item"><input type="checkbox" checked><span>通信</span></div><div class="cb-item"><input type="checkbox" checked><span>传感器</span></div></div><div class="fg"><label class="fl">关键词</label><input type="text" class="fi" placeholder="输入关键词过滤..."></div>`,`<button class="btn bs" onclick="closeModal()">重置</button><button class="btn bp" onclick="closeModal()">应用</button>`);
+document.getElementById('btnRefresh').onclick=()=>openModal('刷新日志',`<div style="text-align:center;padding:10px"><i class="fa-solid fa-rotate" style="font-size:48px;color:var(--bl);margin-bottom:16px"></i><div style="color:var(--tp);font-size:14px;margin-bottom:8px">正在刷新日志数据...</div><div style="color:var(--ts);font-size:12px">正在获取最新日志记录</div></div>`,`<button class="btn bs" onclick="closeModal()">取消</button><button class="btn bp" onclick="closeModal()">确定</button>`);
+document.getElementById('btnSettings').onclick=()=>openModal('日志设置',`<div class="fg"><label class="fl">日志级别</label><select class="fs"><option>DEBUG</option><option selected>INFO</option><option>WARN</option><option>ERROR</option></select></div><div class="fg"><label class="fl">自动刷新</label><div class="cb-item"><input type="checkbox" checked><span>启用自动刷新</span></div></div><div class="fr"><div class="fg"><label class="fl">刷新间隔</label><input type="text" class="fi" value="5"></div><div class="fg"><label class="fl">秒</label></div></div><div class="fg"><label class="fl">最大记录数</label><input type="text" class="fi" value="10000"></div><div class="cb-item"><input type="checkbox" checked><span>记录到文件</span></div><div class="cb-item"><input type="checkbox"><span>启用远程日志服务器</span></div>`,`<button class="btn bs" onclick="closeModal()">取消</button><button class="btn bp" onclick="closeModal()">保存</button>`);
+document.getElementById('log1').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:27:03] [OK] #0847 抓取任务执行中
+
+时间戳: 2026-03-23 14:27:03.123
+任务ID: #0847
+类型: 抓取任务
+状态: 执行中
+TCP目标位姿: [412.5, 87.3, -156.8]
+运动速度: 250 mm/s
+当前阶段: 预定位到达</div><div class="info-box" style="margin-top:12px"><div class="ib"><i class="fa-solid fa-circle-info"></i> 说明</div><div class="ic">机器人正在执行抓取任务，TCP已到达预定位姿，等待视觉确认</div></div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log2').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:26:58] [INFO] 视觉定位完成
+
+时间戳: 2026-03-23 14:26:58.456
+模块: 视觉定位
+检测目标: PCB-A
+置信度: 0.97
+像素坐标: (648, 412)
+深度值: 125.3mm
+3D位置: [412.5, 87.3, -156.8]
+旋转角度: [180.0, 0.0, 45.0]</div><div class="info-box" style="margin-top:12px"><div class="ib"><i class="fa-solid fa-circle-info"></i> 说明</div><div class="ic">视觉定位成功完成，目标检测置信度高于阈值0.95，可以进行抓取</div></div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log3').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:26:55] [INFO] ICP点云配准
+
+时间戳: 2026-03-23 14:26:55.789
+算法: ICP + RANSAC
+迭代次数: 23
+收敛状态: 已收敛
+RMSE: 0.018mm
+变换矩阵: 已更新
+配准用时: 45ms</div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log4').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:26:51] [INFO] 深度图获取
+
+时间戳: 2026-03-23 14:26:51.234
+相机: Intel RealSense D455
+分辨率: 1280 x 720
+有效点云: 124,562 个
+降采样后: 31,140 个
+获取用时: 12ms</div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log5').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:26:48] [OK] #0846 任务完成
+
+时间戳: 2026-03-23 14:26:48.567
+任务ID: #0846
+状态: 已完成
+放置工位: A3-07
+位置偏差: 0.03mm
+角度偏差: 0.1deg
+任务用时: 12.5s</div><div class="info-box" style="margin-top:12px"><div class="ib"><i class="fa-solid fa-circle-check" style="color:var(--gr)"></i> 任务成功</div><div class="ic">工件已成功放置，位置精度满足要求</div></div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log6').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:26:42] [INFO] 夹爪松开
+
+时间戳: 2026-03-23 14:26:42.123
+动作: 夹爪松开
+力传感器读数: 0.2N
+确认状态: 工件释放确认
+夹爪开度: 100%</div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log7').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:26:38] [WARN] J3关节电流告警
+
+时间戳: 2026-03-23 14:26:38.456
+关节: J3
+当前电流: 4.8A
+报警阈值: 5.0A
+负载率: 96%
+建议: 检查J3关节负载情况</div><div class="info-box" style="margin-top:12px;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.1)"><div class="ib" style="color:var(--og)"><i class="fa-solid fa-triangle-exclamation"></i> 警告</div><div class="ic">J3关节电流接近报警阈值，建议立即检查负载情况</div></div>`,`<button class="btn bs" onclick="closeModal()">关闭</button><button class="btn bp" onclick="closeModal()">查看维护</button>`);
+document.getElementById('log8').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:26:30] [INFO] 路径规划
+
+时间戳: 2026-03-23 14:26:30.789
+算法: RRT*
+路径点数量: 47
+规划用时: 28ms
+碰撞检测: 通过
+安全距离: 12.4mm</div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log9').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:26:22] [INFO] 碰撞检测
+
+时间戳: 2026-03-23 14:26:22.123
+检测结果: 通过
+最小安全距离: 12.4mm
+安全阈值: 10mm
+碰撞风险: 无</div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log10').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:26:15] [OK] 夹爪闭合
+
+时间戳: 2026-03-23 14:26:15.456
+动作: 力控抓取
+目标抓持力: 15.0N
+实际抓持力: 15.2N
+滑动检测: 正常
+抓取状态: 成功</div><div class="info-box" style="margin-top:12px"><div class="ib"><i class="fa-solid fa-circle-check" style="color:var(--gr)"></i> 抓取成功</div><div class="ic">工件抓取成功，力控精度满足要求</div></div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log11').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:26:08] [INFO] 传感器校准
+
+时间戳: 2026-03-23 14:26:08.789
+传感器类型: 六轴力/力矩传感器
+校准类型: 零漂补偿
+校准结果: 已完成
+补偿值: 已更新</div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log12').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:25:55] [WARN] 视觉检测延迟
+
+时间戳: 2026-03-23 14:25:55.234
+当前延迟: 82ms
+设定周期: 50ms
+延迟率: 64%
+影响: 可能影响节拍效率</div><div class="info-box" style="margin-top:12px;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.1)"><div class="ib" style="color:var(--og)"><i class="fa-solid fa-triangle-exclamation"></i> 警告</div><div class="ic">视觉检测延迟超过设定值，建议检查相机或算法性能</div></div>`,`<button class="btn bs" onclick="closeModal()">关闭</button><button class="btn bp" onclick="closeModal()">优化设置</button>`);
+document.getElementById('log13').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:25:47] [ERROR] #0839 抓取失败
+
+时间戳: 2026-03-23 14:25:47.567
+任务ID: #0839
+错误代码: ERR_POSE_EXCEED
+错误描述: 工件姿态角超限
+实际Roll角: 32.4deg
+最大允许: 25deg
+处理措施: 已跳过
+跳过原因: 姿态无法满足抓取条件</div><div class="info-box" style="margin-top:12px;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.1)"><div class="ib" style="color:var(--rd)"><i class="fa-solid fa-circle-xmark"></i> 错误</div><div class="ic">抓取任务因工件姿态超限而失败，已自动跳过</div></div>`,`<button class="btn bs" onclick="closeModal()">关闭</button><button class="btn bp" onclick="closeModal()">查看工件</button>`);
+document.getElementById('log14').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:25:40] [INFO] 手眼标定
+
+时间戳: 2026-03-23 14:25:40.890
+状态: 标定矩阵载入成功
+标定日期: 2026-03-20
+标定残差: 0.032mm
+精度等级: ±0.05mm
+矩阵版本: v3.2.1</div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.getElementById('log15').onclick=()=>openModal('日志详情',`<div class="log-detail">[14:25:33] [OK] 机器人通信
+
+时间戳: 2026-03-23 14:25:33.123
+机器人型号: FANUC M-20iD/25
+通信协议: EtherNet/IP
+通信周期: 2ms
+丢包率: 0.00%
+连接状态: 正常</div>`,`<button class="btn bs" onclick="closeModal()">关闭</button>`);
+document.querySelectorAll('.lfbtn').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('.lfbtn').forEach(x=>x.classList.remove('active'));this.classList.add('active');}));
+</script>
+</body>
+</html>

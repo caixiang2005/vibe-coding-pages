@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>风险分级管控 - 能源全域安全风险管控隐患排查治理平台</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #1a1c2e 0%, #2d1f3d 30%, #1a2a3a 70%, #0f1923 100%);
+      height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+      color: #333;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    .mac-window { width: 100%; height: 100%; flex: 1; background: #f5f5f7; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .titlebar { height: 52px; background: linear-gradient(180deg, #e8e8ea 0%, #d4d4d8 100%); border-bottom: 1px solid #b8b8bc; display: flex; align-items: center; padding: 0 16px; flex-shrink: 0; position: relative; }
+    .traffic-lights { display: flex; gap: 8px; z-index: 2; }
+    .traffic-light { width: 12px; height: 12px; border-radius: 50%; position: relative; }
+    .traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+    .traffic-light:hover { cursor: pointer; }
+    .traffic-light:hover::after { content: ''; position: absolute; inset: -2px; background: rgba(0,0,0,0.1); border-radius: 50%; }
+    .titlebar-text { position: absolute; left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: 500; color: #4a4a4a; letter-spacing: 0.3px; }
+    .main-layout { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+    .sidebar { width: 220px; background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%); display: flex; flex-direction: column; flex-shrink: 0; border-right: 1px solid #151d25; min-height: 0; }
+    .sidebar-header { padding: 18px 16px 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #e74c3c, #c0392b); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: white; font-weight: 700; letter-spacing: -0.5px; }
+    .logo-text { font-size: 13px; color: #ecf0f1; font-weight: 600; line-height: 1.3; }
+    .user-info { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: rgba(255, 255, 255, 0.05); border-radius: 6px; }
+    .user-avatar { width: 28px; height: 28px; background: linear-gradient(135deg, #3498db, #2980b9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; font-weight: 600; }
+    .user-detail { flex: 1; }
+    .user-name { font-size: 12px; color: #ecf0f1; font-weight: 500; }
+    .user-role { font-size: 10px; color: #7f8c8d; }
+    .online-dot { width: 7px; height: 7px; background: #2ecc71; border-radius: 50%; box-shadow: 0 0 4px rgba(46, 204, 113, 0.5); }
+    .sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 0; }
+    .nav-group { margin-bottom: 4px; }
+    .nav-group-title { font-size: 10px; color: #5a6a7a; text-transform: uppercase; letter-spacing: 1px; padding: 10px 16px 4px; font-weight: 600; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer; transition: all 0.15s; position: relative; color: #95a5a6; font-size: 13px; text-decoration: none; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #ecf0f1; }
+    .nav-item.active { background: rgba(52, 152, 219, 0.15); color: #3498db; }
+    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; background: #3498db; border-radius: 0 2px 2px 0; }
+    .nav-item:not(.active):hover { text-decoration: none; color: #ecf0f1; }
+    .nav-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 12px; opacity: 0.8; }
+    .nav-badge { margin-left: auto; background: #e74c3c; color: white; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+    .nav-badge.warn { background: #f39c12; }
+    .nav-badge.info { background: #3498db; }
+    .sidebar-footer { padding: 12px 16px; border-top: 1px solid rgba(255, 255, 255, 0.06); display: flex; align-items: center; gap: 8px; }
+    .sidebar-footer-item { font-size: 11px; color: #5a6a7a; cursor: pointer; transition: color 0.15s; }
+    .sidebar-footer-item:hover { color: #95a6a6; }
+    .content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f0f1f3; min-width: 0; min-height: 0; }
+    .toolbar { height: 46px; background: white; border-bottom: 1px solid #e0e0e4; display: flex; align-items: center; padding: 0 20px; gap: 12px; flex-shrink: 0; }
+    .breadcrumb { font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px; }
+    .breadcrumb span { color: #999; }
+    .breadcrumb .current { color: #333; font-weight: 500; }
+    .toolbar-spacer { flex: 1; }
+    .toolbar-search { display: flex; align-items: center; background: #f5f5f7; border: 1px solid #e0e0e4; border-radius: 6px; padding: 5px 10px; gap: 6px; width: 200px; transition: all 0.2s; }
+    .toolbar-search:focus-within { border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); background: white; }
+    .toolbar-search input { border: none; background: none; outline: none; font-size: 12px; color: #333; width: 100%; font-family: inherit; }
+    .toolbar-search input::placeholder { color: #aaa; }
+    .search-icon { font-size: 12px; color: #999; }
+    .toolbar-btn { padding: 5px 12px; border: 1px solid #d0d0d4; border-radius: 6px; background: white; font-size: 12px; color: #555; cursor: pointer; transition: all 0.15s; font-family: inherit; display: flex; align-items: center; gap: 4px; }
+    .toolbar-btn:hover { background: #f5f5f7; border-color: #bbb; }
+    .toolbar-btn.primary { background: #3498db; color: white; border-color: #2980b9; }
+    .toolbar-btn.primary:hover { background: #2980b9; }
+    .toolbar-btn:active { transform: scale(0.97); }
+    .page-content { flex: 1; overflow-y: auto; padding: 20px; }
+    .dashboard-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .dash-title { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+    .dash-date { font-size: 12px; color: #888; }
+    .card { background: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); border: 1px solid #eee; overflow: hidden; margin-bottom: 14px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; border-bottom: 1px solid #f0f0f2; }
+    .card-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+    .card-action { font-size: 11px; color: #3498db; cursor: pointer; transition: color 0.15s; }
+    .card-action:hover { color: #2980b9; text-decoration: underline; }
+    .card-body { padding: 14px 16px; }
+    .control-level { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+    .level-card { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); border: 1px solid #eee; position: relative; overflow: hidden; }
+    .level-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+    .level-card.red::before { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+    .level-card.orange::before { background: linear-gradient(90deg, #f39c12, #e67e22); }
+    .level-card.yellow::before { background: linear-gradient(90deg, #f1c40f, #f39c12); }
+    .level-card.blue::before { background: linear-gradient(90deg, #3498db, #2980b9); }
+    .level-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .level-name { font-size: 13px; font-weight: 600; color: #333; }
+    .level-count { font-size: 20px; font-weight: 700; }
+    .level-card.red .level-count { color: #e74c3c; }
+    .level-card.orange .level-count { color: #e67e22; }
+    .level-card.yellow .level-count { color: #d4a000; }
+    .level-card.blue .level-count { color: #2980b9; }
+    .level-desc { font-size: 11px; color: #888; }
+    .level-items { font-size: 11px; color: #666; margin-top: 8px; line-height: 1.6; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .data-table th { text-align: left; padding: 8px 10px; color: #666; font-weight: 500; border-bottom: 1px solid #eee; background: #fafafa; }
+    .data-table td { padding: 8px 10px; border-bottom: 1px solid #f5f5f5; color: #333; }
+    .data-table tr:hover td { background: #f8f9fb; cursor: pointer; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .tag.critical { background: #fde8e8; color: #c0392b; }
+    .tag.major { background: #fef3e2; color: #d35400; }
+    .tag.moderate { background: #fef9e7; color: #b7950b; }
+    .tag.low { background: #e8f6fd; color: #2980b9; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .level-card, .card { animation: fadeIn 0.4s ease both; }
+    
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.2s; }
+    .modal-overlay.show { opacity: 1; visibility: visible; }
+    .modal { background: white; border-radius: 12px; width: 480px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); transform: scale(0.9); transition: transform 0.2s; }
+    .modal-overlay.show .modal { transform: scale(1); }
+      .modal-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; background: #fafafa; border-radius: 12px 12px 0 0; position: relative; }
+    .modal-title { font-size: 15px; font-weight: 600; color: #1a1a1a; text-align: center; flex: 1; }
+    .modal-close { display: none; }
+    .modal-body { padding: 20px; overflow-y: auto; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 12px; color: #666; margin-bottom: 6px; display: block; font-weight: 500; }
+    .form-input { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; transition: all 0.15s; }
+    .form-input:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
+    .form-select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; background: white; cursor: pointer; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; background: #fafafa; border-radius: 0 0 12px 12px; }
+    .btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.15s; font-family: inherit; border: none; }
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: #f5f5f7; color: #555; border: 1px solid #ddd; }
+    .btn-secondary:hover { background: #eee; }
+    .btn-primary { background: #3498db; color: white; }
+    .btn-primary:hover { background: #2980b9; }
+  </style>
+</head>
+<body>
+  <div class="mac-window">
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo">
+            <div class="logo-text">能源全域安全风险管控隐患排查治理平台</div>
+          </div>
+        </div>
+        <div class="user-info" style="margin: 0 10px 12px;">
+          <div class="user-avatar">包</div>
+          <div class="user-detail">
+            <div class="user-name">包倩倩</div>
+            <div class="user-role">安全管理部</div>
+          </div>
+          <div class="online-dot"></div>
+        </div>
+        <div class="sidebar-nav">
+          <div class="nav-group">
+            <div class="nav-group-title">总览</div>
+            <a href="main.html" class="nav-item">
+              <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg></div>
+              安全驾驶舱
+            </a>
+            <a href="risk-inspection.html" class="nav-item">
+              <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+              隐患排查任务
+              <span class="nav-badge">5</span>
+            </a>
+            <a href="hazard-register.html" class="nav-item">
+              <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2h8a1 1 0 011 1v8a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="5" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="5" y1="7" x2="9" y2="7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="5" y1="9" x2="7.5" y2="9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+              隐患治理台账
+            </a>
+            <a href="rectification-tracking.html" class="nav-item">
+              <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M1 11l4-4 2 2 3-4 3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              整改跟踪
+              <span class="nav-badge info">8</span>
+            </a>
+            <a href="risk-assessment.html" class="nav-item">
+              <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 1L1 12h12L7 1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="7" y1="5" x2="7" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="10" r="0.8"/></svg></div>
+              风险辨识评估
+              <span class="nav-badge warn">12</span>
+            </a>
+            <div class="nav-item active">
+              <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="2" y="2" width="10" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 7l1.5 1.5L9 5.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              风险分级管控
+            </div>
+            <a href="statistics.html" class="nav-item">
+              <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.5 7l1.5 2 3.5-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              统计报表
+            </a>
+          </div>
+        </div>
+        <div class="sidebar-footer">
+          <div class="sidebar-footer-item">设置</div>
+          <div class="sidebar-footer-item">帮助</div>
+        </div>
+      </div>
+      <div class="content-area">
+        <div class="toolbar">
+          <div class="breadcrumb"><span>首页</span><span>/</span><span class="current">风险分级管控</span></div>
+          <div class="toolbar-spacer"></div>
+          <div class="toolbar-search"><span class="search-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="5" cy="5" r="3.5" stroke="#999" stroke-width="1.2"/><line x1="7.5" y1="7.5" x2="10.5" y2="10.5" stroke="#999" stroke-width="1.2" stroke-linecap="round"/></svg></span><input type="text" placeholder="搜索管控项..." /></div>
+          <button class="toolbar-btn" onclick="window.location.href='main.html'">返回首页</button>
+          <button class="toolbar-btn primary" onclick="openModal('addModal')">+ 新增管控</button>
+        </div>
+        <div class="page-content">
+          <div class="dashboard-header">
+            <div class="dash-title">风险分级管控</div>
+            <div class="dash-date">2026-03-23</div>
+          </div>
+          <div class="control-level">
+            <div class="level-card red">
+              <div class="level-header">
+                <div class="level-name">重大风险</div>
+                <div class="level-count">7</div>
+              </div>
+              <div class="level-desc">需制定管控方案并上报</div>
+              <div class="level-items">● 罐区液位控制<br>● 主变压器温度</div>
+            </div>
+            <div class="level-card orange">
+              <div class="level-header">
+                <div class="level-name">较大风险</div>
+                <div class="level-count">15</div>
+              </div>
+              <div class="level-desc">需明确管控层级和措施</div>
+              <div class="level-items">● 输气管道压力<br>● 燃气轮机振动</div>
+            </div>
+            <div class="level-card yellow">
+              <div class="level-header">
+                <div class="level-name">一般风险</div>
+                <div class="level-count">38</div>
+              </div>
+              <div class="level-desc">需纳入日常巡检管理</div>
+              <div class="level-items">● 应急照明设备<br>● 安全标识标牌</div>
+            </div>
+            <div class="level-card blue">
+              <div class="level-header">
+                <div class="level-name">低风险</div>
+                <div class="level-count">52</div>
+              </div>
+              <div class="level-desc">需保持现有管控措施</div>
+              <div class="level-items">● 排水设施<br>● 围墙围栏</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">管控措施清单</div>
+              <div class="card-action" onclick="openModal('addModal')">添加管控</div>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width:80px">编号</th>
+                    <th>风险点名称</th>
+                    <th style="width:70px">等级</th>
+                    <th style="width:80px">管控类型</th>
+                    <th style="width:90px">责任部门</th>
+                    <th style="width:80px">责任人</th>
+                    <th style="width:80px">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr onclick="openModal('detailModal')">
+                    <td>GK-2026-001</td>
+                    <td>3号储油罐区液位控制</td>
+                    <td><span class="tag critical">重大</span></td>
+                    <td>工程技术</td>
+                    <td>储运车间</td>
+                    <td>王建国</td>
+                    <td><button style="background:#e8f0fe;color:#2c3e9c;padding:4px 10px;border-radius:4px;font-size:11px;border:none;cursor:pointer;" onclick="event.stopPropagation();openModal('detailModal')">详情</button></td>
+                  </tr>
+                  <tr onclick="openModal('detailModal')">
+                    <td>GK-2026-002</td>
+                    <td>主变压器温度监控</td>
+                    <td><span class="tag critical">重大</span></td>
+                    <td>监测预警</td>
+                    <td>电气车间</td>
+                    <td>李明辉</td>
+                    <td><button style="background:#e8f0fe;color:#2c3e9c;padding:4px 10px;border-radius:4px;font-size:11px;border:none;cursor:pointer;" onclick="event.stopPropagation();openModal('detailModal')">详情</button></td>
+                  </tr>
+                  <tr onclick="openModal('detailModal')">
+                    <td>GK-2026-003</td>
+                    <td>天然气管道压力控制</td>
+                    <td><span class="tag major">较大</span></td>
+                    <td>工程技术</td>
+                    <td>输气车间</td>
+                    <td>张伟</td>
+                    <td><button style="background:#e8f0fe;color:#2c3e9c;padding:4px 10px;border-radius:4px;font-size:11px;border:none;cursor:pointer;" onclick="event.stopPropagation();openModal('detailModal')">详情</button></td>
+                  </tr>
+                  <tr onclick="openModal('detailModal')">
+                    <td>GK-2026-004</td>
+                    <td>应急照明系统维护</td>
+                    <td><span class="tag moderate">一般</span></td>
+                    <td>日常巡检</td>
+                    <td>综合管理部</td>
+                    <td>赵海峰</td>
+                    <td><button style="background:#e8f0fe;color:#2c3e9c;padding:4px 10px;border-radius:4px;font-size:11px;border:none;cursor:pointer;" onclick="event.stopPropagation();openModal('detailModal')">详情</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增管控弹窗 -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="traffic-lights">
+          <div class="traffic-light close"></div>
+          <div class="traffic-light minimize"></div>
+          <div class="traffic-light maximize"></div>
+        </div>
+        <div class="modal-title">新增管控措施</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">风险点名称</label>
+          <input type="text" class="form-input" placeholder="请输入风险点名称" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">风险等级</label>
+            <select class="form-select">
+              <option>重大风险</option>
+              <option>较大风险</option>
+              <option>一般风险</option>
+              <option>低风险</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">管控类型</label>
+            <select class="form-select">
+              <option>工程技术</option>
+              <option>监测预警</option>
+              <option>日常巡检</option>
+              <option>教育培训</option>
+              <option>应急处置</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">责任部门</label>
+            <select class="form-select">
+              <option>储运车间</option>
+              <option>电气车间</option>
+              <option>输气车间</option>
+              <option>综合管理部</option>
+              <option>安全管理部</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">责任人</label>
+            <select class="form-select">
+              <option>王建国</option>
+              <option>李明辉</option>
+              <option>张伟</option>
+              <option>刘晓红</option>
+              <option>赵海峰</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">管控措施</label>
+          <textarea class="form-input" rows="3" placeholder="请描述具体的管控措施"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addModal')">取消</button>
+        <button class="btn btn-primary" onclick="closeModal('addModal')">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管控详情弹窗 -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="traffic-lights">
+          <div class="traffic-light close"></div>
+          <div class="traffic-light minimize"></div>
+          <div class="traffic-light maximize"></div>
+        </div>
+        <div class="modal-title">管控措施详情</div>
+      </div>
+      <div class="modal-body">
+        <div style="background:#fde8e8;padding:12px;border-radius:6px;margin-bottom:14px;border-left:3px solid #e74c3c;">
+          <div style="font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">3号储油罐区液位控制</div>
+          <div style="display:flex;gap:12px;font-size:12px;color:#666;">
+            <span>编号：GK-2026-001</span>
+            <span><span class="tag critical">重大风险</span></span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">管控类型</label>
+            <div style="padding:4px 0;color:#333;font-size:13px;">工程技术</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">责任部门</label>
+            <div style="padding:4px 0;color:#333;font-size:13px;">储运车间</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">责任人</label>
+            <div style="padding:4px 0;color:#333;font-size:13px;">王建国</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">联系电话</label>
+            <div style="padding:4px 0;color:#333;font-size:13px;">138-xxxx-xxxx</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">管控措施</label>
+          <div style="padding:4px 0;color:#333;font-size:13px;line-height:1.5;">1. 安装液位连续监测系统<br>2. 设置高液位报警（90%）<br>3. 配备紧急切断装置<br>4. 制定溢油应急预案<br>5. 每月对液位仪表进行校验</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">检查周期</label>
+          <div style="padding:4px 0;color:#333;font-size:13px;">每日巡检</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('detailModal')">关闭</button>
+        <button class="btn btn-primary" onclick="closeModal('detailModal')">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openModal(id) { document.getElementById(id).classList.add('show'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
+    });
+  </script>
+</body>
+</html>

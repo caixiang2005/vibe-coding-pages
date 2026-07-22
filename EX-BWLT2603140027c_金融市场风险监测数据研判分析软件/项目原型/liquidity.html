@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>流动性分析 - 金融市场风险监测数据研判分析软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--mac-title:#e8e6e3;--mac-title-inactive:#f6f6f6;--sidebar-bg:#1e1e2e;--sidebar-text:#a6adc8;--sidebar-active:rgba(137,180,250,.12);--sidebar-active-text:#89b4fa;--content-bg:#11111b;--content-bg-2:#181825;--card-bg:#1e1e2e;--card-border:rgba(255,255,255,.04);--text-primary:#cdd6f4;--text-secondary:#6c7086;--text-dim:#45475a;--accent-blue:#89b4fa;--accent-green:#a6e3a1;--accent-red:#f38ba8;--accent-yellow:#f9e2af;--accent-mauve:#cba6f7;--accent-peach:#fab387;--accent-teal:#94e2d5;--shadow-heavy:0 30px 80px rgba(0,0,0,.6),0 0 1px rgba(255,255,255,.05);--radius:10px}
+    body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a12;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;color:var(--text-primary)}
+    .desktop-bg{position:fixed;inset:0;background:linear-gradient(135deg,#0c0c1d 0%,#1a1a2e 40%,#16213e 70%,#0f3460 100%);z-index:0}
+    .desktop-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 20%,rgba(137,180,250,.04) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(203,166,247,.03) 0%,transparent 50%)}
+    .mac-window{position:relative;z-index:1;width:1280px;max-width:96vw;height:820px;max-height:90vh;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-heavy);display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.06)}
+    .title-bar{height:52px;min-height:52px;background:linear-gradient(180deg,#2a2a3c 0%,#232336 100%);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid rgba(0,0,0,.4);-webkit-app-region:drag;position:relative}
+    .traffic-lights{display:flex;gap:8px;z-index:2}
+    .traffic-light{width:12px;height:12px;border-radius:50%;position:relative}
+    .traffic-light.close{background:#ec6a5e;border:1px solid #d14f44}
+    .traffic-light.minimize{background:#f4be4f;border:1px solid #d69e2e}
+    .traffic-light.maximize{background:#61c554;border:1px solid #4da83f}
+    .title-bar-text{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;font-weight:500;color:#a0a0b8;letter-spacing:.3px;white-space:nowrap}
+    .title-bar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);padding:4px 12px 4px 8px;border-radius:6px;font-size:12px;color:var(--text-secondary)}
+    .user-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent-blue),var(--accent-mauve));display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:10px;color:#fff;font-weight:600}
+    .main-body{flex:1;display:flex;overflow:hidden;background:var(--content-bg)}
+    .sidebar{width:220px;min-width:220px;background:var(--sidebar-bg);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;padding:12px 0;overflow-y:auto}
+    .sidebar-section{padding:0 12px;margin-bottom:4px}
+    .sidebar-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);padding:12px 12px 6px}
+    .sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--sidebar-text);transition:all .15s;position:relative;margin-bottom:1px}
+    .sidebar-item:hover{background:rgba(255,255,255,.04);color:var(--text-primary)}
+    .sidebar-item.active{background:var(--sidebar-active);color:var(--sidebar-active-text)}
+    .sidebar-item .icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:13px;opacity:.7}
+    .sidebar-item.active .icon{opacity:1}
+    .sidebar-item .badge{margin-left:auto;background:var(--accent-red);color:#11111b;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+    .sidebar-status{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.04)}
+    .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px}
+    .status-dot.online{background:var(--accent-green);box-shadow:0 0 6px rgba(166,227,161,.4)}
+    .status-text{font-size:11px;color:var(--text-secondary)}
+    .content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .content-header{display:flex;flex-direction:column;gap:12px;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.03);background:var(--content-bg-2)}
+    .content-title{font-size:18px;font-weight:600;color:var(--text-primary);letter-spacing:-.2px}
+    .content-subtitle{font-size:12px;color:var(--text-secondary);margin-top:2px}
+    .header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;width:100%}
+    .btn{padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+    .btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary)}
+    .btn.primary{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.2);color:var(--accent-blue)}
+    .btn.primary:hover{background:rgba(137,180,250,.25)}
+    .btn.warning{background:rgba(243,139,168,.15);border-color:rgba(243,139,168,.2);color:var(--accent-red)}
+    .btn.warning:hover{background:rgba(243,139,168,.25)}
+    .btn.info{background:rgba(137,180,250,.12);border-color:rgba(137,180,250,.18);color:var(--accent-blue)}
+    .btn.info:hover{background:rgba(137,180,250,.22)}
+    .time-display{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim)}
+    .tab-bar{display:flex;gap:2px;margin-bottom:14px}
+    .tab-item{padding:5px 12px;font-size:11px;color:var(--text-dim);border-radius:4px;cursor:pointer;transition:all .15s}
+    .tab-item:hover{color:var(--text-secondary)}
+    .tab-item.active{background:rgba(137,180,250,.1);color:var(--accent-blue)}
+    .market-filter{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    .filter-chip{padding:4px 12px;font-size:11px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-secondary);cursor:pointer;transition:all .15s}
+    .filter-chip:hover{background:rgba(255,255,255,.08)}
+    .filter-chip.active{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.3);color:var(--accent-blue)}
+    .content-scroll{flex:1;overflow-y:auto;padding:20px 24px}
+    .content-scroll::-webkit-scrollbar{width:6px}
+    .content-scroll::-webkit-scrollbar-track{background:transparent}
+    .content-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+    .kpi-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:16px 18px}
+    .kpi-label{font-size:11px;color:var(--text-secondary);margin-bottom:8px;letter-spacing:.3px}
+    .kpi-value{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;letter-spacing:-1px}
+    .kpi-sub{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px}
+    .kpi-change{font-family:'JetBrains Mono',monospace;font-weight:500}
+    .kpi-change.up{color:var(--accent-red)}
+    .kpi-change.down{color:var(--accent-green)}
+    .kpi-change.neutral{color:var(--accent-yellow)}
+    .kpi-desc{color:var(--text-dim)}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+    .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:18px;overflow:hidden}
+    .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .card-title{font-size:13px;font-weight:600;color:var(--text-primary)}
+    .card-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500}
+    .tag-warn{background:rgba(243,139,168,.12);color:var(--accent-red)}
+    .tag-safe{background:rgba(166,227,161,.12);color:var(--accent-green)}
+    .tag-info{background:rgba(137,180,250,.12);color:var(--accent-blue)}
+    .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .bar-label{font-size:11px;color:var(--text-secondary);width:70px;text-align:right;flex-shrink:0}
+    .bar-track{flex:1;height:8px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:4px;transition:width 1s ease}
+    .bar-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);width:60px;flex-shrink:0}
+    .flow-arrow{font-size:10px;margin-left:2px}
+    .flow-arrow.up{color:var(--accent-red)}
+    .flow-arrow.down{color:var(--accent-green)}
+    .flow-arrow.stable{color:var(--accent-yellow)}
+    .operation-row{cursor:pointer;transition:background .15s}
+    .operation-row:hover td{background:rgba(137,180,250,.08)}
+    .data-table{width:100%;border-collapse:collapse;font-size:12px}
+    .data-table th{text-align:left;padding:8px 10px;color:var(--text-dim);font-weight:500;font-size:11px;letter-spacing:.3px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .data-table td{padding:10px 10px;color:var(--text-secondary);border-bottom:1px solid rgba(255,255,255,.02);font-family:'JetBrains Mono',monospace;font-size:11px}
+    .data-table tr:hover td{background:rgba(255,255,255,.015)}
+    .data-table .name-col{font-family:'Noto Sans SC',sans-serif;color:var(--text-primary);font-weight:500}
+    .rate-card{cursor:pointer;transition:all .15s;padding:8px;border-radius:6px}
+    .rate-card:hover{background:rgba(255,255,255,.04)}
+    .sim-btn{padding:4px 10px;font-size:10px;border-radius:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-secondary);cursor:pointer}
+    .sim-btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary)}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .kpi-card,.card{animation:fadeIn .4s ease both}
+    .kpi-card:nth-child(2){animation-delay:.05s}
+    .kpi-card:nth-child(3){animation-delay:.1s}
+    .kpi-card:nth-child(4){animation-delay:.15s}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s ease}
+    .modal-content{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;width:400px;max-width:90vw;overflow:hidden}
+    .modal-header{display:flex;align-items:center;justify-content:center;padding:16px 20px;background:var(--content-bg-2);border-bottom:1px solid rgba(255,255,255,.05);position:relative}
+    .modal-header .traffic-lights{display:flex;gap:8px;position:absolute;left:20px;top:50%;transform:translateY(-50%)}
+    .modal-header .traffic-light{width:12px;height:12px;border-radius:50%;cursor:pointer}
+    .modal-header .traffic-light.close{background:#ff5f57}
+    .modal-header .traffic-light.minimize{background:#febc2e}
+    .modal-header .traffic-light.maximize{background:#28c840}
+    .modal-title{font-size:14px;font-weight:600;color:var(--text-primary)}
+    .modal-body{padding:24px 20px}
+    .modal-body p{font-size:13px;color:var(--text-secondary);margin-bottom:16px}
+    .report-progress{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:12px}
+    .progress-fill{height:100%;background:var(--accent-blue);border-radius:3px;width:0;transition:width .4s ease}
+    .report-status{font-size:11px;color:var(--text-dim)}
+    .report-success{text-align:center;padding:20px 0}
+    .success-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:rgba(166,227,161,.15);color:var(--accent-green);border-radius:50%;font-size:24px;margin-bottom:16px}
+    .report-filename{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);margin:8px 0 20px}
+    .toast-notification{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 20px;font-size:13px;color:var(--text-primary);z-index:1001;transition:transform .3s ease;display:flex;align-items:center;gap:10px}
+    .toast-notification.show{transform:translateX(-50%) translateY(0)}
+    .toast-notification.success{border-left:3px solid var(--accent-green)}
+    .toast-notification.warning{border-left:3px solid var(--accent-yellow)}
+    .toast-notification.error{border-left:3px solid var(--accent-red)}
+  </style>
+</head>
+<body>
+  <div class="desktop-bg"></div>
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <div class="title-bar-text">金融市场风险监测数据研判分析软件</div>
+      <div class="title-bar-right">
+        <div class="time-display" id="clock"></div>
+        <div class="user-badge">
+          <div class="user-avatar">鲍</div>
+          <span>鲍姝帆</span>
+        </div>
+      </div>
+    </div>
+    <div class="main-body">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">软件功能</div>
+          <div class="sidebar-item" onclick="location.href='dashboard.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            风险总览
+          </div>
+          <div class="sidebar-item" onclick="location.href='market.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+            市场监测
+          </div>
+          <div class="sidebar-item" onclick="location.href='credit.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            信用风险
+            <span class="badge">3</span>
+          </div>
+          <div class="sidebar-item active">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
+            流动性分析
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="location.href='stress.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            压力测试
+          </div>
+          <div class="sidebar-item" onclick="location.href='var.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span>
+            VaR模型
+          </div>
+          <div class="sidebar-item" onclick="location.href='correlation.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+            关联分析
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="location.href='system.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+            系统设置
+          </div>
+        </div>
+        <div class="sidebar-status">
+          <span class="status-dot online"></span>
+          <span class="status-text">数据源连接正常 · 延迟 12ms</span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="content-header">
+          <div>
+            <div class="content-title">流动性分析</div>
+            <div class="content-subtitle">银行间市场资金面与央行操作跟踪 · 数据更新于 <span id="updateTime"></span></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn" onclick="showLiquidityConfig()">流动性配置</button>
+            <button class="btn" onclick="showPolicyCalendar()">政策日历</button>
+            <button class="btn" onclick="showFundFlow()">资金流向</button>
+            <button class="btn" onclick="showCashFlowForecast()">现金流预测</button>
+            <button class="btn" onclick="showLCRAnalysis()">LCR 分析</button>
+            <button class="btn" onclick="showNSFRAnalysis()">NSFR 分析</button>
+            <button class="btn" onclick="showTermStructure()">期限结构</button>
+            <button class="btn warning" onclick="pushLiquidityAlert()"><i class="fas fa-bell"></i> 一键预警推送</button>
+            <button class="btn" onclick="showLiquidityHistory()"><i class="fas fa-history"></i> 历史流动性回溯</button>
+            <button class="btn" onclick="showLiquidityForecast()"><i class="fas fa-chart-line"></i> 流动性预测</button>
+            <button class="btn" onclick="exportData()">导出数据</button>
+            <button class="btn primary" onclick="generateReport()">生成报告</button>
+          </div>
+        </div>
+        <div class="content-scroll">
+          <div class="tab-bar">
+            <div class="tab-item active" onclick="switchLiquidityTab(this,'1w')">1周</div>
+            <div class="tab-item" onclick="switchLiquidityTab(this,'1m')">1月</div>
+            <div class="tab-item" onclick="switchLiquidityTab(this,'3m')">3月</div>
+            <div class="tab-item" onclick="switchLiquidityTab(this,'6m')">6月</div>
+            <div class="tab-item" onclick="switchLiquidityTab(this,'1y')">1年</div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-card" onclick="showLiquidityKpiDetail('SHIBOR隔夜','2.35%','上海银行间同业拆借利率(Shanghai Interbank Offered Rate)，反映银行间市场短期资金成本。隔夜代表1天期资金利率，是最具流动性的资金价格。')">
+              <div class="kpi-label">SHIBOR 隔夜 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-peach)">2.35%</div>
+              <div class="kpi-sub"><span class="kpi-change up">+15bp</span><span class="kpi-desc">月末效应</span></div>
+            </div>
+            <div class="kpi-card" onclick="showLiquidityKpiDetail('DR007','2.18%','存款类机构质押式回购利率(DR007)，以利率债作为质押品的回购利率，更能准确反映银行体系流动性状况。央行7天逆回购利率为政策利率走廊的下限。')">
+              <div class="kpi-label">DR007 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-yellow)">2.18%</div>
+              <div class="kpi-sub"><span class="kpi-change up">+8bp</span><span class="kpi-desc">高于政策利率</span></div>
+            </div>
+            <div class="kpi-card" onclick="showLiquidityKpiDetail('逆回购到期(本周)','8,400亿','本周公开市场操作中到期的逆回购总额。净回笼表示投放量小于到期量，反映央行在回收流动性。月末季节性因素通常导致资金面偏紧。')">
+              <div class="kpi-label">逆回购到期(本周) <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-blue)">8,400亿</div>
+              <div class="kpi-sub"><span class="kpi-change neutral">净回笼 1,200亿</span><span class="kpi-desc"></span></div>
+            </div>
+            <div class="kpi-card" onclick="showLiquidityKpiDetail('流动性缺口','-3,200亿','银行体系流动性供需差额，负值表示流动性不足。缺口主要来自MLF(中期借贷便利)到期，预计缺口将通过续作或降准填补。')">
+              <div class="kpi-label">流动性缺口 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-red)">-3,200亿</div>
+              <div class="kpi-sub"><span class="kpi-change up">缺口扩大</span><span class="kpi-desc">MLF到期影响</span></div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-head"><span class="card-title">银行间市场资金面指标</span><span class="card-tag tag-warn" id="liquidityStatusTag">偏紧</span></div>
+              <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <button class="sim-btn" onclick="showRateForecast()">利率预测</button>
+                <button class="sim-btn" onclick="showLiquiditySim()">流动性模拟</button>
+              </div>
+              <div style="padding:6px 0;">
+                <div class="rate-card" onclick="showRateDetail('R001','2.28%','+18bp','银行间质押式回购隔夜','偏紧')">
+                  <div class="bar-row"><span class="bar-label">R001</span><div class="bar-track"><div class="bar-fill flow-up" style="width:72%;background:var(--accent-peach)"></div></div><span class="bar-val">2.28% <span class="flow-arrow up">↑</span></span></div>
+                </div>
+                <div class="rate-card" onclick="showRateDetail('R007','2.42%','+12bp','银行间质押式回购7天','偏紧')">
+                  <div class="bar-row"><span class="bar-label">R007</span><div class="bar-track"><div class="bar-fill flow-up" style="width:68%;background:var(--accent-yellow)"></div></div><span class="bar-val">2.42% <span class="flow-arrow up">↑</span></span></div>
+                </div>
+                <div class="rate-card" onclick="showRateDetail('R014','2.61%','+8bp','银行间质押式回购14天','一般')">
+                  <div class="bar-row"><span class="bar-label">R014</span><div class="bar-track"><div class="bar-fill flow-up" style="width:58%;background:var(--accent-blue)"></div></div><span class="bar-val">2.61% <span class="flow-arrow up">↑</span></span></div>
+                </div>
+                <div class="rate-card" onclick="showRateDetail('R1M','2.78%','-5bp','银行间质押式回购1月','宽松')">
+                  <div class="bar-row"><span class="bar-label">R1M</span><div class="bar-track"><div class="bar-fill flow-down" style="width:52%;background:var(--accent-mauve)"></div></div><span class="bar-val">2.78% <span class="flow-arrow down">↓</span></span></div>
+                </div>
+                <div class="rate-card" onclick="showRateDetail('GC001','2.15%','-3bp','国债回购隔夜','宽松')">
+                  <div class="bar-row"><span class="bar-label">GC001</span><div class="bar-track"><div class="bar-fill flow-down" style="width:65%;background:var(--accent-teal)"></div></div><span class="bar-val">2.15% <span class="flow-arrow down">↓</span></span></div>
+                </div>
+                <div class="rate-card" onclick="showRateDetail('GC007','2.34%','0bp','国债回购7天','均衡')">
+                  <div class="bar-row"><span class="bar-label">GC007</span><div class="bar-track"><div class="bar-fill flow-stable" style="width:60%;background:var(--accent-green)"></div></div><span class="bar-val">2.34% <span class="flow-arrow stable">→</span></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span class="card-title">央行公开市场操作</span>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <button class="trend-btn" onclick="sortOperations('date')">按日期</button>
+                  <button class="trend-btn" onclick="filterOperations('positive')">只看净投放</button>
+                  <button class="trend-btn" onclick="filterOperations('negative')">只看净回笼</button>
+                  <button class="trend-btn" onclick="exportOperations()">导出</button>
+                </div>
+              </div>
+              <table class="data-table">
+                <thead><tr><th onclick="sortOperations('date')">日期 ↕</th><th onclick="sortOperations('type')">操作 ↕</th><th onclick="sortOperations('amount')">规模(亿) ↕</th><th onclick="sortOperations('expire')">到期 ↕</th><th onclick="sortOperations('net')">净投放 ↕</th><th>操作</th></tr></thead>
+                <tbody id="operationsTableBody">
+                  <tr class="operation-row" onclick="showOperationDetail('03/24','7D逆回购','注入流动性','2,200亿','3,500亿','-1,300亿','银行资金面紧张')"><td>03/24</td><td>7D逆回购</td><td>2,200</td><td>3,500</td><td style="color:var(--accent-red)">-1,300</td><td><button class="trend-btn" onclick="event.stopPropagation();addToCalendar('03/24','7D逆回购')" style="padding:2px 6px;font-size:9px;">日历</button></td></tr>
+                  <tr class="operation-row" onclick="showOperationDetail('03/23','7D逆回购','注入流动性','1,800亿','2,000亿','-200亿','银行资金面偏紧')"><td>03/23</td><td>7D逆回购</td><td>1,800</td><td>2,000</td><td style="color:var(--accent-red)">-200</td><td><button class="trend-btn" onclick="event.stopPropagation();addToCalendar('03/23','7D逆回购')" style="padding:2px 6px;font-size:9px;">日历</button></td></tr>
+                  <tr class="operation-row" onclick="showOperationDetail('03/22','14D逆回购','跨月资金','3,000亿','2,800亿','+200亿','平稳跨月')"><td>03/22</td><td>14D逆回购</td><td>3,000</td><td>2,800</td><td style="color:var(--accent-green)">+200</td><td><button class="trend-btn" onclick="event.stopPropagation();addToCalendar('03/22','14D逆回购')" style="padding:2px 6px;font-size:9px;">日历</button></td></tr>
+                  <tr class="operation-row" onclick="showOperationDetail('03/21','MLF','中期借贷便利','5,000亿','5,000亿','0亿','等价续作')"><td>03/21</td><td>MLF</td><td>5,000</td><td>5,000</td><td style="color:var(--accent-yellow)">0</td><td><button class="trend-btn" onclick="event.stopPropagation();addToCalendar('03/21','MLF')" style="padding:2px 6px;font-size:9px;">日历</button></td></tr>
+                  <tr class="operation-row" onclick="showOperationDetail('03/20','7D逆回购','注入流动性','1,500亿','1,600亿','-100亿','资金面略紧')"><td>03/20</td><td>7D逆回购</td><td>1,500</td><td>1,600</td><td style="color:var(--accent-red)">-100</td><td><button class="trend-btn" onclick="event.stopPropagation();addToCalendar('03/20','7D逆回购')" style="padding:2px 6px;font-size:9px;">日历</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function updateClock(){
+      const now=new Date();
+      const h=String(now.getHours()).padStart(2,'0');
+      const m=String(now.getMinutes()).padStart(2,'0');
+      const s=String(now.getSeconds()).padStart(2,'0');
+      document.getElementById('clock').textContent=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${h}:${m}:${s}`;
+      document.getElementById('updateTime').textContent=`${h}:${m}`;
+    }
+    updateClock();
+    setInterval(updateClock,1000);
+
+    function switchLiquidityTab(el,period){
+      el.closest('.tab-bar').querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+      const kpiValues=document.querySelectorAll('.kpi-value');
+      const kpiChanges=document.querySelectorAll('.kpi-change');
+      const kpiDescs=document.querySelectorAll('.kpi-desc');
+      const statusTag=document.querySelector('.card-tag');
+      const data={
+        '1w':{values:['2.35%','2.18%','8,400亿','-3,200亿'],changes:['+15bp','+8bp','净回笼 1,200亿','缺口扩大'],descs:['月末效应','高于政策利率','','MLF到期影响'],status:'偏紧',tag:'tag-warn'},
+        '1m':{values:['2.12%','2.05%','12,800亿','-1,800亿'],changes:['+5bp','+3bp','净投放 800亿','缺口收窄'],descs:['均值水平','接近政策利率','','MLF到期影响'],status:'均衡',tag:'tag-info'},
+        '3m':{values:['1.98%','1.92%','28,500亿','+500亿'],changes:['-8bp','-5bp','净投放 2,100亿','盈余状态'],descs:['低于均值','低于政策利率','','季末财政投放'],status:'宽松',tag:'tag-safe'},
+        '6m':{values:['1.85%','1.78%','52,000亿','+2,800亿'],changes:['-18bp','-15bp','净投放 5,600亿','盈余扩大'],descs:['显著低于均值','显著低于政策利率','','降准生效'],status:'宽松',tag:'tag-safe'},
+        '1y':{values:['2.45%','2.38%','98,000亿','-4,200亿'],changes:['+25bp','+22bp','净回笼 3,200亿','缺口扩大'],descs:['年初较高','高于政策利率','','经济复苏期'],status:'偏紧',tag:'tag-warn'}
+      };
+      const d=data[period];
+      if(d){
+        kpiValues.forEach((v,i)=>v.textContent=d.values[i]);
+        kpiChanges.forEach((v,i)=>v.textContent=d.changes[i]);
+        kpiDescs.forEach((v,i)=>v.textContent=d.descs[i]);
+        if(statusTag){statusTag.textContent=d.status;statusTag.className='card-tag '+d.tag;}
+        showToast('已切换至近'+el.textContent+'数据','success');
+      }
+    }
+
+    function showOperationDetail(date,type,purpose,amount,expire,net,reason){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      const netColor=net.startsWith('+')?'var(--accent-green)':net==='0亿'?'var(--accent-yellow)':'var(--accent-red)';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">操作详情</span></div><div class="modal-body" style="padding:20px"><p style="color:var(--text-primary);font-size:14px;margin-bottom:12px">${date} ${type}</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px"><div style="font-size:10px;color:var(--text-secondary)">操作类型</div><div style="font-size:13px;color:var(--text-primary)">${type}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px"><div style="font-size:10px;color:var(--text-secondary)">操作目的</div><div style="font-size:13px;color:var(--text-primary)">${purpose}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px"><div style="font-size:10px;color:var(--text-secondary)">投放规模</div><div style="font-size:13px;color:var(--text-primary)">${amount}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px"><div style="font-size:10px;color:var(--text-secondary)">到期回收</div><div style="font-size:13px;color:var(--text-primary)">${expire}</div></div></div><div style="background:rgba(255,255,255,.03);padding:12px;border-radius:6px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:var(--text-secondary)">净投放</span><span style="font-size:16px;color:${netColor};font-family:'JetBrains Mono'">${net}</span></div><div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:var(--text-secondary)">市场背景</span><span style="font-size:12px;color:var(--text-primary)">${reason}</span></div></div><div style="display:flex;gap:8px;margin-top:12px"><button class="btn" onclick="showPolicyContext('${type}')" style="flex:1">政策背景</button><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="flex:1">确定</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showRateDetail(name,value,change,description,status){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      const statusColor=status==='偏紧'?'var(--accent-red)':status==='一般'?'var(--accent-yellow)':status==='宽松'?'var(--accent-green)':'var(--accent-blue)';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">${name} 详情</span></div><div class="modal-body" style="padding:20px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">当前利率</div><div style="font-size:22px;font-family:'JetBrains Mono';color:var(--text-primary)">${value}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">日变化</div><div style="font-size:22px;font-family:'JetBrains Mono';color:var(--accent-red)">${change}</div></div></div><div style="background:rgba(255,255,255,.03);padding:12px;border-radius:6px;margin-bottom:12px"><div class="detail-row"><span class="detail-label">品种名称</span><span class="detail-value">${description}</span></div><div class="detail-row"><span class="detail-label">资金面状态</span><span class="detail-value" style="color:${statusColor}">${status}</span></div><div class="detail-row"><span class="detail-label">历史分位</span><span class="detail-value">P72</span></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showRateForecast(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:450px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">资金面利率预测</span></div><div class="modal-body" style="padding:20px"><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">基于当前市场态势与央行操作倾向的7日预测</p><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:11px;color:var(--text-secondary)">明日(R001)</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-yellow)">2.32%</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:11px;color:var(--text-secondary)">本周均值</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--text-primary)">2.38%</span></div><div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-secondary)">趋势判断</span><span style="font-size:11px;color:var(--accent-yellow)">边际收敛</span></div></div><p style="font-size:11px;color:var(--text-dim);">预测仅供参考，实际受多种因素影响</p><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showLiquiditySim(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:450px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">流动性情景模拟</span></div><div class="modal-body" style="padding:20px"><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">不同情景下流动性缺口变化模拟</p><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="margin-bottom:10px;"><span style="font-size:11px;color:var(--accent-green)">乐观情景</span><div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="font-size:10px;color:var(--text-dim)">MLF超额续作+降准</span><span style="font-size:10px;font-family:'JetBrains Mono';color:var(--accent-green)">+2,800亿</span></div></div><div style="margin-bottom:10px;"><span style="font-size:11px;color:var(--accent-yellow)">基准情景</span><div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="font-size:10px;color:var(--text-dim)">等价续作</span><span style="font-size:10px;font-family:'JetBrains Mono';color:var(--accent-yellow)">-1,200亿</span></div></div><div><span style="font-size:11px;color:var(--accent-red)">压力情景</span><div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="font-size:10px;color:var(--text-dim)">缩量续作+资金外流</span><span style="font-size:10px;font-family:'JetBrains Mono';color:var(--accent-red)">-4,500亿</span></div></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showPolicyContext(type){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">货币政策背景</span></div><div class="modal-body" style="padding:20px"><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">近期货币政策操作分析</p><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;">央行当前政策取向</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">近期央行维持稳健货币政策，根据市场资金面情况灵活开展公开市场操作。当前银行体系流动性处于合理充裕水平，但受月末季节性因素影响，资金面略有收紧。</p></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;">市场影响分析</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">逆回购缩量主要针对短期流动性过剩进行回收，保持资金面平稳。预计短期内资金面将维持当前态势，大幅收紧或宽松的概率均较低。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showLiquidityKpiDetail(name,value,description){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">指标说明</span></div><div class="modal-body" style="padding:20px"><div style="text-align:center;margin-bottom:16px;"><div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${name}</div><div style="font-size:28px;font-family:'JetBrains Mono';color:var(--accent-blue);font-weight:600">${value}</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:16px;"><p style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${description}</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:16px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function exportData(){
+      const tables=document.querySelectorAll('.data-table');
+      if(tables.length===0){showToast('当前页面暂无数据可导出','warning');return;}
+      let csv='\uFEFF';
+      tables.forEach((table,idx)=>{if(idx>0)csv+='\n\n';table.querySelectorAll('tr').forEach(row=>{const cells=row.querySelectorAll('th,td');const rowData=[];cells.forEach(cell=>{rowData.push('"'+cell.textContent.trim().replace(/"/g,'""')+'"');});csv+=rowData.join(',')+'\n';});});
+      const now=new Date();const filename='liquidity_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.csv';
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename;link.click();URL.revokeObjectURL(link.href);
+      showToast('数据已导出: '+filename,'success');
+    }
+    function generateReport(){showReportModal('流动性分析');}
+    function showReportModal(panelName){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML='<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">生成报告</span></div><div class="modal-body"><p>正在为 "<strong>'+panelName+'</strong>" 生成分析报告...</p><div class="report-progress"><div class="progress-bar"><div class="progress-fill"></div></div></div><p class="report-status">正在提取数据...</p></div></div>';
+      document.body.appendChild(modal);
+      setTimeout(()=>{const progressFill=modal.querySelector('.progress-fill');const reportStatus=modal.querySelector('.report-status');let progress=0;const stages=['正在提取数据...','正在生成图表...','正在计算指标...','正在生成报告...','报告生成完成'];const interval=setInterval(()=>{progress+=20;progressFill.style.width=progress+'%';if(progress<=100)reportStatus.textContent=stages[Math.floor(progress/25)];if(progress>=100){clearInterval(interval);setTimeout(()=>{modal.querySelector('.modal-body').innerHTML='<div class="report-success"><span class="success-icon">✓</span><p>报告生成成功！</p><p class="report-filename">'+panelName+'_报告_'+new Date().toLocaleDateString()+'.pdf</p><button class="btn primary" onclick="this.closest(\'.modal-overlay\').remove()">确定</button></div>';},300);}},400);},100);
+    }
+    function showToast(message,type){const existing=document.querySelector('.toast-notification');if(existing)existing.remove();const toast=document.createElement('div');toast.className='toast-notification '+type;toast.innerHTML='<span>'+message+'</span>';document.body.appendChild(toast);setTimeout(()=>toast.classList.add('show'),10);setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),300);},3000);}
+
+    function sortOperations(criteria){
+      const tbody = document.getElementById('operationsTableBody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a, b) => {
+        const getVal = (row, crit) => {
+          if(crit === 'date') return row.cells[0].textContent;
+          if(crit === 'type') return row.cells[1].textContent;
+          if(crit === 'amount' || crit === 'expire' || crit === 'net') return parseFloat(row.cells[crit === 'amount' ? 2 : crit === 'expire' ? 3 : 4].textContent);
+          return row.cells[0].textContent;
+        };
+        return getVal(b, criteria).localeCompare(getVal(a, criteria)) || getVal(b, criteria) - getVal(a, criteria);
+      });
+      rows.forEach(row => tbody.appendChild(row));
+      showToast('已按'+{date:'日期',type:'操作类型',amount:'规模',expire:'到期',net:'净投放'}[criteria]+'排序','success');
+    }
+
+    function filterOperations(type){
+      const tbody = document.getElementById('operationsTableBody');
+      const rows = tbody.querySelectorAll('tr');
+      rows.forEach(row => {
+        const netText = row.cells[4].textContent;
+        if(type === 'positive'){
+          row.style.display = netText.startsWith('+') ? '' : 'none';
+        } else if(type === 'negative'){
+          row.style.display = netText.startsWith('-') ? '' : 'none';
+        } else {
+          row.style.display = '';
+        }
+      });
+      showToast('已筛选'+{positive:'净投放',negative:'净回笼'}[type]+'记录','success');
+    }
+
+    function exportOperations(){
+      let csv = '\uFEFF日期,操作类型,规模(亿),到期(亿),净投放\n';
+      document.querySelectorAll('#operationsTableBody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        csv += cells[0].textContent + ',' + cells[1].textContent + ',' + cells[2].textContent + ',' + cells[3].textContent + ',' + cells[4].textContent + '\n';
+      });
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'operations_list.csv';
+      link.click();
+      showToast('操作记录已导出','success');
+    }
+
+    function addToCalendar(date, type){
+      showToast(date + ' ' + type + ' 已添加到日历','success');
+    }
+
+    function showPolicyCalendar(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">央行政策日程</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid var(--accent-red);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:12px;color:var(--text-primary);font-weight:500;">03/25 周一</span><span style="font-size:10px;color:var(--accent-red);">重要</span></div><div style="font-size:11px;color:var(--text-secondary);">美联储主席讲话 · 关注货币政策信号</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid var(--accent-yellow);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:12px;color:var(--text-primary);font-weight:500;">03/27 周三</span><span style="font-size:10px;color:var(--accent-yellow);">关注</span></div><div style="font-size:11px;color:var(--text-secondary);">央行逆回购操作 · 规模待定</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid var(--accent-blue);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:12px;color:var(--text-primary);font-weight:500;">03/28 周四</span><span style="font-size:10px;color:var(--accent-blue);">常规</span></div><div style="font-size:11px;color:var(--text-secondary);">MLF到期续作窗口 · 预计等量续作</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid var(--accent-blue);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:12px;color:var(--text-primary);font-weight:500;">03/30 周六</span><span style="font-size:10px;color:var(--accent-blue);">常规</span></div><div style="font-size:11px;color:var(--text-secondary);">央行外汇占款数据公布</div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:8px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showFundFlow(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:480px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">银行间资金流向</span></div><div class="modal-body" style="padding:20px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;"><div style="background:rgba(243,139,168,.08);padding:14px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">资金净投放</div><div style="font-size:22px;font-family:'JetBrains Mono';color:var(--accent-red);font-weight:600">-1,200亿</div></div><div style="background:rgba(137,180,250,.08);padding:14px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">流动性缺口</div><div style="font-size:22px;font-family:'JetBrains Mono';color:var(--accent-blue);font-weight:600">-3,200亿</div></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">资金流向明细</div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">逆回购投放</span><span style="font-family:'JetBrains Mono';color:var(--accent-green)">+7,200亿</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">逆回购到期</span><span style="font-family:'JetBrains Mono';color:var(--accent-red)">-8,400亿</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">MLF到期</span><span style="font-family:'JetBrains Mono';color:var(--accent-red)">-2,000亿</span></div><div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-secondary);">降准释放</span><span style="font-family:'JetBrains Mono';color:var(--accent-green)">+0亿</span></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+    document.querySelectorAll('.toggle-switch').forEach(function(sw){sw.addEventListener('click',function(){this.classList.toggle('active');});});
+
+    function showNSFRAnalysis(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">净稳定资金比率 (NSFR) 分析</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(137,180,250,.08);border-radius:8px;padding:16px;text-align:center;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">净稳定资金比率 (NSFR)</div><div style="font-size:36px;font-family:'JetBrains Mono';color:var(--accent-green);font-weight:600;">128.5%</div><div style="font-size:10px;color:var(--accent-green);margin-top:4px;">高于监管要求 (≥100%)</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">可用稳定资金构成</div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">一级资本</span><span style="font-family:'JetBrains Mono';color:var(--text-primary)">15,200 亿</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">二级资本</span><span style="font-family:'JetBrains Mono';color:var(--text-primary)">8,500 亿</span></div><div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-secondary);">其他资本</span><span style="font-family:'JetBrains Mono';color:var(--text-primary)">6,300 亿</span></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showTermStructure(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:600px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">利率期限结构分析</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">国债收益率曲线</div><div style="height:120px;display:flex;align-items:flex-end;gap:6px;padding:10px 0;"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:35%;background:linear-gradient(to top,var(--accent-blue),rgba(137,180,250,.3));border-radius:2px;"></div><div style="font-size:8px;color:var(--text-dim);">1Y</div><div style="font-size:9px;color:var(--text-dim);">1.85%</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:48%;background:linear-gradient(to top,var(--accent-blue),rgba(137,180,250,.3));border-radius:2px;"></div><div style="font-size:8px;color:var(--text-dim);">3Y</div><div style="font-size:9px;color:var(--text-dim);">2.12%</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:58%;background:linear-gradient(to top,var(--accent-yellow),rgba(249,226,175,.3));border-radius:2px;"></div><div style="font-size:8px;color:var(--text-dim);">5Y</div><div style="font-size:9px;color:var(--text-dim);">2.35%</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:72%;background:linear-gradient(to top,var(--accent-yellow),rgba(249,226,175,.3));border-radius:2px;"></div><div style="font-size:8px;color:var(--text-dim);">7Y</div><div style="font-size:9px;color:var(--text-dim);">2.52%</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:85%;background:linear-gradient(to top,var(--accent-red),rgba(243,139,168,.3));border-radius:2px;"></div><div style="font-size:8px;color:var(--text-dim);">10Y</div><div style="font-size:9px;color:var(--text-dim);">2.68%</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;height:92%;background:linear-gradient(to top,var(--accent-red),rgba(243,139,168,.3));border-radius:2px;"></div><div style="font-size:8px;color:var(--text-dim);">30Y</div><div style="font-size:9px;color:var(--text-dim);">2.92%</div></div></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:6px;font-weight:500;">期限结构分析</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">收益率曲线陡峭化，期限利差扩大至 83bp，反映市场对长期经济前景保持谨慎乐观。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function pushLiquidityAlert(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-bell" style="color:var(--accent-red);margin-right:8px;"></i>流动性风险预警推送</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;"><i class="fas fa-check-circle" style="color:var(--accent-green);margin-right:8px;"></i>预警推送已发送</div><div style="font-size:11px;color:var(--text-secondary);">检测到流动性紧张预警</div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showLiquidityHistory(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-history" style="color:var(--accent-blue);margin-right:8px;"></i>历史流动性回溯</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><table class="data-table"><thead><tr><th>日期</th><th>LCR</th><th>NSFR</th></tr></thead><tbody><tr><td class="name-col">2025-03-20</td><td>142.5%</td><td>128.5%</td></tr><tr><td class="name-col">2025-03-15</td><td>138.2%</td><td>126.8%</td></tr></tbody></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showLiquidityForecast(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-chart-line" style="color:var(--accent-green);margin-right:8px;"></i>流动性预测</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">未来 7 日流动性预测</div><table class="data-table"><thead><tr><th>日期</th><th>预计 LCR</th><th>预计 NSFR</th></tr></thead><tbody><tr><td class="name-col">T+3</td><td style="color:var(--accent-blue)">145.2%</td><td style="color:var(--accent-blue)">130.5%</td></tr><tr><td class="name-col">T+7</td><td style="color:var(--accent-yellow)">138.5%</td><td style="color:var(--accent-blue)">129.2%</td></tr></tbody></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+  </script>
+</body>
+</html>

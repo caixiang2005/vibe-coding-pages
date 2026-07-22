@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>流域水资源供需结构分析计算软件</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpg') no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .mac-window {
+      width: 1120px;
+      max-width: 96vw;
+      background: #1e1e1e;
+      border-radius: 10px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .title-bar {
+      height: 38px;
+      background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      position: relative;
+    }
+
+    .traffic-lights { display: flex; gap: 8px; z-index: 2; }
+    .traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .title-bar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #999;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .toolbar {
+      height: 40px;
+      background: linear-gradient(180deg, #292929, #232323);
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 2px;
+    }
+
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      color: #aaa;
+      font-size: 11.5px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover { background: rgba(255, 255, 255, 0.06); color: #ddd; }
+    .tool-btn:active { transform: scale(0.97); }
+    .tool-sep { width: 1px; height: 20px; background: #3a3a3a; margin: 0 6px; }
+    .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px 3px 6px;
+      background: rgba(74, 144, 226, 0.12);
+      border: 1px solid rgba(74, 144, 226, 0.25);
+      border-radius: 12px;
+      color: #7ab8f5;
+      font-size: 11px;
+    }
+
+    .user-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .main-layout { display: flex; height: 620px; }
+
+    .sidebar {
+      width: 220px;
+      background: #252525;
+      border-right: 1px solid #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 12px 14px 8px;
+      color: #666;
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-item {
+      padding: 6px 8px;
+      color: #aaa;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .nav-item:hover { background: rgba(255, 255, 255, 0.04); color: #ccc; }
+    .nav-item:active { transform: scale(0.98); }
+    .nav-item.active { background: rgba(74, 144, 226, 0.15); color: #7ab8f5; }
+    .nav-item i { width: 13px; font-size: 13px; flex-shrink: 0; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 10px 14px;
+      border-top: 1px solid #1e1e1e;
+    }
+
+    .project-info {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .project-label { color: #555; font-size: 10px; margin-bottom: 4px; }
+    .project-name { color: #bbb; font-size: 11.5px; font-weight: 500; margin-bottom: 6px; }
+    .project-meta { display: flex; gap: 12px; }
+    .project-meta span { color: #666; font-size: 10px; }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #1e1e1e;
+    }
+
+    .tab-bar { display: flex; background: #222; border-bottom: 1px solid #1a1a1a; }
+
+    .tab {
+      padding: 9px 18px;
+      color: #777;
+      font-size: 12px;
+      cursor: pointer;
+      border-right: 1px solid #1a1a1a;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .tab:hover { color: #aaa; background: rgba(255, 255, 255, 0.02); }
+    .tab.active { color: #ddd; background: #1e1e1e; }
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #4a90e2;
+    }
+
+    .content-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .content-body::-webkit-scrollbar { width: 6px; }
+    .content-body::-webkit-scrollbar-track { background: transparent; }
+    .content-body::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
+
+    .card {
+      background: #262626;
+      border-radius: 8px;
+      border: 1px solid #333;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      color: #ccc;
+      font-size: 12.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .dot-blue { background: #4a90e2; }
+    .dot-green { background: #28c840; }
+    .dot-orange { background: #f5a623; }
+    .dot-purple { background: #9b59b6; }
+
+    .card-badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .badge-info { background: rgba(74, 144, 226, 0.12); color: #7ab8f5; border: 1px solid rgba(74, 144, 226, 0.2); }
+    .badge-success { background: rgba(40, 200, 64, 0.12); color: #28c840; border: 1px solid rgba(40, 200, 64, 0.2); }
+    .badge-warning { background: rgba(245, 166, 35, 0.12); color: #f5a623; border: 1px solid rgba(245, 166, 35, 0.2); }
+
+    .card-body { padding: 14px; }
+    .full-width { grid-column: 1 / -1; }
+
+    .stats-row { display: flex; gap: 10px; }
+
+    .stat-block {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-value { font-size: 20px; font-weight: 600; margin-bottom: 3px; }
+    .stat-value.blue { color: #4a90e2; }
+    .stat-value.green { color: #28c840; }
+    .stat-value.orange { color: #f5a623; }
+    .stat-label { color: #777; font-size: 10.5px; }
+    .stat-sub { color: #555; font-size: 9.5px; margin-top: 2px; }
+
+    .scheme-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .scheme-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid #333;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .scheme-item:hover {
+      border-color: #4a90e2;
+      background: rgba(74, 144, 226, 0.05);
+    }
+
+    .scheme-item.selected {
+      border-color: #4a90e2;
+      background: rgba(74, 144, 226, 0.1);
+    }
+
+    .scheme-radio {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #555;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .scheme-item.selected .scheme-radio {
+      border-color: #4a90e2;
+    }
+
+    .scheme-item.selected .scheme-radio::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: #4a90e2;
+      border-radius: 50%;
+    }
+
+    .scheme-info { flex: 1; }
+    .scheme-name { color: #ccc; font-size: 12px; margin-bottom: 3px; }
+    .scheme-desc { color: #666; font-size: 10px; }
+    .scheme-badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: 500;
+    }
+    .badge-recommend { background: rgba(40, 200, 64, 0.15); color: #28c840; }
+
+    .compare-table { width: 100%; border-collapse: collapse; }
+    .compare-table th {
+      padding: 8px 10px;
+      text-align: center;
+      color: #777;
+      font-size: 10.5px;
+      font-weight: 500;
+      border-bottom: 1px solid #333;
+    }
+    .compare-table td {
+      padding: 8px 10px;
+      text-align: center;
+      color: #bbb;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .compare-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    .td-best { color: #28c840; font-weight: 500; }
+    .td-worst { color: #e74c3c; }
+
+    .radar-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 180px;
+    }
+
+    .radar-svg {
+      width: 180px;
+      height: 180px;
+    }
+
+    .status-bar {
+      height: 24px;
+      background: #222;
+      border-top: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+    }
+
+    .status-item { color: #555; font-size: 10.5px; display: flex; align-items: center; gap: 4px; }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; background: #28c840; }
+    .status-right { margin-left: auto; display: flex; gap: 14px; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card { animation: fadeIn 0.4s ease both; }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 2px; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+
+    .modal {
+      background: #2a2a2a;
+      border-radius: 10px;
+      border: 1px solid #3a3a3a;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      min-width: 380px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #3a3a3a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .modal-traffic-lights { position: absolute; left: 14px; display: flex; gap: 8px; }
+    .modal-traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .modal-traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .modal-traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .modal-traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+    .modal-title { color: #ddd; font-size: 14px; font-weight: 500; text-align: center; }
+    .modal-body { padding: 16px; }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #3a3a3a;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: #3a3a3a; color: #aaa; }
+    .btn-secondary:hover { background: #444; color: #fff; }
+    .btn-primary { background: #4a90e2; color: #fff; }
+    .btn-primary:hover { background: #5a9fe8; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; color: #888; font-size: 11px; margin-bottom: 5px; }
+
+    .form-input {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 12px;
+    }
+
+    .form-input:focus { outline: none; border-color: #4a90e2; }
+
+    .form-select {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .form-select:focus { outline: none; border-color: #4a90e2; }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+
+    .checkbox-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: #4a90e2;
+      cursor: pointer;
+    }
+
+    .checkbox-item span { color: #aaa; font-size: 12px; }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <span class="title-bar-text">流域水资源供需结构分析计算软件</span>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool-btn" onclick="location.href='main.html'">
+        <i class="fa-solid fa-arrow-left"></i>
+        返回
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnNewScheme">
+        <i class="fa-solid fa-plus"></i>
+        新增方案
+      </button>
+      <button class="tool-btn" id="btnCompare">
+        <i class="fa-solid fa-code-compare"></i>
+        方案对比
+      </button>
+      <button class="tool-btn" id="btnExport">
+        <i class="fa-solid fa-download"></i>
+        导出报告
+      </button>
+      <div class="toolbar-right">
+        <div class="user-badge">
+          <img class="user-avatar" src="https://i01piccdn.sogoucdn.com/4a7eff1521dc451e" alt="于露" />
+          于露
+        </div>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">功能导航</div>
+
+        <div class="nav-item" onclick="location.href='main.html'">
+          <i class="fa-solid fa-table-cells"></i>
+          供需总览
+        </div>
+        <div class="nav-item" onclick="location.href='need_water.html'">
+          <i class="fa-solid fa-users"></i>
+          需水预测
+        </div>
+        <div class="nav-item" onclick="location.href='supply_analysis.html'">
+          <i class="fa-solid fa-droplet"></i>
+          供水分析
+        </div>
+        <div class="nav-item" onclick="location.href='balance_analysis.html'">
+          <i class="fa-solid fa-chart-column"></i>
+          供需平衡分析
+        </div>
+        <div class="nav-item" onclick="location.href='water_balance_check.html'">
+          <i class="fa-solid fa-check-double"></i>
+          水量平衡校核
+        </div>
+        <div class="nav-item active">
+          <i class="fa-solid fa-code-compare"></i>
+          方案比选
+        </div>
+        <div class="nav-item" onclick="location.href='results_output.html'">
+          <i class="fa-solid fa-file-lines"></i>
+          成果输出
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="project-info">
+            <div class="project-label">当前项目</div>
+            <div class="project-name">海河流域水资源配置</div>
+            <div class="project-meta">
+              <span>规划水平年：2035</span>
+              <span>P=75%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <div class="content-body">
+          <div class="card full-width">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-blue"></span> 方案比选总览</div>
+              <span class="card-badge badge-info">3 个参选方案</span>
+            </div>
+            <div class="card-body">
+              <div class="stats-row">
+                <div class="stat-block">
+                  <div class="stat-value blue">3</div>
+                  <div class="stat-label">比选方案数</div>
+                  <div class="stat-sub">已创建</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value green">方案二</div>
+                  <div class="stat-label">推荐方案</div>
+                  <div class="stat-sub">综合最优</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value orange">5</div>
+                  <div class="stat-label">评价指标</div>
+                  <div class="stat-sub">多维度</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value blue">2035</div>
+                  <div class="stat-label">规划水平年</div>
+                  <div class="stat-sub">P=75%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-green"></span> 参选方案列表</div>
+            </div>
+            <div class="card-body" style="padding: 8px 14px;">
+              <div class="scheme-list">
+                <div class="scheme-item" onclick="selectScheme(this)">
+                  <div class="scheme-radio"></div>
+                  <div class="scheme-info">
+                    <div class="scheme-name">方案一：现状工程延续</div>
+                    <div class="scheme-desc">维持现有工程格局，适度扩建</div>
+                  </div>
+                  <span class="scheme-badge" style="background:rgba(136,136,136,0.15);color:#888;">基准方案</span>
+                </div>
+                <div class="scheme-item selected" onclick="selectScheme(this)">
+                  <div class="scheme-radio"></div>
+                  <div class="scheme-info">
+                    <div class="scheme-name">方案二：规划工程实施</div>
+                    <div class="scheme-desc">按规划新建水源工程 + 节水措施</div>
+                  </div>
+                  <span class="scheme-badge badge-recommend"><i class="fa-solid fa-thumbs-up"></i> 推荐</span>
+                </div>
+                <div class="scheme-item" onclick="selectScheme(this)">
+                  <div class="scheme-radio"></div>
+                  <div class="scheme-info">
+                    <div class="scheme-name">方案三：强化节水治污</div>
+                    <div class="scheme-desc">加大节水力度 + 水污染治理</div>
+                  </div>
+                  <span class="scheme-badge" style="background:rgba(74,144,226,0.15);color:#4a90e2;">备选</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-orange"></span> 方案综合评分</span>
+            </div>
+            <div class="card-body">
+              <div class="radar-container">
+                <svg class="radar-svg" viewBox="0 0 200 200">
+                  <defs>
+                    <linearGradient id="schemeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:0.6" />
+                      <stop offset="100%" style="stop-color:#9b59b6;stop-opacity:0.6" />
+                    </linearGradient>
+                  </defs>
+                  <!-- 背景网格 -->
+                  <polygon points="100,30 170,70 170,150 100,190 30,150 30,70" fill="none" stroke="#333" stroke-width="1"/>
+                  <polygon points="100,55 145,80 145,140 100,165 55,140 55,80" fill="none" stroke="#333" stroke-width="1"/>
+                  <polygon points="100,80 120,90 120,130 100,140 80,130 80,90" fill="none" stroke="#333" stroke-width="1"/>
+                  <!-- 辐射线 -->
+                  <line x1="100" y1="30" x2="100" y2="190" stroke="#333" stroke-width="1"/>
+                  <line x1="100" y1="30" x2="170" y2="70" stroke="#333" stroke-width="1"/>
+                  <line x1="100" y1="30" x2="170" y2="150" stroke="#333" stroke-width="1"/>
+                  <line x1="100" y1="30" x2="30" y2="150" stroke="#333" stroke-width="1"/>
+                  <line x1="100" y1="30" x2="30" y2="70" stroke="#333" stroke-width="1"/>
+                  <!-- 方案二数据 -->
+                  <polygon points="100,50 155,85 150,135 100,160 60,135 65,85" fill="url(#schemeGradient)" stroke="#4a90e2" stroke-width="2"/>
+                  <!-- 标签 -->
+                  <text x="100" y="22" text-anchor="middle" fill="#666" font-size="8">经济性</text>
+                  <text x="178" y="73" text-anchor="start" fill="#666" font-size="8">技术性</text>
+                  <text x="178" y="153" text-anchor="start" fill="#666" font-size="8">环境影响</text>
+                  <text x="100" y="198" text-anchor="middle" fill="#666" font-size="8">社会效益</text>
+                  <text x="22" y="153" text-anchor="end" fill="#666" font-size="8">水资源利用</text>
+                  <text x="22" y="73" text-anchor="end" fill="#666" font-size="8">可行性</text>
+                </svg>
+              </div>
+              <div style="margin-top:8px;display:flex;justify-content:center;gap:16px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="width:10px;height:10px;background:#4a90e2;border-radius:2px;"></div>
+                  <span style="color:#888;font-size:10px;">方案二</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card full-width">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-purple"></span> 方案指标对比表</div>
+              <span class="card-badge badge-info">2035 年 P=75%</span>
+            </div>
+            <div class="card-body" style="padding: 0; overflow-x: auto;">
+              <table class="compare-table">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;">评价指标</th>
+                    <th>方案一<br><span style="color:#666;font-size:9px;">现状延续</span></th>
+                    <th>方案二<br><span style="color:#666;font-size:9px;">规划实施</span></th>
+                    <th>方案三<br><span style="color:#666;font-size:9px;">强化节水</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="text-align:left;">总供水量 (亿 m3)</td>
+                    <td>395.2</td>
+                    <td class="td-best">438.6</td>
+                    <td>415.3</td>
+                  </tr>
+                  <tr>
+                    <td style="text-align:left;">缺水率 (%)</td>
+                    <td class="td-worst">16.2%</td>
+                    <td class="td-best">6.9%</td>
+                    <td>9.5%</td>
+                  </tr>
+                  <tr>
+                    <td style="text-align:left;">供水保证率 (%)</td>
+                    <td>83.8%</td>
+                    <td class="td-best">93.1%</td>
+                    <td>90.5%</td>
+                  </tr>
+                  <tr>
+                    <td style="text-align:left;">工程投资 (亿元)</td>
+                    <td class="td-best">125</td>
+                    <td>280</td>
+                    <td>195</td>
+                  </tr>
+                  <tr>
+                    <td style="text-align:left;">年运行费 (亿元)</td>
+                    <td class="td-best">45</td>
+                    <td>68</td>
+                    <td>52</td>
+                  </tr>
+                  <tr>
+                    <td style="text-align:left;">节水潜力 (亿 m3)</td>
+                    <td>35.2</td>
+                    <td>82.5</td>
+                    <td class="td-best">105.8</td>
+                  </tr>
+                  <tr>
+                    <td style="text-align:left;">综合评分</td>
+                    <td>72</td>
+                    <td class="td-best">89</td>
+                    <td>81</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-dot"></span>
+            比选完成
+          </div>
+          <div class="status-item">推荐方案：方案二</div>
+          <div class="status-item">评价方法：层次分析法</div>
+          <div class="status-right">
+            <div class="status-item">参选方案：3</div>
+            <div class="status-item">评价指标：5</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    function selectScheme(element) {
+      document.querySelectorAll('.scheme-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      element.classList.add('selected');
+    }
+
+    document.getElementById('btnNewScheme').addEventListener('click', () => {
+      openModal(
+        '新增比选方案',
+        `<div class="form-group">
+          <label class="form-label">方案名称</label>
+          <input type="text" class="form-input" placeholder="请输入方案名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">方案类型</label>
+          <select class="form-select">
+            <option>现状延续型</option>
+            <option>规划实施型</option>
+            <option>强化节水型</option>
+            <option>综合优化型</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">方案描述</label>
+          <input type="text" class="form-input" placeholder="请输入方案描述">
+        </div>
+        <div class="form-group">
+          <label class="form-label">主要措施</label>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>新建水源工程</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>节水措施</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox">
+              <span>水污染治理</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>外调水利用</span>
+            </label>
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary">创建方案</button>`
+      );
+    });
+
+    document.getElementById('btnCompare').addEventListener('click', () => {
+      openModal(
+        '方案对比设置',
+        `<div class="form-group">
+          <label class="form-label">对比方案</label>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>方案一：现状工程延续</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>方案二：规划工程实施</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>方案三：强化节水治污</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">评价指标</label>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>经济性指标</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>技术性指标</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>环境影响指标</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>社会效益指标</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>水资源利用指标</span>
+            </label>
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary">开始对比</button>`
+      );
+    });
+
+    document.getElementById('btnExport').addEventListener('click', () => {
+      openModal(
+        '导出比选报告',
+        `<div class="form-group">
+          <label class="form-label">导出格式</label>
+          <select class="form-select">
+            <option>PDF 报告</option>
+            <option>Word 文档</option>
+            <option>Excel 数据</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">报告内容</label>
+          <select class="form-select">
+            <option>完整比选报告</option>
+            <option>简要对比表</option>
+            <option>仅评分结果</option>
+          </select>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="exportComparison()">导出</button>`
+      );
+    });
+
+    function exportComparison() {
+      openModal(
+        '导出成功',
+        `<div style="text-align:center;padding:20px;">
+          <i class="fa-solid fa-circle-check" style="font-size:48px;color:#28c840;margin-bottom:12px;"></i>
+          <div style="color:#aaa;font-size:12px;margin-bottom:6px;">比选报告已导出</div>
+          <div style="color:#888;font-size:10px;margin-top:8px;">导出路径：D:\水资源项目\输出</div>
+          <div style="margin-top:12px;text-align:left;padding:12px;background:#1e1e1e;border-radius:5px;">
+            <div style="display:flex;align-items:center;gap:8px;color:#ccc;font-size:11px;margin-bottom:6px;">
+              <i class="fa-solid fa-file-pdf" style="color:#e74c3c;"></i>
+              方案比选分析报告.pdf
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;color:#ccc;font-size:11px;">
+              <i class="fa-solid fa-file-excel" style="color:#28c840;"></i>
+              方案指标对比表.xlsx
+            </div>
+          </div>
+        </div>`,
+        `<button class="btn btn-primary" onclick="closeModal()">确定</button>`
+      );
+    }
+  </script>
+
+</body>
+
+</html>

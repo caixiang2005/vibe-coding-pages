@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设备管理 - 新能源储能系统</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--primary:#0EA5E9;--primary-light:#E0F2FE;--accent:#10B981;--danger:#EF4444;--warning:#F97316;--bg:#F0F6FF;--sidebar-bg:#0F2744;--text-primary:#0F2744;--text-secondary:#5A7A99;--text-light:#94A3B8;--border:#DCE8F5;--shadow-card:0 2px 12px rgba(15,39,68,0.08)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text-primary);display:flex;height:100vh;overflow:hidden}
+  .sidebar{width:220px;background:var(--sidebar-bg);display:flex;flex-direction:column;flex-shrink:0}
+  .logo-area{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.07)}
+  .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#0EA5E9,#10B981);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+  .logo-icon i{color:white;font-size:18px}
+  .logo-title{color:white;font-size:13px;font-weight:600;line-height:1.4}
+  .logo-sub{color:rgba(255,255,255,0.4);font-size:10px;margin-top:2px;font-family:'Rajdhani';letter-spacing:1px}
+  .nav-section{flex:1;padding:16px 12px;overflow-y:auto}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:2px;color:rgba(255,255,255,0.55);font-size:13px;font-weight:500;transition:all 0.2s;text-decoration:none}
+  .nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9)}
+  .nav-item.active{background:linear-gradient(135deg,#0EA5E9,#0284C7);color:white;box-shadow:0 4px 12px rgba(14,165,233,0.3)}
+  .nav-item i{width:18px;text-align:center;font-size:14px}
+  .nav-badge{margin-left:auto;background:var(--danger);color:white;font-size:10px;padding:2px 6px;border-radius:10px;font-family:'JetBrains Mono'}
+  .sidebar-footer{padding:16px 12px;border-top:1px solid rgba(255,255,255,0.07)}
+  .user-card{display:flex;align-items:center;gap:10px}
+  .user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0EA5E9,#10B981);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .user-avatar img{width:100%;height:100%;display:block;object-fit:cover}
+  .user-info .name{color:white;font-size:12px;font-weight:600}
+  .user-info .role{color:rgba(255,255,255,0.4);font-size:10px}
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .topbar{height:60px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;box-shadow:0 1px 8px rgba(15,39,68,0.06)}
+  .topbar-breadcrumb{display:flex;align-items:center;gap:8px;flex:1}
+  .breadcrumb-item{color:var(--text-secondary);font-size:13px}
+  .breadcrumb-item.current{color:var(--text-primary);font-weight:600}
+  .breadcrumb-sep{color:var(--text-light);font-size:12px}
+  .topbar-right{display:flex;align-items:center;gap:12px}
+  .topbar-time{font-family:'JetBrains Mono';font-size:13px;color:var(--text-secondary);background:var(--bg);padding:6px 12px;border-radius:6px}
+  .topbar-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);position:relative;transition:all 0.2s}
+  .topbar-btn .dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:var(--danger);border-radius:50%;border:1.5px solid white}
+  .content{flex:1;overflow-y:auto;padding:24px 28px}
+  .panel{background:white;border-radius:14px;padding:20px;box-shadow:var(--shadow-card);border:1px solid var(--border)}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .panel-title{font-size:14px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:8px}
+  .panel-title i{color:var(--primary)}
+
+  /* DEVICE SPECIFIC */
+  .dev-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+  .dev-sum-card{background:white;border-radius:12px;padding:16px;box-shadow:var(--shadow-card);border:1px solid var(--border);text-align:center}
+  .dev-sum-val{font-size:32px;font-weight:700;font-family:'Rajdhani';line-height:1;margin-bottom:2px}
+  .dev-sum-label{font-size:12px;color:var(--text-secondary)}
+
+  .layout-2col{display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:16px}
+
+  /* DEVICE CARD GRID */
+  .device-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .device-card{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-card);transition:all 0.2s;cursor:pointer;position:relative;overflow:hidden}
+  .device-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(14,165,233,0.12);border-color:var(--primary)}
+  .device-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+  .device-card.online::before{background:linear-gradient(90deg,#10B981,#34D399)}
+  .device-card.warning::before{background:linear-gradient(90deg,#F59E0B,#FCD34D)}
+  .device-card.offline::before{background:linear-gradient(90deg,#94A3B8,#CBD5E1)}
+  .dc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+  .dc-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px}
+  .dc-icon.blue{background:#EFF8FF;color:#0EA5E9}
+  .dc-icon.green{background:#ECFDF5;color:#10B981}
+  .dc-icon.purple{background:#F5F3FF;color:#7C3AED}
+  .dc-icon.amber{background:#FFFBEB;color:#F59E0B}
+  .dc-icon.gray{background:#F1F5F9;color:#94A3B8}
+  .dc-status{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+  .dc-status.online{background:#ECFDF5;color:#059669}
+  .dc-status.warning{background:#FFFBEB;color:#D97706}
+  .dc-status.offline{background:#F1F5F9;color:#64748B}
+  .dc-status-dot{width:6px;height:6px;border-radius:50%}
+  .dc-status.online .dc-status-dot{background:#10B981}
+  .dc-status.warning .dc-status-dot{background:#F59E0B}
+  .dc-status.offline .dc-status-dot{background:#94A3B8}
+  .dc-name{font-size:13px;font-weight:600;margin-bottom:2px}
+  .dc-model{font-size:11px;color:var(--text-light)}
+  .dc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .dc-metric{background:var(--bg);border-radius:6px;padding:8px}
+  .dc-metric-val{font-size:14px;font-weight:700;font-family:'Rajdhani';color:var(--text-primary)}
+  .dc-metric-key{font-size:10px;color:var(--text-light)}
+  .dc-actions{display:flex;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+  .dc-action-btn{flex:1;padding:6px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-family:'Noto Sans SC';font-weight:500;text-align:center;transition:all 0.2s}
+  .dc-action-btn.primary{background:var(--primary-light);color:var(--primary)}
+  .dc-action-btn.primary:hover{background:var(--primary);color:white}
+  .dc-action-btn.warn{background:#FFFBEB;color:#D97706}
+  .dc-action-btn.danger{background:#FEF2F2;color:#EF4444}
+
+  /* MAINTENANCE PLAN */
+  .maint-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .maint-item:last-child{border-bottom:none}
+  .maint-type{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
+  .maint-type.pm{background:#EFF8FF;color:#0EA5E9}
+  .maint-type.cm{background:#FEF2F2;color:#EF4444}
+  .maint-type.insp{background:#ECFDF5;color:#10B981}
+  .maint-name{font-size:13px;font-weight:500;flex:1}
+  .maint-date{font-size:11px;color:var(--text-secondary);font-family:'JetBrains Mono'}
+  .maint-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px}
+  .maint-badge.soon{background:#FFFBEB;color:#D97706}
+  .maint-badge.ok{background:#ECFDF5;color:#059669}
+  .maint-badge.overdue{background:#FEF2F2;color:#EF4444}
+
+  /* MODAL */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,39,68,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: white; border-radius: 16px; width: 90%; max-width: 650px; max-height: 85vh; overflow: hidden; box-shadow: 0 20px 60px rgba(15,39,68,0.3); }
+  .modal-header { padding: 18px 24px; background: linear-gradient(135deg, #0F2744, #1a4a80); color: white; display: flex; align-items: center; justify-content: space-between; cursor: move; }
+  .modal-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .modal-close { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.1); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .modal-close:hover { background: rgba(255,255,255,0.2); }
+  .modal-body { padding: 24px; max-height: calc(85vh - 140px); overflow-y: auto; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end; }
+  .modal-btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Noto Sans SC'; }
+  .modal-btn.primary { background: linear-gradient(135deg, #0EA5E9, #0284C7); color: white; }
+  .modal-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.3); }
+  .modal-btn.secondary { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+  .modal-btn.secondary:hover { background: var(--border); }
+  .modal-form-group { margin-bottom: 16px; }
+  .modal-form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
+  .modal-form-input, .modal-form-select { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Noto Sans SC'; outline: none; }
+  .modal-form-input:focus, .modal-form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+  .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { font-size: 12px; color: var(--text-secondary); }
+  .detail-val { font-size: 13px; font-weight: 500; }
+  .detail-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row > div { flex: 1; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo-area">
+    <div class="logo-title">新能源储能系统运行监控与能效分析系统</div>
+  </div>
+  <nav class="nav-section">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i>总览仪表板</a>
+    <a href="monitor.html" class="nav-item"><i class="fa-solid fa-display"></i>实时监控</a>
+    <a href="efficiency.html" class="nav-item"><i class="fa-solid fa-chart-line"></i>能效分析</a>
+    <a href="alarm.html" class="nav-item"><i class="fa-solid fa-bell"></i>告警管理<span class="nav-badge">5</span></a>
+    <a href="device.html" class="nav-item active"><i class="fa-solid fa-server"></i>设备管理</a>
+    <a href="report.html" class="nav-item"><i class="fa-solid fa-file-lines"></i>报表中心</a>
+    
+  </nav>
+  <div class="sidebar-footer">
+    <button onclick="window.location.href='login.html'" style="width:100%;padding:10px;margin-bottom:12px;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;font-size:13px;font-family:'Noto Sans SC';display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s">
+      <i class="fa-solid fa-sign-out-alt"></i> 退出登录
+    </button>
+    <div class="user-card">
+      <div class="user-avatar"><img src="static/avatar.jpg" alt="用户头像"></div>
+      <div class="user-info"><div class="name">华南农业大学</div><div class="role">系统管理员</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      <span class="breadcrumb-item">首页</span>
+      <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right" style="font-size:10px"></i></span>
+      <span class="breadcrumb-item current">设备管理</span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock">--:--:--</div>
+      <button style="padding:8px 16px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:13px;font-family:'Noto Sans SC';cursor:pointer;font-weight:500;display:flex;align-items:center;gap:6px" onclick="openAddDevice()"><i class="fa-solid fa-plus"></i>添加设备</button>
+      
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- SUMMARY -->
+    <div class="dev-summary">
+      <div class="dev-sum-card">
+        <div class="dev-sum-val" style="color:#0EA5E9">18</div>
+        <div class="dev-sum-label">接入设备总数</div>
+      </div>
+      <div class="dev-sum-card">
+        <div class="dev-sum-val" style="color:#10B981">15</div>
+        <div class="dev-sum-label">在线运行</div>
+      </div>
+      <div class="dev-sum-card">
+        <div class="dev-sum-val" style="color:#F59E0B">2</div>
+        <div class="dev-sum-label">告警设备</div>
+      </div>
+      <div class="dev-sum-card">
+        <div class="dev-sum-val" style="color:#94A3B8">1</div>
+        <div class="dev-sum-label">离线/停用</div>
+      </div>
+    </div>
+
+    <!-- DEVICE CARDS -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-head">
+        <div class="panel-title"><i class="fa-solid fa-server"></i>设备总览</div>
+        <div style="display:flex;gap:8px">
+          <div style="display:flex;background:var(--bg);border-radius:8px;padding:3px;gap:2px">
+            <button style="padding:5px 10px;border-radius:6px;border:none;background:white;cursor:pointer;font-size:12px;color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.06)"><i class="fa-solid fa-grip"></i></button>
+            <button style="padding:5px 10px;border-radius:6px;border:none;background:transparent;cursor:pointer;font-size:12px;color:var(--text-secondary)" onclick="openDeviceList()"><i class="fa-solid fa-list"></i></button>
+          </div>
+          <select style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:'Noto Sans SC';outline:none;background:white">
+            <option>全部类型</option>
+            <option>BMS系统</option>
+            <option>PCS变流器</option>
+            <option>热管理系统</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="device-grid">
+        <!-- PCS 01 -->
+        <div class="device-card online" onclick="openDeviceDetail('PCS-01')">
+          <div class="dc-header">
+            <div class="dc-icon blue"><i class="fa-solid fa-bolt"></i></div>
+            <span class="dc-status online"><span class="dc-status-dot"></span>运行中</span>
+          </div>
+          <div class="dc-name">PCS变流器 #01</div>
+          <div class="dc-model">型号: HINJI-PCS-1500 · SN: HJ2024001</div>
+          <div class="dc-metrics">
+            <div class="dc-metric"><div class="dc-metric-val">1200<span style="font-size:10px">kW</span></div><div class="dc-metric-key">输出功率</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">98.4<span style="font-size:10px">%</span></div><div class="dc-metric-key">效率</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">690<span style="font-size:10px">V</span></div><div class="dc-metric-key">AC电压</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">34.2<span style="font-size:10px">°C</span></div><div class="dc-metric-key">温度</div></div>
+          </div>
+          <div class="dc-actions">
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openDeviceDetail('PCS-01')"><i class="fa-solid fa-eye"></i> 详情</button>
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openPCSControl('PCS-01')"><i class="fa-solid fa-sliders"></i> 控制</button>
+          </div>
+        </div>
+
+        <!-- PCS 02 -->
+        <div class="device-card online" onclick="openDeviceDetail('PCS-02')">
+          <div class="dc-header">
+            <div class="dc-icon blue"><i class="fa-solid fa-bolt"></i></div>
+            <span class="dc-status online"><span class="dc-status-dot"></span>运行中</span>
+          </div>
+          <div class="dc-name">PCS变流器 #02</div>
+          <div class="dc-model">型号: HINJI-PCS-1500 · SN: HJ2024002</div>
+          <div class="dc-metrics">
+            <div class="dc-metric"><div class="dc-metric-val">1256<span style="font-size:10px">kW</span></div><div class="dc-metric-key">输出功率</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">97.5<span style="font-size:10px">%</span></div><div class="dc-metric-key">效率</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">690<span style="font-size:10px">V</span></div><div class="dc-metric-key">AC电压</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">35.8<span style="font-size:10px">°C</span></div><div class="dc-metric-key">温度</div></div>
+          </div>
+          <div class="dc-actions">
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openDeviceDetail('PCS-02')"><i class="fa-solid fa-eye"></i> 详情</button>
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openPCSControl('PCS-02')"><i class="fa-solid fa-sliders"></i> 控制</button>
+          </div>
+        </div>
+
+        <!-- PCS 03 WARNING -->
+        <div class="device-card warning" onclick="openDeviceDetail('PCS-03')">
+          <div class="dc-header">
+            <div class="dc-icon amber"><i class="fa-solid fa-bolt"></i></div>
+            <span class="dc-status warning"><span class="dc-status-dot"></span>告警</span>
+          </div>
+          <div class="dc-name">PCS变流器 #03</div>
+          <div class="dc-model">型号: HINJI-PCS-1500 · SN: HJ2024003</div>
+          <div class="dc-metrics">
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#EF4444">停机</div><div class="dc-metric-key">输出功率</div></div>
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#F59E0B">E-042</div><div class="dc-metric-key">故障码</div></div>
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#F59E0B">672<span style="font-size:10px">V</span></div><div class="dc-metric-key">DC电压</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">33.1<span style="font-size:10px">°C</span></div><div class="dc-metric-key">温度</div></div>
+          </div>
+          <div class="dc-actions">
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openDeviceDetail('PCS-03')"><i class="fa-solid fa-eye"></i> 详情</button>
+            <button class="dc-action-btn warn" onclick="event.stopPropagation();openAddPlan()"><i class="fa-solid fa-wrench"></i> 维护</button>
+          </div>
+        </div>
+
+        <!-- BMS 01 -->
+        <div class="device-card online" onclick="openDeviceDetail('BMS-01')">
+          <div class="dc-header">
+            <div class="dc-icon green"><i class="fa-solid fa-battery-three-quarters"></i></div>
+            <span class="dc-status online"><span class="dc-status-dot"></span>运行中</span>
+          </div>
+          <div class="dc-name">BMS电池管理 #01</div>
+          <div class="dc-model">型号: CATL-BMS-6S · SN: CT2023001</div>
+          <div class="dc-metrics">
+            <div class="dc-metric"><div class="dc-metric-val">82<span style="font-size:10px">%</span></div><div class="dc-metric-key">SOC</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">96.8<span style="font-size:10px">%</span></div><div class="dc-metric-key">SOH</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">3.42<span style="font-size:10px">V</span></div><div class="dc-metric-key">均值电压</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">32.4<span style="font-size:10px">°C</span></div><div class="dc-metric-key">温度</div></div>
+          </div>
+          <div class="dc-actions">
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openDeviceDetail('BMS-01')"><i class="fa-solid fa-eye"></i> 详情</button>
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openBMSData('BMS-01')"><i class="fa-solid fa-chart-line"></i> 数据</button>
+          </div>
+        </div>
+
+        <!-- BMS 03 WARNING -->
+        <div class="device-card warning" onclick="openDeviceDetail('BMS-03')">
+          <div class="dc-header">
+            <div class="dc-icon amber"><i class="fa-solid fa-battery-exclamation"></i></div>
+            <span class="dc-status warning"><span class="dc-status-dot"></span>告警</span>
+          </div>
+          <div class="dc-name">BMS电池管理 #03</div>
+          <div class="dc-model">型号: CATL-BMS-6S · SN: CT2023003</div>
+          <div class="dc-metrics">
+            <div class="dc-metric"><div class="dc-metric-val">68<span style="font-size:10px">%</span></div><div class="dc-metric-key">SOC</div></div>
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#F59E0B">95.4<span style="font-size:10px">%</span></div><div class="dc-metric-key">SOH</div></div>
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#EF4444">58.2<span style="font-size:10px">°C</span></div><div class="dc-metric-key">最高温度</div></div>
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#EF4444">超温</div><div class="dc-metric-key">状态</div></div>
+          </div>
+          <div class="dc-actions">
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openDeviceDetail('BMS-03')"><i class="fa-solid fa-eye"></i> 详情</button>
+            <button class="dc-action-btn danger" onclick="event.stopPropagation()"><i class="fa-solid fa-circle-stop"></i> 停机</button>
+          </div>
+        </div>
+
+        <!-- HVAC -->
+        <div class="device-card online" onclick="openDeviceDetail('HVAC-01')">
+          <div class="dc-header">
+            <div class="dc-icon blue"><i class="fa-solid fa-snowflake"></i></div>
+            <span class="dc-status online"><span class="dc-status-dot"></span>制冷中</span>
+          </div>
+          <div class="dc-name">热管理系统 HVAC</div>
+          <div class="dc-model">型号: GREE-HVAC-50T · SN: GR2023001</div>
+          <div class="dc-metrics">
+            <div class="dc-metric"><div class="dc-metric-val">28.3<span style="font-size:10px">°C</span></div><div class="dc-metric-key">环境温度</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">62<span style="font-size:10px">%</span></div><div class="dc-metric-key">湿度</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">2400<span style="font-size:10px">rpm</span></div><div class="dc-metric-key">风扇转速</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">18.4<span style="font-size:10px">kW</span></div><div class="dc-metric-key">制冷功率</div></div>
+          </div>
+          <div class="dc-actions">
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openDeviceDetail('HVAC-01')"><i class="fa-solid fa-eye"></i> 详情</button>
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openHVACControl('HVAC-01')"><i class="fa-solid fa-sliders"></i> 控制</button>
+          </div>
+        </div>
+
+        <!-- EMS -->
+        <div class="device-card online" onclick="openDeviceDetail('EMS-01')">
+          <div class="dc-header">
+            <div class="dc-icon purple"><i class="fa-solid fa-microchip"></i></div>
+            <span class="dc-status online"><span class="dc-status-dot"></span>在线</span>
+          </div>
+          <div class="dc-name">EMS能量管理主机</div>
+          <div class="dc-model">型号: SUNGROW-EMS-V3 · SN: SG2024001</div>
+          <div class="dc-metrics">
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#10B981">正常</div><div class="dc-metric-key">通信状态</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">99.98<span style="font-size:10px">%</span></div><div class="dc-metric-key">系统可用性</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">2.4<span style="font-size:10px">ms</span></div><div class="dc-metric-key">响应时延</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">18</div><div class="dc-metric-key">接入设备</div></div>
+          </div>
+          <div class="dc-actions">
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openDeviceDetail('EMS-01')"><i class="fa-solid fa-eye"></i> 详情</button>
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openEMSConfig('EMS-01')"><i class="fa-solid fa-gear"></i> 配置</button>
+          </div>
+        </div>
+
+        <!-- TRANSFORMER 01 -->
+        <div class="device-card online" onclick="openDeviceDetail('TR-01')">
+          <div class="dc-header">
+            <div class="dc-icon green"><i class="fa-solid fa-circle-nodes"></i></div>
+            <span class="dc-status online"><span class="dc-status-dot"></span>运行中</span>
+          </div>
+          <div class="dc-name">主变压器 #01</div>
+          <div class="dc-model">型号: TBEA-2000kVA · SN: TB2023001</div>
+          <div class="dc-metrics">
+            <div class="dc-metric"><div class="dc-metric-val">1850<span style="font-size:10px">kVA</span></div><div class="dc-metric-key">视在功率</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">99.8<span style="font-size:10px">%</span></div><div class="dc-metric-key">效率</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">10<span style="font-size:10px">kV</span></div><div class="dc-metric-key">高压侧</div></div>
+            <div class="dc-metric"><div class="dc-metric-val">45.6<span style="font-size:10px">°C</span></div><div class="dc-metric-key">油温</div></div>
+          </div>
+          <div class="dc-actions">
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openDeviceDetail('TR-01')"><i class="fa-solid fa-eye"></i> 详情</button>
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openTransformerData('TR-01')"><i class="fa-solid fa-chart-line"></i> 数据</button>
+          </div>
+        </div>
+
+        <!-- TRANSFORMER 02 OFFLINE -->
+        <div class="device-card offline" onclick="openDeviceDetail('TR-02')">
+          <div class="dc-header">
+            <div class="dc-icon gray"><i class="fa-solid fa-circle-nodes"></i></div>
+            <span class="dc-status offline"><span class="dc-status-dot"></span>离线</span>
+          </div>
+          <div class="dc-name">辅助变压器 #02</div>
+          <div class="dc-model">型号: TBEA-500kVA · SN: TB2023002</div>
+          <div class="dc-metrics">
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#94A3B8">--</div><div class="dc-metric-key">视在功率</div></div>
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#94A3B8">--</div><div class="dc-metric-key">效率</div></div>
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#94A3B8">--</div><div class="dc-metric-key">高压侧</div></div>
+            <div class="dc-metric"><div class="dc-metric-val" style="color:#EF4444">通信失联</div><div class="dc-metric-key">状态</div></div>
+          </div>
+          <div class="dc-actions">
+            <button class="dc-action-btn primary" onclick="event.stopPropagation();openDeviceDetail('TR-02')"><i class="fa-solid fa-eye"></i> 详情</button>
+            <button class="dc-action-btn warn" onclick="event.stopPropagation();openAddPlan()"><i class="fa-solid fa-wrench"></i> 维护</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAINTENANCE PLAN -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><i class="fa-solid fa-calendar-check"></i>维护计划</div>
+        <button style="padding:7px 14px;background:var(--primary-light);color:var(--primary);border:none;border-radius:8px;font-size:12px;font-family:'Noto Sans SC';cursor:pointer;font-weight:500" onclick="openAddPlan()"><i class="fa-solid fa-plus"></i> 新增计划</button>
+      </div>
+      <div class="maint-item" onclick="openPlanDetail('plan1')" style="cursor:pointer">
+        <div class="maint-type cm"><i class="fa-solid fa-wrench"></i></div>
+        <div style="flex:1"><div class="maint-name">BMS#03超温故障排查</div><div style="font-size:11px;color:var(--text-light)">BMS电池管理 #03</div></div>
+        <div class="maint-date">计划: 2025-01-15</div>
+        <span class="maint-badge overdue">紧急</span>
+      </div>
+      <div class="maint-item" onclick="openPlanDetail('plan2')" style="cursor:pointer">
+        <div class="maint-type pm"><i class="fa-solid fa-calendar"></i></div>
+        <div style="flex:1"><div class="maint-name">PCS变流器季度预防性维护</div><div style="font-size:11px;color:var(--text-light)">PCS变流器 #01 ~ #04</div></div>
+        <div class="maint-date">计划: 2025-01-20</div>
+        <span class="maint-badge soon">即将到期</span>
+      </div>
+      <div class="maint-item" onclick="openPlanDetail('plan3')" style="cursor:pointer">
+        <div class="maint-type insp"><i class="fa-solid fa-magnifying-glass"></i></div>
+        <div style="flex:1"><div class="maint-name">电池簇容量测试与校准</div><div style="font-size:11px;color:var(--text-light)">电池簇 #01 ~ #06</div></div>
+        <div class="maint-date">计划: 2025-02-01</div>
+        <span class="maint-badge ok">已安排</span>
+      </div>
+      <div class="maint-item" onclick="openPlanDetail('plan4')" style="cursor:pointer">
+        <div class="maint-type pm"><i class="fa-solid fa-calendar"></i></div>
+        <div style="flex:1"><div class="maint-name">热管理系统年度大检修</div><div style="font-size:11px;color:var(--text-light)">热管理系统 HVAC</div></div>
+        <div class="maint-date">计划: 2025-03-15</div>
+        <span class="maint-badge ok">已安排</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateClock(){const now=new Date();document.getElementById('clock').textContent=now.toLocaleTimeString('zh-CN',{hour12:false})}
+  updateClock();setInterval(updateClock,1000);
+
+  // Modal functions
+  function openModal(title, content) {
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    modalTitle.innerHTML = title;
+    modalBody.innerHTML = content;
+    modalOverlay.classList.add('active');
+    modal.style.position = 'fixed';
+    modal.style.left = '50%';
+    modal.style.top = '50%';
+    modal.style.transform = 'translate(-50%, -50%)';
+    modal.style.margin = '0';
+  }
+
+  function closeModal() {
+    const modalOverlay = document.getElementById('modalOverlay');
+    modalOverlay.classList.remove('active');
+  }
+
+  // Drag functionality - init after DOM ready
+  document.addEventListener('DOMContentLoaded', function() {
+    const modalHeader = document.querySelector('.modal-header');
+    if (modalHeader) {
+      let isDragging = false;
+      let dragOffsetX, dragOffsetY;
+      const modal = document.getElementById('modal');
+
+      modalHeader.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        dragOffsetX = e.clientX - modal.getBoundingClientRect().left;
+        dragOffsetY = e.clientY - modal.getBoundingClientRect().top;
+        modal.style.transition = 'none';
+      });
+
+      document.addEventListener('mousemove', function(e) {
+        if (isDragging) {
+          modal.style.left = (e.clientX - dragOffsetX) + 'px';
+          modal.style.top = (e.clientY - dragOffsetY) + 'px';
+          modal.style.position = 'fixed';
+          modal.style.transform = 'none';
+        }
+      });
+
+      document.addEventListener('mouseup', function() {
+        isDragging = false;
+      });
+    }
+
+    // Close modal on overlay click
+    const modalOverlay = document.getElementById('modalOverlay');
+    if (modalOverlay) {
+      modalOverlay.addEventListener('click', function(e) {
+        if (e.target === modalOverlay) closeModal();
+      });
+    }
+  });
+
+  // PCS Control Modal
+  window.openPCSControl = function(deviceId) {
+    const content = `
+      <div class="detail-grid-2" style="margin-bottom:16px">
+        <div style="padding:12px;background:var(--bg);border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px">当前功率</div>
+          <div style="font-size:24px;font-weight:700;color:#0EA5E9;font-family:'Rajdhani'">1200 <span style="font-size:12px">kW</span></div>
+        </div>
+        <div style="padding:12px;background:var(--bg);border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px">运行模式</div>
+          <div style="font-size:16px;font-weight:700;color:#10B981;font-family:'Rajdhani'">并网放电</div>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">功率设定 (kW)</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="range" min="0" max="1500" value="1200" style="flex:1" id="pcsPowerSlider" oninput="document.getElementById('pcsPowerVal').textContent=this.value">
+          <span id="pcsPowerVal" style="font-family:'JetBrains Mono';font-weight:600;min-width:60px;text-align:right">1200 kW</span>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">运行模式</label>
+        <select class="modal-form-select">
+          <option>并网放电</option>
+          <option>并网充电</option>
+          <option>离网运行</option>
+          <option>待机</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">功率因数</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="range" min="0.8" max="1" step="0.01" value="0.95" style="flex:1" id="pcsPFSlider" oninput="document.getElementById('pcsPFVal').textContent=this.value">
+          <span id="pcsPFVal" style="font-family:'JetBrains Mono';font-weight:600;min-width:60px;text-align:right">0.95</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="modal-btn primary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-check"></i> 确认下发</button>
+        <button class="modal-btn secondary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-circle-stop"></i> 紧急停机</button>
+      </div>
+    `;
+    openModal(`<i class="fa-solid fa-sliders"></i> PCS变流器 #01 控制`, content);
+  };
+
+  // BMS Data Modal
+  window.openBMSData = function(deviceId) {
+    const content = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="padding:12px;background:#ECFDF5;border-radius:8px;text-align:center">
+          <div style="font-size:10px;color:#059669;margin-bottom:2px">SOC</div>
+          <div style="font-size:20px;font-weight:700;color:#10B981;font-family:'Rajdhani'">82%</div>
+        </div>
+        <div style="padding:12px;background:#EFF8FF;border-radius:8px;text-align:center">
+          <div style="font-size:10px;color:#0284C7;margin-bottom:2px">SOH</div>
+          <div style="font-size:20px;font-weight:700;color:#0EA5E9;font-family:'Rajdhani'">96.8%</div>
+        </div>
+        <div style="padding:12px;background:#F5F3FF;border-radius:8px;text-align:center">
+          <div style="font-size:10px;color:#7C3AED;margin-bottom:2px">温度</div>
+          <div style="font-size:20px;font-weight:700;color:#7C3AED;font-family:'Rajdhani'">32.4°C</div>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">SOC 告警阈值</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" class="modal-form-input" value="20" style="flex:1">
+          <span style="color:var(--text-secondary)">~</span>
+          <input type="number" class="modal-form-input" value="95" style="flex:1">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">SOH 告警阈值</label>
+        <input type="number" class="modal-form-input" value="80" placeholder="输入SOH告警阈值">
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">温度告警阈值 (°C)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" class="modal-form-input" value="55" style="flex:1" placeholder="高温告警">
+          <span style="color:var(--text-secondary)">/</span>
+          <input type="number" class="modal-form-input" value="10" style="flex:1" placeholder="低温告警">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">均衡控制</label>
+        <select class="modal-form-select">
+          <option>自动均衡</option>
+          <option>被动均衡</option>
+          <option>主动均衡</option>
+          <option>关闭均衡</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="modal-btn primary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-check"></i> 保存配置</button>
+        <button class="modal-btn secondary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-arrows-rotate"></i> SOC校准</button>
+      </div>
+    `;
+    openModal(`<i class="fa-solid fa-chart-line"></i> BMS电池管理 #01 数据配置`, content);
+  };
+
+  // HVAC Control Modal
+  window.openHVACControl = function(deviceId) {
+    const content = `
+      <div class="detail-grid-2" style="margin-bottom:16px">
+        <div style="padding:12px;background:#EFF8FF;border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px">当前温度</div>
+          <div style="font-size:24px;font-weight:700;color:#0EA5E9;font-family:'Rajdhani'">28.3°C</div>
+        </div>
+        <div style="padding:12px;background:#ECFDF5;border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px">运行状态</div>
+          <div style="font-size:16px;font-weight:700;color:#10B981;font-family:'Rajdhani'">制冷中</div>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">目标温度 (°C)</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="range" min="18" max="30" value="25" style="flex:1" id="hvacTempSlider" oninput="document.getElementById('hvacTempVal').textContent=this.value">
+          <span id="hvacTempVal" style="font-family:'JetBrains Mono';font-weight:600;min-width:50px;text-align:right">25°C</span>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">运行模式</label>
+        <select class="modal-form-select">
+          <option>自动</option>
+          <option>制冷</option>
+          <option>制热</option>
+          <option>通风</option>
+          <option>除湿</option>
+          <option>关闭</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">风扇转速 (%)</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="range" min="30" max="100" value="62" style="flex:1" id="hvacFanSlider" oninput="document.getElementById('hvacFanVal').textContent=this.value">
+          <span id="hvacFanVal" style="font-family:'JetBrains Mono';font-weight:600;min-width:60px;text-align:right">62%</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <div class="modal-form-group" style="margin-bottom:0">
+          <label class="modal-form-label">高温告警 (°C)</label>
+          <input type="number" class="modal-form-input" value="35">
+        </div>
+        <div class="modal-form-group" style="margin-bottom:0">
+          <label class="modal-form-label">低温告警 (°C)</label>
+          <input type="number" class="modal-form-input" value="15">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="modal-btn primary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-check"></i> 确认设置</button>
+        <button class="modal-btn secondary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-power-off"></i> 紧急关闭</button>
+      </div>
+    `;
+    openModal(`<i class="fa-solid fa-sliders"></i> 热管理系统 HVAC 控制`, content);
+  };
+
+  // EMS Config Modal
+  window.openEMSConfig = function(deviceId) {
+    const content = `
+      <div style="padding:12px;background:#ECFDF5;border-radius:8px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+        <i class="fa-solid fa-circle-check" style="font-size:24px;color:#10B981"></i>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#059669">系统运行正常</div>
+          <div style="font-size:11px;color:#6EE7B7">EMS能量管理主机 · 监控室</div>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">系统模式</label>
+        <select class="modal-form-select">
+          <option>自动调度</option>
+          <option>手动控制</option>
+          <option>维护模式</option>
+          <option>测试模式</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">调度策略</label>
+        <select class="modal-form-select">
+          <option>经济最优</option>
+          <option>寿命延长</option>
+          <option>响应优先</option>
+          <option>自定义</option>
+        </select>
+      </div>
+      <div class="detail-grid-2">
+        <div class="modal-form-group">
+          <label class="modal-form-label">SOC 上限 (%)</label>
+          <input type="number" class="modal-form-input" value="95">
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-form-label">SOC 下限 (%)</label>
+          <input type="number" class="modal-form-input" value="20">
+        </div>
+      </div>
+      <div class="detail-grid-2">
+        <div class="modal-form-group">
+          <label class="modal-form-label">最大放电功率 (kW)</label>
+          <input type="number" class="modal-form-input" value="1500">
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-form-label">最大充电功率 (kW)</label>
+          <input type="number" class="modal-form-input" value="1200">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">数据采集周期 (秒)</label>
+        <input type="number" class="modal-form-input" value="5">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="modal-btn primary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-check"></i> 保存配置</button>
+        <button class="modal-btn secondary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-arrows-rotate"></i> 重启系统</button>
+      </div>
+    `;
+    openModal(`<i class="fa-solid fa-gear"></i> EMS能量管理 配置`, content);
+  };
+
+  // Transformer Data Modal
+  window.openTransformerData = function(deviceId) {
+    const content = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="padding:12px;background:#ECFDF5;border-radius:8px;text-align:center">
+          <div style="font-size:10px;color:#059669;margin-bottom:2px">视在功率</div>
+          <div style="font-size:18px;font-weight:700;color:#10B981;font-family:'Rajdhani'">1850 kVA</div>
+        </div>
+        <div style="padding:12px;background:#EFF8FF;border-radius:8px;text-align:center">
+          <div style="font-size:10px;color:#0284C7;margin-bottom:2px">效率</div>
+          <div style="font-size:18px;font-weight:700;color:#0EA5E9;font-family:'Rajdhani'">99.8%</div>
+        </div>
+        <div style="padding:12px;background:#FFF7ED;border-radius:8px;text-align:center">
+          <div style="font-size:10px;color:#EA580C;margin-bottom:2px">油温</div>
+          <div style="font-size:18px;font-weight:700;color:#F97316;font-family:'Rajdhani'">45.6°C</div>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">告警阈值配置</label>
+      </div>
+      <div class="detail-grid-2">
+        <div class="modal-form-group">
+          <label class="modal-form-label">油温告警 (°C)</label>
+          <input type="number" class="modal-form-input" value="85">
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-form-label">负载率告警 (%)</label>
+          <input type="number" class="modal-form-input" value="90">
+        </div>
+      </div>
+      <div class="detail-grid-2">
+        <div class="modal-form-group">
+          <label class="modal-form-label">高压侧电压 (kV)</label>
+          <input type="number" class="modal-form-input" value="10" readonly>
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-form-label">低压侧电压 (V)</label>
+          <input type="number" class="modal-form-input" value="400" readonly>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">监测周期 (分钟)</label>
+        <input type="number" class="modal-form-input" value="5">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="modal-btn primary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-check"></i> 保存配置</button>
+        <button class="modal-btn secondary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-file-export"></i> 导出数据</button>
+      </div>
+    `;
+    openModal(`<i class="fa-solid fa-chart-line"></i> 主变压器 #01 数据配置`, content);
+  };
+
+  // Device Detail Modal
+  window.openDeviceDetail = function(deviceId) {
+    const deviceData = {
+      'PCS-01': { id: 'PCS-01', name: 'PCS变流器 #01', type: 'PCS', model: 'SG3125HV-60', sn: 'PCS20240315001', status: 'online', location: '设备间A-01', install: '2024-03-15', vendor: '阳光电源', power: '1200 kW', voltage: '690V', contact: '张工 138****1234' },
+      'PCS-02': { id: 'PCS-02', name: 'PCS变流器 #02', type: 'PCS', model: 'SG3125HV-60', sn: 'PCS20240315002', status: 'online', location: '设备间A-02', install: '2024-03-15', vendor: '阳光电源', power: '1256 kW', voltage: '690V', contact: '张工 138****1234' },
+      'PCS-03': { id: 'PCS-03', name: 'PCS变流器 #03', type: 'PCS', model: 'SG3125HV-60', sn: 'PCS20240315003', status: 'warning', location: '设备间A-03', install: '2024-03-15', vendor: '阳光电源', power: '停机', voltage: '672V', contact: '张工 138****1234', fault: 'E-042' },
+      'BMS-01': { id: 'BMS-01', name: 'BMS电池管理 #01', type: 'BMS', model: 'CATL-BMS-6S', sn: 'BMS20240315001', status: 'online', location: '设备间B-01', install: '2024-03-15', vendor: '比亚迪', power: '--', voltage: '768V', contact: '李工 139****5678' },
+      'BMS-03': { id: 'BMS-03', name: 'BMS电池管理 #03', type: 'BMS', model: 'CATL-BMS-6S', sn: 'BMS20240315003', status: 'warning', location: '设备间B-03', install: '2024-03-15', vendor: '比亚迪', power: '--', voltage: '768V', contact: '李工 139****5678', temp: '58.2°C' },
+      'HVAC-01': { id: 'HVAC-01', name: '热管理系统 HVAC', type: 'HVAC', model: 'GREE-HVAC-50T', sn: 'HVAC20240315001', status: 'online', location: '设备间C', install: '2024-03-15', vendor: '格力', power: '18.4 kW', voltage: '380V', contact: '王工 137****9012' },
+      'EMS-01': { id: 'EMS-01', name: 'EMS能量管理主机', type: 'EMS', model: 'SUNGROW-EMS-V3', sn: 'EMS20240315001', status: 'online', location: '监控室', install: '2024-03-15', vendor: '阳光电源', power: '--', voltage: '220V', contact: '系统管理员' },
+      'TR-01': { id: 'TR-01', name: '主变压器 #01', type: '变压器', model: 'TBEA-2000kVA', sn: 'TR20240315001', status: 'online', location: '配电房', install: '2024-03-15', vendor: '特变电工', power: '1850 kVA', voltage: '10kV/0.4kV', contact: '配电室 136****3456' },
+      'TR-02': { id: 'TR-02', name: '辅助变压器 #02', type: '变压器', model: 'TBEA-500kVA', sn: 'TR20240315002', status: 'offline', location: '配电房', install: '2024-03-15', vendor: '特变电工', power: '--', voltage: '--', contact: '配电室 136****3456' },
+    };
+    const data = deviceData[deviceId] || deviceData['PCS-01'];
+    const content = `
+      <div class="detail-row"><span class="detail-label">设备ID</span><span class="detail-val" style="font-family:'JetBrains Mono'">${data.id}</span></div>
+      <div class="detail-row"><span class="detail-label">设备名称</span><span class="detail-val">${data.name}</span></div>
+      <div class="detail-row"><span class="detail-label">设备型号</span><span class="detail-val">${data.model}</span></div>
+      <div class="detail-row"><span class="detail-label">序列号</span><span class="detail-val" style="font-family:'JetBrains Mono'">${data.sn}</span></div>
+      <div class="detail-row"><span class="detail-label">安装位置</span><span class="detail-val">${data.location}</span></div>
+      <div class="detail-row"><span class="detail-label">投运日期</span><span class="detail-val">${data.install}</span></div>
+      <div class="detail-row"><span class="detail-label">生产厂家</span><span class="detail-val">${data.vendor}</span></div>
+      <div class="detail-row"><span class="detail-label">联系方式</span><span class="detail-val">${data.contact}</span></div>
+      <div class="detail-row"><span class="detail-label">额定功率</span><span class="detail-val" style="color:#10B981">${data.power}</span></div>
+      <div class="detail-row"><span class="detail-label">额定电压</span><span class="detail-val">${data.voltage}</span></div>
+    `;
+    openModal(`<i class="fa-solid fa-server"></i> ${data.name} 详情`, content);
+  };
+
+  // Add Device Modal
+  window.openAddDevice = function() {
+    const content = `
+      <div class="form-row">
+        <div class="modal-form-group">
+          <label class="modal-form-label">设备类型</label>
+          <select class="modal-form-select">
+            <option>PCS变流器</option>
+            <option>BMS电池管理</option>
+            <option>HVAC热管理</option>
+            <option>EMS能量管理</option>
+            <option>变压器</option>
+          </select>
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-form-label">设备型号</label>
+          <input class="modal-form-input" placeholder="请输入设备型号">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">设备名称</label>
+        <input class="modal-form-input" placeholder="请输入设备名称">
+      </div>
+      <div class="form-row">
+        <div class="modal-form-group">
+          <label class="modal-form-label">序列号</label>
+          <input class="modal-form-input" placeholder="请输入序列号">
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-form-label">安装位置</label>
+          <input class="modal-form-input" placeholder="请输入安装位置">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="modal-form-group">
+          <label class="modal-form-label">生产厂家</label>
+          <input class="modal-form-input" placeholder="请输入生产厂家">
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-form-label">投运日期</label>
+          <input class="modal-form-input" type="date">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">备注</label>
+        <input class="modal-form-input" placeholder="请输入备注信息（选填）">
+      </div>
+    `;
+    openModal(`<i class="fa-solid fa-plus-circle"></i> 添加新设备`, content);
+  };
+
+  // Add Maintenance Plan Modal
+  window.openAddPlan = function() {
+    const content = `
+      <div class="modal-form-group">
+        <label class="modal-form-label">计划类型</label>
+        <select class="modal-form-select">
+          <option>故障修复</option>
+          <option>预防性维护</option>
+          <option>定期检查</option>
+          <option>设备校准</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">计划名称</label>
+        <input class="modal-form-input" placeholder="请输入计划名称">
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">关联设备</label>
+        <select class="modal-form-select">
+          <option>全部设备</option>
+          <option>PCS变流器 #01</option>
+          <option>PCS变流器 #02</option>
+          <option>BMS电池管理 #03</option>
+          <option>热管理系统 HVAC</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="modal-form-group">
+          <label class="modal-form-label">计划日期</label>
+          <input class="modal-form-input" type="date">
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-form-label">计划时间</label>
+          <input class="modal-form-input" type="time">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">优先级</label>
+        <select class="modal-form-select">
+          <option>紧急</option>
+          <option>高</option>
+          <option>中</option>
+          <option>低</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">备注说明</label>
+        <textarea class="modal-form-input" rows="3" placeholder="请输入备注信息"></textarea>
+      </div>
+    `;
+    openModal(`<i class="fa-solid fa-calendar-plus"></i> 新增维护计划`, content);
+  };
+
+  // Maintenance Plan Detail Modal
+  window.openPlanDetail = function(planId) {
+    const planData = {
+      'plan1': { name: 'BMS#03超温故障排查', type: '故障修复', device: 'BMS电池管理 #03', date: '2025-01-15', priority: '紧急', status: '待处理', desc: '排查电池簇#03第58节电芯温度异常升高原因，检查冷却系统和水冷机组运行状态。' },
+      'plan2': { name: 'PCS变流器季度预防性维护', type: '预防性维护', device: 'PCS变流器 #01 ~ #04', date: '2025-01-20', priority: '高', status: '即将到期', desc: '对4台PCS变流器进行全面检查，包括IGBT模块、滤波电容、冷却风扇等关键部件。' },
+      'plan3': { name: '电池簇容量测试与校准', type: '定期检查', device: '电池簇 #01 ~ #06', date: '2025-02-01', priority: '中', status: '已安排', desc: '对6个电池簇进行容量测试，评估电池健康状态，必要时进行SOC校准。' },
+      'plan4': { name: '热管理系统年度大检修', type: '预防性维护', device: '热管理系统 HVAC', date: '2025-03-15', priority: '中', status: '已安排', desc: '对HVAC系统进行全面检修，包括滤网更换、制冷剂补充、压缩机检测等。' }
+    };
+    const data = planData[planId] || planData['plan1'];
+    const content = `
+      <div class="detail-row"><span class="detail-label">计划名称</span><span class="detail-val">${data.name}</span></div>
+      <div class="detail-row"><span class="detail-label">计划类型</span><span class="detail-val">${data.type}</span></div>
+      <div class="detail-row"><span class="detail-label">关联设备</span><span class="detail-val">${data.device}</span></div>
+      <div class="detail-row"><span class="detail-label">计划日期</span><span class="detail-val">${data.date}</span></div>
+      <div class="detail-row"><span class="detail-label">优先级</span><span class="detail-val" style="color:${data.priority === '紧急' ? '#EF4444' : data.priority === '高' ? '#F59E0B' : '#0EA5E9'}">${data.priority}</span></div>
+      <div class="detail-row"><span class="detail-label">状态</span><span class="detail-val">${data.status}</span></div>
+      <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text-secondary)">
+        <strong style="color:var(--text-primary)">详细说明：</strong><br>${data.desc}
+      </div>
+      <div style="margin-top:16px;display:flex;gap:8px">
+        <button class="modal-btn primary" style="flex:1" onclick="closeModal()"><i class="fa-solid fa-check"></i> 确认执行</button>
+        <button class="modal-btn secondary" style="flex:1"><i class="fa-solid fa-pen"></i> 编辑计划</button>
+      </div>
+    `;
+    openModal(`<i class="fa-solid fa-clipboard-list"></i> 维护计划详情`, content);
+  };
+
+  // Device List Modal
+  window.openDeviceList = function() {
+    const devices = [
+      { id: 'PCS-01', name: 'PCS变流器 #01', type: 'PCS', status: 'online', model: 'HINJI-PCS-1500', location: '设备间A-01' },
+      { id: 'PCS-02', name: 'PCS变流器 #02', type: 'PCS', status: 'online', model: 'HINJI-PCS-1500', location: '设备间A-02' },
+      { id: 'PCS-03', name: 'PCS变流器 #03', type: 'PCS', status: 'warning', model: 'HINJI-PCS-1500', location: '设备间A-03' },
+      { id: 'BMS-01', name: 'BMS电池管理 #01', type: 'BMS', status: 'online', model: 'CATL-BMS-6S', location: '设备间B-01' },
+      { id: 'BMS-03', name: 'BMS电池管理 #03', type: 'BMS', status: 'warning', model: 'CATL-BMS-6S', location: '设备间B-03' },
+      { id: 'HVAC-01', name: '热管理系统 HVAC', type: 'HVAC', status: 'online', model: 'GREE-HVAC-50T', location: '设备间C' },
+      { id: 'EMS-01', name: 'EMS能量管理主机', type: 'EMS', status: 'online', model: 'SUNGROW-EMS-V3', location: '监控室' },
+      { id: 'TR-01', name: '主变压器 #01', type: '变压器', status: 'online', model: 'TBEA-2000kVA', location: '配电房' },
+      { id: 'TR-02', name: '辅助变压器 #02', type: '变压器', status: 'offline', model: 'TBEA-500kVA', location: '配电房' }
+    ];
+    const content = `
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input type="text" placeholder="搜索设备..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none">
+        <select style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+          <option>全部状态</option>
+          <option>运行中</option>
+          <option>告警</option>
+          <option>离线</option>
+        </select>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--bg)">
+            <th style="padding:10px 8px;text-align:left;font-weight:600;color:var(--text-secondary)">设备ID</th>
+            <th style="padding:10px 8px;text-align:left;font-weight:600;color:var(--text-secondary)">设备名称</th>
+            <th style="padding:10px 8px;text-align:left;font-weight:600;color:var(--text-secondary)">类型</th>
+            <th style="padding:10px 8px;text-align:left;font-weight:600;color:var(--text-secondary)">型号</th>
+            <th style="padding:10px 8px;text-align:left;font-weight:600;color:var(--text-secondary)">位置</th>
+            <th style="padding:10px 8px;text-align:left;font-weight:600;color:var(--text-secondary)">状态</th>
+            <th style="padding:10px 8px;text-align:center;font-weight:600;color:var(--text-secondary)">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${devices.map(d => `
+            <tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="closeModal();setTimeout(()=>openDeviceDetail('${d.id}'),100)">
+              <td style="padding:10px 8px;font-family:'JetBrains Mono';font-size:11px;color:var(--text-light)">${d.id}</td>
+              <td style="padding:10px 8px;font-weight:500">${d.name}</td>
+              <td style="padding:10px 8px;color:var(--text-secondary)">${d.type}</td>
+              <td style="padding:10px 8px;color:var(--text-secondary)">${d.model}</td>
+              <td style="padding:10px 8px;color:var(--text-secondary)">${d.location}</td>
+              <td style="padding:10px 8px">
+                <span style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:600;${d.status === 'online' ? 'background:#ECFDF5;color:#059669' : d.status === 'warning' ? 'background:#FFFBEB;color:#D97706' : 'background:#F1F5F9;color:#64748B'}">
+                  ${d.status === 'online' ? '运行中' : d.status === 'warning' ? '告警' : '离线'}
+                </span>
+              </td>
+              <td style="padding:10px 8px;text-align:center">
+                <button class="dc-action-btn primary" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();openDeviceDetail('${d.id}')">详情</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+    openModal(`<i class="fa-solid fa-list"></i> 设备列表`, content);
+  };
+</script>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header" id="modalHeader">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" onclick="closeModal()">取消</button>
+      <button class="modal-btn primary" onclick="closeModal()"><i class="fa-solid fa-check"></i> 确认添加</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

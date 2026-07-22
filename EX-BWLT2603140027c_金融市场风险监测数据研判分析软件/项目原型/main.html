@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>金融市场风险监测数据研判分析软件</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --mac-title: #e8e6e3;
+      --mac-title-inactive: #f6f6f6;
+      --sidebar-bg: #1e1e2e;
+      --sidebar-text: #a6adc8;
+      --sidebar-active: rgba(137, 180, 250, 0.12);
+      --sidebar-active-text: #89b4fa;
+      --content-bg: #11111b;
+      --content-bg-2: #181825;
+      --card-bg: #1e1e2e;
+      --card-border: rgba(255, 255, 255, 0.04);
+      --text-primary: #cdd6f4;
+      --text-secondary: #6c7086;
+      --text-dim: #45475a;
+      --accent-blue: #89b4fa;
+      --accent-green: #a6e3a1;
+      --accent-red: #f38ba8;
+      --accent-yellow: #f9e2af;
+      --accent-mauve: #cba6f7;
+      --accent-peach: #fab387;
+      --accent-teal: #94e2d5;
+      --shadow-heavy: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.05);
+      --radius: 10px;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a12;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      color: var(--text-primary);
+    }
+
+    .desktop-bg {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 40%, #16213e 70%, #0f3460 100%);
+      z-index: 0;
+    }
+
+    .desktop-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 20%, rgba(137, 180, 250, 0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 20% 80%, rgba(203, 166, 247, 0.03) 0%, transparent 50%);
+    }
+
+    .mac-window {
+      position: relative;
+      z-index: 1;
+      width: 1280px;
+      max-width: 96vw;
+      height: 820px;
+      max-height: 90vh;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-heavy);
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .title-bar {
+      height: 52px;
+      min-height: 52px;
+      background: linear-gradient(180deg, #2a2a3c 0%, #232336 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+      -webkit-app-region: drag;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .traffic-light.close {
+      background: #ec6a5e;
+      border: 1px solid #d14f44;
+    }
+
+    .traffic-light.minimize {
+      background: #f4be4f;
+      border: 1px solid #d69e2e;
+    }
+
+    .traffic-light.maximize {
+      background: #61c554;
+      border: 1px solid #4da83f;
+    }
+
+    .title-bar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: #a0a0b8;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .title-bar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px 12px 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .user-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-mauve));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      font-size: 10px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .user-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .main-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      background: var(--content-bg);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 12px 12px 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--sidebar-text);
+      transition: all 0.15s;
+      position: relative;
+      margin-bottom: 1px;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+
+    .sidebar-item.active {
+      background: var(--sidebar-active);
+      color: var(--sidebar-active-text);
+    }
+
+    .sidebar-item .icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .sidebar-item.active .icon {
+      opacity: 1;
+    }
+
+    .sidebar-item .badge {
+      margin-left: auto;
+      background: var(--accent-red);
+      color: #11111b;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.04);
+      margin: 8px 12px;
+    }
+
+    .sidebar-status {
+      margin-top: auto;
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .status-dot.online {
+      background: var(--accent-green);
+      box-shadow: 0 0 6px rgba(166, 227, 161, 0.4);
+    }
+
+    .status-text {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* Content */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .content-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      background: var(--content-bg-2);
+    }
+
+    .content-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+
+    .content-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+
+    .btn.primary {
+      background: rgba(137, 180, 250, 0.15);
+      border-color: rgba(137, 180, 250, 0.2);
+      color: var(--accent-blue);
+    }
+
+    .btn.primary:hover {
+      background: rgba(137, 180, 250, 0.25);
+    }
+
+    .time-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .content-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    .content-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .content-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+    }
+
+    /* KPI Row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    .kpi-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -1px;
+    }
+
+    .kpi-sub {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 11px;
+    }
+
+    .kpi-change {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+    }
+
+    .kpi-change.up {
+      color: var(--accent-red);
+    }
+
+    .kpi-change.down {
+      color: var(--accent-green);
+    }
+
+    .kpi-change.neutral {
+      color: var(--accent-yellow);
+    }
+
+    .kpi-desc {
+      color: var(--text-dim);
+    }
+
+    /* Chart Cards */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .grid-3-1 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .card-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .tag-warn {
+      background: rgba(243, 139, 168, 0.12);
+      color: var(--accent-red);
+    }
+
+    .tag-safe {
+      background: rgba(166, 227, 161, 0.12);
+      color: var(--accent-green);
+    }
+
+    .tag-info {
+      background: rgba(137, 180, 250, 0.12);
+      color: var(--accent-blue);
+    }
+
+    /* Mini chart via SVG */
+    .chart-area {
+      width: 100%;
+    }
+
+    .chart-area svg {
+      width: 100%;
+      display: block;
+    }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 8px 10px;
+      color: var(--text-dim);
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .data-table td {
+      padding: 10px 10px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .data-table .name-col {
+      font-family: 'Noto Sans SC', sans-serif;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .risk-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .risk-high {
+      background: rgba(243, 139, 168, 0.15);
+      color: var(--accent-red);
+    }
+
+    .risk-mid {
+      background: rgba(249, 226, 175, 0.15);
+      color: var(--accent-yellow);
+    }
+
+    .risk-low {
+      background: rgba(166, 227, 161, 0.12);
+      color: var(--accent-green);
+    }
+
+    /* Alert list */
+    .alert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .alert-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.015);
+      border-left: 3px solid transparent;
+    }
+
+    .alert-item.alert-red {
+      border-left-color: var(--accent-red);
+    }
+
+    .alert-item.alert-yellow {
+      border-left-color: var(--accent-yellow);
+    }
+
+    .alert-item.alert-blue {
+      border-left-color: var(--accent-blue);
+    }
+
+    .alert-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .alert-body {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .alert-body strong {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* Gauge */
+    .gauge-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+    }
+
+    .gauge-svg {
+      width: 130px;
+      height: 80px;
+    }
+
+    .gauge-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .gauge-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    /* Bar chart */
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .bar-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      width: 70px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease;
+    }
+
+    .bar-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      width: 40px;
+      flex-shrink: 0;
+    }
+
+    /* Heatmap */
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 3px;
+    }
+
+    .heatmap-cell {
+      aspect-ratio: 1;
+      border-radius: 3px;
+      position: relative;
+      cursor: default;
+    }
+
+    .heatmap-cell:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #313244;
+      color: var(--text-primary);
+      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .heatmap-labels {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 3px;
+      margin-top: 4px;
+    }
+
+    .heatmap-labels span {
+      font-size: 9px;
+      text-align: center;
+      color: var(--text-dim);
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 14px;
+    }
+
+    .tab-item {
+      padding: 5px 12px;
+      font-size: 11px;
+      color: var(--text-dim);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab-item:hover {
+      color: var(--text-secondary);
+    }
+
+    .tab-item.active {
+      background: rgba(137, 180, 250, 0.1);
+      color: var(--accent-blue);
+    }
+
+    /* Sparkline */
+    .spark {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .kpi-card,
+    .card,
+    .alert-item {
+      animation: fadeIn 0.4s ease both;
+    }
+
+    .kpi-card:nth-child(2),
+    .card:nth-child(2) {
+      animation-delay: 0.05s;
+    }
+
+    .kpi-card:nth-child(3) {
+      animation-delay: 0.1s;
+    }
+
+    .kpi-card:nth-child(4) {
+      animation-delay: 0.15s;
+    }
+
+    /* Panel views */
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    /* Settings components */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .form-row:last-child {
+      border-bottom: none;
+    }
+
+    .form-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .form-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-switch.active {
+      background: rgba(137, 180, 250, 0.3);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: var(--text-secondary);
+      border-radius: 50%;
+      transition: all 0.2s;
+      pointer-events: none;
+    }
+
+    .toggle-switch.active::after {
+      left: 18px;
+      background: var(--accent-blue);
+    }
+
+    .form-row .toggle-switch {
+      margin-left: 10px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .status-badge.active {
+      background: rgba(166, 227, 161, 0.12);
+      color: var(--accent-green);
+    }
+
+    .status-badge.inactive {
+      background: rgba(243, 139, 168, 0.12);
+      color: var(--accent-red);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      width: 400px;
+      max-width: 90vw;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 20px;
+      background: var(--content-bg-2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      position: relative;
+    }
+
+    .modal-header .traffic-lights {
+      display: flex;
+      gap: 8px;
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .modal-header .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-header .traffic-light.close {
+      background: #ff5f57;
+    }
+
+    .modal-header .traffic-light.minimize {
+      background: #febc2e;
+    }
+
+    .modal-header .traffic-light.maximize {
+      background: #28c840;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 24px 20px;
+    }
+
+    .modal-body p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .report-progress {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 3px;
+      width: 0;
+      transition: width 0.4s ease;
+    }
+
+    .report-status {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .report-success {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .success-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: rgba(166, 227, 161, 0.15);
+      color: var(--accent-green);
+      border-radius: 50%;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .report-filename {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin: 8px 0 20px;
+    }
+
+    /* Toast */
+    .toast-notification {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 13px;
+      color: var(--text-primary);
+      z-index: 1001;
+      transition: transform 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast-notification.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-notification.success {
+      border-left: 3px solid var(--accent-green);
+    }
+
+    .toast-notification.warning {
+      border-left: 3px solid var(--accent-yellow);
+    }
+
+    .toast-notification.error {
+      border-left: 3px solid var(--accent-red);
+    }
+
+    /* Tab content */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Bar chart colors */
+    .bar-fill.accent-red { background: var(--accent-red); }
+    .bar-fill.accent-peach { background: var(--accent-peach); }
+    .bar-fill.accent-yellow { background: var(--accent-yellow); }
+    .bar-fill.accent-blue { background: var(--accent-blue); }
+    .bar-fill.accent-mauve { background: var(--accent-mauve); }
+    .bar-fill.accent-green { background: var(--accent-green); }
+    .bar-fill.accent-teal { background: var(--accent-teal); }
+  </style>
+</head>
+
+<body>
+  <div class="desktop-bg"></div>
+
+  <div class="mac-window">
+    <!-- Title Bar -->
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <div class="title-bar-text">金融市场风险监测数据研判分析软件</div>
+      <div class="title-bar-right">
+        <div class="time-display" id="clock"></div>
+        <div class="user-badge">
+          <div class="user-avatar"><img src="https://img04.sogoucdn.com/app/a/100520093/ae588be27ee085c4-fd668f66a830d70e-4acefdc9163e3ad357e44e9799bdc20f.jpg" alt="鲍姝帆" onerror="this.remove(); this.parentNode.textContent='鲍';" /></div>
+          <span>鲍姝帆</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main-body">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">软件功能</div>
+          <div class="sidebar-item active" onclick="switchPanel('dashboard',this)">
+            <span class="icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+              </svg>
+            </span>
+            风险总览
+          </div>
+          <div class="sidebar-item" onclick="switchPanel('market',this)">
+            <span class="icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </span>
+            市场监测
+          </div>
+          <div class="sidebar-item" onclick="switchPanel('credit',this)">
+            <span class="icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </span>
+            信用风险
+            <span class="badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="switchPanel('liquidity',this)">
+            <span class="icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+              </svg>
+            </span>
+            流动性分析
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="switchPanel('stress',this)">
+            <span class="icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </span>
+            压力测试
+          </div>
+          <div class="sidebar-item" onclick="switchPanel('var',this)">
+            <span class="icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="20" x2="12" y2="10" />
+                <line x1="18" y1="20" x2="18" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="16" />
+              </svg>
+            </span>
+            VaR模型
+          </div>
+          <div class="sidebar-item" onclick="switchPanel('correlation',this)">
+            <span class="icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+            </span>
+            关联分析
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="switchPanel('system',this)">
+            <span class="icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </span>
+            系统设置
+          </div>
+        </div>
+
+        <div class="sidebar-status">
+          <span class="status-dot online"></span>
+          <span class="status-text">数据源连接正常 · 延迟 12ms</span>
+        </div>
+      </div>
+
+      <!-- Content Area -->
+      <div class="content">
+        <div class="content-header">
+          <div>
+            <div class="content-title" id="panelTitle">风险总览</div>
+            <div class="content-subtitle" id="panelSubtitle">全市场风险指标实时监测 · 数据更新于 <span id="updateTime"></span></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn" onclick="exportData()">导出数据</button>
+            <button class="btn primary" onclick="generateReport()">生成报告</button>
+          </div>
+        </div>
+
+        <div class="content-scroll">
+
+          <!-- === Dashboard Panel === -->
+          <div class="panel active" id="panel-dashboard">
+            <!-- KPI -->
+            <div class="kpi-row">
+              <div class="kpi-card">
+                <div class="kpi-label">综合风险指数</div>
+                <div class="kpi-value" style="color:var(--accent-yellow)">67.4</div>
+                <div class="kpi-sub">
+                  <span class="kpi-change up">+3.2</span>
+                  <span class="kpi-desc">较上日</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">监测预警数量</div>
+                <div class="kpi-value" style="color:var(--accent-red)">18</div>
+                <div class="kpi-sub">
+                  <span class="kpi-change up">+5</span>
+                  <span class="kpi-desc">红色预警 3 · 橙色 7 · 黄色 8</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">VaR(99%, 1D)</div>
+                <div class="kpi-value" style="color:var(--accent-mauve)">2.34%</div>
+                <div class="kpi-sub">
+                  <span class="kpi-change up">+0.18%</span>
+                  <span class="kpi-desc">历史分位 P87</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">市场波动率(VIX)</div>
+                <div class="kpi-value" style="color:var(--accent-peach)">24.8</div>
+                <div class="kpi-sub">
+                  <span class="kpi-change neutral">+0.3</span>
+                  <span class="kpi-desc">中等偏高</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid-3-1">
+              <div class="card">
+                <div class="card-head">
+                  <span class="card-title">综合风险指数趋势 (近30日)</span>
+                  <span class="card-tag tag-warn">关注</span>
+                </div>
+                <div class="chart-area" id="riskTrendChart"></div>
+              </div>
+              <div class="card">
+                <div class="card-head">
+                  <span class="card-title">风险等级分布</span>
+                  <span class="card-tag tag-info">实时</span>
+                </div>
+                <div style="padding:6px 0;">
+                  <div class="bar-row"><span class="bar-label">利率风险</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:78%;background:var(--accent-red)"></div>
+                    </div><span class="bar-val">78</span>
+                  </div>
+                  <div class="bar-row"><span class="bar-label">信用风险</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:65%;background:var(--accent-peach)"></div>
+                    </div><span class="bar-val">65</span>
+                  </div>
+                  <div class="bar-row"><span class="bar-label">汇率风险</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:52%;background:var(--accent-yellow)"></div>
+                    </div><span class="bar-val">52</span>
+                  </div>
+                  <div class="bar-row"><span class="bar-label">流动性</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:41%;background:var(--accent-blue)"></div>
+                    </div><span class="bar-val">41</span>
+                  </div>
+                  <div class="bar-row"><span class="bar-label">操作风险</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:28%;background:var(--accent-green)"></div>
+                    </div><span class="bar-val">28</span>
+                  </div>
+                  <div class="bar-row"><span class="bar-label">合规风险</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:33%;background:var(--accent-teal)"></div>
+                    </div><span class="bar-val">33</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Alert + Table -->
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-head">
+                  <span class="card-title">实时预警信息</span>
+                  <span class="card-tag tag-warn">18条</span>
+                </div>
+                <div class="alert-list">
+                  <div class="alert-item alert-red">
+                    <span class="alert-time">09:32</span>
+                    <div class="alert-body"><strong>[红色]</strong> 国债收益率曲线倒挂加深，10Y-2Y利差降至-18bp，触发阈值预警</div>
+                  </div>
+                  <div class="alert-item alert-red">
+                    <span class="alert-time">09:15</span>
+                    <div class="alert-body"><strong>[红色]</strong> 信用债利差单日走阔22bp，AA级企业债违约概率模型输出升至3.7%</div>
+                  </div>
+                  <div class="alert-item alert-yellow">
+                    <span class="alert-time">08:58</span>
+                    <div class="alert-body"><strong>[橙色]</strong> 离岸人民币汇率波动率突破近三月高位，隐含波动率达6.8%</div>
+                  </div>
+                  <div class="alert-item alert-yellow">
+                    <span class="alert-time">08:41</span>
+                    <div class="alert-body"><strong>[橙色]</strong> 银行间同业拆借利率SHIBOR隔夜上行15bp至2.35%，资金面趋紧</div>
+                  </div>
+                  <div class="alert-item alert-blue">
+                    <span class="alert-time">08:30</span>
+                    <div class="alert-body"><strong>[蓝色]</strong> 沪深300期权隐含波动率偏度指数异常，Put-Call比升至1.42</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-head">
+                  <span class="card-title">重点监测机构</span>
+                  <span class="card-tag tag-info">Top 8</span>
+                </div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>机构名称</th>
+                      <th>风险评分</th>
+                      <th>等级</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="name-col">恒泰信托</td>
+                      <td>82.1</td>
+                      <td><span class="risk-badge risk-high">高</span></td>
+                    </tr>
+                    <tr>
+                      <td class="name-col">鑫融资管</td>
+                      <td>76.5</td>
+                      <td><span class="risk-badge risk-high">高</span></td>
+                    </tr>
+                    <tr>
+                      <td class="name-col">中汇租赁</td>
+                      <td>71.3</td>
+                      <td><span class="risk-badge risk-high">高</span></td>
+                    </tr>
+                    <tr>
+                      <td class="name-col">东海期货</td>
+                      <td>58.9</td>
+                      <td><span class="risk-badge risk-mid">中</span></td>
+                    </tr>
+                    <tr>
+                      <td class="name-col">华信基金</td>
+                      <td>54.2</td>
+                      <td><span class="risk-badge risk-mid">中</span></td>
+                    </tr>
+                    <tr>
+                      <td class="name-col">银通资本</td>
+                      <td>47.6</td>
+                      <td><span class="risk-badge risk-mid">中</span></td>
+                    </tr>
+                    <tr>
+                      <td class="name-col">国盛证券</td>
+                      <td>32.4</td>
+                      <td><span class="risk-badge risk-low">低</span></td>
+                    </tr>
+                    <tr>
+                      <td class="name-col">瑞银信投</td>
+                      <td>28.7</td>
+                      <td><span class="risk-badge risk-low">低</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- === Market Panel === -->
+          <div class="panel" id="panel-market">
+            <div class="kpi-row">
+              <div class="kpi-card">
+                <div class="kpi-label">上证综指</div>
+                <div class="kpi-value" style="color:var(--accent-red)">3,187.42</div>
+                <div class="kpi-sub"><span class="kpi-change up">-1.23%</span><span class="kpi-desc">成交额 4,128亿</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">中债总财富指数</div>
+                <div class="kpi-value" style="color:var(--accent-green)">224.67</div>
+                <div class="kpi-sub"><span class="kpi-change down">+0.08%</span><span class="kpi-desc">久期 5.23年</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">USD/CNY 中间价</div>
+                <div class="kpi-value" style="color:var(--accent-peach)">7.2485</div>
+                <div class="kpi-sub"><span class="kpi-change up">+126pips</span><span class="kpi-desc">上调</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">COMEX 黄金</div>
+                <div class="kpi-value" style="color:var(--accent-yellow)">2,647</div>
+                <div class="kpi-sub"><span class="kpi-change down">+0.42%</span><span class="kpi-desc">美元/盎司</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">跨市场联动风险热力图</span>
+                <span class="card-tag tag-info">相关系数矩阵</span>
+              </div>
+              <div style="margin-bottom:8px;">
+                <div class="heatmap-grid" id="heatmapGrid"></div>
+                <div class="heatmap-labels" id="heatmapLabels"></div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:14px;">
+              <div class="card-head">
+                <span class="card-title">全球主要市场风险传导路径</span>
+                <span class="card-tag tag-warn">关注</span>
+              </div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>市场/指标</th>
+                    <th>当前值</th>
+                    <th>日变动</th>
+                    <th>波动率</th>
+                    <th>相关性(A股)</th>
+                    <th>风险评级</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="name-col">美国10Y国债</td>
+                    <td>4.58%</td>
+                    <td style="color:var(--accent-red)">+8bp</td>
+                    <td>14.2%</td>
+                    <td>-0.67</td>
+                    <td><span class="risk-badge risk-high">高</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">日经225</td>
+                    <td>38,421</td>
+                    <td style="color:var(--accent-red)">-1.87%</td>
+                    <td>22.1%</td>
+                    <td>0.58</td>
+                    <td><span class="risk-badge risk-mid">中</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">恒生指数</td>
+                    <td>17,284</td>
+                    <td style="color:var(--accent-red)">-2.14%</td>
+                    <td>25.6%</td>
+                    <td>0.82</td>
+                    <td><span class="risk-badge risk-high">高</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">美元指数DXY</td>
+                    <td>106.32</td>
+                    <td style="color:var(--accent-green)">+0.45%</td>
+                    <td>8.7%</td>
+                    <td>-0.54</td>
+                    <td><span class="risk-badge risk-mid">中</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">WTI原油</td>
+                    <td>71.84</td>
+                    <td style="color:var(--accent-red)">-2.31%</td>
+                    <td>31.4%</td>
+                    <td>0.32</td>
+                    <td><span class="risk-badge risk-mid">中</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">铜 LME</td>
+                    <td>8,542</td>
+                    <td style="color:var(--accent-red)">-1.12%</td>
+                    <td>18.9%</td>
+                    <td>0.61</td>
+                    <td><span class="risk-badge risk-mid">中</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- === Credit Panel === -->
+          <div class="panel" id="panel-credit">
+            <div class="kpi-row">
+              <div class="kpi-card">
+                <div class="kpi-label">信用利差(AA)</div>
+                <div class="kpi-value" style="color:var(--accent-red)">186bp</div>
+                <div class="kpi-sub"><span class="kpi-change up">+22bp</span><span class="kpi-desc">近一年P92分位</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">违约预警主体</div>
+                <div class="kpi-value" style="color:var(--accent-red)">7</div>
+                <div class="kpi-sub"><span class="kpi-change up">+2</span><span class="kpi-desc">新增：恒泰信托、鑫融资管</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">到期偿还压力(30D)</div>
+                <div class="kpi-value" style="color:var(--accent-peach)">2,847亿</div>
+                <div class="kpi-sub"><span class="kpi-change neutral">环比+12%</span><span class="kpi-desc">城投占比
+                    41%</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">净融资额(本周)</div>
+                <div class="kpi-value" style="color:var(--accent-blue)">-312亿</div>
+                <div class="kpi-sub"><span class="kpi-change up">净偿还</span><span class="kpi-desc">连续第三周</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span class="card-title">高风险主体清单</span><span class="card-tag tag-warn">违约概率 >
+                  2%</span></div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>主体名称</th>
+                    <th>行业</th>
+                    <th>主体评级</th>
+                    <th>利差(bp)</th>
+                    <th>违约概率</th>
+                    <th>CDS报价</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="name-col">恒泰信托有限公司</td>
+                    <td>信托</td>
+                    <td>A</td>
+                    <td>342</td>
+                    <td>3.7%</td>
+                    <td>285bp</td>
+                    <td><span class="risk-badge risk-high">预警</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">鑫融资产管理</td>
+                    <td>资管</td>
+                    <td>A+</td>
+                    <td>278</td>
+                    <td>2.9%</td>
+                    <td>234bp</td>
+                    <td><span class="risk-badge risk-high">预警</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">中汇金融租赁</td>
+                    <td>租赁</td>
+                    <td>AA-</td>
+                    <td>245</td>
+                    <td>2.6%</td>
+                    <td>201bp</td>
+                    <td><span class="risk-badge risk-high">预警</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">宏运城投发展</td>
+                    <td>城投</td>
+                    <td>AA</td>
+                    <td>218</td>
+                    <td>2.4%</td>
+                    <td>187bp</td>
+                    <td><span class="risk-badge risk-mid">观察</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">海天地产集团</td>
+                    <td>地产</td>
+                    <td>A+</td>
+                    <td>312</td>
+                    <td>3.2%</td>
+                    <td>267bp</td>
+                    <td><span class="risk-badge risk-high">预警</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">中诚实业控股</td>
+                    <td>制造</td>
+                    <td>AA-</td>
+                    <td>198</td>
+                    <td>2.1%</td>
+                    <td>168bp</td>
+                    <td><span class="risk-badge risk-mid">观察</span></td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">润德能源科技</td>
+                    <td>能源</td>
+                    <td>A</td>
+                    <td>267</td>
+                    <td>2.8%</td>
+                    <td>225bp</td>
+                    <td><span class="risk-badge risk-high">预警</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- === Liquidity Panel === -->
+          <div class="panel" id="panel-liquidity">
+            <div class="kpi-row">
+              <div class="kpi-card">
+                <div class="kpi-label">SHIBOR 隔夜</div>
+                <div class="kpi-value" style="color:var(--accent-peach)">2.35%</div>
+                <div class="kpi-sub"><span class="kpi-change up">+15bp</span><span class="kpi-desc">月末效应</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">DR007</div>
+                <div class="kpi-value" style="color:var(--accent-yellow)">2.18%</div>
+                <div class="kpi-sub"><span class="kpi-change up">+8bp</span><span class="kpi-desc">高于政策利率</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">逆回购到期(本周)</div>
+                <div class="kpi-value" style="color:var(--accent-blue)">8,400亿</div>
+                <div class="kpi-sub"><span class="kpi-change neutral">净回笼 1,200亿</span><span class="kpi-desc"></span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">流动性缺口</div>
+                <div class="kpi-value" style="color:var(--accent-red)">-3,200亿</div>
+                <div class="kpi-sub"><span class="kpi-change up">缺口扩大</span><span class="kpi-desc">MLF到期影响</span></div>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-head"><span class="card-title">银行间市场资金面指标</span><span
+                    class="card-tag tag-warn">偏紧</span></div>
+                <div style="padding:6px 0;">
+                  <div class="bar-row"><span class="bar-label">R001</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:72%;background:var(--accent-peach)"></div>
+                    </div><span class="bar-val">2.28%</span>
+                  </div>
+                  <div class="bar-row"><span class="bar-label">R007</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:68%;background:var(--accent-yellow)"></div>
+                    </div><span class="bar-val">2.42%</span>
+                  </div>
+                  <div class="bar-row"><span class="bar-label">R014</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:58%;background:var(--accent-blue)"></div>
+                    </div><span class="bar-val">2.61%</span>
+                  </div>
+                  <div class="bar-row"><span class="bar-label">R1M</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:52%;background:var(--accent-mauve)"></div>
+                    </div><span class="bar-val">2.78%</span>
+                  </div>
+                  <div class="bar-row"><span class="bar-label">GC001</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:65%;background:var(--accent-teal)"></div>
+                    </div><span class="bar-val">2.15%</span>
+                  </div>
+                  <div class="bar-row"><span class="bar-label">GC007</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" style="width:60%;background:var(--accent-green)"></div>
+                    </div><span class="bar-val">2.34%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-head"><span class="card-title">央行公开市场操作</span><span class="card-tag tag-info">本周</span>
+                </div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>日期</th>
+                      <th>操作</th>
+                      <th>规模(亿)</th>
+                      <th>到期</th>
+                      <th>净投放</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>03/24</td>
+                      <td>7D逆回购</td>
+                      <td>2,200</td>
+                      <td>3,500</td>
+                      <td style="color:var(--accent-red)">-1,300</td>
+                    </tr>
+                    <tr>
+                      <td>03/23</td>
+                      <td>7D逆回购</td>
+                      <td>1,800</td>
+                      <td>2,000</td>
+                      <td style="color:var(--accent-red)">-200</td>
+                    </tr>
+                    <tr>
+                      <td>03/22</td>
+                      <td>14D逆回购</td>
+                      <td>3,000</td>
+                      <td>2,800</td>
+                      <td style="color:var(--accent-green)">+200</td>
+                    </tr>
+                    <tr>
+                      <td>03/21</td>
+                      <td>MLF</td>
+                      <td>5,000</td>
+                      <td>5,000</td>
+                      <td style="color:var(--accent-yellow)">0</td>
+                    </tr>
+                    <tr>
+                      <td>03/20</td>
+                      <td>7D逆回购</td>
+                      <td>1,500</td>
+                      <td>1,600</td>
+                      <td style="color:var(--accent-red)">-100</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- === Stress Test Panel === -->
+          <div class="panel" id="panel-stress">
+            <div class="tab-bar">
+              <div class="tab-item active" onclick="switchStressTab(this, 'base')">基准情景</div>
+              <div class="tab-item" onclick="switchStressTab(this, 'light')">轻度压力</div>
+              <div class="tab-item" onclick="switchStressTab(this, 'medium')">中度压力</div>
+              <div class="tab-item" onclick="switchStressTab(this, 'extreme')">极端压力</div>
+            </div>
+            <div id="stressContent">
+              <div class="kpi-row">
+                <div class="kpi-card">
+                  <div class="kpi-label">资本充足率(压力后)</div>
+                  <div class="kpi-value" style="color:var(--accent-yellow)">11.2%</div>
+                  <div class="kpi-sub"><span class="kpi-change up">-1.8%</span><span class="kpi-desc">监管要求 10.5%</span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">预计损失</div>
+                  <div class="kpi-value" style="color:var(--accent-red)">487亿</div>
+                  <div class="kpi-sub"><span class="kpi-change up">+124亿</span><span class="kpi-desc">较上期</span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">流动性覆盖率</div>
+                  <div class="kpi-value" style="color:var(--accent-green)">128%</div>
+                  <div class="kpi-sub"><span class="kpi-change down">监管要求 100%</span><span class="kpi-desc"></span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">风险敞口集中度</div>
+                  <div class="kpi-value" style="color:var(--accent-mauve)">23.4%</div>
+                  <div class="kpi-sub"><span class="kpi-change neutral">房地产占比最高</span><span class="kpi-desc"></span></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-head"><span class="card-title">情景分析 - 各风险因子冲击影响</span><span class="card-tag tag-warn" id="stressScenarioTag">基准情景</span></div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>风险因子</th>
+                      <th>冲击幅度</th>
+                      <th>影响损失(亿)</th>
+                      <th>占比</th>
+                      <th>敏感度</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stressTableBody">
+                    <tr><td class="name-col">利率上行</td><td>+100bp</td><td>178</td><td>36.6%</td><td><span class="risk-badge risk-high">高</span></td></tr>
+                    <tr><td class="name-col">信用违约</td><td>违约率+2%</td><td>134</td><td>27.5%</td><td><span class="risk-badge risk-high">高</span></td></tr>
+                    <tr><td class="name-col">股市下跌</td><td>-20%</td><td>89</td><td>18.3%</td><td><span class="risk-badge risk-mid">中</span></td></tr>
+                    <tr><td class="name-col">汇率贬值</td><td>CNY -5%</td><td>52</td><td>10.7%</td><td><span class="risk-badge risk-mid">中</span></td></tr>
+                    <tr><td class="name-col">商品价格</td><td>原油 -30%</td><td>34</td><td>7.0%</td><td><span class="risk-badge risk-low">低</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- === VaR Panel === -->
+          <div class="panel" id="panel-var">
+            <div class="tab-bar">
+              <div class="tab-item active" onclick="switchVarTab(this, 'historical')">历史模拟法</div>
+              <div class="tab-item" onclick="switchVarTab(this, 'variance')">方差-协方差法</div>
+              <div class="tab-item" onclick="switchVarTab(this, 'montecarlo')">蒙特卡洛模拟</div>
+            </div>
+            <div id="varContent">
+              <div class="kpi-row">
+                <div class="kpi-card">
+                  <div class="kpi-label">VaR(95%, 1D)</div>
+                  <div class="kpi-value" style="color:var(--accent-blue)">1.67%</div>
+                  <div class="kpi-sub"><span class="kpi-change up">+0.12%</span><span class="kpi-desc">置信水平 95%</span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">VaR(99%, 1D)</div>
+                  <div class="kpi-value" style="color:var(--accent-mauve)">2.34%</div>
+                  <div class="kpi-sub"><span class="kpi-change up">+0.18%</span><span class="kpi-desc">置信水平 99%</span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">CVaR(99%, 1D)</div>
+                  <div class="kpi-value" style="color:var(--accent-red)">3.12%</div>
+                  <div class="kpi-sub"><span class="kpi-change up">+0.24%</span><span class="kpi-desc">条件在险价值</span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-label">回溯检验突破</div>
+                  <div class="kpi-value" style="color:var(--accent-yellow)">4次</div>
+                  <div class="kpi-sub"><span class="kpi-change neutral">近250日</span><span class="kpi-desc">绿灯区</span></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-head"><span class="card-title">VaR分解 - 各资产类别贡献</span><span class="card-tag tag-info" id="varMethodTag">历史模拟法</span></div>
+                <div id="varBarChart">
+                  <div class="bar-row"><span class="bar-label">利率债</span><div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--accent-blue)"></div></div><span class="bar-val">35.2%</span></div>
+                  <div class="bar-row"><span class="bar-label">信用债</span><div class="bar-track"><div class="bar-fill" style="width:28%;background:var(--accent-mauve)"></div></div><span class="bar-val">27.8%</span></div>
+                  <div class="bar-row"><span class="bar-label">权益类</span><div class="bar-track"><div class="bar-fill" style="width:18%;background:var(--accent-peach)"></div></div><span class="bar-val">18.1%</span></div>
+                  <div class="bar-row"><span class="bar-label">外汇</span><div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--accent-yellow)"></div></div><span class="bar-val">11.6%</span></div>
+                  <div class="bar-row"><span class="bar-label">商品</span><div class="bar-track"><div class="bar-fill" style="width:7%;background:var(--accent-teal)"></div></div><span class="bar-val">7.3%</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- === Correlation Panel === -->
+          <div class="panel" id="panel-correlation">
+            <div class="kpi-row">
+              <div class="kpi-card">
+                <div class="kpi-label">平均相关系数</div>
+                <div class="kpi-value" style="color:var(--accent-blue)">0.47</div>
+                <div class="kpi-sub"><span class="kpi-change up">+0.08</span><span class="kpi-desc">关联性上升</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">尾部相关系数</div>
+                <div class="kpi-value" style="color:var(--accent-red)">0.72</div>
+                <div class="kpi-sub"><span class="kpi-change up">+0.11</span><span class="kpi-desc">极端情景下增强</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Copula拟合度</div>
+                <div class="kpi-value" style="color:var(--accent-green)">0.94</div>
+                <div class="kpi-sub"><span class="kpi-change down">t-Copula</span><span class="kpi-desc">自由度 v=5</span>
+                </div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">系统性风险指数</div>
+                <div class="kpi-value" style="color:var(--accent-mauve)">0.68</div>
+                <div class="kpi-sub"><span class="kpi-change up">+0.05</span><span class="kpi-desc">CoVaR贡献升高</span>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><span class="card-title">跨市场相关性矩阵 (滚动60日)</span><span
+                  class="card-tag tag-warn">联动增强</span></div>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>沪深300</th>
+                    <th>中债指数</th>
+                    <th>USD/CNY</th>
+                    <th>黄金</th>
+                    <th>原油</th>
+                    <th>恒生</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="name-col">沪深300</td>
+                    <td style="color:var(--accent-blue)">1.00</td>
+                    <td>-0.34</td>
+                    <td>-0.48</td>
+                    <td>0.12</td>
+                    <td>0.28</td>
+                    <td style="color:var(--accent-red)">0.82</td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">中债指数</td>
+                    <td>-0.34</td>
+                    <td style="color:var(--accent-blue)">1.00</td>
+                    <td>0.21</td>
+                    <td>0.38</td>
+                    <td>-0.15</td>
+                    <td>-0.28</td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">USD/CNY</td>
+                    <td>-0.48</td>
+                    <td>0.21</td>
+                    <td style="color:var(--accent-blue)">1.00</td>
+                    <td>-0.52</td>
+                    <td>-0.31</td>
+                    <td>-0.56</td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">黄金</td>
+                    <td>0.12</td>
+                    <td>0.38</td>
+                    <td>-0.52</td>
+                    <td style="color:var(--accent-blue)">1.00</td>
+                    <td>0.24</td>
+                    <td>0.18</td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">原油</td>
+                    <td>0.28</td>
+                    <td>-0.15</td>
+                    <td>-0.31</td>
+                    <td>0.24</td>
+                    <td style="color:var(--accent-blue)">1.00</td>
+                    <td>0.35</td>
+                  </tr>
+                  <tr>
+                    <td class="name-col">恒生</td>
+                    <td style="color:var(--accent-red)">0.82</td>
+                    <td>-0.28</td>
+                    <td>-0.56</td>
+                    <td>0.18</td>
+                    <td>0.35</td>
+                    <td style="color:var(--accent-blue)">1.00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- === System Panel === -->
+          <div class="panel" id="panel-system">
+            <div class="settings-grid">
+              <div class="card">
+                <div class="card-head"><span class="card-title">数据源配置</span><span class="card-tag tag-safe">已连接</span></div>
+                <div class="form-row"><span class="form-label">Wind数据接口</span><span class="form-value">启用</span></div>
+                <div class="form-row"><span class="form-label">聚源数据库</span><span class="form-value">启用</span></div>
+                <div class="form-row"><span class="form-label">实时行情推送</span><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div></div>
+                <div class="form-row"><span class="form-label">数据刷新频率</span><span class="form-value">5秒</span></div>
+              </div>
+              <div class="card">
+                <div class="card-head"><span class="card-title">预警规则配置</span><span class="card-tag tag-info">6条规则</span></div>
+                <div class="form-row"><span class="form-label">红色预警阈值</span><span class="form-value">≥80</span></div>
+                <div class="form-row"><span class="form-label">橙色预警阈值</span><span class="form-value">60-79</span></div>
+                <div class="form-row"><span class="form-label">黄色预警阈值</span><span class="form-value">40-59</span></div>
+                <div class="form-row"><span class="form-label">预警声音提示</span><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div></div>
+                <div class="form-row"><span class="form-label">短信通知</span><div class="toggle-switch" onclick="this.classList.toggle('active')"></div></div>
+              </div>
+              <div class="card">
+                <div class="card-head"><span class="card-title">模型参数设置</span><span class="card-tag tag-info">VaR配置</span></div>
+                <div class="form-row"><span class="form-label">VaR置信水平</span><span class="form-value">99%</span></div>
+                <div class="form-row"><span class="form-label">持有期</span><span class="form-value">1天</span></div>
+                <div class="form-row"><span class="form-label">历史模拟天数</span><span class="form-value">250日</span></div>
+                <div class="form-row"><span class="form-label">压力测试情景数</span><span class="form-value">4种</span></div>
+              </div>
+              <div class="card">
+                <div class="card-head"><span class="card-title">风险指标体系</span><span class="card-tag tag-info">指标配置</span></div>
+                <div class="form-row"><span class="form-label">利率风险因子</span><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div></div>
+                <div class="form-row"><span class="form-label">信用风险因子</span><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div></div>
+                <div class="form-row"><span class="form-label">流动性风险因子</span><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div></div>
+                <div class="form-row"><span class="form-label">汇率风险因子</span><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div></div>
+                <div class="form-row"><span class="form-label">操作风险因子</span><div class="toggle-switch" onclick="this.classList.toggle('active')"></div></div>
+              </div>
+            </div>
+            <div class="card" style="margin-top:14px;">
+              <div class="card-head"><span class="card-title">系统日志</span><span class="card-tag tag-warn">最近操作</span></div>
+              <table class="data-table">
+                <thead><tr><th>时间</th><th>用户</th><th>操作类型</th><th>描述</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr><td>03/24 09:32:15</td><td class="name-col">鲍姝帆</td><td>参数修改</td><td>修改VaR置信水平 95%→99%</td><td><span class="status-badge active">成功</span></td></tr>
+                  <tr><td>03/24 08:15:42</td><td class="name-col">鲍姝帆</td><td>数据导出</td><td>导出日报数据 20240323.xlsx</td><td><span class="status-badge active">成功</span></td></tr>
+                  <tr><td>03/23 17:28:33</td><td class="name-col">系统</td><td>自动备份</td><td>配置文件自动备份</td><td><span class="status-badge active">成功</span></td></tr>
+                  <tr><td>03/23 14:05:18</td><td class="name-col">鲍姝帆</td><td>阈值调整</td><td>红色预警阈值 75→80</td><td><span class="status-badge active">成功</span></td></tr>
+                  <tr><td>03/22 11:42:07</td><td class="name-col">系统</td><td>数据同步</td><td>Wind接口数据同步异常</td><td><span class="status-badge inactive">失败</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${h}:${m}:${s}`;
+      document.getElementById('updateTime').textContent = `${h}:${m}`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Panel switching
+    const panelTitles = {
+      dashboard: ['风险总览', '全市场风险指标实时监测'],
+      market: ['市场监测', '全球市场行情与跨市场风险传导分析'],
+      credit: ['信用风险', '信用债市场风险监测与违约预警'],
+      liquidity: ['流动性分析', '银行间市场资金面与央行操作跟踪'],
+      stress: ['压力测试', '多情景压力测试与敏感性分析'],
+      var: ['VaR模型', '在险价值计算与回溯检验'],
+      correlation: ['关联分析', '跨市场关联性与系统性风险度量'],
+      system: ['系统设置', '系统配置与参数管理']
+    };
+    function switchPanel(name, el) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+      const panel = document.getElementById('panel-' + name);
+      if (panel) panel.classList.add('active');
+      if (el) el.classList.add('active');
+      const t = panelTitles[name];
+      if (t) {
+        document.getElementById('panelTitle').textContent = t[0];
+        document.getElementById('panelSubtitle').innerHTML = t[1] + ' · 数据更新于 <span id="updateTime"></span>';
+        updateClock();
+      }
+    }
+
+    // Stress test scenario switching
+    function switchStressTab(el, scenario) {
+      el.closest('.tab-bar').querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const scenarioTag = document.getElementById('stressScenarioTag');
+      const tbody = document.getElementById('stressTableBody');
+      const scenarios = {
+        base: { name: '基准情景', tag: 'tag-warn', data: [
+          ['利率上行', '+100bp', '178', '36.6%', 'risk-high'],
+          ['信用违约', '违约率+2%', '134', '27.5%', 'risk-high'],
+          ['股市下跌', '-20%', '89', '18.3%', 'risk-mid'],
+          ['汇率贬值', 'CNY -5%', '52', '10.7%', 'risk-mid'],
+          ['商品价格', '原油 -30%', '34', '7.0%', 'risk-low']
+        ]},
+        light: { name: '轻度压力', tag: 'tag-info', data: [
+          ['利率上行', '+50bp', '89', '35.2%', 'risk-mid'],
+          ['信用违约', '违约率+1%', '67', '26.5%', 'risk-mid'],
+          ['股市下跌', '-10%', '45', '17.8%', 'risk-mid'],
+          ['汇率贬值', 'CNY -3%', '26', '10.3%', 'risk-low'],
+          ['商品价格', '原油 -15%', '17', '6.7%', 'risk-low']
+        ]},
+        medium: { name: '中度压力', tag: 'tag-warn', data: [
+          ['利率上行', '+150bp', '267', '37.8%', 'risk-high'],
+          ['信用违约', '违约率+3%', '201', '28.4%', 'risk-high'],
+          ['股市下跌', '-30%', '134', '19.0%', 'risk-high'],
+          ['汇率贬值', 'CNY -8%', '78', '11.0%', 'risk-mid'],
+          ['商品价格', '原油 -45%', '51', '7.2%', 'risk-low']
+        ]},
+        extreme: { name: '极端压力', tag: 'tag-warn', data: [
+          ['利率上行', '+200bp', '356', '39.1%', 'risk-high'],
+          ['信用违约', '违约率+5%', '289', '31.7%', 'risk-high'],
+          ['股市下跌', '-50%', '223', '24.5%', 'risk-high'],
+          ['汇率贬值', 'CNY -15%', '112', '12.3%', 'risk-high'],
+          ['商品价格', '原油 -60%', '85', '9.3%', 'risk-mid']
+        ]}
+      };
+      const s = scenarios[scenario];
+      if (s && scenarioTag && tbody) {
+        scenarioTag.textContent = s.name;
+        scenarioTag.className = 'card-tag ' + s.tag;
+        tbody.innerHTML = s.data.map(row => 
+          '<tr>' + row.map((cell, i) => {
+            if (i === 4) return '<td><span class="risk-badge ' + cell + '">' + (cell === 'risk-high' ? '高' : cell === 'risk-mid' ? '中' : '低') + '</span></td>';
+            return '<td' + (i === 0 ? ' class="name-col"' : '') + '>' + cell + '</td>';
+          }).join('') + '</tr>'
+        ).join('');
+        showToast('已切换至' + s.name, 'success');
+      }
+    }
+
+    // VaR method switching
+    function switchVarTab(el, method) {
+      el.closest('.tab-bar').querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const methodTag = document.getElementById('varMethodTag');
+      const barChart = document.getElementById('varBarChart');
+      const methods = {
+        historical: {
+          name: '历史模拟法',
+          data: [
+            ['利率债', '35.2%', '35', 'var(--accent-blue)'],
+            ['信用债', '27.8%', '28', 'var(--accent-mauve)'],
+            ['权益类', '18.1%', '18', 'var(--accent-peach)'],
+            ['外汇', '11.6%', '12', 'var(--accent-yellow)'],
+            ['商品', '7.3%', '7', 'var(--accent-teal)']
+          ]
+        },
+        variance: {
+          name: '方差-协方差法',
+          data: [
+            ['利率债', '38.5%', '39', 'var(--accent-blue)'],
+            ['信用债', '25.2%', '25', 'var(--accent-mauve)'],
+            ['权益类', '21.3%', '21', 'var(--accent-peach)'],
+            ['外汇', '9.8%', '10', 'var(--accent-yellow)'],
+            ['商品', '5.2%', '5', 'var(--accent-teal)']
+          ]
+        },
+        montecarlo: {
+          name: '蒙特卡洛模拟',
+          data: [
+            ['利率债', '32.1%', '32', 'var(--accent-blue)'],
+            ['信用债', '30.5%', '31', 'var(--accent-mauve)'],
+            ['权益类', '20.8%', '21', 'var(--accent-peach)'],
+            ['外汇', '10.2%', '10', 'var(--accent-yellow)'],
+            ['商品', '6.4%', '6', 'var(--accent-teal)']
+          ]
+        }
+      };
+      const m = methods[method];
+      if (m && methodTag && barChart) {
+        methodTag.textContent = m.name;
+        barChart.innerHTML = m.data.map(row =>
+          '<div class="bar-row"><span class="bar-label">' + row[0] + '</span><div class="bar-track"><div class="bar-fill" style="width:' + row[2] + '%;background:' + row[3] + '"></div></div><span class="bar-val">' + row[1] + '</span></div>'
+        ).join('');
+        showToast('已切换至' + m.name, 'success');
+      }
+    }
+
+    // Export data functionality
+    function exportData() {
+      const activePanel = document.querySelector('.panel.active');
+      if (!activePanel) return;
+      const panelId = activePanel.id.replace('panel-', '');
+      const panelName = panelTitles[panelName] ? panelTitles[panelName][0] : panelId;
+      let csvContent = '\uFEFF';
+      const tables = activePanel.querySelectorAll('.data-table');
+      if (tables.length === 0) {
+        showToast('当前页面暂无数据可导出', 'warning');
+        return;
+      }
+      tables.forEach((table, tableIndex) => {
+        if (tableIndex > 0) csvContent += '\n\n';
+        const rows = table.querySelectorAll('tr');
+        rows.forEach(row => {
+          const cells = row.querySelectorAll('th, td');
+          const rowData = [];
+          cells.forEach(cell => {
+            let text = cell.textContent.trim().replace(/"/g, '""');
+            rowData.push('"' + text + '"');
+          });
+          csvContent += rowData.join(',') + '\n';
+        });
+      });
+      const now = new Date();
+      const filename = panelId + '_' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + '.csv';
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      showToast('数据已导出: ' + filename, 'success');
+    }
+
+    // Generate report functionality
+    function generateReport() {
+      const activePanel = document.querySelector('.panel.active');
+      if (!activePanel) return;
+      const panelId = activePanel.id.replace('panel-', '');
+      const panelName = panelTitles[panelId] ? panelTitles[panelId][0] : panelId;
+      showReportModal(panelName);
+    }
+
+    function showReportModal(panelName) {
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="traffic-lights">
+              <div class="traffic-light close"></div>
+              <div class="traffic-light minimize"></div>
+              <div class="traffic-light maximize"></div>
+            </div>
+            <span class="modal-title">生成报告</span>
+          </div>
+          <div class="modal-body">
+            <p>正在为 "<strong>${panelName}</strong>" 生成分析报告...</p>
+            <div class="report-progress">
+              <div class="progress-bar"><div class="progress-fill"></div></div>
+            </div>
+            <p class="report-status">正在提取数据...</p>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      setTimeout(() => {
+        const progressFill = modal.querySelector('.progress-fill');
+        const reportStatus = modal.querySelector('.report-status');
+        let progress = 0;
+        const stages = ['正在提取数据...', '正在生成图表...', '正在计算指标...', '正在生成报告...', '报告生成完成'];
+        const interval = setInterval(() => {
+          progress += 20;
+          progressFill.style.width = progress + '%';
+          if (progress <= 100) {
+            reportStatus.textContent = stages[Math.floor(progress / 25)];
+          }
+          if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+              modal.querySelector('.modal-body').innerHTML = `
+                <div class="report-success">
+                  <span class="success-icon">✓</span>
+                  <p>报告生成成功！</p>
+                  <p class="report-filename">${panelName}_报告_${new Date().toLocaleDateString()}.pdf</p>
+                  <button class="btn primary" onclick="this.closest('.modal-overlay').remove()">确定</button>
+                </div>
+              `;
+            }, 300);
+          }
+        }, 400);
+      }, 100);
+    }
+
+    // Tab switching functionality
+    function switchTab(el, tabName) {
+      const tabBar = el.closest('.tab-bar');
+      tabBar.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const card = tabBar.closest('.card');
+      if (card) {
+        const contentId = tabName + 'Content';
+        card.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        const content = card.querySelector('#' + contentId);
+        if (content) content.style.display = 'block';
+      }
+    }
+
+    // Toast notification
+    function showToast(message, type) {
+      const existing = document.querySelector('.toast-notification');
+      if (existing) existing.remove();
+      const toast = document.createElement('div');
+      toast.className = 'toast-notification ' + type;
+      toast.innerHTML = '<span>' + message + '</span>';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Initialize toggle switches
+    document.querySelectorAll('.toggle-switch').forEach(function(sw) {
+      if (!sw.hasAttribute('onclick')) {
+        sw.addEventListener('click', function() { this.classList.toggle('active'); });
+      }
+    });
+
+    // Risk trend chart SVG
+    (function () {
+      const data = [58, 56, 54, 57, 59, 61, 58, 55, 57, 60, 62, 64, 61, 59, 62, 65, 63, 60, 58, 61, 63, 66, 64, 62, 65, 67, 64, 66, 68, 67.4];
+      const w = 580, h = 120, pad = 30;
+      const minV = Math.min(...data) - 3, maxV = Math.max(...data) + 3;
+      const sx = i => (i / (data.length - 1)) * (w - pad * 2) + pad;
+      const sy = v => h - pad - ((v - minV) / (maxV - minV)) * (h - pad * 2);
+      let path = 'M';
+      data.forEach((v, i) => { path += (i ? 'L' : '') + sx(i).toFixed(1) + ',' + sy(v).toFixed(1); });
+      let area = path + 'L' + sx(data.length - 1) + ',' + h + 'L' + sx(0) + ',' + h + 'Z';
+      // threshold line at 65
+      const tY = sy(65);
+      let svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(249,226,175,0.25)"/>
+        <stop offset="100%" stop-color="rgba(249,226,175,0)"/>
+      </linearGradient>
+    </defs>
+    <line x1="${pad}" y1="${tY}" x2="${w - pad}" y2="${tY}" stroke="rgba(243,139,168,0.3)" stroke-dasharray="4,4"/>
+    <text x="${w - pad + 4}" y="${tY + 4}" fill="rgba(243,139,168,0.5)" font-size="9" font-family="JetBrains Mono">65</text>
+    <path d="${area}" fill="url(#trendGrad)"/>
+    <path d="${path}" fill="none" stroke="#f9e2af" stroke-width="2"/>
+    <circle cx="${sx(data.length - 1)}" cy="${sy(data[data.length - 1])}" r="4" fill="#f9e2af" stroke="#1e1e2e" stroke-width="2"/>
+    <text x="${sx(data.length - 1) + 8}" y="${sy(data[data.length - 1]) + 4}" fill="#f9e2af" font-size="11" font-family="JetBrains Mono" font-weight="600">67.4</text>
+    <text x="${pad}" y="${h - 6}" fill="rgba(108,112,134,0.6)" font-size="9" font-family="JetBrains Mono">02/23</text>
+    <text x="${sx(14)}" y="${h - 6}" fill="rgba(108,112,134,0.6)" font-size="9" font-family="JetBrains Mono">03/09</text>
+    <text x="${w - pad - 30}" y="${h - 6}" fill="rgba(108,112,134,0.6)" font-size="9" font-family="JetBrains Mono">03/24</text>
+  </svg>`;
+      document.getElementById('riskTrendChart').innerHTML = svg;
+    })();
+
+    // Heatmap
+    (function () {
+      const labels = ['股票', '债券', '外汇', '黄金', '原油', '地产', '银行', '保险'];
+      const matrix = [
+        [1, -.34, -.48, .12, .28, .61, .72, .58],
+        [-.34, 1, .21, .38, -.15, -.22, -.18, .14],
+        [-.48, .21, 1, -.52, -.31, -.41, -.35, -.28],
+        [.12, .38, -.52, 1, .24, .08, .05, .11],
+        [.28, -.15, -.31, .24, 1, .32, .22, .18],
+        [.61, -.22, -.41, .08, .32, 1, .68, .52],
+        [.72, -.18, -.35, .05, .22, .68, 1, .74],
+        [.58, .14, -.28, .11, .18, .52, .74, 1]
+      ];
+      const grid = document.getElementById('heatmapGrid');
+      const lbls = document.getElementById('heatmapLabels');
+      matrix.forEach((row, i) => {
+        row.forEach((v, j) => {
+          const cell = document.createElement('div');
+          cell.className = 'heatmap-cell';
+          const abs = Math.abs(v);
+          let color;
+          if (v > 0) color = `rgba(243,139,168,${abs * 0.7})`;
+          else color = `rgba(137,180,250,${abs * 0.7})`;
+          if (i === j) color = 'rgba(203,166,247,0.4)';
+          cell.style.background = color;
+          cell.setAttribute('data-tip', labels[i] + '/' + labels[j] + ': ' + v.toFixed(2));
+          grid.appendChild(cell);
+        });
+      });
+      labels.forEach(l => {
+        const s = document.createElement('span');
+        s.textContent = l;
+        lbls.appendChild(s);
+      });
+    })();
+  </script>
+</body>
+
+</html>

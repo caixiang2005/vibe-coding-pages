@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程学习 - 智能普法多人联机互动学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#0EA5E9',
+                        accent: '#38BDF8',
+                        dark: '#020617',
+                        surface: '#020617',
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .macos-window {
+            width: 1440px;
+            min-height: 900px;
+            background: #020617;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        }
+        .traffic-lights {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .online-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        .tab-btn {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active {
+            color: #2563EB;
+            border-bottom-color: #2563EB;
+        }
+        .tab-btn:hover:not(.active) {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .chapter-item {
+            transition: all 0.2s ease;
+        }
+        .chapter-item:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
+        .chapter-item.active {
+            background: rgba(37, 99, 235, 0.2);
+            border-left: 3px solid #2563EB;
+        }
+        .chapter-item.completed:hover {
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .progress-track {
+            cursor: pointer;
+        }
+        .progress-track:hover .progress-fill {
+            height: 6px;
+        }
+        .toast {
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+        .chat-msg {
+            animation: msgIn 0.3s ease;
+        }
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+    <div class="macos-window rounded-xl overflow-hidden">
+        <!-- macOS Title Bar -->
+        <div class="bg-surface/80 backdrop-blur-xl px-5 py-3 flex items-center border-b border-white/5">
+            <div class="flex gap-2">
+                <div class="traffic-lights bg-red-500"></div>
+                <div class="traffic-lights bg-yellow-500"></div>
+                <div class="traffic-lights bg-green-500"></div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="text-sm font-medium text-white/80">智能普法多人联机互动学习系统</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10">
+                    <div class="online-indicator"></div>
+                    <span class="text-xs text-green-400 font-medium">1,247 人在线</span>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Sub Title Bar with Back Button -->
+        <div class="bg-surface/60 backdrop-blur px-5 py-2.5 flex items-center border-b border-white/5">
+            <a href="course-detail.html" class="flex items-center gap-2 text-sm text-white/60 hover:text-primary transition group">
+                <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i>
+                <span>返回课程详情</span>
+            </a>
+            <div class="flex-1 text-center">
+                <span class="text-sm text-white/50">刑事案件办理全流程实务</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <i data-lucide="bookmark" class="w-4 h-4 text-white/40 cursor-pointer hover:text-yellow-400 transition"></i>
+                <i data-lucide="share-2" class="w-4 h-4 text-white/40 cursor-pointer hover:text-primary transition"></i>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex" style="height: 812px;">
+            <!-- Left: Video & Tabs -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Video Player Area -->
+                <div class="relative bg-black" style="aspect-ratio: 16/9; max-height: 480px;">
+                    <!-- Video Placeholder -->
+                    <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+                        <!-- Decorative grid -->
+                        <div class="absolute inset-0" style="background-image: url('https://images.unsplash.com/photo-1505663912202-ac22d4cb3707?auto=format&fit=crop&w=1200&q=80')"></div>
+                        <!-- Play Button -->
+                        <button id="videoPlayBtn" class="relative z-10 w-20 h-20 rounded-full bg-primary/80 hover:bg-primary flex items-center justify-center transition-all hover:scale-110 shadow-lg shadow-primary/30" onclick="togglePlay()">
+                            <i data-lucide="play" class="w-8 h-8 text-white ml-1" id="playIcon"></i>
+                        </button>
+                        <!-- Video Title Overlay -->
+                        <div class="absolute bottom-16 left-6 z-10">
+                            <div class="text-xs text-white/40 mb-1">正在播放</div>
+                            <div class="text-lg font-semibold text-white">第九章：法庭辩论策略与方法</div>
+                        </div>
+                    </div>
+
+                    <!-- Video Controls -->
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent px-4 pb-3 pt-8 z-20">
+                        <!-- Progress Bar -->
+                        <div class="progress-track group mb-3" onclick="seekProgress(event)">
+                            <div class="w-full h-1 bg-white/20 rounded-full relative cursor-pointer group-hover:h-1.5 transition-all">
+                                <div class="progress-fill h-full bg-primary rounded-full transition-all" style="width: 27.8%;" id="progressBar"></div>
+                                <div class="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition" style="left: 27.8%;" id="progressDot"></div>
+                            </div>
+                        </div>
+                        <!-- Controls Row -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <button class="text-white hover:text-primary transition" onclick="togglePlay()">
+                                    <i data-lucide="play" class="w-5 h-5" id="controlPlayIcon"></i>
+                                </button>
+                                <button class="text-white/60 hover:text-white transition" onclick="skipBackward()">
+                                    <i data-lucide="skip-back" class="w-4 h-4"></i>
+                                </button>
+                                <button class="text-white/60 hover:text-white transition" onclick="skipForward()">
+                                    <i data-lucide="skip-forward" class="w-4 h-4"></i>
+                                </button>
+                                <button class="text-white/60 hover:text-white transition flex items-center gap-1" onclick="toggleVolume()">
+                                    <i data-lucide="volume-2" class="w-4 h-4" id="volumeIcon"></i>
+                                </button>
+                                <span class="text-xs text-white/60 font-mono" id="timeDisplay">12:35 / 45:00</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button class="text-xs text-white/60 hover:text-white px-2 py-1 rounded border border-white/10 hover:border-white/30 transition font-mono" id="speedBtn" onclick="cycleSpeed()">1x</button>
+                                <button class="text-white/60 hover:text-white transition" onclick="togglePIP()">
+                                    <i data-lucide="picture-in-picture" class="w-4 h-4"></i>
+                                </button>
+                                <button class="text-white/60 hover:text-white transition">
+                                    <i data-lucide="maximize" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs Area -->
+                <div class="flex-1 flex flex-col overflow-hidden border-t border-white/5">
+                    <!-- Tab Bar -->
+                    <div class="flex items-center gap-1 px-5 bg-surface/40 border-b border-white/5">
+                        <button class="tab-btn active px-4 py-3 text-sm font-medium text-primary" data-tab="notes" onclick="switchTab('notes')">
+                            <span class="flex items-center gap-2"><i data-lucide="pen-line" class="w-4 h-4"></i>课程笔记</span>
+                        </button>
+                        <button class="tab-btn px-4 py-3 text-sm font-medium text-white/50" data-tab="chapters" onclick="switchTab('chapters')">
+                            <span class="flex items-center gap-2"><i data-lucide="list" class="w-4 h-4"></i>章节内容</span>
+                        </button>
+                        <button class="tab-btn px-4 py-3 text-sm font-medium text-white/50" data-tab="discuss" onclick="switchTab('discuss')">
+                            <span class="flex items-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i>在线讨论</span>
+                        </button>
+                        <button class="tab-btn px-4 py-3 text-sm font-medium text-white/50" data-tab="ai" onclick="switchTab('ai')">
+                            <span class="flex items-center gap-2"><i data-lucide="bot" class="w-4 h-4"></i>AI答疑</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab Contents -->
+                    <div class="flex-1 overflow-hidden">
+                        <!-- Notes Tab -->
+                        <div id="tab-notes" class="tab-content h-full flex flex-col p-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm text-white/60">我的学习笔记</span>
+                                <span class="text-xs text-white/30">自动保存已开启</span>
+                            </div>
+                            <textarea id="notesArea" class="flex-1 w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white/80 resize-none focus:outline-none focus:border-primary/50 placeholder-white/20 scrollbar-thin" placeholder="在此记录你的学习笔记...">【法庭辩论策略笔记】
+
+1. 法庭辩论的基本原则：
+   - 以事实为依据，以法律为准绳
+   - 辩论应当围绕案件争议焦点展开
+   - 注意辩论礼仪，尊重对方当事人和法庭
+
+2. 常见辩论技巧：
+   - 逻辑推理法：通过严密的逻辑链条推导结论
+   - 反证法：通过否定对方论据来支持己方观点
+   - 类比论证：引用类似案例加强说服力
+
+3. 重点关注：
+   - 刑事辩护中的"排除合理怀疑"标准
+   - 如何有效质证关键证据</textarea>
+                            <div class="flex items-center justify-between mt-3">
+                                <span class="text-xs text-white/30">最后编辑: 2024-03-20 14:30</span>
+                                <button class="px-4 py-2 bg-primary hover:bg-primary/80 text-white text-sm rounded-lg transition flex items-center gap-2" onclick="saveNotes()">
+                                    <i data-lucide="save" class="w-4 h-4"></i>
+                                    保存笔记
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chapters Tab -->
+                        <div id="tab-chapters" class="tab-content h-full overflow-y-auto p-5 scrollbar-thin hidden">
+                            <h3 class="text-white font-semibold mb-4">第九章：法庭辩论策略与方法</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                                    <i data-lucide="play-circle" class="w-5 h-5 text-primary mt-0.5 shrink-0"></i>
+                                    <div>
+                                        <p class="text-sm text-white font-medium">9.1 法庭辩论概述</p>
+                                        <p class="text-xs text-white/40 mt-1">介绍法庭辩论的定义、性质、特征和基本原则</p>
+                                        <span class="text-xs text-primary mt-1 inline-block">00:00 - 08:30</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 p-3 rounded-lg bg-white/5">
+                                    <i data-lucide="circle" class="w-5 h-5 text-white/30 mt-0.5 shrink-0"></i>
+                                    <div>
+                                        <p class="text-sm text-white/80 font-medium">9.2 辩论前的准备工作</p>
+                                        <p class="text-xs text-white/40 mt-1">案件分析、证据整理、辩论提纲拟定</p>
+                                        <span class="text-xs text-white/40 mt-1 inline-block">08:30 - 16:00</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 p-3 rounded-lg bg-white/5">
+                                    <i data-lucide="circle" class="w-5 h-5 text-white/30 mt-0.5 shrink-0"></i>
+                                    <div>
+                                        <p class="text-sm text-white/80 font-medium">9.3 法庭辩论的基本技巧</p>
+                                        <p class="text-xs text-white/40 mt-1">逻辑推理、反证法、类比论证等核心辩论方法</p>
+                                        <span class="text-xs text-white/40 mt-1 inline-block">16:00 - 28:00</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 p-3 rounded-lg bg-white/5">
+                                    <i data-lucide="circle" class="w-5 h-5 text-white/30 mt-0.5 shrink-0"></i>
+                                    <div>
+                                        <p class="text-sm text-white/80 font-medium">9.4 刑事辩护中的辩论策略</p>
+                                        <p class="text-xs text-white/40 mt-1">无罪辩护、罪轻辩护、量刑辩护的不同策略</p>
+                                        <span class="text-xs text-white/40 mt-1 inline-block">28:00 - 38:00</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3 p-3 rounded-lg bg-white/5">
+                                    <i data-lucide="circle" class="w-5 h-5 text-white/30 mt-0.5 shrink-0"></i>
+                                    <div>
+                                        <p class="text-sm text-white/80 font-medium">9.5 案例分析与实战演练</p>
+                                        <p class="text-xs text-white/40 mt-1">经典案例解析，模拟法庭辩论实战</p>
+                                        <span class="text-xs text-white/40 mt-1 inline-block">38:00 - 45:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Discussion Tab -->
+                        <div id="tab-discuss" class="tab-content h-full flex flex-col hidden">
+                            <div class="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin" id="discussList">
+                                <div class="flex items-start gap-3">
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=chen" class="w-8 h-8 rounded-full shrink-0 bg-white/10">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm text-white font-medium">陈律师</span>
+                                            <span class="text-xs text-white/30">10分钟前</span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mt-1 bg-white/5 rounded-lg p-3">这一章关于法庭辩论策略讲得非常实用，特别是反证法的运用部分，在我之前办理的一个诈骗案中就用到了类似的方法。</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=wang" class="w-8 h-8 rounded-full shrink-0 bg-white/10">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm text-white font-medium">王学员</span>
+                                            <span class="text-xs text-white/30">25分钟前</span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mt-1 bg-white/5 rounded-lg p-3">请问老师，在刑事辩护中，如何有效地运用"排除合理怀疑"原则进行辩护？有没有具体的案例可以参考？</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=li" class="w-8 h-8 rounded-full shrink-0 bg-white/10">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm text-white font-medium">李法官</span>
+                                            <span class="text-xs text-green-400/80 text-xs bg-green-400/10 px-1.5 py-0.5 rounded">讲师</span>
+                                            <span class="text-xs text-white/30">30分钟前</span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mt-1 bg-white/5 rounded-lg p-3">@王学员 很好的问题！排除合理怀疑在实务中需要注意：1）怀疑必须是合理的，不能是凭空臆测；2）要从证据体系整体出发，找出证据链中的薄弱环节。建议结合本章38分钟处的案例来学习。</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=zhao" class="w-8 h-8 rounded-full shrink-0 bg-white/10">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm text-white font-medium">赵同学</span>
+                                            <span class="text-xs text-white/30">45分钟前</span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mt-1 bg-white/5 rounded-lg p-3">类比论证那部分很有启发性，原来在辩论中合理引用类似案例可以大大增强说服力。做了详细笔记！</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-white/5 flex items-center gap-3">
+                                <input type="text" id="discussInput" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/50" placeholder="参与讨论..." onkeydown="if(event.key==='Enter')sendDiscuss()">
+                                <button class="px-4 py-2.5 bg-primary hover:bg-primary/80 text-white text-sm rounded-lg transition" onclick="sendDiscuss()">发送</button>
+                            </div>
+                        </div>
+
+                        <!-- AI Q&A Tab -->
+                        <div id="tab-ai" class="tab-content h-full flex flex-col hidden">
+                            <div class="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin" id="aiChatList">
+                                <div class="flex justify-center mb-2">
+                                    <span class="text-xs text-white/30 bg-white/5 px-3 py-1 rounded-full">AI法律助教为你解答学习疑问</span>
+                                </div>
+                                <!-- User Message -->
+                                <div class="flex items-start gap-3 justify-end">
+                                    <div class="max-w-md">
+                                        <p class="text-sm text-white bg-primary/30 rounded-lg rounded-tr-none p-3">在刑事辩护中，无罪辩护和罪轻辩护应该如何选择？有哪些需要注意的要点？</p>
+                                    </div>
+                                    <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-8 h-8 rounded-full shrink-0 border border-primary/30">
+                                </div>
+                                <!-- AI Response -->
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                                        <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+                                    </div>
+                                    <div class="max-w-lg">
+                                        <div class="text-sm text-white/80 bg-white/5 rounded-lg rounded-tl-none p-4 space-y-2">
+                                            <p class="font-medium text-white">关于无罪辩护与罪轻辩护的选择，以下是关键要点：</p>
+                                            <p><strong class="text-primary">一、无罪辩护适用情形：</strong></p>
+                                            <ul class="list-disc list-inside text-white/60 space-y-1 ml-2">
+                                                <li>证据不足，无法形成完整证据链</li>
+                                                <li>行为不符合犯罪构成要件</li>
+                                                <li>存在法定免责事由（正当防卫、紧急避险等）</li>
+                                            </ul>
+                                            <p><strong class="text-primary">二、罪轻辩护适用情形：</strong></p>
+                                            <ul class="list-disc list-inside text-white/60 space-y-1 ml-2">
+                                                <li>犯罪事实清楚但存在从轻、减轻情节</li>
+                                                <li>自首、立功、认罪认罚等法定从宽情节</li>
+                                                <li>被害人过错、初犯偶犯等酌定从轻情节</li>
+                                            </ul>
+                                            <p><strong class="text-primary">三、选择策略建议：</strong></p>
+                                            <p class="text-white/60">应根据案件具体情况综合判断。切忌同时提出无罪辩护和罪轻辩护，这样会削弱辩护力度。建议在充分阅卷和会见后，与当事人充分沟通后确定辩护方向。</p>
+                                        </div>
+                                        <span class="text-xs text-white/20 mt-1 inline-block">AI助教 · 基于课程内容生成</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-white/5 flex items-center gap-3">
+                                <input type="text" id="aiInput" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/50" placeholder="向AI助教提问..." onkeydown="if(event.key==='Enter')sendAiQuestion()">
+                                <button class="px-4 py-2.5 bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white text-sm rounded-lg transition flex items-center gap-2" onclick="sendAiQuestion()">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                    提问
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Chapter List -->
+            <div class="w-80 border-l border-white/5 bg-surface/40 flex flex-col">
+                <!-- Course Info -->
+                <div class="p-5 border-b border-white/5">
+                    <h2 class="text-white font-semibold text-base">刑事案件办理全流程实务</h2>
+                    <div class="flex items-center gap-3 mt-3">
+                        <div class="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 50%;"></div>
+                        </div>
+                        <span class="text-xs text-white/50 whitespace-nowrap">8/16 章节已完成</span>
+                    </div>
+                    <div class="flex items-center gap-4 mt-3 text-xs text-white/40">
+                        <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> 总计 12小时</span>
+                        <span class="flex items-center gap-1"><i data-lucide="users" class="w-3 h-3"></i> 3,542人学习</span>
+                    </div>
+                </div>
+
+                <!-- Chapter List -->
+                <div class="flex-1 overflow-y-auto scrollbar-thin p-3" id="chapterList">
+                    <!-- Chapters will be generated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50"></div>
+
+    <script>
+        // Chapter Data
+        const chapters = [
+            { id: 1, title: '刑事案件概述与分类', duration: '42:00', status: 'completed' },
+            { id: 2, title: '案件受理与立案审查', duration: '38:00', status: 'completed' },
+            { id: 3, title: '侦查程序与技巧', duration: '55:00', status: 'completed' },
+            { id: 4, title: '证据收集与固定', duration: '48:00', status: 'completed' },
+            { id: 5, title: '审查起诉实务', duration: '40:00', status: 'completed' },
+            { id: 6, title: '刑事强制措施', duration: '35:00', status: 'completed' },
+            { id: 7, title: '庭前准备工作', duration: '44:00', status: 'completed' },
+            { id: 8, title: '法庭调查与举证质证', duration: '50:00', status: 'completed' },
+            { id: 9, title: '法庭辩论策略与方法', duration: '45:00', status: 'current' },
+            { id: 10, title: '判决与量刑建议', duration: '46:00', status: 'locked' },
+            { id: 11, title: '二审与再审程序', duration: '42:00', status: 'locked' },
+            { id: 12, title: '刑事附带民事诉讼', duration: '38:00', status: 'locked' },
+            { id: 13, title: '未成年人刑事案件', duration: '40:00', status: 'locked' },
+            { id: 14, title: '涉外刑事案件处理', duration: '44:00', status: 'locked' },
+            { id: 15, title: '刑事案件文书写作', duration: '48:00', status: 'locked' },
+            { id: 16, title: '综合案例分析与模拟', duration: '52:00', status: 'locked' },
+        ];
+
+        // Render chapters
+        function renderChapters() {
+            const container = document.getElementById('chapterList');
+            container.innerHTML = chapters.map(ch => {
+                let statusIcon = '';
+                let classes = 'chapter-item flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer mb-1';
+
+                if (ch.status === 'completed') {
+                    statusIcon = '<div class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center shrink-0"><i data-lucide="check" class="w-3.5 h-3.5 text-green-400"></i></div>';
+                    classes += ' completed';
+                } else if (ch.status === 'current') {
+                    statusIcon = '<div class="w-6 h-6 rounded-full bg-primary/30 flex items-center justify-center shrink-0 relative"><i data-lucide="play" class="w-3 h-3 text-primary"></i><div class="absolute inset-0 rounded-full border-2 border-primary/50 animate-ping"></div></div>';
+                    classes += ' active';
+                } else {
+                    statusIcon = '<div class="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center shrink-0"><i data-lucide="lock" class="w-3 h-3 text-white/20"></i></div>';
+                }
+
+                const titleColor = ch.status === 'locked' ? 'text-white/30' : ch.status === 'current' ? 'text-white' : 'text-white/70';
+                const durationColor = ch.status === 'locked' ? 'text-white/15' : 'text-white/40';
+
+                return `
+                    <div class="${classes}" data-chapter="${ch.id}" onclick="selectChapter(${ch.id})">
+                        ${statusIcon}
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm ${titleColor} font-medium truncate">第${ch.id}章 ${ch.title}</p>
+                            <p class="text-xs ${durationColor} mt-0.5">${ch.duration}</p>
+                        </div>
+                        ${ch.status === 'current' ? '<span class="text-xs text-primary font-medium shrink-0">播放中</span>' : ''}
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // Select chapter
+        function selectChapter(id) {
+            const ch = chapters.find(c => c.id === id);
+            if (ch.status === 'locked') return;
+            document.querySelectorAll('.chapter-item').forEach(el => el.classList.remove('active'));
+            const el = document.querySelector(`[data-chapter="${id}"]`);
+            if (el) el.classList.add('active');
+        }
+
+        // Play/Pause toggle
+        let isPlaying = false;
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const playIcon = document.getElementById('playIcon');
+            const controlPlayIcon = document.getElementById('controlPlayIcon');
+            if (isPlaying) {
+                playIcon.setAttribute('data-lucide', 'pause');
+                controlPlayIcon.setAttribute('data-lucide', 'pause');
+            } else {
+                playIcon.setAttribute('data-lucide', 'play');
+                controlPlayIcon.setAttribute('data-lucide', 'play');
+            }
+            lucide.createIcons();
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('text-white/50');
+                el.classList.remove('text-primary');
+            });
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            activeBtn.classList.add('active');
+            activeBtn.classList.remove('text-white/50');
+            activeBtn.classList.add('text-primary');
+        }
+
+        // Seek progress
+        function seekProgress(event) {
+            const track = event.currentTarget;
+            const rect = track.getBoundingClientRect();
+            const pct = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressDot').style.left = pct + '%';
+            const totalSeconds = 45 * 60;
+            const currentSeconds = Math.round((pct / 100) * totalSeconds);
+            const min = Math.floor(currentSeconds / 60);
+            const sec = currentSeconds % 60;
+            document.getElementById('timeDisplay').textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')} / 45:00`;
+        }
+
+        // Playback speed
+        const speeds = ['1x', '1.5x', '2x'];
+        let speedIndex = 0;
+        function cycleSpeed() {
+            speedIndex = (speedIndex + 1) % speeds.length;
+            document.getElementById('speedBtn').textContent = speeds[speedIndex];
+        }
+
+        // Volume toggle
+        let isMuted = false;
+        function toggleVolume() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('volumeIcon');
+            icon.setAttribute('data-lucide', isMuted ? 'volume-x' : 'volume-2');
+            lucide.createIcons();
+        }
+
+        // Skip forward/backward (visual only)
+        function skipForward() {
+            showToast('快进 10 秒');
+        }
+        function skipBackward() {
+            showToast('后退 10 秒');
+        }
+
+        function togglePIP() {
+            showToast('画中画模式');
+        }
+
+        // Save notes
+        function saveNotes() {
+            showToast('保存成功', 'success');
+        }
+
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500/90' : 'bg-white/10';
+            const icon = type === 'success' ? '<i data-lucide="check-circle" class="w-4 h-4"></i>' : '<i data-lucide="info" class="w-4 h-4"></i>';
+            toast.className = `toast flex items-center gap-2 px-4 py-2.5 ${bgColor} backdrop-blur-xl text-white text-sm rounded-lg shadow-lg border border-white/10`;
+            toast.innerHTML = `${icon} ${message}`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        // Discussion send
+        function sendDiscuss() {
+            const input = document.getElementById('discussInput');
+            const text = input.value.trim();
+            if (!text) return;
+            const list = document.getElementById('discussList');
+            const msg = document.createElement('div');
+            msg.className = 'flex items-start gap-3 chat-msg';
+            msg.innerHTML = `
+                <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-8 h-8 rounded-full shrink-0 border border-primary/30">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-white font-medium">张明</span>
+                        <span class="text-xs text-white/30">刚刚</span>
+                    </div>
+                    <p class="text-sm text-white/70 mt-1 bg-white/5 rounded-lg p-3">${text}</p>
+                </div>
+            `;
+            list.appendChild(msg);
+            input.value = '';
+            list.scrollTop = list.scrollHeight;
+        }
+
+        // AI Q&A send
+        function sendAiQuestion() {
+            const input = document.getElementById('aiInput');
+            const text = input.value.trim();
+            if (!text) return;
+            const list = document.getElementById('aiChatList');
+
+            // User message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'flex items-start gap-3 justify-end chat-msg';
+            userMsg.innerHTML = `
+                <div class="max-w-md">
+                    <p class="text-sm text-white bg-primary/30 rounded-lg rounded-tr-none p-3">${text}</p>
+                </div>
+                <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-8 h-8 rounded-full shrink-0 border border-primary/30">
+            `;
+            list.appendChild(userMsg);
+            input.value = '';
+
+            // AI response (simulated)
+            setTimeout(() => {
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'flex items-start gap-3 chat-msg';
+                aiMsg.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <div class="max-w-lg">
+                        <div class="text-sm text-white/80 bg-white/5 rounded-lg rounded-tl-none p-4">
+                            <p>感谢您的提问！根据本课程第九章的内容，这是一个很好的问题。</p>
+                            <p class="mt-2 text-white/60">在刑事辩护实务中，需要综合考虑案件事实、证据情况和法律规定。建议您重点关注本章9.4节中关于辩护策略选择的内容，其中详细讲解了不同情形下的应对方法。如果还有疑问，可以继续提问。</p>
+                        </div>
+                        <span class="text-xs text-white/20 mt-1 inline-block">AI助教 · 基于课程内容生成</span>
+                    </div>
+                `;
+                list.appendChild(aiMsg);
+                list.scrollTop = list.scrollHeight;
+                lucide.createIcons();
+            }, 800);
+
+            list.scrollTop = list.scrollHeight;
+        }
+
+        // Initialize
+        renderChapters();
+        lucide.createIcons();
+    </script>
+</body>
+</html>

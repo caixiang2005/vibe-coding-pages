@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工业机器人智能定位抓取控制系统 - 视觉定位</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --mac-bg: #1a1a2e;
+      --window-bg: #1e1e2e;
+      --titlebar: #2a2a3e;
+      --sidebar-bg: #232336;
+      --card-bg: #2a2a40;
+      --card-border: #3a3a55;
+      --text-primary: #e0e0ec;
+      --text-secondary: #8888a8;
+      --text-dim: #5a5a78;
+      --accent-blue: #4a9eff;
+      --accent-green: #34d399;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #a78bfa;
+      --accent-cyan: #22d3ee;
+      --divider: #333350;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: url('./static/bg.jpg') no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .mac-window {
+      width: 1280px;
+      max-width: 96vw;
+      background: var(--window-bg);
+      border-radius: 12px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .title-bar {
+      height: 52px;
+      background: var(--titlebar);
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .title-bar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .toolbar {
+      height: 42px;
+      background: linear-gradient(180deg, #2a2a3e, #252538);
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 2px;
+    }
+
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      color: var(--text-secondary);
+      font-size: 11.5px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-primary);
+    }
+
+    .tool-btn:active {
+      transform: scale(0.97);
+    }
+
+    .tool-btn i { font-size: 12px; }
+    .tool-btn.primary { color: var(--accent-blue); }
+    .tool-btn.success { color: var(--accent-green); }
+    .tool-btn.danger { color: var(--accent-red); }
+
+    .tool-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--divider);
+      margin: 0 6px;
+    }
+
+    .toolbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px 3px 6px;
+      background: rgba(74, 158, 255, 0.12);
+      border: 1px solid rgba(74, 158, 255, 0.25);
+      border-radius: 12px;
+      color: var(--accent-blue);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .user-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .main-layout {
+      display: flex;
+      height: 620px;
+    }
+
+    .sidebar {
+      width: 200px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--divider);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 14px 14px 10px;
+      color: var(--text-dim);
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-item {
+      padding: 7px 12px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 6px 2px;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: rgba(74, 158, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .nav-item i {
+      width: 14px;
+      height: 14px;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 12px 14px;
+      border-top: 1px solid var(--divider);
+    }
+
+    .robot-status {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .robot-label {
+      color: var(--text-dim);
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .robot-name {
+      color: var(--text-primary);
+      font-size: 11.5px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .robot-meta {
+      display: flex;
+      gap: 12px;
+    }
+
+    .robot-meta span {
+      color: var(--text-dim);
+      font-size: 10px;
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--window-bg);
+    }
+
+    .content-body {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      color: var(--text-primary);
+      font-size: 12.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .card-badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .badge-online {
+      background: rgba(52, 211, 153, 0.12);
+      color: var(--accent-green);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+
+    .badge-running {
+      background: rgba(74, 158, 255, 0.12);
+      color: var(--accent-blue);
+      border: 1px solid rgba(74, 158, 255, 0.2);
+    }
+
+    .camera-feed {
+      height: 260px;
+      background: #0a0a14;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .camera-feed svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .feed-label {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 3px 8px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+    }
+
+    .feed-status {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--accent-green);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
+
+    .feed-status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .param-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .param-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .param-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .param-value-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .param-input {
+      flex: 1;
+      height: 28px;
+      background: #1a1a2e;
+      border: 1px solid var(--card-border);
+      border-radius: 5px;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 0 6px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .param-input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .param-unit {
+      font-size: 9px;
+      color: var(--text-dim);
+      width: 24px;
+    }
+
+    .result-card {
+      grid-column: 1 / -1;
+    }
+
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .result-table th {
+      padding: 8px 12px;
+      text-align: left;
+      color: var(--text-dim);
+      font-size: 10.5px;
+      font-weight: 500;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    .result-table td {
+      padding: 8px 12px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .result-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .status-bar {
+      height: 26px;
+      background: #222233;
+      border-top: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+    }
+
+    .status-item {
+      color: var(--text-dim);
+      font-size: 10.5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    .status-right {
+      margin-left: auto;
+      display: flex;
+      gap: 14px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      min-width: 380px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: var(--titlebar);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .modal-traffic-lights {
+      position: absolute;
+      left: 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .modal-traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .modal-traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .modal-title {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 16px;
+    }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--divider);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-secondary {
+      background: var(--card-border);
+      color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+      background: #444460;
+      color: var(--text-primary);
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #5aadff;
+    }
+
+    .btn-success {
+      background: var(--accent-green);
+      color: #0a2020;
+    }
+
+    .btn-danger {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      color: var(--text-dim);
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1a1a2e;
+      border: 1px solid var(--card-border);
+      border-radius: 5px;
+      color: var(--text-primary);
+      font-size: 12px;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1a1a2e;
+      border: 1px solid var(--card-border);
+      border-radius: 5px;
+      color: var(--text-primary);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    .checkbox-item span {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <span class="title-bar-text">工业机器人智能定位抓取控制系统</span>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool-btn primary" id="btnStartCap">
+        <i class="fa-solid fa-video"></i>
+        开启采集
+      </button>
+      <button class="tool-btn danger" id="btnStopCap">
+        <i class="fa-solid fa-stop"></i>
+        停止采集
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnCalibration">
+        <i class="fa-solid fa-crosshairs"></i>
+        相机标定
+      </button>
+      <button class="tool-btn success" id="btnDetect">
+        <i class="fa-solid fa-search"></i>
+        目标检测
+      </button>
+      <button class="tool-btn" id="btnCapture">
+        <i class="fa-solid fa-camera"></i>
+        手动抓拍
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnSaveParams">
+        <i class="fa-solid fa-save"></i>
+        保存参数
+      </button>
+      <button class="tool-btn" id="btnLoadParams">
+        <i class="fa-solid fa-folder-open"></i>
+        加载参数
+      </button>
+      <div class="toolbar-right">
+        <div class="user-badge">
+          <img class="user-avatar" src="https://i02piccdn.sogoucdn.com/93b2fc982f88939f" alt="王晓岚头像">
+          王晓岚
+        </div>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">功能导航</div>
+        <nav>
+          <a class="nav-item" href="./main.html">
+            <i class="fa-solid fa-house"></i>
+            系统概览
+          </a>
+          <a class="nav-item active" href="./vision.html">
+            <i class="fa-solid fa-eye"></i>
+            视觉定位
+          </a>
+          <a class="nav-item" href="./control.html">
+            <i class="fa-solid fa-gamepad"></i>
+            运动控制
+          </a>
+          <a class="nav-item" href="./task.html">
+            <i class="fa-solid fa-list-check"></i>
+            任务编排
+          </a>
+          <a class="nav-item" href="./statistics.html">
+            <i class="fa-solid fa-chart-bar"></i>
+            数据统计
+          </a>
+          <a class="nav-item" href="./alarm.html">
+            <i class="fa-solid fa-bell"></i>
+            报警管理
+          </a>
+          <a class="nav-item" href="./maintenance.html">
+            <i class="fa-solid fa-wrench"></i>
+            维护管理
+          </a>
+          <a class="nav-item" href="./log.html">
+            <i class="fa-solid fa-file-lines"></i>
+            运行日志
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="robot-status">
+            <div class="robot-label">当前机器人</div>
+            <div class="robot-name">FANUC M-20iD/25</div>
+            <div class="robot-meta">
+              <span>192.168.1.100</span>
+              <span>在线</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <div class="content-body">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent-blue)"></span> RGB相机 - 海康 MV-CS060</div>
+              <span class="card-badge badge-running">采集中</span>
+            </div>
+            <div class="camera-feed">
+              <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
+                <rect width="400" height="260" fill="#0a0a14"/>
+                <defs>
+                  <pattern id="grid2" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1a1a2e" stroke-width="0.5"/>
+                  </pattern>
+                </defs>
+                <rect width="400" height="260" fill="url(#grid2)"/>
+                <rect x="120" y="80" width="80" height="60" rx="3" fill="none" stroke="#4a9eff" stroke-width="1.5" stroke-dasharray="4 2"/>
+                <rect x="125" y="85" width="30" height="20" rx="2" fill="#4a9eff" opacity="0.2"/>
+                <text x="310" y="140" fill="#4a9eff" font-size="9" font-family="JetBrains Mono">PCB-A</text>
+                <text x="310" y="152" fill="#34d399" font-size="8" font-family="JetBrains Mono">置信度: 0.97</text>
+                <text x="200" y="230" fill="#5a5a78" font-size="8" font-family="JetBrains Mono" text-anchor="middle">640 x 480 @ 30fps</text>
+                <circle cx="350" cy="30" r="4" fill="#ef4444" opacity="0.8">
+                  <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.5s" repeatCount="indefinite"/>
+                </circle>
+                <text x="360" y="34" fill="#ef4444" font-size="7" font-family="JetBrains Mono">REC</text>
+                <line x1="0" y1="130" x2="400" y2="130" stroke="#ef4444" stroke-width="0.3" opacity="0.3" stroke-dasharray="5 5"/>
+                <line x1="200" y1="0" x2="200" y2="260" stroke="#ef4444" stroke-width="0.3" opacity="0.3" stroke-dasharray="5 5"/>
+              </svg>
+              <div class="feed-label">RGB</div>
+              <div class="feed-status">
+                <span class="feed-status-dot"></span>
+                采集中
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent-cyan)"></span> 深度相机 - Intel RealSense D455</div>
+              <span class="card-badge badge-running">采集中</span>
+            </div>
+            <div class="camera-feed">
+              <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="depthGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#4a9eff;stop-opacity:0.8"/>
+                    <stop offset="50%" style="stop-color:#34d399;stop-opacity:0.6"/>
+                    <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0.4"/>
+                  </linearGradient>
+                </defs>
+                <rect width="400" height="260" fill="#0a0a14"/>
+                <rect x="0" y="0" width="400" height="260" fill="url(#depthGrad)" opacity="0.3"/>
+                <rect x="140" y="100" width="50" height="50" rx="2" fill="none" stroke="#22d3ee" stroke-width="1.5"/>
+                <circle cx="165" cy="125" r="15" fill="none" stroke="#22d3ee" stroke-width="0.8" stroke-dasharray="3 2"/>
+                <text x="200" y="200" fill="#22d3ee" font-size="8" font-family="JetBrains Mono" text-anchor="middle">深度: 456.2mm</text>
+                <text x="200" y="215" fill="#5a5a78" font-size="7" font-family="JetBrains Mono" text-anchor="middle">点云: 124,562 pts</text>
+                <circle cx="350" cy="30" r="4" fill="#ef4444" opacity="0.8">
+                  <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.5s" repeatCount="indefinite"/>
+                </circle>
+                <text x="360" y="34" fill="#ef4444" font-size="7" font-family="JetBrains Mono">REC</text>
+              </svg>
+              <div class="feed-label">DEPTH</div>
+              <div class="feed-status">
+                <span class="feed-status-dot"></span>
+                采集中
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent-orange)"></span> 检测参数配置</div>
+            </div>
+            <div class="param-grid">
+              <div class="param-item">
+                <span class="param-label">置信度阈值</span>
+                <div class="param-value-row">
+                  <input type="text" class="param-input" value="0.85">
+                </div>
+              </div>
+              <div class="param-item">
+                <span class="param-label">NMS阈值</span>
+                <div class="param-value-row">
+                  <input type="text" class="param-input" value="0.45">
+                </div>
+              </div>
+              <div class="param-item">
+                <span class="param-label">输入尺寸</span>
+                <div class="param-value-row">
+                  <input type="text" class="param-input" value="640">
+                </div>
+              </div>
+              <div class="param-item">
+                <span class="param-label">推理耗时</span>
+                <div class="param-value-row">
+                  <span style="font-family:'JetBrains Mono';font-size:12px;color:var(--accent-green)">11.2ms</span>
+                </div>
+              </div>
+              <div class="param-item">
+                <span class="param-label">检测类别</span>
+                <div class="param-value-row">
+                  <input type="text" class="param-input" value="PCB/IC/连接器">
+                </div>
+              </div>
+              <div class="param-item">
+                <span class="param-label">最大检测数</span>
+                <div class="param-value-row">
+                  <input type="text" class="param-input" value="20">
+                </div>
+              </div>
+              <div class="param-item">
+                <span class="param-label">旋转角度</span>
+                <div class="param-value-row">
+                  <input type="text" class="param-input" value="360">
+                  <span class="param-unit">deg</span>
+                </div>
+              </div>
+              <div class="param-item">
+                <span class="param-label">点云配准</span>
+                <div class="param-value-row">
+                  <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--accent-blue)">ICP+RANSAC</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent-purple)"></span> 手眼标定状态</div>
+            </div>
+            <div style="padding:12px">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;color:var(--text-secondary)">标定状态</span>
+                  <span style="font-size:11px;color:var(--accent-green);padding:2px 8px;background:rgba(52,211,153,0.1);border-radius:4px">已标定</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;color:var(--text-secondary)">标定日期</span>
+                  <span style="font-size:11px;color:var(--text-primary)">2026-03-20</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;color:var(--text-secondary)">标定残差</span>
+                  <span style="font-size:11px;color:var(--accent-cyan);font-family:'JetBrains Mono'">0.032mm</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;color:var(--text-secondary)">已运行时长</span>
+                  <span style="font-size:11px;color:var(--accent-orange)">3天 (建议复标)</span>
+                </div>
+              </div>
+              <div style="margin-top:12px;padding:8px;background:rgba(245,158,11,0.1);border-radius:5px;border:1px solid rgba(245,158,11,0.2)">
+                <div style="font-size:10px;color:var(--accent-orange);margin-bottom:3px">提示</div>
+                <div style="font-size:10px;color:var(--text-dim)">标定超过7天，建议重新标定以保证精度</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card result-card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:var(--accent-green)"></span> 检测结果</div>
+              <button class="btn btn-primary" style="padding:3px 10px;font-size:10px" id="btnNewDetect">
+                <i class="fa-solid fa-plus" style="margin-right:4px"></i>新建检测
+              </button>
+            </div>
+            <table class="result-table">
+              <thead>
+                <tr>
+                  <th>目标ID</th>
+                  <th>类别</th>
+                  <th>像素坐标</th>
+                  <th>深度</th>
+                  <th>3D位置 (mm)</th>
+                  <th>旋转角</th>
+                  <th>置信度</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>#001</td>
+                  <td>PCB-A</td>
+                  <td style="font-family:'JetBrains Mono'">(648, 412)</td>
+                  <td style="font-family:'JetBrains Mono'">456.2mm</td>
+                  <td style="font-family:'JetBrains Mono'">[412.5, 87.3, -156.8]</td>
+                  <td style="font-family:'JetBrains Mono'">+12.5°</td>
+                  <td style="color:var(--accent-green)">0.97</td>
+                </tr>
+                <tr>
+                  <td>#002</td>
+                  <td>IC-芯片</td>
+                  <td style="font-family:'JetBrains Mono'">(285, 198)</td>
+                  <td style="font-family:'JetBrains Mono'">423.8mm</td>
+                  <td style="font-family:'JetBrains Mono'">[298.2, 156.7, -142.3]</td>
+                  <td style="font-family:'JetBrains Mono'">-45.0°</td>
+                  <td style="color:var(--accent-green)">0.94</td>
+                </tr>
+                <tr>
+                  <td>#003</td>
+                  <td>连接器</td>
+                  <td style="font-family:'JetBrains Mono'">(512, 356)</td>
+                  <td style="font-family:'JetBrains Mono'">468.5mm</td>
+                  <td style="font-family:'JetBrains Mono'">[378.4, 123.6, -168.2]</td>
+                  <td style="font-family:'JetBrains Mono'">+89.2°</td>
+                  <td style="color:var(--accent-green)">0.91</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-dot"></span>
+            视觉系统就绪
+          </div>
+          <div class="status-item">RGB相机: 已连接</div>
+          <div class="status-item">深度相机: 已连接</div>
+          <div class="status-item">检测帧率: 30fps</div>
+          <div class="status-right">
+            <div class="status-item">YOLOv8 + ICP</div>
+            <div class="status-item">TensorRT FP16</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.getElementById('btnStartCap').addEventListener('click', () => {
+      openModal(
+        '开启采集',
+        `<div style="text-align:center;padding:10px">
+          <i class="fa-solid fa-video" style="font-size:48px;color:var(--accent-green);margin-bottom:16px"></i>
+          <div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认开启相机采集？</div>
+          <div style="color:var(--text-secondary);font-size:12px">RGB和深度相机将开始同步采集</div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-success" onclick="closeModal()">开启</button>`
+      );
+    });
+
+    document.getElementById('btnStopCap').addEventListener('click', () => {
+      openModal(
+        '停止采集',
+        `<div style="text-align:center;padding:10px">
+          <i class="fa-solid fa-stop" style="font-size:48px;color:var(--accent-red);margin-bottom:16px"></i>
+          <div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认停止相机采集？</div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-danger" onclick="closeModal()">停止</button>`
+      );
+    });
+
+    document.getElementById('btnCalibration').addEventListener('click', () => {
+      openModal(
+        '相机标定',
+        `<div class="form-group">
+          <label class="form-label">标定类型</label>
+          <select class="form-select">
+            <option>手眼标定</option>
+            <option>相机内参标定</option>
+            <option>深度校准</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">标定板类型</label>
+            <select class="form-select">
+              <option>9x6 棋盘格</option>
+              <option>7x5 棋盘格</option>
+              <option>CharUco</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">标定次数</label>
+            <input type="text" class="form-input" value="15">
+          </div>
+        </div>
+        <div class="checkbox-group" style="margin-top:8px">
+          <label class="checkbox-item">
+            <input type="checkbox" checked>
+            <span>自动优化标定参数</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" checked>
+            <span>保存标定结果</span>
+          </label>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="closeModal()">开始标定</button>`
+      );
+    });
+
+    document.getElementById('btnDetect').addEventListener('click', () => {
+      openModal(
+        '目标检测',
+        `<div class="form-group">
+          <label class="form-label">检测模式</label>
+          <select class="form-select">
+            <option>实时检测</option>
+            <option>单帧检测</option>
+            <option>连续检测</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">目标类别</label>
+            <select class="form-select">
+              <option>全部</option>
+              <option>PCB板</option>
+              <option>IC芯片</option>
+              <option>连接器</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">最小置信度</label>
+            <input type="text" class="form-input" value="0.85">
+          </div>
+        </div>
+        <div class="checkbox-group" style="margin-top:8px">
+          <label class="checkbox-item">
+            <input type="checkbox" checked>
+            <span>显示检测框</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" checked>
+            <span>显示类别标签</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" checked>
+            <span>输出3D位姿</span>
+          </label>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-success" onclick="closeModal()">开始检测</button>`
+      );
+    });
+
+    document.getElementById('btnCapture').addEventListener('click', () => {
+      openModal(
+        '手动抓拍',
+        `<div style="text-align:center;padding:10px">
+          <i class="fa-solid fa-camera" style="font-size:48px;color:var(--accent-blue);margin-bottom:16px"></i>
+          <div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认执行手动抓拍？</div>
+          <div style="color:var(--text-secondary);font-size:12px">当前帧将被保存并用于后续处理</div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="closeModal()">抓拍</button>`
+      );
+    });
+
+    document.getElementById('btnSaveParams').addEventListener('click', () => {
+      openModal(
+        '保存参数',
+        `<div class="form-group">
+          <label class="form-label">配置文件名</label>
+          <input type="text" class="form-input" value="vision_params_20260323" placeholder="请输入文件名">
+        </div>
+        <div class="form-group">
+          <label class="form-label">保存位置</label>
+          <select class="form-select">
+            <option>/config/vision/</option>
+            <option>/user/custom/</option>
+          </select>
+        </div>
+        <div class="checkbox-group">
+          <label class="checkbox-item">
+            <input type="checkbox" checked>
+            <span>包含检测模型路径</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" checked>
+            <span>包含标定参数</span>
+          </label>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="closeModal()">保存</button>`
+      );
+    });
+
+    document.getElementById('btnLoadParams').addEventListener('click', () => {
+      openModal(
+        '加载参数',
+        `<div class="form-group">
+          <label class="form-label">选择配置文件</label>
+          <select class="form-select">
+            <option>vision_params_20260320</option>
+            <option>vision_params_20260316</option>
+            <option>vision_params_default</option>
+          </select>
+        </div>
+        <div style="padding:10px;background:rgba(74,158,255,0.1);border-radius:6px;border:1px solid rgba(74,158,255,0.2);margin-top:8px">
+          <div style="font-size:11px;color:var(--accent-blue);margin-bottom:4px">当前配置</div>
+          <div style="font-size:10px;color:var(--text-secondary)">
+            置信度: 0.85 | NMS: 0.45 | 模型: yolov8x_pcb_v4.engine
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="closeModal()">加载</button>`
+      );
+    });
+
+    document.getElementById('btnNewDetect').addEventListener('click', () => {
+      openModal(
+        '新建检测任务',
+        `<div class="form-group">
+          <label class="form-label">任务名称</label>
+          <input type="text" class="form-input" placeholder="请输入任务名称">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">检测类型</label>
+            <select class="form-select">
+              <option>目标检测+3D定位</option>
+              <option>仅目标检测</option>
+              <option>仅3D定位</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">优先级</label>
+            <select class="form-select">
+              <option>高</option>
+              <option selected>中</option>
+              <option>低</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">备注</label>
+          <input type="text" class="form-input" placeholder="选填">
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="closeModal()">创建</button>`
+      );
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佳晔新能源物联网终端管控系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: #0a1628; color: #fff; overflow: hidden; height: 100vh; }
+        .title-bar { height: 32px; background: linear-gradient(180deg, #1a2a4a 0%, #0d1a30 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #1e3a5f; }
+        .title-bar-left { display: flex; align-items: center; gap: 8px; }
+        .title-bar-icon { width: 16px; height: 16px; background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); border-radius: 2px; }
+        .title-bar-text { font-size: 12px; color: #a0c4e8; }
+        .title-bar-controls { display: flex; height: 100%; }
+        .title-bar-btn { width: 46px; height: 100%; border: none; background: transparent; color: #a0c4e8; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .title-bar-btn:hover { background: rgba(255,255,255,0.1); }
+        .title-bar-btn.close:hover { background: #e81123; color: #fff; }
+        .title-bar-btn svg { width: 10px; height: 10px; }
+        .maximize-icon { width: 10px; height: 10px; border: 1px solid #a0c4e8; background: transparent; }
+        .main-container { height: calc(100vh - 32px); display: flex; flex-direction: column; }
+        .nav-bar { height: 50px; background: linear-gradient(180deg, #0d2040 0%, #081830 100%); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #1e4a7a; position: relative; }
+        .nav-tabs { display: flex; gap: 4px; }
+        .nav-tab { padding: 8px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px 4px 0 0; color: #7ab8e0; cursor: pointer; font-size: 14px; transition: all 0.2s; text-decoration: none; }
+        .nav-tab:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); color: #9ad8ff; }
+        .nav-tab.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 15px; }
+        .nav-btn { padding: 6px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .nav-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; color: #9ad8ff; }
+        .content-area { flex: 1; display: flex; overflow: hidden; }
+        .left-panel { width: 200px; padding: 15px 10px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #1e4a7a; }
+        .menu-btn { padding: 12px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .menu-btn i { width: 16px; text-align: center; }
+        .menu-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; }
+        .menu-btn.active { background: linear-gradient(180deg, #006699 0%, #004466 100%); border-color: #00aadd; color: #fff; }
+        .main-content { flex: 1; padding: 15px; overflow: auto; background: linear-gradient(90deg, rgba(0,170,220,0.03) 1px, transparent 1px), linear-gradient(rgba(0,170,220,0.03) 1px, transparent 1px); background-size: 30px 30px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #2a5a8a; border-radius: 8px; width: 650px; max-height: 80vh; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-header { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-bottom: 1px solid #2a5a8a; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 16px; color: #00d4ff; font-weight: bold; text-align: center; flex: 1; }
+        .modal-close { width: 28px; height: 28px; background: transparent; border: 1px solid #3a5a7a; border-radius: 4px; color: #7ab8e0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .modal-close:hover { background: #e81123; border-color: #e81123; color: #fff; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; color: #7ab8e0; margin-bottom: 6px; }
+        .form-label .required { color: #ff4444; }
+        .form-input { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: #00aadd; }
+        .form-select { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; cursor: pointer; }
+        .form-select:focus { outline: none; border-color: #00aadd; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .modal-footer { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-top: 1px solid #2a5a8a; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { padding: 10px 25px; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all 0.2s; border: 1px solid; }
+        .btn-primary { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .btn-primary:hover { background: linear-gradient(180deg, #00b8f6 0%, #0098d6 100%); }
+        .btn-secondary { background: linear-gradient(180deg, #3a5a7a 0%, #2a4a6a 100%); border-color: #4a7a9a; color: #a0c4e8; }
+        .btn-secondary:hover { background: linear-gradient(180deg, #4a6a8a 0%, #3a5a7a 100%); color: #fff; }
+        .btn-danger { background: linear-gradient(180deg, #dc3545 0%, #c82333 100%); border-color: #e81123; color: #fff; }
+        .btn-danger:hover { background: linear-gradient(180deg, #e81123 0%, #d32f2f 100%); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a1628; }
+        ::-webkit-scrollbar-thumb { background: #2a5a8a; border-radius: 4px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 18px; color: #00d4ff; }
+        .settings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .settings-card { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #1e4a7a; border-radius: 6px; padding: 20px; }
+        .settings-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #1e3a5a; }
+        .settings-card-icon { font-size: 20px; color: #00d4ff; }
+        .settings-card-title { font-size: 15px; color: #fff; font-weight: bold; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer; }
+        .checkbox-item input { width: 16px; height: 16px; accent-color: #00aadd; }
+        .toggle-switch { position: relative; width: 50px; height: 26px; background: #2a5a8a; border-radius: 13px; cursor: pointer; transition: background 0.3s; }
+        .toggle-switch.active { background: #00a8e6; }
+        .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform 0.3s; }
+        .toggle-switch.active::after { transform: translateX(24px); }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #1e3a5a; }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-label { font-size: 13px; color: #a0c4e8; }
+        .setting-control { display: flex; align-items: center; gap: 10px; }
+        .data-table tr:hover td { background: rgba(0,170,220,0.05); }
+        .table-btn { padding: 4px 10px; background: linear-gradient(180deg, #1a4a6a 0%, #0d3555 100%); border: 1px solid #2a6a9a; border-radius: 3px; color: #7ab8e0; cursor: pointer; font-size: 11px; margin-right: 5px; }
+        .table-btn:hover { background: linear-gradient(180deg, #2a5a7a 0%, #1a4565 100%); color: #fff; }
+        .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <div class="title-bar-icon"></div>
+            <span class="title-bar-text">佳晔新能源物联网终端管控系统</span>
+        </div>
+        <div class="title-bar-controls">
+            <button class="title-bar-btn minimize" onclick="showMessage('窗口最小化')"><svg viewBox="0 0 10 10" fill="currentColor"><rect x="0" y="4.5" width="10" height="1"/></svg></button>
+            <button class="title-bar-btn maximize" onclick="showMessage('窗口最大化')"><div class="maximize-icon"></div></button>
+            <button class="title-bar-btn close" onclick="showMessage('系统关闭中...')"><svg viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2"><line x1="0" y1="0" x2="10" y2="10"/><line x1="10" y1="0" x2="0" y2="10"/></svg></button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="nav-bar">
+            <div class="nav-tabs">
+                <a href="index.html" class="nav-tab">主界面</a>
+                <a href="device-registry.html" class="nav-tab">设备台账</a>
+                <a href="alarm-center.html" class="nav-tab">告警中心</a>
+                <a href="data-report.html" class="nav-tab">数据报表</a>
+                <a href="user-management.html" class="nav-tab">用户管理</a>
+                <a href="role-permission.html" class="nav-tab">角色权限</a>
+                <a href="system-log.html" class="nav-tab">系统日志</a>
+                <a href="system-setting.html" class="nav-tab active">系统设置</a>
+            </div>
+            <div class="nav-right">
+                <button class="nav-btn" onclick="showMessage('跳转到告警管理')"><i class="fas fa-bell"></i> 告警管理</button>
+                <button class="nav-btn" onclick="showMessage('跳转到数据查询')"><i class="fas fa-search"></i> 数据查询</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="left-panel">
+                <button class="menu-btn active" onclick="switchTab('system-params', this)"><i class="fas fa-cog"></i> 系统参数</button>
+                <button class="menu-btn" onclick="switchTab('notification-setting', this)"><i class="fas fa-bell"></i> 通知设置</button>
+                <button class="menu-btn" onclick="switchTab('function-switch', this)"><i class="fas fa-toggle-on"></i> 功能开关</button>
+                <button class="menu-btn" onclick="switchTab('data-management', this)"><i class="fas fa-database"></i> 数据管理</button>
+            </div>
+
+            <div class="main-content">
+                <!-- 系统参数 -->
+                <div id="system-params">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-cog"></i> 系统设置</h2>
+                        <div style="display:flex;gap:10px;">
+                            <button class="btn btn-secondary" onclick="resetSettings()"><i class="fas fa-undo"></i> 恢复默认</button>
+                            <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> 保存设置</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-clock settings-card-icon"></i>
+                                <span class="settings-card-title">数据采集间隔</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">采集间隔（秒）</label>
+                                <input type="number" class="form-input" value="300" min="60" max="3600">
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-chart-line settings-card-icon"></i>
+                                <span class="settings-card-title">数据保留策略</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">保留天数</label>
+                                <input type="number" class="form-input" value="90" min="30" max="365">
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-database settings-card-icon"></i>
+                                <span class="settings-card-title">存储设置</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">存储位置</label>
+                                <select class="form-select">
+                                    <option value="local" selected>本地存储</option>
+                                    <option value="cloud">云端存储</option>
+                                    <option value="hybrid">混合存储</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-network-wired settings-card-icon"></i>
+                                <span class="settings-card-title">通信协议</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">协议类型</label>
+                                <select class="form-select">
+                                    <option value="modbus" selected>Modbus TCP</option>
+                                    <option value="mqtt">MQTT</option>
+                                    <option value="http">HTTP API</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-language settings-card-icon"></i>
+                                <span class="settings-card-title">界面语言</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">语言设置</label>
+                                <select class="form-select">
+                                    <option value="zh" selected>简体中文</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-palette settings-card-icon"></i>
+                                <span class="settings-card-title">界面主题</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">主题选择</label>
+                                <select class="form-select">
+                                    <option value="dark" selected>深色主题</option>
+                                    <option value="light">浅色主题</option>
+                                    <option value="auto">跟随系统</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 通知设置 -->
+                <div id="notification-setting" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-bell"></i> 通知方式配置</h2>
+                        <button class="btn btn-primary" onclick="showMessage('通知配置已保存')"><i class="fas fa-save"></i> 保存配置</button>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-desktop settings-card-icon"></i>
+                                <span class="settings-card-title">弹窗通知</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">启用弹窗通知</label>
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">通知停留时间 (秒)</label>
+                                <input type="number" class="form-input" value="5" min="1" max="30">
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-volume-up settings-card-icon"></i>
+                                <span class="settings-card-title">声音提醒</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">启用声音提醒</label>
+                                <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">提示音类型</label>
+                                <select class="form-select">
+                                    <option value="default">默认提示音</option>
+                                    <option value="gentle">轻柔提示音</option>
+                                    <option value="urgent">紧急提示音</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-envelope settings-card-icon"></i>
+                                <span class="settings-card-title">邮件通知</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">启用邮件通知</label>
+                                <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">SMTP 服务器</label>
+                                <input type="text" class="form-input" value="smtp.example.com">
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-sms settings-card-icon"></i>
+                                <span class="settings-card-title">短信通知</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">启用短信通知</label>
+                                <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">短信网关</label>
+                                <input type="text" class="form-input" value="http://sms.gateway.com">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 功能开关 -->
+                <div id="function-switch" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-toggle-on"></i> 系统功能开关</h2>
+                        <button class="btn btn-primary" onclick="showMessage('功能开关配置已保存')"><i class="fas fa-save"></i> 保存配置</button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">序号</th>
+                                <th>功能名称</th>
+                                <th>功能描述</th>
+                                <th>当前状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>自动数据采集</td>
+                                <td>定时自动采集设备运行数据</td>
+                                <td><div class="toggle-switch active" onclick="toggleSwitch(this)"></div></td>
+                                <td><button class="table-btn" onclick="showMessage('配置采集频率')">配置</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>告警自动推送</td>
+                                <td>发生告警时自动推送给相关人员</td>
+                                <td><div class="toggle-switch active" onclick="toggleSwitch(this)"></div></td>
+                                <td><button class="table-btn" onclick="showMessage('配置推送规则')">配置</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>数据自动备份</td>
+                                <td>每日自动备份系统数据</td>
+                                <td><div class="toggle-switch" onclick="toggleSwitch(this)"></div></td>
+                                <td><button class="table-btn" onclick="showMessage('配置备份策略')">配置</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>远程设备控制</td>
+                                <td>允许远程控制设备启停</td>
+                                <td><div class="toggle-switch active" onclick="toggleSwitch(this)"></div></td>
+                                <td><button class="table-btn" onclick="showMessage('配置权限')">配置</button></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>能效优化建议</td>
+                                <td>AI 分析提供能效优化建议</td>
+                                <td><div class="toggle-switch" onclick="toggleSwitch(this)"></div></td>
+                                <td><button class="table-btn" onclick="showMessage('配置优化参数')">配置</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 数据管理 -->
+                <div id="data-management" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-database"></i> 系统数据管理</h2>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-download settings-card-icon"></i>
+                                <span class="settings-card-title">数据备份</span>
+                            </div>
+                            <div style="font-size:13px;color:#7a9ab8;line-height:1.8;margin-bottom:15px;">
+                                <div>✓ 完整备份系统数据</div>
+                                <div>✓ 包含配置、日志、历史记录</div>
+                                <div>✓ 支持增量备份</div>
+                            </div>
+                            <button class="btn btn-primary" style="width:100%;" onclick="showMessage('数据备份已开始')"><i class="fas fa-download"></i> 立即备份</button>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-upload settings-card-icon"></i>
+                                <span class="settings-card-title">数据恢复</span>
+                            </div>
+                            <div style="font-size:13px;color:#7a9ab8;line-height:1.8;margin-bottom:15px;">
+                                <div>✓ 从备份文件恢复数据</div>
+                                <div>✓ 支持选择性恢复</div>
+                                <div>✓ 恢复前自动备份当前数据</div>
+                            </div>
+                            <button class="btn btn-secondary" style="width:100%;" onclick="showMessage('请选择备份文件')"><i class="fas fa-upload"></i> 选择恢复</button>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-trash-alt settings-card-icon"></i>
+                                <span class="settings-card-title">数据清理</span>
+                            </div>
+                            <div style="font-size:13px;color:#7a9ab8;line-height:1.8;margin-bottom:15px;">
+                                <div>✓ 清理过期历史数据</div>
+                                <div>✓ 清理系统缓存</div>
+                                <div>✓ 释放存储空间</div>
+                            </div>
+                            <button class="btn btn-danger" style="width:100%;" onclick="showMessage('数据清理完成')"><i class="fas fa-trash"></i> 清理数据</button>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <i class="fas fa-sync-alt settings-card-icon"></i>
+                                <span class="settings-card-title">数据同步</span>
+                            </div>
+                            <div style="font-size:13px;color:#7a9ab8;line-height:1.8;margin-bottom:15px;">
+                                <div>✓ 同步云端数据</div>
+                                <div>✓ 多站点数据同步</div>
+                                <div>✓ 实时数据一致性</div>
+                            </div>
+                            <button class="btn btn-primary" style="width:100%;" onclick="showMessage('数据同步已完成')"><i class="fas fa-sync"></i> 立即同步</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px;">
+                        <h3 style="color:#00d4ff;margin-bottom:15px;font-size:16px;"><i class="fas fa-history"></i> 最近备份记录</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:60px;">序号</th>
+                                    <th>备份名称</th>
+                                    <th>备份类型</th>
+                                    <th>文件大小</th>
+                                    <th>备份时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>system_backup_20240331</td>
+                                    <td>完整备份</td>
+                                    <td>256 MB</td>
+                                    <td>2024-03-31 02:00</td>
+                                    <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,255,136,0.2);color:#00ff88;border:1px solid #00aa66;">成功</span></td>
+                                    <td><button class="table-btn" onclick="showMessage('下载备份')">下载</button><button class="table-btn" onclick="showMessage('恢复数据')">恢复</button></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>system_backup_20240330</td>
+                                    <td>完整备份</td>
+                                    <td>254 MB</td>
+                                    <td>2024-03-30 02:00</td>
+                                    <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,255,136,0.2);color:#00ff88;border:1px solid #00aa66;">成功</span></td>
+                                    <td><button class="table-btn" onclick="showMessage('下载备份')">下载</button><button class="table-btn" onclick="showMessage('恢复数据')">恢复</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal" style="width:400px;">
+            <div class="modal-header">
+                <span class="modal-title">确认操作</span>
+                <button class="modal-close" onclick="closeModal('confirmModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" style="padding:30px;text-align:center;">
+                <i class="fas fa-exclamation-triangle" style="font-size:48px;color:#ffaa00;margin-bottom:20px;"></i>
+                <p style="font-size:15px;color:#fff;margin-bottom:10px;">确定要恢复默认设置吗？</p>
+                <p style="font-size:13px;color:#7a9ab8;">此操作不可撤销</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('confirmModal')">取消</button>
+                <button class="btn btn-danger" onclick="confirmReset()">确认恢复</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.main-content > div').forEach(div => { div.style.display = 'none'; });
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function toggleSwitch(el) { el.classList.toggle('active'); }
+        function saveSettings() { showMessage('系统设置保存成功'); }
+        function resetSettings() { openModal('confirmModal'); }
+        function confirmReset() { showMessage('已恢复默认设置'); closeModal('confirmModal'); }
+        function showMessage(text) { var msg = document.createElement('div'); msg.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#00a8e6 0%,#0088c6 100%);color:#fff;padding:12px 30px;border-radius:4px;z-index:2000;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);'; msg.textContent = text; document.body.appendChild(msg); setTimeout(() => { msg.style.opacity = '0'; msg.style.transition = 'opacity 0.3s'; setTimeout(() => msg.remove(), 300); }, 2000); }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => { overlay.addEventListener('click', function(e) { if (e.target === this) { this.classList.remove('show'); } }); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.show').forEach(modal => { modal.classList.remove('show'); }); } });
+    </script>
+</body>
+</html>

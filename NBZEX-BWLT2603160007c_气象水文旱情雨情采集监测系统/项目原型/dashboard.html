@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>气象水文旱情雨情采集监测系统 - 综合总览</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpg') center center no-repeat;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 30px;
+    }
+
+    .mac-window {
+      width: 1280px;
+      background: #1a1d23;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .titlebar {
+      height: 42px;
+      background: linear-gradient(180deg, #3a3d44 0%, #2d3038 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #1a1a1e;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .traffic-lights span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    .tl-close { background: #ff5f57; border: 1px solid #e14640; }
+    .tl-minimize { background: #febc2e; border: 1px solid #d4a123; }
+    .tl-maximize { background: #28c840; border: 1px solid #1aab29; }
+
+    .titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      color: #b0b3ba;
+      font-weight: 500;
+    }
+
+    .main-layout {
+      display: flex;
+      height: 720px;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #1f222a;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 16px 0;
+    }
+
+    .sidebar-header {
+      padding: 8px 20px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 12px;
+    }
+
+    .sidebar-header h3 {
+      font-size: 11px;
+      color: #5b8def;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-header p {
+      font-size: 10px;
+      color: #555a65;
+    }
+
+    .nav-group {
+      padding: 0 12px;
+      margin-bottom: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      color: #8a8f9c;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #c0c4ce;
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, #2d5dd4 0%, #3b6ce8 100%);
+      color: #fff;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(45, 93, 212, 0.3);
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      background: #14161c;
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 3px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .top-bar h1 {
+      font-size: 20px;
+      color: #e8eaf0;
+      font-weight: 600;
+    }
+
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .time-display {
+      font-size: 12px;
+      color: #6b7080;
+      font-weight: 500;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: rgba(40, 200, 64, 0.12);
+      color: #28c840;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #28c840;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: linear-gradient(145deg, #1e2130 0%, #1a1d28 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .stat-card:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+
+    .stat-card:nth-child(1)::after { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .stat-card:nth-child(2)::after { background: linear-gradient(90deg, #10b981, #34d399); }
+    .stat-card:nth-child(3)::after { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .stat-card:nth-child(4)::after { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+    .stat-label {
+      font-size: 11px;
+      color: #5b6078;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      color: #e8eaf0;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .stat-card:nth-child(1) .stat-value { color: #60a5fa; }
+    .stat-card:nth-child(2) .stat-value { color: #34d399; }
+    .stat-card:nth-child(3) .stat-value { color: #fbbf24; }
+    .stat-card:nth-child(4) .stat-value { color: #f87171; }
+
+    .stat-sub {
+      font-size: 11px;
+      color: #4a4f60;
+    }
+
+    .stat-sub span { color: #34d399; font-weight: 600; }
+    .stat-sub span.down { color: #f87171; }
+
+    .panels-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .panel {
+      background: linear-gradient(145deg, #1e2130 0%, #1a1d28 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      color: #c0c4d0;
+      font-weight: 600;
+    }
+
+    .panel-tab {
+      display: flex;
+      gap: 2px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 6px;
+      padding: 2px;
+    }
+
+    .panel-tab span {
+      font-size: 11px;
+      color: #5b6078;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .panel-tab span.active {
+      background: #2d5dd4;
+      color: #fff;
+    }
+
+    .chart-area {
+      height: 200px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      padding: 0 4px;
+    }
+
+    .chart-bar-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .chart-bar {
+      width: 100%;
+      border-radius: 3px 3px 0 0;
+      position: relative;
+      min-height: 8px;
+      transition: all 0.3s;
+    }
+
+    .chart-bar.rain {
+      background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+
+    .chart-label {
+      font-size: 9px;
+      color: #484c56;
+      text-align: center;
+      padding-top: 6px;
+    }
+
+    .alert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .alert-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 3px solid;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .alert-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .alert-item.red { border-color: #ef4444; }
+    .alert-item.orange { border-color: #f59e0b; }
+    .alert-item.yellow { border-color: #eab308; }
+    .alert-item.blue { border-color: #3b82f6; }
+
+    .alert-level {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    .alert-item.red .alert-level { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .alert-item.orange .alert-level { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .alert-item.yellow .alert-level { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+    .alert-item.blue .alert-level { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+
+    .alert-content { flex: 1; }
+
+    .alert-title {
+      font-size: 12px;
+      color: #c0c4d0;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .alert-time {
+      font-size: 10px;
+      color: #484c56;
+    }
+
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    .station-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .station-table th {
+      font-size: 10px;
+      color: #5b6078;
+      font-weight: 600;
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .station-table td {
+      font-size: 12px;
+      color: #a0a5b5;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      cursor: pointer;
+    }
+
+    .station-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .station-status {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .station-status.online { background: #28c840; }
+    .station-status.warning { background: #f59e0b; }
+    .station-status.offline { background: #ef4444; }
+
+    .drought-indicator {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .drought-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .drought-label {
+      font-size: 11px;
+      color: #8a8f9c;
+      width: 60px;
+    }
+
+    .drought-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .drought-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+
+    .drought-val {
+      font-size: 11px;
+      color: #8a8f9c;
+      width: 40px;
+      text-align: right;
+    }
+
+    .water-level-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .water-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 6px;
+    }
+
+    .water-name { font-size: 12px; color: #a0a5b5; }
+
+    .water-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .water-value.normal { color: #34d399; }
+    .water-value.high { color: #f59e0b; }
+    .water-value.danger { color: #ef4444; }
+
+    .water-change { font-size: 10px; color: #5b6078; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      width: 500px;
+      background: #1e2130;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-header {
+      height: 42px;
+      background: linear-gradient(180deg, #3a3d44 0%, #2d3038 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #1a1a1e;
+    }
+
+    .modal-traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-lights span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .modal-title {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      color: #b0b3ba;
+      font-weight: 500;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #a0a5b5;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .modal-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #c0c4ce;
+    }
+
+    .modal-btn.primary {
+      background: #2d5dd4;
+      color: #fff;
+      border-color: #2d5dd4;
+    }
+
+    .modal-btn.primary:hover {
+      background: #3b6ce8;
+    }
+
+    .station-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .detail-item {
+      background: rgba(255, 255, 255, 0.02);
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .detail-label {
+      font-size: 10px;
+      color: #5b6078;
+      margin-bottom: 4px;
+    }
+
+    .detail-value {
+      font-size: 13px;
+      color: #c0c4d0;
+      font-weight: 500;
+    }
+
+    .alert-detail-content {
+      background: rgba(255, 255, 255, 0.02);
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
+    .alert-detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .alert-detail-row:last-child { margin-bottom: 0; }
+
+    .alert-detail-label { font-size: 11px; color: #5b6078; }
+
+    .alert-detail-value { font-size: 11px; color: #a0a5b5; }
+  </style>
+</head>
+
+<body>
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <span class="tl-close"></span>
+        <span class="tl-minimize"></span>
+        <span class="tl-maximize"></span>
+      </div>
+      <div class="titlebar-text">气象水文旱情雨情采集监测系统</div>
+    </div>
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h3>监测中心</h3>
+          <p>水利部信息中心</p>
+        </div>
+        <div class="nav-group">
+          <div class="nav-item active" onclick="window.location.href='dashboard.html'">
+            <span class="nav-icon">&#9632;</span> 综合总览
+          </div>
+          <div class="nav-item" onclick="window.location.href='warning.html'">
+            <span class="nav-icon">&#9733;</span> 预警管理
+          </div>
+          <div class="nav-item" onclick="window.location.href='stations.html'">
+            <span class="nav-icon">&#9881;</span> 站点管理
+          </div>
+          <div class="nav-item" onclick="window.location.href='report.html'">
+            <span class="nav-icon">&#9776;</span> 报表统计
+          </div>
+          <div class="nav-item" onclick="window.location.href='rainfall.html'">
+            <span class="nav-icon">&#9650;</span> 雨情监测
+          </div>
+          <div class="nav-item" onclick="window.location.href='water.html'">
+            <span class="nav-icon">&#9644;</span> 水情监测
+          </div>
+          <div class="nav-item" onclick="window.location.href='drought.html'">
+            <span class="nav-icon">&#9673;</span> 旱情监测
+          </div>
+          <div class="nav-item" onclick="window.location.href='setting.html'">
+            <span class="nav-icon">&#9881;</span> 系统设置
+          </div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="top-bar">
+          <h1>综合总览</h1>
+          <div class="top-bar-right">
+            <div class="time-display" id="clock">2026-03-25 14:32:08</div>
+            <div class="status-badge">
+              <span class="status-dot"></span>
+              系统运行正常
+            </div>
+          </div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card" onclick="showStationStats('online')">
+            <div class="stat-label">在线监测站点</div>
+            <div class="stat-value">1,247</div>
+            <div class="stat-sub">较昨日 <span>+12</span></div>
+          </div>
+          <div class="stat-card" onclick="showStationStats('rainfall')">
+            <div class="stat-label">今日降雨站点</div>
+            <div class="stat-value">386</div>
+            <div class="stat-sub">覆盖率 30.9%</div>
+          </div>
+          <div class="stat-card" onclick="showStationStats('warning')">
+            <div class="stat-label">预警信息</div>
+            <div class="stat-value">23</div>
+            <div class="stat-sub">其中红色预警 <span class="down">3</span></div>
+          </div>
+          <div class="stat-card" onclick="showStationStats('drought')">
+            <div class="stat-label">旱情指数(综合)</div>
+            <div class="stat-value">2.7</div>
+            <div class="stat-sub">中度干旱区域 14.2%</div>
+          </div>
+        </div>
+        <div class="panels-row">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">区域降雨量趋势 (mm)</div>
+              <div class="panel-tab">
+                <span>24h</span>
+                <span class="active">7天</span>
+                <span>30天</span>
+              </div>
+            </div>
+            <div class="chart-area">
+              <div class="chart-bar-group">
+                <div class="chart-bar rain" style="height:45%"></div>
+                <div class="chart-label">03/19</div>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar rain" style="height:62%"></div>
+                <div class="chart-label">03/20</div>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar rain" style="height:38%"></div>
+                <div class="chart-label">03/21</div>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar rain" style="height:85%"></div>
+                <div class="chart-label">03/22</div>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar rain" style="height:72%"></div>
+                <div class="chart-label">03/23</div>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar rain" style="height:28%"></div>
+                <div class="chart-label">03/24</div>
+              </div>
+              <div class="chart-bar-group">
+                <div class="chart-bar rain" style="height:15%"></div>
+                <div class="chart-label">03/25</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">实时预警</div>
+            </div>
+            <div class="alert-list">
+              <div class="alert-item red" onclick="showAlertDetail(0)">
+                <span class="alert-level">红色</span>
+                <div class="alert-content">
+                  <div class="alert-title">渭河临潼段水位超警戒</div>
+                  <div class="alert-time">10分钟前</div>
+                </div>
+              </div>
+              <div class="alert-item orange" onclick="showAlertDetail(1)">
+                <span class="alert-level">橙色</span>
+                <div class="alert-content">
+                  <div class="alert-title">汉中地区暴雨预警</div>
+                  <div class="alert-time">28分钟前</div>
+                </div>
+              </div>
+              <div class="alert-item yellow" onclick="showAlertDetail(2)">
+                <span class="alert-level">黄色</span>
+                <div class="alert-content">
+                  <div class="alert-title">关中东部土壤含水量异常</div>
+                  <div class="alert-time">1小时前</div>
+                </div>
+              </div>
+              <div class="alert-item blue" onclick="showAlertDetail(3)">
+                <span class="alert-level">蓝色</span>
+                <div class="alert-content">
+                  <div class="alert-title">泾河张家山站流量上升</div>
+                  <div class="alert-time">2小时前</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-row">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">重点监测站点</div>
+            </div>
+            <table class="station-table">
+              <thead>
+                <tr>
+                  <th>站名</th>
+                  <th>状态</th>
+                  <th>水位(m)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr onclick="showStationDetail('华县水文站', '61202400', '水文站', '渭南市', '在线', '326.45', '128.6', '88%', '2分钟前')">
+                  <td><span class="station-status online"></span>华县水文站</td>
+                  <td>正常</td>
+                  <td>326.45</td>
+                </tr>
+                <tr onclick="showStationDetail('临潼水文站', '61202800', '水文站', '西安市', '预警', '341.82', '156.2', '72%', '1分钟前')">
+                  <td><span class="station-status warning"></span>临潼水文站</td>
+                  <td>预警</td>
+                  <td>341.82</td>
+                </tr>
+                <tr onclick="showStationDetail('咸阳水文站', '61203000', '水文站', '咸阳市', '在线', '389.17', '98.4', '95%', '刚刚')">
+                  <td><span class="station-status online"></span>咸阳水文站</td>
+                  <td>正常</td>
+                  <td>389.17</td>
+                </tr>
+                <tr onclick="showStationDetail('张家山站', '61105200', '水文站', '咸阳市', '离线', '--', '--', '12%', '3小时前')">
+                  <td><span class="station-status offline"></span>张家山站</td>
+                  <td>离线</td>
+                  <td>--</td>
+                </tr>
+                <tr onclick="showStationDetail('武功雨量站', '61203600', '雨量站', '咸阳市', '在线', '412.30', '--', '82%', '5分钟前')">
+                  <td><span class="station-status online"></span>武功雨量站</td>
+                  <td>正常</td>
+                  <td>412.30</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">旱情等级分布</div>
+            </div>
+            <div class="drought-indicator">
+              <div class="drought-row">
+                <span class="drought-label">特旱</span>
+                <div class="drought-bar-bg">
+                  <div class="drought-bar-fill" style="width:8%;background:#dc2626"></div>
+                </div>
+                <span class="drought-val">3.2%</span>
+              </div>
+              <div class="drought-row">
+                <span class="drought-label">重旱</span>
+                <div class="drought-bar-bg">
+                  <div class="drought-bar-fill" style="width:18%;background:#ea580c"></div>
+                </div>
+                <span class="drought-val">7.1%</span>
+              </div>
+              <div class="drought-row">
+                <span class="drought-label">中旱</span>
+                <div class="drought-bar-bg">
+                  <div class="drought-bar-fill" style="width:35%;background:#f59e0b"></div>
+                </div>
+                <span class="drought-val">14.2%</span>
+              </div>
+              <div class="drought-row">
+                <span class="drought-label">轻旱</span>
+                <div class="drought-bar-bg">
+                  <div class="drought-bar-fill" style="width:52%;background:#facc15"></div>
+                </div>
+                <span class="drought-val">21.8%</span>
+              </div>
+              <div class="drought-row">
+                <span class="drought-label">无旱</span>
+                <div class="drought-bar-bg">
+                  <div class="drought-bar-fill" style="width:100%;background:#22c55e"></div>
+                </div>
+                <span class="drought-val">53.7%</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">重点河流水位</div>
+            </div>
+            <div class="water-level-list">
+              <div class="water-item">
+                <div>
+                  <div class="water-name">渭河 (华县段)</div>
+                  <div class="water-change">警戒: 340.00m</div>
+                </div>
+                <div class="water-value danger">341.82m</div>
+              </div>
+              <div class="water-item">
+                <div>
+                  <div class="water-name">泾河 (张家山)</div>
+                  <div class="water-change">警戒: 420.00m</div>
+                </div>
+                <div class="water-value high">416.55m</div>
+              </div>
+              <div class="water-item">
+                <div>
+                  <div class="water-name">汉江 (安康段)</div>
+                  <div class="water-change">警戒: 225.00m</div>
+                </div>
+                <div class="water-value normal">218.30m</div>
+              </div>
+              <div class="water-item">
+                <div>
+                  <div class="water-name">丹江 (商洛段)</div>
+                  <div class="water-change">警戒: 380.00m</div>
+                </div>
+                <div class="water-value normal">365.12m</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="stationModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title" id="stationModalTitle">站点详情</div>
+      </div>
+      <div class="modal-body">
+        <div class="station-detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">站号</div>
+            <div class="detail-value" id="sStationId">61202400</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">类型</div>
+            <div class="detail-value" id="sType">水文站</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">所属区域</div>
+            <div class="detail-value" id="sRegion">渭南市</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">当前状态</div>
+            <div class="detail-value" id="sStatus" style="color:#22c55e">在线</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">水位</div>
+            <div class="detail-value" id="sWaterLevel">326.45 m</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">流量</div>
+            <div class="detail-value" id="sFlow">128.6 m³/s</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">电池电量</div>
+            <div class="detail-value" id="sBattery">88%</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">最后通信</div>
+            <div class="detail-value" id="sLastComm">2分钟前</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn primary" onclick="window.location.href='stations.html'">管理站点</button>
+        <button class="modal-btn" onclick="closeModal('stationModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="alertModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">预警详情</div>
+      </div>
+      <div class="modal-body">
+        <div class="alert-detail-content">
+          <div class="alert-detail-row">
+            <span class="alert-detail-label">预警等级</span>
+            <span class="alert-detail-value" id="aLevel" style="color:#ef4444;font-weight:600">红色预警</span>
+          </div>
+          <div class="alert-detail-row">
+            <span class="alert-detail-label">预警类型</span>
+            <span class="alert-detail-value" id="aType">水情预警</span>
+          </div>
+          <div class="alert-detail-row">
+            <span class="alert-detail-label">发布站点</span>
+            <span class="alert-detail-value" id="aStation">临潼水文站 (61202800)</span>
+          </div>
+          <div class="alert-detail-row">
+            <span class="alert-detail-label">发布时间</span>
+            <span class="alert-detail-value" id="aTime">2026-03-25 13:48</span>
+          </div>
+          <div class="alert-detail-row">
+            <span class="alert-detail-label">所属区域</span>
+            <span class="alert-detail-value" id="aRegion">西安市临潼区</span>
+          </div>
+          <div class="alert-detail-row" style="flex-direction:column">
+            <span class="alert-detail-label">预警描述</span>
+            <span class="alert-detail-value" id="aDesc" style="margin-top:6px;line-height:1.6">当前水位341.82m，超警戒水位0.82m。预计未来6小时水位将继续上涨至342.5m左右，请沿岸各县区做好防汛应急准备。</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn primary" onclick="window.location.href='warning.html'">预警管理</button>
+        <button class="modal-btn" onclick="closeModal('alertModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="statsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title" id="statsModalTitle">统计详情</div>
+      </div>
+      <div class="modal-body">
+        <div id="statsModalContent"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('statsModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const alertData = [
+      { level: '红色预警', type: '水情预警', station: '临潼水文站 (61202800)', time: '2026-03-25 13:48', region: '西安市临潼区', desc: '当前水位341.82m，超警戒水位0.82m。预计未来6小时水位将继续上涨至342.5m左右，请沿岸各县区做好防汛应急准备。' },
+      { level: '橙色预警', type: '雨情预警', station: '勉县雨量站 (61203400)', time: '2026-03-25 12:30', region: '汉中市勉县', desc: '过去3小时累计降雨量38.2mm，预计未来3小时仍有强降雨，6小时累计雨量可能超过60mm，达到暴雨级别。' },
+      { level: '黄色预警', type: '旱情预警', station: '蒲城墒情站 (61302100)', time: '2026-03-25 09:00', region: '渭南市蒲城县', desc: '10cm土壤含水量降至8.2%，低于凋萎系数，冬小麦返青期受旱面积扩大，建议启动抗旱灌溉。' },
+      { level: '蓝色预警', type: '气象预警', station: '气象局预报', time: '2026-03-25 08:00', region: '宝鸡市全域', desc: '预计未来24小时宝鸡地区将出现中雨天气过程，局部大雨，请相关部门关注雨情变化。' }
+    ];
+
+    function updateClock() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function showStationDetail(name, id, type, region, status, waterLevel, flow, battery, lastComm) {
+      document.getElementById('stationModalTitle').textContent = '站点详情 - ' + name;
+      document.getElementById('sStationId').textContent = id;
+      document.getElementById('sType').textContent = type;
+      document.getElementById('sRegion').textContent = region;
+      document.getElementById('sStatus').textContent = status;
+      document.getElementById('sStatus').style.color = status === '在线' ? '#22c55e' : status === '预警' ? '#f59e0b' : '#ef4444';
+      document.getElementById('sWaterLevel').textContent = waterLevel + ' m';
+      document.getElementById('sFlow').textContent = flow === '--' ? '--' : flow + ' m³/s';
+      document.getElementById('sBattery').textContent = battery;
+      document.getElementById('sLastComm').textContent = lastComm;
+      document.getElementById('stationModal').classList.add('active');
+    }
+
+    function showAlertDetail(index) {
+      const data = alertData[index];
+      document.getElementById('aLevel').textContent = data.level;
+      document.getElementById('aLevel').style.color = data.level === '红色预警' ? '#ef4444' : data.level === '橙色预警' ? '#f59e0b' : data.level === '黄色预警' ? '#eab308' : '#3b82f6';
+      document.getElementById('aType').textContent = data.type;
+      document.getElementById('aStation').textContent = data.station;
+      document.getElementById('aTime').textContent = data.time;
+      document.getElementById('aRegion').textContent = data.region;
+      document.getElementById('aDesc').textContent = data.desc;
+      document.getElementById('alertModal').classList.add('active');
+    }
+
+    function showStationStats(type) {
+      let title = '';
+      let content = '';
+      
+      if (type === 'online') {
+        title = '在线监测站点详情';
+        content = '<div class="station-detail-grid"><div class="detail-item"><div class="detail-label">在线站点数</div><div class="detail-value" style="color:#22c55e">1,192</div></div><div class="detail-item"><div class="detail-label">在线率</div><div class="detail-value">95.6%</div></div><div class="detail-item"><div class="detail-label">较昨日新增</div><div class="detail-value">+12</div></div><div class="detail-item"><div class="detail-label">主要分布</div><div class="detail-value">渭南、西安</div></div></div>';
+      } else if (type === 'rainfall') {
+        title = '降雨站点详情';
+        content = '<div class="station-detail-grid"><div class="detail-item"><div class="detail-label">今日降雨站点</div><div class="detail-value" style="color:#3b82f6">386</div></div><div class="detail-item"><div class="detail-label">覆盖率</div><div class="detail-value">30.9%</div></div><div class="detail-item"><div class="detail-label">最大降雨量</div><div class="detail-value">28.6mm</div></div><div class="detail-item"><div class="detail-label">降雨区域</div><div class="detail-value">汉中、渭南</div></div></div>';
+      } else if (type === 'warning') {
+        title = '预警信息详情';
+        content = '<div class="station-detail-grid"><div class="detail-item"><div class="detail-label">预警总数</div><div class="detail-value">23</div></div><div class="detail-item"><div class="detail-label">红色预警</div><div class="detail-value" style="color:#ef4444">3</div></div><div class="detail-item"><div class="detail-label">橙色预警</div><div class="detail-value" style="color:#f59e0b">6</div></div><div class="detail-item"><div class="detail-label">黄色/蓝色</div><div class="detail-value">14</div></div></div>';
+      } else if (type === 'drought') {
+        title = '旱情指数详情';
+        content = '<div class="station-detail-grid"><div class="detail-item"><div class="detail-label">综合旱情指数</div><div class="detail-value" style="color:#f59e0b">2.7</div></div><div class="detail-item"><div class="detail-label">干旱等级</div><div class="detail-value">中度干旱</div></div><div class="detail-item"><div class="detail-label">干旱面积</div><div class="detail-value">14.2%</div></div><div class="detail-item"><div class="detail-label">主要区域</div><div class="detail-value">关中东部</div></div></div>';
+      }
+      
+      document.getElementById('statsModalTitle').textContent = title;
+      document.getElementById('statsModalContent').innerHTML = content;
+      document.getElementById('statsModal').classList.add('active');
+    }
+
+    document.querySelectorAll('.panel-tab span').forEach(tab => {
+      tab.addEventListener('click', function() {
+        this.parentElement.querySelectorAll('span').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成就中心 - 智能普法多人联机互动学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#0EA5E9',
+                        accent: '#38BDF8',
+                        dark: '#020617',
+                        surface: '#020617',
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .macos-window {
+            width: 1440px;
+            min-height: 900px;
+            background: #020617;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        }
+        .traffic-lights {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background: rgba(37, 99, 235, 0.16);
+            transform: translateX(4px);
+        }
+        .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.32), transparent);
+        }
+        .badge-item {
+            transition: all 0.3s ease;
+        }
+        .badge-item:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(37, 99, 235, 0.3);
+        }
+        .badge-item.locked {
+            filter: grayscale(1);
+            opacity: 0.5;
+        }
+        .badge-item.locked:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        .online-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes shine {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        .badge-unlocked {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%);
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563EB 0%, #0EA5E9 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        .modal-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .modal-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .content-hidden { display: none; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+    <div class="macos-window rounded-xl overflow-hidden">
+        <div class="bg-surface/80 backdrop-blur-xl px-5 py-3 flex items-center border-b border-white/5 relative z-[1000]">
+            <div class="flex gap-2">
+                <div class="traffic-lights bg-red-500"></div>
+                <div class="traffic-lights bg-yellow-500"></div>
+                <div class="traffic-lights bg-green-500"></div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="text-sm font-medium text-white/80">智能普法多人联机互动学习系统</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10">
+                    <div class="online-indicator"></div>
+                    <span class="text-xs text-green-400 font-medium">1,247 人在线</span>
+                </div>
+                <div class="relative">
+                    <button onclick="toggleNotification()" class="relative">
+                        <i class="fa-regular fa-bell w-5 h-5 text-white/60 cursor-pointer hover:text-white transition"></i>
+                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">3</span>
+                    </button>
+                    <div id="notificationDropdown" class="hidden absolute right-0 top-full mt-2 w-80 glass-card rounded-xl overflow-hidden shadow-xl z-[9999]">
+                        <div class="p-4 border-b border-white/10">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-white font-bold">通知中心</h3>
+                                <button class="text-xs text-primary hover:underline">全部已读</button>
+                            </div>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto">
+                            <div class="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-trophy text-yellow-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">恭喜获得"勤奋学者"成就</p>
+                                        <p class="text-xs text-white/40 mt-1">刚刚</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-fire text-green-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">连续学习7天</p>
+                                        <p class="text-xs text-white/40 mt-1">1小时前</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-star text-blue-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">积分突破2500</p>
+                                        <p class="text-xs text-white/40 mt-1">2小时前</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex h-[856px]">
+            <div class="w-64 bg-surface/40 border-r border-white/5 p-4">
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" 
+                             class="w-12 h-12 rounded-full border-2 border-primary/50" alt="用户头像">
+                        <div class="flex-1">
+                            <p class="text-white font-semibold text-sm">张明</p>
+                            <p class="text-xs text-white/50">中级学员 · Lv.8</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-white/5">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-white/60">学习进度</span>
+                            <span class="text-primary font-semibold">68%</span>
+                        </div>
+                        <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-primary to-secondary w-[68%] rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="space-y-1">
+                    <a href="main.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-home w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">学习大厅</span>
+                    </a>
+                    <a href="rooms.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-users w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">多人房间</span>
+                        <span class="ml-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">3</span>
+                    </a>
+                    <a href="live.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-video w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">直播课堂</span>
+                    </a>
+                    <a href="laws.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-book-open w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">法规库</span>
+                    </a>
+                    <a href="discussion.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-comments w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">案例讨论</span>
+                    </a>
+                    <div class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-trophy w-5 h-5 text-primary"></i>
+                        <span class="text-sm font-medium text-white">成就中心</span>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="flex-1 overflow-y-auto scrollbar-thin">
+                <div class="sticky top-0 bg-dark/95 backdrop-blur-xl border-b border-white/5 px-8 py-4 z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 class="text-2xl font-bold text-white">成就中心</h1>
+                            <p class="text-sm text-white/60 mt-1">解锁成就徽章，见证你的法律学习之路</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-yellow-400">2,580</p>
+                                <p class="text-xs text-white/50">总积分</p>
+                            </div>
+                            <div class="w-px h-10 bg-white/10"></div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-primary">18/45</p>
+                                <p class="text-xs text-white/50">已解锁成就</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-6">
+                        <button onclick="switchTab('all')" id="tab-all" class="tab-btn px-1 py-2 text-sm font-semibold text-primary border-b-2 border-primary">全部成就</button>
+                        <button onclick="switchTab('learning')" id="tab-learning" class="tab-btn px-1 py-2 text-sm font-medium text-white/60 hover:text-white transition">学习成就</button>
+                        <button onclick="switchTab('social')" id="tab-social" class="tab-btn px-1 py-2 text-sm font-medium text-white/60 hover:text-white transition">社交成就</button>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <div id="content-all" class="content-section">
+                        <div class="mb-8">
+                            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-star text-yellow-400"></i>
+                                已解锁成就
+                            </h2>
+                            <div class="grid grid-cols-4 gap-4">
+                                <div class="badge-item glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('法学入门', '首次完成一门法律课程', '2024-01-15', true, 100)">
+                                    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
+                                        <i class="fa-solid fa-graduation-cap text-white text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-white font-bold mb-1">法学入门</h3>
+                                    <p class="text-xs text-white/50">首次完成课程</p>
+                                </div>
+
+                                <div class="badge-item glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('勤奋学者', '累计学习满100小时', '2024-02-20', true, 200)">
+                                    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                                        <i class="fa-solid fa-book-open text-white text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-white font-bold mb-1">勤奋学者</h3>
+                                    <p class="text-xs text-white/50">学习满100小时</p>
+                                </div>
+
+                                <div class="badge-item glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('答题达人', '答题正确率超过90%', '2024-03-05', true, 150)">
+                                    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                                        <i class="fa-solid fa-brain text-white text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-white font-bold mb-1">答题达人</h3>
+                                    <p class="text-xs text-white/50">正确率超90%</p>
+                                </div>
+
+                                <div class="badge-item glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('持之以恒', '连续学习30天', '2024-05-20', true, 300)">
+                                    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-cyan-400 to-teal-500 flex items-center justify-center">
+                                        <i class="fa-solid fa-fire text-white text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-white font-bold mb-1">持之以恒</h3>
+                                    <p class="text-xs text-white/50">连续学习30天</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-lock text-white/40"></i>
+                                待解锁成就
+                            </h2>
+                            <div class="grid grid-cols-4 gap-4">
+                                <div class="badge-item locked glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('法律专家', '完成全部法律课程', '-', false, 500)">
+                                    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center">
+                                        <i class="fa-solid fa-user-graduate text-white text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-white/60 font-bold mb-1">法律专家</h3>
+                                    <p class="text-xs text-white/40">完成全部课程</p>
+                                </div>
+
+                                <div class="badge-item locked glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('全能学霸', '所有科目正确率100%', '-', false, 800)">
+                                    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center">
+                                        <i class="fa-solid fa-crown text-white text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-white/60 font-bold mb-1">全能学霸</h3>
+                                    <p class="text-xs text-white/40">正确率100%</p>
+                                </div>
+
+                                <div class="badge-item locked glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('终身学习', '学习时长超过1000小时', '-', false, 600)">
+                                    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center">
+                                        <i class="fa-solid fa-infinity text-white text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-white/60 font-bold mb-1">终身学习</h3>
+                                    <p class="text-xs text-white/40">学习1000小时</p>
+                                </div>
+
+                                <div class="badge-item locked glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('荣誉会员', '连续登录365天', '-', false, 1000)">
+                                    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center">
+                                        <i class="fa-solid fa-medal text-white text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-white/60 font-bold mb-1">荣誉会员</h3>
+                                    <p class="text-xs text-white/40">连续登录365天</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-learning" class="content-section content-hidden">
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="badge-item glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('法学入门', '首次完成一门法律课程', '2024-01-15', true, 100)">
+                                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
+                                    <i class="fa-solid fa-graduation-cap text-white text-2xl"></i>
+                                </div>
+                                <h3 class="text-white font-bold mb-1">法学入门</h3>
+                                <p class="text-xs text-white/50">首次完成课程</p>
+                            </div>
+                            <div class="badge-item glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('勤奋学者', '累计学习满100小时', '2024-02-20', true, 200)">
+                                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                                    <i class="fa-solid fa-book-open text-white text-2xl"></i>
+                                </div>
+                                <h3 class="text-white font-bold mb-1">勤奋学者</h3>
+                                <p class="text-xs text-white/50">学习满100小时</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-social" class="content-section content-hidden">
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="badge-item glass-card rounded-xl p-5 text-center cursor-pointer" onclick="openBadgeModal('社交达人', '帮助10位学友解决问题', '2024-03-18', true, 180)">
+                                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center">
+                                    <i class="fa-solid fa-hands-helping text-white text-2xl"></i>
+                                </div>
+                                <h3 class="text-white font-bold mb-1">社交达人</h3>
+                                <p class="text-xs text-white/50">帮助10位学友</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-80 bg-surface/40 border-l border-white/5 p-6 overflow-y-auto scrollbar-thin">
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line w-5 h-5 text-primary"></i>
+                        我的进度
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-white/60">学习时长</span>
+                                <span class="text-white font-medium">12.5/20小时</span>
+                            </div>
+                            <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-500 w-[62%] rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-white/60">完成章节</span>
+                                <span class="text-white font-medium">18/24章</span>
+                            </div>
+                            <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-green-500 to-emerald-500 w-[75%] rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-bolt w-5 h-5 text-yellow-500"></i>
+                        今日挑战
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                            <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                <i class="fa-solid fa-check text-green-400 text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white/80">完成1个课程章节</p>
+                                <p class="text-xs text-green-400">已完成</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                            <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                                <i class="fa-solid fa-spinner text-yellow-400 text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white/80">回答5道法律题目</p>
+                                <p class="text-xs text-yellow-400">进行中 (3/5)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-trophy w-5 h-5 text-orange-500"></i>
+                        积分排行榜
+                    </h3>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="w-6 text-center text-yellow-500 font-bold">1</span>
+                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-7 h-7 rounded-full">
+                            <span class="text-white/80 flex-1">刘晓梅</span>
+                            <span class="text-yellow-400 font-medium">3,850</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="w-6 text-center text-white/60 font-bold">2</span>
+                            <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-7 h-7 rounded-full">
+                            <span class="text-white/80 flex-1">王建国</span>
+                            <span class="text-white/60 font-medium">3,620</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm pt-2 border-t border-white/5">
+                            <span class="w-6 text-center text-primary font-bold">18</span>
+                            <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-7 h-7 rounded-full border-2 border-primary">
+                            <span class="text-white flex-1">张明</span>
+                            <span class="text-primary font-medium">2,580</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="badgeModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+        <div class="modal-content glass-card rounded-2xl p-6 w-[420px]">
+            <div class="flex items-center justify-between mb-6">
+                <div class="modal-dots">
+                    <span class="bg-red-500"></span>
+                    <span class="bg-yellow-500"></span>
+                    <span class="bg-green-500"></span>
+                </div>
+                <h3 id="badgeModalTitle" class="text-xl font-bold text-white text-center flex-1">成就详情</h3>
+                <button onclick="closeBadgeModal()" class="text-white/60 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="text-center">
+                <div id="badgeIcon" class="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
+                    <i class="fa-solid fa-graduation-cap text-white text-4xl"></i>
+                </div>
+                <h4 id="badgeName" class="text-white font-bold text-xl mb-2">法学入门</h4>
+                <p id="badgeDesc" class="text-white/60 mb-4">首次完成一门法律课程</p>
+                <div class="p-4 bg-yellow-500/10 rounded-xl mb-4">
+                    <p class="text-sm text-white/60 mb-1">奖励积分</p>
+                    <p id="badgePoints" class="text-2xl font-bold text-yellow-400">+100</p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeBadgeModal()" class="btn-secondary flex-1 py-3 rounded-lg text-white font-medium">
+                    关闭
+                </button>
+                <button onclick="shareBadge()" class="btn-primary flex-1 py-3 rounded-lg text-white font-semibold">
+                    <i class="fa-solid fa-share-nodes mr-2"></i>分享成就
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleNotification() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const bell = e.target.closest('.fa-bell');
+            if (!bell && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+                btn.classList.add('text-white/60', 'font-medium');
+            });
+            document.getElementById('tab-' + tab).classList.remove('text-white/60', 'font-medium');
+            document.getElementById('tab-' + tab).classList.add('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+            
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.add('content-hidden');
+            });
+            document.getElementById('content-' + tab).classList.remove('content-hidden');
+        }
+
+        function openBadgeModal(name, desc, date, unlocked, points) {
+            document.getElementById('badgeName').textContent = name;
+            document.getElementById('badgeModalTitle').textContent = name;
+            document.getElementById('badgeDesc').textContent = desc;
+            document.getElementById('badgePoints').textContent = '+' + points;
+            
+            const iconEl = document.getElementById('badgeIcon');
+            if (unlocked) {
+                iconEl.className = 'w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center';
+            } else {
+                iconEl.className = 'w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center';
+            }
+            
+            document.getElementById('badgeModal').classList.remove('hidden');
+            document.getElementById('badgeModal').classList.add('flex');
+        }
+
+        function closeBadgeModal() {
+            document.getElementById('badgeModal').classList.add('hidden');
+            document.getElementById('badgeModal').classList.remove('flex');
+        }
+
+        function shareBadge() {
+            alert('成就分享链接已复制到剪贴板！');
+            closeBadgeModal();
+        }
+
+        document.getElementById('badgeModal').addEventListener('click', function(e) {
+            if (e.target === this) closeBadgeModal();
+        });
+    </script>
+</body>
+</html>

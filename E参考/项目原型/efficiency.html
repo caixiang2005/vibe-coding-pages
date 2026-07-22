@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>能效分析 - 新能源储能系统</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0EA5E9; --primary-dark: #0284C7; --primary-light: #E0F2FE;
+    --accent: #10B981; --accent-warm: #F59E0B; --danger: #EF4444;
+    --bg: #F0F6FF; --sidebar-bg: #0F2744; --card-bg: #FFFFFF;
+    --text-primary: #0F2744; --text-secondary: #5A7A99; --text-light: #94A3B8;
+    --border: #DCE8F5; --shadow-card: 0 2px 12px rgba(15,39,68,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 220px; background: var(--sidebar-bg); display: flex; flex-direction: column; position: relative; z-index: 10; flex-shrink: 0; }
+  .logo-area { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #0EA5E9, #10B981); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+  .logo-icon i { color: white; font-size: 18px; }
+  .logo-title { color: white; font-size: 13px; font-weight: 600; line-height: 1.4; }
+  .logo-sub { color: rgba(255,255,255,0.4); font-size: 10px; margin-top: 2px; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px; }
+  .nav-section { flex: 1; padding: 16px 12px; overflow-y: auto; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 500; transition: all 0.2s; text-decoration: none; }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+  .nav-item.active { background: linear-gradient(135deg, #0EA5E9, #0284C7); color: white; box-shadow: 0 4px 12px rgba(14,165,233,0.3); }
+  .nav-item i { width: 18px; text-align: center; font-size: 14px; }
+  .nav-badge { margin-left: auto; background: var(--danger); color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-family: 'JetBrains Mono'; }
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
+  .user-card { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0EA5E9, #10B981); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .user-avatar img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .user-info .name { color: white; font-size: 12px; font-weight: 600; }
+  .user-info .role { color: rgba(255,255,255,0.4); font-size: 10px; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px; gap: 16px; box-shadow: 0 1px 8px rgba(15,39,68,0.06); }
+  .topbar-breadcrumb { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .breadcrumb-item { color: var(--text-secondary); font-size: 13px; }
+  .breadcrumb-item.current { color: var(--text-primary); font-weight: 600; }
+  .breadcrumb-sep { color: var(--text-light); font-size: 12px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-time { font-family: 'JetBrains Mono'; font-size: 13px; color: var(--text-secondary); background: var(--bg); padding: 6px 12px; border-radius: 6px; }
+  .topbar-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: white; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); position: relative; transition: all 0.2s; }
+  .topbar-btn .dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; background: var(--danger); border-radius: 50%; border: 1.5px solid white; }
+  .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+  .panel { background: white; border-radius: 14px; padding: 20px; box-shadow: var(--shadow-card); border: 1px solid var(--border); }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .panel-title { font-size: 14px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+  .panel-title i { color: var(--primary); }
+
+  /* TABS */
+  .tab-bar { display: flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: 10px; margin-bottom: 20px; width: fit-content; }
+  .tab { padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; }
+  .tab.active { background: white; color: var(--primary); box-shadow: 0 2px 8px rgba(14,165,233,0.15); }
+
+  /* DATE RANGE PICKER MOCK */
+  .date-filter { display: flex; align-items: center; gap: 8px; }
+  .date-btn { padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; background: white; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-family: 'Noto Sans SC'; transition: all 0.2s; }
+  .date-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .date-btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); font-weight: 500; }
+  .date-btn:active { transform: scale(0.97); }
+
+  /* KPI STRIP */
+  .kpi-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi-card { background: white; border-radius: 12px; padding: 16px; box-shadow: var(--shadow-card); border: 1px solid var(--border); text-align: center; }
+  .kpi-val { font-size: 24px; font-weight: 700; font-family: 'Rajdhani'; margin-bottom: 2px; transition: all 0.3s ease; }
+  .kpi-label { font-size: 11px; color: var(--text-secondary); }
+  .kpi-change { font-size: 11px; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 3px; }
+  .kpi-change.up { color: #10B981; }
+  .kpi-change.down { color: #EF4444; }
+
+  /* CHART CONTAINERS */
+  .chart-2col { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; margin-bottom: 16px; }
+  .chart-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+
+  /* BAR CHART */
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 180px; padding: 0 4px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .bar-col-inner { width: 100%; display: flex; gap: 3px; align-items: flex-end; }
+  .bar-seg { flex: 1; border-radius: 4px 4px 0 0; transition: all 0.3s; }
+  .bar-seg:hover { opacity: 0.8; filter: brightness(1.05); }
+  .bar-seg.charge { background: linear-gradient(180deg, #38BDF8, #0EA5E9); }
+  .bar-seg.discharge { background: linear-gradient(180deg, #34D399, #10B981); }
+  .bar-seg.loss { background: linear-gradient(180deg, #FCA5A5, #EF4444); }
+  .bar-xlbl { font-size: 10px; color: var(--text-light); font-family: 'JetBrains Mono'; }
+
+  /* EFFICIENCY GAUGE */
+  .gauge-wrap { display: flex; flex-direction: column; align-items: center; padding: 16px 0; }
+  .gauge-svg { width: 180px; height: 110px; }
+  .gauge-val { font-size: 32px; font-weight: 700; font-family: 'Rajdhani'; color: #10B981; text-align: center; margin-top: 8px; }
+  .gauge-label { font-size: 12px; color: var(--text-secondary); text-align: center; }
+
+  /* SANKEY LIKE FLOW */
+  .flow-panel { height: 220px; background: #F8FCFF; border-radius: 10px; position: relative; overflow: hidden; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th { font-size: 12px; font-weight: 600; color: var(--text-secondary); padding: 10px 12px; text-align: left; background: var(--bg); }
+  .data-table th:first-child { border-radius: 8px 0 0 8px; }
+  .data-table th:last-child { border-radius: 0 8px 8px 0; }
+  .data-table td { font-size: 13px; padding: 11px 12px; border-bottom: 1px solid var(--border); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td.mono { font-family: 'JetBrains Mono'; font-size: 12px; }
+  .eff-bar-wrap { width: 100%; height: 6px; background: #E2EEF9; border-radius: 3px; }
+  .eff-bar { height: 6px; border-radius: 3px; background: linear-gradient(90deg, #10B981, #34D399); }
+
+  /* CIRCLE METRICS */
+  .circle-metrics { display: flex; justify-content: space-around; padding: 8px 0; }
+  .circle-m { text-align: center; }
+  .circle-m svg { width: 80px; height: 80px; }
+  .circle-m .c-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,39,68,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: white; border-radius: 16px; width: 90%; max-width: 800px; max-height: 85vh; overflow: hidden; box-shadow: 0 20px 60px rgba(15,39,68,0.3); }
+  .modal-header { padding: 18px 24px; background: linear-gradient(135deg, #0F2744, #1a4a80); color: white; display: flex; align-items: center; justify-content: space-between; cursor: move; }
+  .modal-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .modal-close { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.1); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .modal-close:hover { background: rgba(255,255,255,0.2); }
+  .modal-body { padding: 24px; max-height: calc(85vh - 140px); overflow-y: auto; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end; }
+  .modal-btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Noto Sans SC'; }
+  .modal-btn.primary { background: linear-gradient(135deg, #0EA5E9, #0284C7); color: white; }
+  .modal-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.3); }
+  .modal-btn.secondary { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+  .modal-btn.secondary:hover { background: var(--border); }
+  .detail-section { margin-bottom: 20px; }
+  .detail-section:last-child { margin-bottom: 0; }
+  .detail-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .detail-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .detail-item { background: var(--bg); padding: 12px; border-radius: 8px; }
+  .detail-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+  .detail-value { font-size: 16px; font-weight: 700; font-family: 'Rajdhani'; color: var(--text-primary); }
+  .mini-chart { height: 100px; background: var(--bg); border-radius: 8px; padding: 10px; }
+  .mini-chart svg { width: 100%; height: 100%; }
+  .analysis-list { display: flex; flex-direction: column; gap: 8px; }
+  .analysis-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--bg); border-radius: 8px; }
+  .analysis-num { width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+  .analysis-text { flex: 1; font-size: 12px; color: var(--text-secondary); }
+  .loss-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .loss-bar-label { width: 80px; font-size: 12px; color: var(--text-secondary); }
+  .loss-bar-track { flex: 1; height: 8px; background: #E2EEF9; border-radius: 4px; overflow: hidden; }
+  .loss-bar-fill { height: 100%; border-radius: 4px; }
+  .loss-bar-val { width: 60px; text-align: right; font-size: 12px; font-weight: 600; font-family: 'JetBrains Mono'; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo-area">
+    <div class="logo-title">新能源储能系统运行监控与能效分析系统</div>
+  </div>
+  <nav class="nav-section">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i>总览仪表板</a>
+    <a href="monitor.html" class="nav-item"><i class="fa-solid fa-display"></i>实时监控</a>
+    <a href="efficiency.html" class="nav-item active"><i class="fa-solid fa-chart-line"></i>能效分析</a>
+    <a href="alarm.html" class="nav-item"><i class="fa-solid fa-bell"></i>告警管理<span class="nav-badge">5</span></a>
+    <a href="device.html" class="nav-item"><i class="fa-solid fa-server"></i>设备管理</a>
+    <a href="report.html" class="nav-item"><i class="fa-solid fa-file-lines"></i>报表中心</a>
+    
+  </nav>
+  <div class="sidebar-footer">
+    <button onclick="window.location.href='login.html'" style="width:100%;padding:10px;margin-bottom:12px;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;font-size:13px;font-family:'Noto Sans SC';display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s">
+      <i class="fa-solid fa-sign-out-alt"></i> 退出登录
+    </button>
+    <div class="user-card">
+      <div class="user-avatar"><img src="static/avatar.jpg" alt="用户头像"></div>
+      <div class="user-info"><div class="name">华南农业大学</div><div class="role">系统管理员</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      <span class="breadcrumb-item">首页</span>
+      <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right" style="font-size:10px"></i></span>
+      <span class="breadcrumb-item current">能效分析</span>
+    </div>
+    <div class="topbar-right">
+      <div class="date-filter">
+        <div class="date-btn" id="dateRangeBtn" onclick="openDateRangePicker()">2025-01-01 ~ 2025-01-31</div>
+        <div class="date-btn active" id="periodMonth" onclick="changePeriod('month')">本月</div>
+        <div class="date-btn" id="periodQuarter" onclick="changePeriod('quarter')">本季度</div>
+        <div class="date-btn" id="periodYear" onclick="changePeriod('year')">本年</div>
+      </div>
+      <div class="topbar-time" id="clock">--:--:--</div>
+      
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- TABS -->
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('overview')">能效总览</div>
+      <div class="tab" onclick="switchTab('charge')">充放电分析</div>
+      <div class="tab" onclick="switchTab('loss')">损耗分析</div>
+      <div class="tab" onclick="switchTab('peak')">峰谷套利</div>
+      <div class="tab" onclick="switchTab('battery')">电池健康</div>
+    </div>
+
+    <!-- TAB CONTENT: OVERVIEW -->
+    <div id="tab-overview">
+
+    <!-- KPI STRIP -->
+    <div class="kpi-strip">
+      <div class="kpi-card">
+        <div class="kpi-val" style="color:#0EA5E9">97.2<span style="font-size:14px">%</span></div>
+        <div class="kpi-label">综合能效 RTE</div>
+        <div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +0.4% 较上月</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val" style="color:#10B981">284,560<span style="font-size:14px">kWh</span></div>
+        <div class="kpi-label">月度充电量</div>
+        <div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +12.3%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val" style="color:#10B981">276,840<span style="font-size:14px">kWh</span></div>
+        <div class="kpi-label">月度放电量</div>
+        <div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +11.8%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val" style="color:#F59E0B">7,720<span style="font-size:14px">kWh</span></div>
+        <div class="kpi-label">月度损耗</div>
+        <div class="kpi-change down"><i class="fa-solid fa-arrow-trend-down"></i> -0.8%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-val" style="color:#7C3AED">¥ 89,420</div>
+        <div class="kpi-label">峰谷套利收益</div>
+        <div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +18.6%</div>
+      </div>
+    </div>
+
+    <!-- ENERGY FLOW + EFFICIENCY -->
+    <div class="chart-2col">
+      <!-- DAILY ENERGY BAR -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-chart-column"></i>每日能量吞吐量 (kWh)</div>
+          <div style="display:flex;gap:10px;font-size:11px;align-items:center">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:8px;background:#0EA5E9;border-radius:2px;display:inline-block"></span>充电</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:8px;background:#10B981;border-radius:2px;display:inline-block"></span>放电</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:8px;background:#EF4444;border-radius:2px;display:inline-block"></span>损耗</span>
+          </div>
+        </div>
+        <div class="bar-chart">
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:85px"></div><div class="bar-seg discharge" style="height:82px"></div></div><span class="bar-xlbl">01</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:92px"></div><div class="bar-seg discharge" style="height:89px"></div></div><span class="bar-xlbl">02</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:78px"></div><div class="bar-seg discharge" style="height:75px"></div></div><span class="bar-xlbl">03</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:95px"></div><div class="bar-seg discharge" style="height:92px"></div></div><span class="bar-xlbl">04</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:88px"></div><div class="bar-seg discharge" style="height:85px"></div></div><span class="bar-xlbl">05</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:76px"></div><div class="bar-seg discharge" style="height:73px"></div></div><span class="bar-xlbl">06</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:91px"></div><div class="bar-seg discharge" style="height:88px"></div></div><span class="bar-xlbl">07</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:89px"></div><div class="bar-seg discharge" style="height:86px"></div></div><span class="bar-xlbl">08</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:94px"></div><div class="bar-seg discharge" style="height:91px"></div></div><span class="bar-xlbl">09</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:82px"></div><div class="bar-seg discharge" style="height:79px"></div></div><span class="bar-xlbl">10</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:87px"></div><div class="bar-seg discharge" style="height:84px"></div></div><span class="bar-xlbl">11</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:90px"></div><div class="bar-seg discharge" style="height:87px"></div></div><span class="bar-xlbl">12</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:96px"></div><div class="bar-seg discharge" style="height:93px"></div></div><span class="bar-xlbl">13</span></div>
+          <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:93px"></div><div class="bar-seg discharge" style="height:90px"></div></div><span class="bar-xlbl">14</span></div>
+        </div>
+      </div>
+
+      <!-- EFFICIENCY GAUGES -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-circle-check"></i>效率指标</div>
+        </div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 180 110">
+            <defs>
+              <linearGradient id="gGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#EF4444"/>
+                <stop offset="50%" stop-color="#F59E0B"/>
+                <stop offset="100%" stop-color="#10B981"/>
+              </linearGradient>
+            </defs>
+            <!-- background arc -->
+            <path d="M 20 100 A 70 70 0 0 1 160 100" fill="none" stroke="#E2EEF9" stroke-width="14" stroke-linecap="round"/>
+            <!-- value arc: 97.2% = ~175 deg of 180 deg -->
+            <path d="M 20 100 A 70 70 0 0 1 160 100" fill="none" stroke="url(#gGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="219 220" stroke-dashoffset="6"/>
+            <!-- needle -->
+            <line x1="90" y1="100" x2="90" y2="35" stroke="#0F2744" stroke-width="2.5" stroke-linecap="round" transform="rotate(83, 90, 100)"/>
+            <circle cx="90" cy="100" r="6" fill="white" stroke="#0F2744" stroke-width="2"/>
+            <!-- labels -->
+            <text x="18" y="118" font-size="10" fill="#EF4444" font-family="JetBrains Mono">0%</text>
+            <text x="83" y="25" font-size="10" fill="#5A7A99" font-family="JetBrains Mono">50%</text>
+            <text x="148" y="118" font-size="10" fill="#10B981" font-family="JetBrains Mono">100%</text>
+          </svg>
+          <div class="gauge-val">97.2%</div>
+          <div class="gauge-label">综合往返效率 (RTE)</div>
+        </div>
+        <div class="circle-metrics">
+          <div class="circle-m">
+            <svg viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="30" fill="none" stroke="#E2EEF9" stroke-width="8"/>
+              <circle cx="40" cy="40" r="30" fill="none" stroke="#0EA5E9" stroke-width="8" stroke-dasharray="170 189" stroke-dashoffset="47" stroke-linecap="round" transform="rotate(-90,40,40)"/>
+              <text x="40" y="44" text-anchor="middle" font-size="14" font-weight="700" font-family="Rajdhani" fill="#0EA5E9">98.4</text>
+            </svg>
+            <div class="c-label">PCS效率%</div>
+          </div>
+          <div class="circle-m">
+            <svg viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="30" fill="none" stroke="#E2EEF9" stroke-width="8"/>
+              <circle cx="40" cy="40" r="30" fill="none" stroke="#10B981" stroke-width="8" stroke-dasharray="177 189" stroke-dashoffset="47" stroke-linecap="round" transform="rotate(-90,40,40)"/>
+              <text x="40" y="44" text-anchor="middle" font-size="14" font-weight="700" font-family="Rajdhani" fill="#10B981">99.0</text>
+            </svg>
+            <div class="c-label">电池效率%</div>
+          </div>
+          <div class="circle-m">
+            <svg viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="30" fill="none" stroke="#E2EEF9" stroke-width="8"/>
+              <circle cx="40" cy="40" r="30" fill="none" stroke="#7C3AED" stroke-width="8" stroke-dasharray="165 189" stroke-dashoffset="47" stroke-linecap="round" transform="rotate(-90,40,40)"/>
+              <text x="40" y="44" text-anchor="middle" font-size="14" font-weight="700" font-family="Rajdhani" fill="#7C3AED">99.8</text>
+            </svg>
+            <div class="c-label">变压器效率%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOH + DETAIL TABLE -->
+    <div class="chart-3col">
+      <!-- SOH TREND -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-heart-pulse"></i>SOH趋势</div>
+        </div>
+        <svg viewBox="0 0 300 160" style="width:100%;height:160px">
+          <defs>
+            <linearGradient id="sohGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#10B981" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#10B981" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M 10,40 C 50,42 90,45 130,50 C 170,55 210,58 250,64 C 270,67 280,69 290,72 L 290,150 L 10,150 Z" fill="url(#sohGrad)"/>
+          <path d="M 10,40 C 50,42 90,45 130,50 C 170,55 210,58 250,64 C 270,67 280,69 290,72" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Dots -->
+          <circle cx="10" cy="40" r="4" fill="white" stroke="#10B981" stroke-width="2"/>
+          <circle cx="130" cy="50" r="4" fill="white" stroke="#10B981" stroke-width="2"/>
+          <circle cx="290" cy="72" r="5" fill="#10B981"/>
+          <!-- Labels -->
+          <text x="10" y="35" font-size="10" fill="#10B981" font-family="JetBrains Mono">98.6%</text>
+          <text x="255" y="68" font-size="10" fill="#10B981" font-family="JetBrains Mono">96.8%</text>
+          <line x1="10" y1="140" x2="290" y2="140" stroke="#DCE8F5" stroke-width="1"/>
+          <text x="10" y="155" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">2024/07</text>
+          <text x="110" y="155" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">2024/10</text>
+          <text x="230" y="155" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">2025/01</text>
+        </svg>
+        <div style="margin-top:10px;padding:10px;background:#ECFDF5;border-radius:8px;border-left:3px solid #10B981">
+          <div style="font-size:11px;color:#059669;font-weight:600">电池健康状态良好</div>
+          <div style="font-size:11px;color:#6EE7B7;margin-top:2px">预计寿命剩余 ~8.2 年</div>
+        </div>
+      </div>
+
+      <!-- CHARGE CYCLE -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-rotate"></i>循环次数统计</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="text-align:center;padding:12px 0">
+            <div style="font-size:48px;font-weight:700;font-family:'Rajdhani';color:#0EA5E9;line-height:1">1,284</div>
+            <div style="font-size:12px;color:var(--text-secondary)">累计充放电循环次数</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:700;font-family:'Rajdhani';color:#0EA5E9">47</div>
+              <div style="font-size:11px;color:var(--text-secondary)">本月循环</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:700;font-family:'Rajdhani';color:#10B981">3,716</div>
+              <div style="font-size:11px;color:var(--text-secondary)">额定总寿命</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:700;font-family:'Rajdhani';color:#F59E0B">34.6%</div>
+              <div style="font-size:11px;color:var(--text-secondary)">寿命消耗</div>
+            </div>
+            <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center">
+              <div style="font-size:18px;font-weight:700;font-family:'Rajdhani';color:#7C3AED">65.4%</div>
+              <div style="font-size:11px;color:var(--text-secondary)">剩余寿命</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOSS BREAKDOWN -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-chart-pie"></i>损耗构成分析</div>
+        </div>
+        <svg viewBox="0 0 200 160" style="width:100%;height:160px">
+          <!-- Donut chart -->
+          <circle cx="100" cy="80" r="55" fill="none" stroke="#E2EEF9" stroke-width="20"/>
+          <!-- PCS Loss: 45% = 127 deg -->
+          <circle cx="100" cy="80" r="55" fill="none" stroke="#0EA5E9" stroke-width="20"
+            stroke-dasharray="155 345" stroke-dashoffset="86" transform="rotate(-90,100,80)"/>
+          <!-- Battery Loss: 30% -->
+          <circle cx="100" cy="80" r="55" fill="none" stroke="#10B981" stroke-width="20"
+            stroke-dasharray="103 345" stroke-dashoffset="-69" transform="rotate(-90,100,80)"/>
+          <!-- Thermal: 15% -->
+          <circle cx="100" cy="80" r="55" fill="none" stroke="#F59E0B" stroke-width="20"
+            stroke-dasharray="52 345" stroke-dashoffset="-172" transform="rotate(-90,100,80)"/>
+          <!-- Other: 10% -->
+          <circle cx="100" cy="80" r="55" fill="none" stroke="#7C3AED" stroke-width="20"
+            stroke-dasharray="34 345" stroke-dashoffset="-224" transform="rotate(-90,100,80)"/>
+          <text x="100" y="76" text-anchor="middle" font-size="11" fill="#5A7A99" font-family="Noto Sans SC">总损耗</text>
+          <text x="100" y="92" text-anchor="middle" font-size="16" font-weight="700" font-family="Rajdhani" fill="#0F2744">2.8%</text>
+        </svg>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#0EA5E9;display:inline-block"></span>变流器损耗</span>
+            <span style="font-family:'JetBrains Mono';font-weight:600">45% · 3,474kWh</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#10B981;display:inline-block"></span>电池内阻损耗</span>
+            <span style="font-family:'JetBrains Mono';font-weight:600">30% · 2,316kWh</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#F59E0B;display:inline-block"></span>热管理耗电</span>
+            <span style="font-family:'JetBrains Mono';font-weight:600">15% · 1,158kWh</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#7C3AED;display:inline-block"></span>辅助系统耗电</span>
+            <span style="font-family:'JetBrains Mono';font-weight:600">10% · 772kWh</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAIL TABLE -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><i class="fa-solid fa-table"></i>各设备能效详细数据</div>
+        <div style="font-size:12px;color:var(--primary);cursor:pointer;padding:4px 10px;border:1px solid var(--primary-light);border-radius:6px;background:var(--primary-light)">
+          <i class="fa-solid fa-download"></i> 导出数据
+        </div>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>设备名称</th>
+            <th>充电量 (kWh)</th>
+            <th>放电量 (kWh)</th>
+            <th>损耗 (kWh)</th>
+            <th>往返效率</th>
+            <th>效率趋势</th>
+            <th>循环次数</th>
+            <th>SOH</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>电池簇 #01</b></td>
+            <td class="mono">47,820</td>
+            <td class="mono">46,435</td>
+            <td class="mono">1,385</td>
+            <td><div class="eff-bar-wrap"><div class="eff-bar" style="width:97.1%"></div></div> 97.1%</td>
+            <td style="color:#10B981;font-size:12px"><i class="fa-solid fa-arrow-trend-up"></i> +0.3%</td>
+            <td class="mono">1,284</td>
+            <td style="color:#10B981;font-weight:600">96.8%</td>
+          </tr>
+          <tr>
+            <td><b>电池簇 #02</b></td>
+            <td class="mono">47,560</td>
+            <td class="mono">46,205</td>
+            <td class="mono">1,355</td>
+            <td><div class="eff-bar-wrap"><div class="eff-bar" style="width:97.2%"></div></div> 97.2%</td>
+            <td style="color:#10B981;font-size:12px"><i class="fa-solid fa-arrow-trend-up"></i> +0.1%</td>
+            <td class="mono">1,281</td>
+            <td style="color:#10B981;font-weight:600">97.1%</td>
+          </tr>
+          <tr>
+            <td><b>电池簇 #03</b></td>
+            <td class="mono">46,980</td>
+            <td class="mono">45,500</td>
+            <td class="mono">1,480</td>
+            <td><div class="eff-bar-wrap"><div class="eff-bar" style="width:96.9%;background:linear-gradient(90deg,#F59E0B,#FCD34D)"></div></div> <span style="color:#F59E0B">96.9%</span></td>
+            <td style="color:#EF4444;font-size:12px"><i class="fa-solid fa-arrow-trend-down"></i> -0.2%</td>
+            <td class="mono">1,290</td>
+            <td style="color:#F59E0B;font-weight:600">95.4%</td>
+          </tr>
+          <tr>
+            <td><b>PCS变流器 #01</b></td>
+            <td class="mono">95,380</td>
+            <td class="mono">93,824</td>
+            <td class="mono">1,556</td>
+            <td><div class="eff-bar-wrap"><div class="eff-bar" style="width:98.4%"></div></div> 98.4%</td>
+            <td style="color:#10B981;font-size:12px"><i class="fa-solid fa-arrow-trend-up"></i> +0.2%</td>
+            <td class="mono">--</td>
+            <td style="color:#94A3B8">N/A</td>
+          </tr>
+          <tr>
+            <td><b>PCS变流器 #02</b></td>
+            <td class="mono">95,120</td>
+            <td class="mono">93,547</td>
+            <td class="mono">1,573</td>
+            <td><div class="eff-bar-wrap"><div class="eff-bar" style="width:98.3%"></div></div> 98.3%</td>
+            <td style="color:#10B981;font-size:12px"><i class="fa-solid fa-arrow-trend-up"></i> +0.1%</td>
+            <td class="mono">--</td>
+            <td style="color:#94A3B8">N/A</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <!-- TAB CONTENT: CHARGE/DISCHARGE -->
+    <div id="tab-charge" style="display:none">
+      <div class="kpi-strip">
+        <div class="kpi-card"><div class="kpi-val" style="color:#0EA5E9">284,560<span style="font-size:14px">kWh</span></div><div class="kpi-label">本月充电量</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +12.3%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#10B981">276,840<span style="font-size:14px">kWh</span></div><div class="kpi-label">本月放电量</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +11.8%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#10B981">97.2<span style="font-size:14px">%</span></div><div class="kpi-label">往返效率</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +0.4%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#7C3AED">47<span style="font-size:14px">次</span></div><div class="kpi-label">充放电循环</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +5</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#F59E0B">2.34</div><div class="kpi-label">日均循环</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +0.2</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-chart-line"></i>近15日充放电功率曲线 (kW)</div></div>
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:65px"></div><div class="bar-seg discharge" style="height:62px"></div></div><span class="bar-xlbl">01</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:58px"></div><div class="bar-seg discharge" style="height:55px"></div></div><span class="bar-xlbl">02</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:72px"></div><div class="bar-seg discharge" style="height:68px"></div></div><span class="bar-xlbl">03</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:55px"></div><div class="bar-seg discharge" style="height:52px"></div></div><span class="bar-xlbl">04</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:48px"></div><div class="bar-seg discharge" style="height:45px"></div></div><span class="bar-xlbl">05</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:82px"></div><div class="bar-seg discharge" style="height:78px"></div></div><span class="bar-xlbl">06</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:45px"></div><div class="bar-seg discharge" style="height:42px"></div></div><span class="bar-xlbl">07</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:68px"></div><div class="bar-seg discharge" style="height:65px"></div></div><span class="bar-xlbl">08</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:52px"></div><div class="bar-seg discharge" style="height:48px"></div></div><span class="bar-xlbl">09</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:78px"></div><div class="bar-seg discharge" style="height:75px"></div></div><span class="bar-xlbl">10</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:62px"></div><div class="bar-seg discharge" style="height:58px"></div></div><span class="bar-xlbl">11</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:48px"></div><div class="bar-seg discharge" style="height:45px"></div></div><span class="bar-xlbl">12</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:85px"></div><div class="bar-seg discharge" style="height:82px"></div></div><span class="bar-xlbl">13</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:58px"></div><div class="bar-seg discharge" style="height:55px"></div></div><span class="bar-xlbl">14</span></div>
+            <div class="bar-col"><div class="bar-col-inner"><div class="bar-seg charge" style="height:72px"></div><div class="bar-seg discharge" style="height:68px"></div></div><span class="bar-xlbl">15</span></div>
+          </div>
+          <div style="display:flex;justify-content:center;gap:20px;padding:10px;font-size:11px">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:8px;background:#0EA5E9;border-radius:2px;display:inline-block"></span>充电功率</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:8px;background:#10B981;border-radius:2px;display:inline-block"></span>放电功率</span>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-chart-pie"></i>时段分布</div></div>
+          <div style="padding:15px">
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-secondary)">谷时(00-06)</span><span style="color:#10B981;font-weight:600">45.1%</span></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-secondary)">平时(06-12)</span><span style="color:#0EA5E9;font-weight:600">31.5%</span></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-secondary)">峰时(12-14)</span><span style="color:#F59E0B;font-weight:600">34.7%</span></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="color:var(--text-secondary)">平时(14-17)</span><span style="color:#7C3AED;font-weight:600">18.3%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-list"></i>每日充放电明细</div></div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:var(--bg)"><th style="padding:10px;text-align:left">日期</th><th style="padding:10px;text-align:right">充电量</th><th style="padding:10px;text-align:right">放电量</th><th style="padding:10px;text-align:right">效率</th><th style="padding:10px;text-align:center">状态</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:10px">2025-01-14</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">9,740 kWh</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">10,692 kWh</td><td style="padding:10px;text-align:right;color:#10B981">97.2%</td><td style="padding:10px;text-align:center"><span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px">正常</span></td></tr>
+            <tr><td style="padding:10px">2025-01-13</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">8,920 kWh</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">9,840 kWh</td><td style="padding:10px;text-align:right;color:#10B981">97.1%</td><td style="padding:10px;text-align:center"><span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px">正常</span></td></tr>
+            <tr><td style="padding:10px">2025-01-12</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">10,120 kWh</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">9,560 kWh</td><td style="padding:10px;text-align:right;color:#F59E0B">96.8%</td><td style="padding:10px;text-align:center"><span style="background:#FFFBEB;color:#D97706;padding:2px 8px;border-radius:10px;font-size:10px">效率低</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB CONTENT: LOSS -->
+    <div id="tab-loss" style="display:none">
+      <div class="kpi-strip">
+        <div class="kpi-card"><div class="kpi-val" style="color:#EF4444">7,720<span style="font-size:14px">kWh</span></div><div class="kpi-label">本月总损耗</div><div class="kpi-change down"><i class="fa-solid fa-arrow-trend-down"></i> -0.8%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#0EA5E9">2.71<span style="font-size:14px">%</span></div><div class="kpi-label">损耗率</div><div class="kpi-change down"><i class="fa-solid fa-arrow-trend-down"></i> -0.2%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#10B981">3,474<span style="font-size:14px">kWh</span></div><div class="kpi-label">变流器损耗</div><div class="kpi-change down"><i class="fa-solid fa-arrow-trend-down"></i> -1.2%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#F59E0B">2,316<span style="font-size:14px">kWh</span></div><div class="kpi-label">电池内阻损耗</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +0.5%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#7C3AED">1,930<span style="font-size:14px">kWh</span></div><div class="kpi-label">辅助系统损耗</div><div class="kpi-change down"><i class="fa-solid fa-arrow-trend-down"></i> -0.3%</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-chart-pie"></i>损耗分布占比</div></div>
+          <div style="padding:20px">
+            <div style="display:flex;align-items:center;gap:15px;padding:10px 0">
+              <div style="width:80px;font-size:12px;color:var(--text-secondary)">变流器</div>
+              <div style="flex:1;height:24px;background:#F0F9FF;border-radius:4px;overflow:hidden"><div style="width:45%;height:100%;background:#0EA5E9"></div></div>
+              <div style="width:60px;font-size:12px;font-weight:600">45%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px;padding:10px 0">
+              <div style="width:80px;font-size:12px;color:var(--text-secondary)">电池内阻</div>
+              <div style="flex:1;height:24px;background:#F0F9FF;border-radius:4px;overflow:hidden"><div style="width:30%;height:100%;background:#10B981"></div></div>
+              <div style="width:60px;font-size:12px;font-weight:600">30%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px;padding:10px 0">
+              <div style="width:80px;font-size:12px;color:var(--text-secondary)">热管理</div>
+              <div style="flex:1;height:24px;background:#F0F9FF;border-radius:4px;overflow:hidden"><div style="width:15%;height:100%;background:#F59E0B"></div></div>
+              <div style="width:60px;font-size:12px;font-weight:600">15%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px;padding:10px 0">
+              <div style="width:80px;font-size:12px;color:var(--text-secondary)">辅助系统</div>
+              <div style="flex:1;height:24px;background:#F0F9FF;border-radius:4px;overflow:hidden"><div style="width:10%;height:100%;background:#7C3AED"></div></div>
+              <div style="width:60px;font-size:12px;font-weight:600">10%</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-list"></i>损耗明细</div></div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--bg)"><th style="padding:8px;text-align:left">设备</th><th style="padding:8px;text-align:right">损耗</th><th style="padding:8px;text-align:right">占比</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:8px">PCS变流器 #01</td><td style="padding:8px;text-align:right;font-family:'JetBrains Mono'">868 kWh</td><td style="padding:8px;text-align:right">11.2%</td></tr>
+              <tr><td style="padding:8px">PCS变流器 #02</td><td style="padding:8px;text-align:right;font-family:'JetBrains Mono'">868 kWh</td><td style="padding:8px;text-align:right">11.2%</td></tr>
+              <tr><td style="padding:8px">PCS变流器 #03</td><td style="padding:8px;text-align:right;font-family:'JetBrains Mono'">868 kWh</td><td style="padding:8px;text-align:right">11.3%</td></tr>
+              <tr><td style="padding:8px">PCS变流器 #04</td><td style="padding:8px;text-align:right;font-family:'JetBrains Mono'">870 kWh</td><td style="padding:8px;text-align:right">11.3%</td></tr>
+              <tr><td style="padding:8px">电池簇损耗</td><td style="padding:8px;text-align:right;font-family:'JetBrains Mono'">2,316 kWh</td><td style="padding:8px;text-align:right">30.0%</td></tr>
+              <tr><td style="padding:8px">辅助系统</td><td style="padding:8px;text-align:right;font-family:'JetBrains Mono'">1,930 kWh</td><td style="padding:8px;text-align:right">25.0%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-lightbulb"></i>节能建议</div></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:15px">
+          <div style="padding:12px;background:#F0F9FF;border-radius:8px;border-left:3px solid #0EA5E9">
+            <div style="font-size:11px;color:#0EA5E9;font-weight:600;margin-bottom:4px">变流器优化</div>
+            <div style="font-size:11px;color:var(--text-secondary)">建议优化PCS工作点，可降低损耗约0.5%</div>
+          </div>
+          <div style="padding:12px;background:#ECFDF5;border-radius:8px;border-left:3px solid #10B981">
+            <div style="font-size:11px;color:#10B981;font-weight:600;margin-bottom:4px">电池维护</div>
+            <div style="font-size:11px;color:var(--text-secondary)">电池簇#03内阻偏高，建议进行维护</div>
+          </div>
+          <div style="padding:12px;background:#FFFBEB;border-radius:8px;border-left:3px solid #F59E0B">
+            <div style="font-size:11px;color:#F59E0B;font-weight:600;margin-bottom:4px">热管理</div>
+            <div style="font-size:11px;color:var(--text-secondary)">优化HVAC运行策略，减少功耗</div>
+          </div>
+          <div style="padding:12px;background:#F5F3FF;border-radius:8px;border-left:3px solid #7C3AED">
+            <div style="font-size:11px;color:#7C3AED;font-weight:600;margin-bottom:4px">辅助设备</div>
+            <div style="font-size:11px;color:var(--text-secondary)">关闭非必要辅助设备</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB CONTENT: PEAK -->
+    <div id="tab-peak" style="display:none">
+      <div class="kpi-strip">
+        <div class="kpi-card"><div class="kpi-val" style="color:#10B981">¥ 89,420</div><div class="kpi-label">本月套利收益</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +18.6%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#0EA5E9">198,560<span style="font-size:14px">kWh</span></div><div class="kpi-label">谷时充电量</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +15.2%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#F59E0B">187,320<span style="font-size:14px">kWh</span></div><div class="kpi-label">峰时放电量</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +14.8%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#7C3AED">0.72<span style="font-size:14px">元</span></div><div class="kpi-label">电价差</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +0.05</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#10B981">¥ 2,981</div><div class="kpi-label">日均收益</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +18.6%</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-chart-column"></i>近30日套利收益趋势 (元)</div></div>
+          <div style="height:220px;padding:15px;display:flex;align-items:flex-end;gap:3px">
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:65%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:58%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:72%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:55%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:48%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:82%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:68%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:75%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:52%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:78%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:62%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:85%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:58%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:72%"></div>
+            <div style="flex:1;background:#10B981;border-radius:2px 2px 0 0;height:90%"></div>
+          </div>
+          <div style="text-align:center;padding:10px;font-size:12px;color:var(--text-secondary)">日期 (01-15)</div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-coins"></i>电价时段收益</div></div>
+          <div style="padding:15px">
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+              <div><div style="font-size:12px;font-weight:600">谷时</div><div style="font-size:10px;color:var(--text-light)">00:00-06:00</div></div>
+              <div style="text-align:right"><div style="font-size:12px;color:#10B981;font-weight:600">¥ 21,070</div><div style="font-size:10px;color:var(--text-light)">198,560kWh</div></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+              <div><div style="font-size:12px;font-weight:600">平时</div><div style="font-size:10px;color:var(--text-light)">06:00-12:00</div></div>
+              <div style="text-align:right"><div style="font-size:12px;color:#0EA5E9;font-weight:600">¥ 4,518</div><div style="font-size:10px;color:var(--text-light)">45,680kWh</div></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+              <div><div style="font-size:12px;font-weight:600">峰时(1)</div><div style="font-size:10px;color:var(--text-light)">08:00-11:00</div></div>
+              <div style="text-align:right"><div style="font-size:12px;color:#F59E0B;font-weight:600">¥ 15,680</div><div style="font-size:10px;color:var(--text-light)">98,760kWh</div></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0">
+              <div><div style="font-size:12px;font-weight:600">峰时(2)</div><div style="font-size:10px;color:var(--text-light)">17:00-21:00</div></div>
+              <div style="text-align:right"><div style="font-size:12px;color:#F59E0B;font-weight:600">¥ 14,080</div><div style="font-size:10px;color:var(--text-light)">88,560kWh</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-list"></i>收益明细</div></div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:var(--bg)"><th style="padding:10px;text-align:left">日期</th><th style="padding:10px;text-align:right">谷时充电</th><th style="padding:10px;text-align:right">峰时放电</th><th style="padding:10px;text-align:right">收益</th><th style="padding:10px;text-align:center">状态</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:10px">2025-01-14</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">6,820 kWh</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">7,240 kWh</td><td style="padding:10px;text-align:right;color:#10B981;font-weight:600">¥ 3,218</td><td style="padding:10px;text-align:center"><span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px">正常</span></td></tr>
+            <tr><td style="padding:10px">2025-01-13</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">6,540 kWh</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">6,980 kWh</td><td style="padding:10px;text-align:right;color:#10B981;font-weight:600">¥ 3,086</td><td style="padding:10px;text-align:center"><span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px">正常</span></td></tr>
+            <tr><td style="padding:10px">2025-01-12</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">6,920 kWh</td><td style="padding:10px;text-align:right;font-family:'JetBrains Mono'">7,120 kWh</td><td style="padding:10px;text-align:right;color:#10B981;font-weight:600">¥ 3,158</td><td style="padding:10px;text-align:center"><span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px">正常</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB CONTENT: BATTERY -->
+    <div id="tab-battery" style="display:none">
+      <div class="kpi-strip">
+        <div class="kpi-card"><div class="kpi-val" style="color:#10B981">96.5<span style="font-size:14px">%</span></div><div class="kpi-label">平均SOH</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +0.2%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#F59E0B">94.8<span style="font-size:14px">%</span></div><div class="kpi-label">最低SOH</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +0.1%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#0EA5E9">0.8<span style="font-size:14px">%/年</span></div><div class="kpi-label">容量衰减率</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> -0.1%</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#7C3AED">8.5<span style="font-size:14px">年</span></div><div class="kpi-label">预计寿命</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +0.5年</div></div>
+        <div class="kpi-card"><div class="kpi-val" style="color:#10B981">5/6</div><div class="kpi-label">健康电池簇</div><div class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +1</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-heart-pulse"></i>各电池簇SOH</div></div>
+          <div style="padding:15px">
+            <div style="display:flex;align-items:center;gap:15px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div style="width:80px;font-size:12px;font-weight:600">电池簇 #01</div>
+              <div style="flex:1;height:20px;background:#F0F9FF;border-radius:4px;overflow:hidden"><div style="width:97.2%;height:100%;background:#10B981"></div></div>
+              <div style="width:50px;font-size:12px;font-weight:600;color:#10B981">97.2%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div style="width:80px;font-size:12px;font-weight:600">电池簇 #02</div>
+              <div style="flex:1;height:20px;background:#F0F9FF;border-radius:4px;overflow:hidden"><div style="width:96.8%;height:100%;background:#10B981"></div></div>
+              <div style="width:50px;font-size:12px;font-weight:600;color:#10B981">96.8%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div style="width:80px;font-size:12px;font-weight:600">电池簇 #03</div>
+              <div style="flex:1;height:20px;background:#F0F9FF;border-radius:4px;overflow:hidden"><div style="width:94.8%;height:100%;background:#F59E0B"></div></div>
+              <div style="width:50px;font-size:12px;font-weight:600;color:#F59E0B">94.8%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div style="width:80px;font-size:12px;font-weight:600">电池簇 #04</div>
+              <div style="flex:1;height:20px;background:#F0F9FF;border-radius:4px;overflow:hidden"><div style="width:97.1%;height:100%;background:#10B981"></div></div>
+              <div style="width:50px;font-size:12px;font-weight:600;color:#10B981">97.1%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <div style="width:80px;font-size:12px;font-weight:600">电池簇 #05</div>
+              <div style="flex:1;height:20px;background:#F0F9FF;border-radius:4px;overflow:hidden"><div style="width:96.5%;height:100%;background:#10B981"></div></div>
+              <div style="width:50px;font-size:12px;font-weight:600;color:#10B981">96.5%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:15px;padding:12px 0">
+              <div style="width:80px;font-size:12px;font-weight:600">电池簇 #06</div>
+              <div style="flex:1;height:20px;background:#F0F9FF;border-radius:4px;overflow:hidden"><div style="width:96.2%;height:100%;background:#10B981"></div></div>
+              <div style="width:50px;font-size:12px;font-weight:600;color:#10B981">96.2%</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title"><i class="fa-solid fa-chart-line"></i>SOH趋势预测</div>
+            <div style="display:flex;gap:16px;font-size:11px;align-items:center">
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:2px;background:#10B981;display:inline-block"></span>实际值</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:2px;background:#0EA5E9;border-style:dashed;display:inline-block"></span>预测值</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:8px;background:rgba(239,68,68,0.15);display:inline-block"></span>预警区</span>
+            </div>
+          </div>
+          <div style="height:240px;padding:10px 15px 15px;position:relative">
+            <svg id="sohChart" viewBox="0 0 500 200" style="width:100%;height:100%">
+              <defs>
+                <linearGradient id="sohChartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10B981" stop-opacity="0.25"/>
+                  <stop offset="100%" stop-color="#10B981" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="forecastGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#0EA5E9" stop-opacity="0.2"/>
+                  <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0"/>
+                </linearGradient>
+                <filter id="chartGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="2" result="blur"/>
+                  <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              <rect x="45" y="10" width="440" height="160" fill="#F8FCFF" rx="4"/>
+              <g stroke="#E2EEF9" stroke-width="1">
+                <line x1="45" y1="10" x2="485" y2="10"/>
+                <line x1="45" y1="42" x2="485" y2="42"/>
+                <line x1="45" y1="74" x2="485" y2="74"/>
+                <line x1="45" y1="106" x2="485" y2="106"/>
+                <line x1="45" y1="138" x2="485" y2="138"/>
+                <line x1="45" y1="170" x2="485" y2="170"/>
+              </g>
+              <line x1="45" y1="170" x2="485" y2="170" stroke="#CBD5E1" stroke-width="1.5"/>
+              <line x1="45" y1="10" x2="45" y2="170" stroke="#CBD5E1" stroke-width="1.5"/>
+              <rect x="45" y="10" width="440" height="24" fill="rgba(239,68,68,0.08)"/>
+              <line x1="45" y1="34" x2="485" y2="34" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="6,4"/>
+              <text x="38" y="14" font-size="9" fill="#94A3B8" text-anchor="end" font-family="JetBrains Mono">100%</text>
+              <text x="38" y="46" font-size="9" fill="#94A3B8" text-anchor="end" font-family="JetBrains Mono">95%</text>
+              <text x="38" y="78" font-size="9" fill="#94A3B8" text-anchor="end" font-family="JetBrains Mono">90%</text>
+              <text x="38" y="110" font-size="9" fill="#94A3B8" text-anchor="end" font-family="JetBrains Mono">85%</text>
+              <text x="38" y="142" font-size="9" fill="#94A3B8" text-anchor="end" font-family="JetBrains Mono">80%</text>
+              <text x="30" y="174" font-size="9" fill="#EF4444" text-anchor="end" font-family="JetBrains Mono">75%</text>
+              <text x="490" y="174" font-size="9" fill="#EF4444" font-family="JetBrains Mono">寿命终止</text>
+              <path id="sohAreaPath" d="M 45,66 L 95,64 L 145,62 L 195,60 L 245,58 L 295,58 L 345,58 L 395,60 L 445,64 L 485,68 L 485,170 L 45,170 Z" fill="url(#sohChartGrad)"/>
+              <path id="sohLinePath" d="M 45,66 L 95,64 L 145,62 L 195,60 L 245,58 L 295,58 L 345,58 L 395,60 L 445,64 L 485,68" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#chartGlow)"/>
+              <path id="forecastAreaPath" d="M 295,58 L 345,58 L 395,60 L 445,64 L 485,68 L 485,100 L 445,92 L 395,82 L 345,74 L 295,70 Z" fill="url(#forecastGrad)" opacity="0"/>
+              <path id="forecastLinePath" d="M 295,58 L 345,58 L 395,60 L 445,64 L 485,68" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round" opacity="0"/>
+              <path id="confidenceBand" d="M 295,50 L 345,48 L 395,52 L 445,58 L 485,62 L 485,74 L 445,72 L 395,68 L 345,66 L 295,66 Z" fill="rgba(14,165,233,0.1)" opacity="0"/>
+              <circle cx="45" cy="66" r="4" fill="white" stroke="#10B981" stroke-width="2"/>
+              <circle cx="95" cy="64" r="4" fill="white" stroke="#10B981" stroke-width="2"/>
+              <circle cx="145" cy="62" r="4" fill="white" stroke="#10B981" stroke-width="2"/>
+              <circle cx="195" cy="60" r="4" fill="white" stroke="#10B981" stroke-width="2"/>
+              <circle cx="245" cy="58" r="4" fill="white" stroke="#10B981" stroke-width="2"/>
+              <circle cx="295" cy="58" r="5" fill="#10B981" stroke="white" stroke-width="2"/>
+              <circle class="forecast-dot" cx="345" cy="58" r="4" fill="white" stroke="#0EA5E9" stroke-width="2" stroke-dasharray="3,2"/>
+              <circle class="forecast-dot" cx="395" cy="60" r="4" fill="white" stroke="#0EA5E9" stroke-width="2" stroke-dasharray="3,2"/>
+              <circle class="forecast-dot" cx="445" cy="64" r="4" fill="white" stroke="#0EA5E9" stroke-width="2" stroke-dasharray="3,2"/>
+              <circle class="forecast-dot" cx="485" cy="68" r="5" fill="#0EA5E9"/>
+              <text x="45" y="188" font-size="10" fill="#5A7A99" text-anchor="middle" font-family="JetBrains Mono">2024/01</text>
+              <text x="145" y="188" font-size="10" fill="#5A7A99" text-anchor="middle" font-family="JetBrains Mono">2024/07</text>
+              <text x="245" y="188" font-size="10" fill="#5A7A99" text-anchor="middle" font-family="JetBrains Mono">2025/01</text>
+              <text x="295" y="188" font-size="10" fill="#0EA5E9" text-anchor="middle" font-family="JetBrains Mono">2025/07</text>
+              <text x="395" y="188" font-size="10" fill="#0EA5E9" text-anchor="middle" font-family="JetBrains Mono">2026/07</text>
+              <text x="485" y="188" font-size="10" fill="#0EA5E9" text-anchor="middle" font-family="JetBrains Mono">2027/07</text>
+              <g id="sohTooltip" visibility="hidden">
+                <rect x="0" y="0" width="120" height="50" rx="6" fill="white" stroke="#E2EEF9" stroke-width="1" filter="drop-shadow(0 2px 4px rgba(15,39,68,0.1))"/>
+                <text x="10" y="18" font-size="11" fill="#5A7A99" font-family="Noto Sans SC">2025/01</text>
+                <text x="10" y="36" font-size="14" font-weight="700" fill="#10B981" font-family="Rajdhani" id="tooltipValue">97.8%</text>
+                <circle cx="105" cy="15" r="6" fill="#10B981"/>
+              </g>
+              <g id="forecastTooltip" visibility="hidden">
+                <rect x="0" y="0" width="130" height="65" rx="6" fill="white" stroke="#E2EEF9" stroke-width="1" filter="drop-shadow(0 2px 4px rgba(15,39,68,0.1))"/>
+                <text x="10" y="18" font-size="11" fill="#5A7A99" font-family="Noto Sans SC">预测日期</text>
+                <text x="10" y="36" font-size="14" font-weight="700" fill="#0EA5E9" font-family="Rajdhani" id="forecastTooltipValue">96.2%</text>
+                <text x="10" y="52" font-size="10" fill="#94A3B8" font-family="Noto Sans SC" id="forecastTooltipRange">置信区间: 95.8%-96.6%</text>
+              </g>
+            </svg>
+            <div style="position:absolute;top:15px;right:20px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:8px 12px">
+              <div style="font-size:10px;color:#059669;margin-bottom:2px">当前SOH</div>
+              <div style="font-size:20px;font-weight:700;color:#10B981;font-family:'Rajdhani'" id="currentSOH">96.8%</div>
+              <div style="font-size:10px;color:#6EE7B7;margin-top:2px">预计80%时间: <span id="soh80Year">2033年</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head"><div class="panel-title"><i class="fa-solid fa-list"></i>电池健康明细</div></div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--bg)"><th style="padding:10px;text-align:left">电池簇</th><th style="padding:10px;text-align:right">SOH</th><th style="padding:10px;text-align:right">容量衰减</th><th style="padding:10px;text-align:center">状态</th><th style="padding:10px;text-align:center">建议</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:10px">电池簇 #01</td><td style="padding:10px;text-align:right;color:#10B981;font-weight:600">97.2%</td><td style="padding:10px;text-align:right">0.6%</td><td style="padding:10px;text-align:center"><span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px">优秀</span></td><td style="padding:10px;text-align:center;font-size:11px;color:var(--text-secondary)">继续保持</td></tr>
+              <tr><td style="padding:10px">电池簇 #02</td><td style="padding:10px;text-align:right;color:#10B981;font-weight:600">96.8%</td><td style="padding:10px;text-align:right">0.7%</td><td style="padding:10px;text-align:center"><span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px">优秀</span></td><td style="padding:10px;text-align:center;font-size:11px;color:var(--text-secondary)">继续保持</td></tr>
+              <tr><td style="padding:10px">电池簇 #03</td><td style="padding:10px;text-align:right;color:#F59E0B;font-weight:600">94.8%</td><td style="padding:10px;text-align:right">1.2%</td><td style="padding:10px;text-align:center"><span style="background:#FFFBEB;color:#D97706;padding:2px 8px;border-radius:10px;font-size:10px">良好</span></td><td style="padding:10px;text-align:center;font-size:11px;color:var(--text-secondary)">关注维护</td></tr>
+              <tr><td style="padding:10px">电池簇 #04</td><td style="padding:10px;text-align:right;color:#10B981;font-weight:600">97.1%</td><td style="padding:10px;text-align:right">0.6%</td><td style="padding:10px;text-align:center"><span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px">优秀</span></td><td style="padding:10px;text-align:center;font-size:11px;color:var(--text-secondary)">继续保持</td></tr>
+              <tr><td style="padding:10px">电池簇 #05</td><td style="padding:10px;text-align:right;color:#10B981;font-weight:600">96.5%</td><td style="padding:10px;text-align:right">0.8%</td><td style="padding:10px;text-align:center"><span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px">优秀</span></td><td style="padding:10px;text-align:center;font-size:11px;color:var(--text-secondary)">继续保持</td></tr>
+              <tr><td style="padding:10px">电池簇 #06</td><td style="padding:10px;text-align:right;color:#10B981;font-weight:600">96.2%</td><td style="padding:10px;text-align:right">0.9%</td><td style="padding:10px;text-align:center"><span style="background:#ECFDF5;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px">优秀</span></td><td style="padding:10px;text-align:center;font-size:11px;color:var(--text-secondary)">继续保持</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('zh-CN', {hour12:false});
+  }
+  updateClock(); setInterval(updateClock, 1000);
+
+  // Tab switching function
+  window.switchTab = function(tabName) {
+    const tabs = ['overview', 'charge', 'loss', 'peak', 'battery'];
+    tabs.forEach(t => {
+      const el = document.getElementById('tab-' + t);
+      if (el) el.style.display = (t === tabName) ? 'block' : 'none';
+    });
+    document.querySelectorAll('.tab-bar .tab').forEach((tab, i) => {
+      const tabNames = ['overview', 'charge', 'loss', 'peak', 'battery'];
+      tab.classList.toggle('active', tabNames[i] === tabName);
+    });
+  };
+
+  // SOH Chart Animation and Interaction
+function initSOHChart() {
+  const sohLinePath = document.getElementById('sohLinePath');
+  const sohAreaPath = document.getElementById('sohAreaPath');
+  const forecastLinePath = document.getElementById('forecastLinePath');
+  const forecastAreaPath = document.getElementById('forecastAreaPath');
+  const confidenceBand = document.getElementById('confidenceBand');
+  const currentSOH = document.getElementById('currentSOH');
+
+  if (!sohLinePath) return;
+
+  const totalLength = sohLinePath.getTotalLength();
+  sohLinePath.style.strokeDasharray = totalLength;
+  sohLinePath.style.strokeDashoffset = totalLength;
+  sohLinePath.style.transition = 'none';
+
+  const areaLength = sohAreaPath.getAttribute('d') ? 1000 : 0;
+  sohAreaPath.style.opacity = '0';
+
+  setTimeout(() => {
+    sohLinePath.style.transition = 'stroke-dashoffset 1.5s ease-out';
+    sohLinePath.style.strokeDashoffset = '0';
+    sohAreaPath.style.transition = 'opacity 1s ease-out 0.5s';
+    sohAreaPath.style.opacity = '1';
+  }, 300);
+
+  setTimeout(() => {
+    if (forecastLinePath) {
+      forecastLinePath.style.transition = 'opacity 0.8s ease-out';
+      forecastLinePath.style.opacity = '1';
+    }
+    if (forecastAreaPath) {
+      forecastAreaPath.style.transition = 'opacity 0.8s ease-out 0.2s';
+      forecastAreaPath.style.opacity = '1';
+    }
+    if (confidenceBand) {
+      confidenceBand.style.transition = 'opacity 0.8s ease-out 0.4s';
+      confidenceBand.style.opacity = '1';
+    }
+  }, 2000);
+
+  const sohChart = document.getElementById('sohChart');
+  const sohTooltip = document.getElementById('sohTooltip');
+  const forecastTooltip = document.getElementById('forecastTooltip');
+  const tooltipValue = document.getElementById('tooltipValue');
+  const forecastTooltipValue = document.getElementById('forecastTooltipValue');
+  const forecastTooltipRange = document.getElementById('forecastTooltipRange');
+
+  const historicalData = [
+    { x: 45, y: 66, date: '2024/01', value: 98.6 },
+    { x: 95, y: 64, date: '2024/04', value: 98.2 },
+    { x: 145, y: 62, date: '2024/07', value: 97.8 },
+    { x: 195, y: 60, date: '2024/10', value: 97.4 },
+    { x: 245, y: 58, date: '2025/01', value: 97.1 },
+    { x: 295, y: 58, date: '2025/04', value: 96.8 }
+  ];
+
+  const forecastData = [
+    { x: 345, y: 58, date: '2025/07', value: 96.5, low: 95.8, high: 97.2 },
+    { x: 395, y: 60, date: '2026/07', value: 95.8, low: 94.5, high: 97.1 },
+    { x: 445, y: 64, date: '2027/01', value: 94.2, low: 92.5, high: 95.9 },
+    { x: 485, y: 68, date: '2027/07', value: 92.6, low: 90.5, high: 94.7 }
+  ];
+
+  if (sohChart) {
+    sohChart.addEventListener('mousemove', function(e) {
+      const rect = sohChart.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (500 / rect.width);
+      const y = (e.clientY - rect.top) * (200 / rect.height);
+
+      let closestHistorical = null;
+      let minDistHistorical = Infinity;
+      historicalData.forEach(point => {
+        const dist = Math.sqrt(Math.pow(x - point.x, 2) + Math.pow(y - point.y, 2));
+        if (dist < minDistHistorical && dist < 30) {
+          minDistHistorical = dist;
+          closestHistorical = point;
+        }
+      });
+
+      let closestForecast = null;
+      let minDistForecast = Infinity;
+      forecastData.forEach(point => {
+        const dist = Math.sqrt(Math.pow(x - point.x, 2) + Math.pow(y - point.y, 2));
+        if (dist < minDistForecast && dist < 30) {
+          minDistForecast = dist;
+          closestForecast = point;
+        }
+      });
+
+      if (closestHistorical && minDistHistorical < 25) {
+        sohTooltip.setAttribute('visibility', 'visible');
+        forecastTooltip.setAttribute('visibility', 'hidden');
+        sohTooltip.setAttribute('transform', `translate(${closestHistorical.x + 10}, ${closestHistorical.y - 30})`);
+        tooltipValue.textContent = closestHistorical.value.toFixed(1) + '%';
+        sohTooltip.querySelector('text:first-of-type').textContent = closestHistorical.date;
+      } else if (closestForecast && minDistForecast < 25) {
+        forecastTooltip.setAttribute('visibility', 'visible');
+        sohTooltip.setAttribute('visibility', 'hidden');
+        forecastTooltip.setAttribute('transform', `translate(${closestForecast.x + 10}, ${closestForecast.y - 40})`);
+        forecastTooltipValue.textContent = closestForecast.value.toFixed(1) + '%';
+        forecastTooltipRange.textContent = `置信区间: ${closestForecast.low.toFixed(1)}%-${closestForecast.high.toFixed(1)}%`;
+        forecastTooltip.querySelector('text:first-of-type').textContent = closestForecast.date;
+      } else {
+        sohTooltip.setAttribute('visibility', 'hidden');
+        forecastTooltip.setAttribute('visibility', 'hidden');
+      }
+    });
+
+    sohChart.addEventListener('mouseleave', function() {
+      if (sohTooltip) sohTooltip.setAttribute('visibility', 'hidden');
+      if (forecastTooltip) forecastTooltip.setAttribute('visibility', 'hidden');
+    });
+  }
+
+  let currentValue = 96.8;
+  let targetValue = 96.8;
+  setInterval(() => {
+    targetValue = 96.5 + Math.random() * 0.6;
+    const animate = () => {
+      const diff = targetValue - currentValue;
+      if (Math.abs(diff) > 0.001) {
+        currentValue += diff * 0.1;
+        if (currentSOH) currentSOH.textContent = currentValue.toFixed(1) + '%';
+        requestAnimationFrame(animate);
+      }
+    };
+    animate();
+  }, 5000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initSOHChart();
+});
+
+// Period data
+  const periodData = {
+    month: { 
+      label: '本月', 
+      range: '2025-01-01 ~ 2025-01-31',
+      charge: '284,560 kWh',
+      discharge: '276,840 kWh',
+      efficiency: '97.2%',
+      cycles: '47 次',
+      revenue: '¥ 42,580',
+      loss: '7,720 kWh'
+    },
+    quarter: { 
+      label: '本季度', 
+      range: '2025-01-01 ~ 2025-03-31',
+      charge: '856,420 kWh',
+      discharge: '831,240 kWh',
+      efficiency: '97.1%',
+      cycles: '142 次',
+      revenue: '¥ 127,840',
+      loss: '23,180 kWh'
+    },
+    year: { 
+      label: '本年', 
+      range: '2025-01-01 ~ 2025-12-31',
+      charge: '3,425,680 kWh',
+      discharge: '3,324,960 kWh',
+      efficiency: '97.0%',
+      cycles: '568 次',
+      revenue: '¥ 511,360',
+      loss: '92,720 kWh'
+    }
+  };
+
+  // Change period function
+  function changePeriod(period) {
+    // Update button states
+    document.querySelectorAll('.date-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('period' + period.charAt(0).toUpperCase() + period.slice(1)).classList.add('active');
+    
+    // Update date range display
+    document.getElementById('dateRangeBtn').textContent = periodData[period].range;
+    
+    // Update KPI values with animation
+    updateKPIData(period);
+  }
+
+  function updateKPIData(period) {
+    const data = periodData[period];
+    const values = [
+      { el: document.querySelector('.kpi-card:nth-child(1) .kpi-val'), val: data.efficiency },
+      { el: document.querySelector('.kpi-card:nth-child(2) .kpi-val'), val: data.charge },
+      { el: document.querySelector('.kpi-card:nth-child(3) .kpi-val'), val: data.discharge },
+      { el: document.querySelector('.kpi-card:nth-child(4) .kpi-val'), val: data.loss },
+      { el: document.querySelector('.kpi-card:nth-child(5) .kpi-val'), val: data.revenue }
+    ];
+    
+    values.forEach((item, index) => {
+      if (item.el) {
+        item.el.style.opacity = '0.5';
+        item.el.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          item.el.textContent = item.val;
+          item.el.style.opacity = '1';
+          item.el.style.transform = 'scale(1)';
+        }, 150 + index * 50);
+      }
+    });
+  }
+
+  // Date range picker modal
+  function openDateRangePicker() {
+    const content = `
+      <div class="modal-form-group">
+        <label class="modal-form-label">开始日期</label>
+        <input class="modal-form-input" type="date" value="2025-01-01">
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">结束日期</label>
+        <input class="modal-form-input" type="date" value="2025-01-31">
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">快速选择</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <button class="date-btn active" style="padding:6px 12px">今天</button>
+          <button class="date-btn" style="padding:6px 12px">昨天</button>
+          <button class="date-btn" style="padding:6px 12px">近7天</button>
+          <button class="date-btn" style="padding:6px 12px">近30天</button>
+        </div>
+      </div>
+    `;
+    openModal('<i class="fa-solid fa-calendar"></i> 自定义日期范围', content);
+  }
+
+  // Modal functions - init after DOM ready
+  document.addEventListener('DOMContentLoaded', function() {
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+
+    function openModal(title, content) {
+      modalTitle.innerHTML = title;
+      modalBody.innerHTML = content;
+      modalOverlay.classList.add('active');
+      modal.style.position = 'fixed';
+      modal.style.left = '50%';
+      modal.style.top = '50%';
+      modal.style.transform = 'translate(-50%, -50%)';
+      modal.style.margin = '0';
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    // Drag functionality
+    const modalHeader = document.querySelector('.modal-header');
+    if (modalHeader) {
+      let isDragging = false;
+      let dragOffsetX, dragOffsetY;
+
+      modalHeader.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        dragOffsetX = e.clientX - modal.getBoundingClientRect().left;
+        dragOffsetY = e.clientY - modal.getBoundingClientRect().top;
+        modal.style.transition = 'none';
+      });
+
+      document.addEventListener('mousemove', function(e) {
+        if (isDragging) {
+          modal.style.left = (e.clientX - dragOffsetX) + 'px';
+          modal.style.top = (e.clientY - dragOffsetY) + 'px';
+          modal.style.position = 'fixed';
+        }
+      });
+
+      document.addEventListener('mouseup', function() {
+        isDragging = false;
+      });
+    }
+
+    if (modalOverlay) {
+      modalOverlay.addEventListener('click', function(e) {
+        if (e.target === modalOverlay) closeModal();
+      });
+    }
+  });
+
+  // Charge/Discharge Analysis Modal
+  window.openChargeDischargeDetail = function() {
+    const content = `
+      <div class="detail-section">
+        <div class="detail-title">本月充放电统计</div>
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-label">充电总量</div><div class="detail-value" style="color:#0EA5E9">284,560 kWh</div></div>
+          <div class="detail-item"><div class="detail-label">放电总量</div><div class="detail-value" style="color:#10B981">276,840 kWh</div></div>
+          <div class="detail-item"><div class="detail-label">往返效率</div><div class="detail-value" style="color:#10B981">97.2%</div></div>
+          <div class="detail-item"><div class="detail-label">循环次数</div><div class="detail-value">47 次</div></div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-title">充放电效率趋势</div>
+        <div class="mini-chart">
+          <svg viewBox="0 0 400 80">
+            <defs><linearGradient id="cd1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0EA5E9" stop-opacity="0.3"/><stop offset="100%" stop-color="#0EA5E9" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,60 C30,55 60,50 90,45 C120,40 150,42 180,38 C210,34 240,30 270,28 C300,26 330,24 360,22 C380,20 400,18 400,18 L400,80 L0,80 Z" fill="url(#cd1)"/>
+            <path d="M0,60 C30,55 60,50 90,45 C120,40 150,42 180,38 C210,34 240,30 270,28 C300,26 330,24 360,22 C380,20 400,18 400,18" fill="none" stroke="#0EA5E9" stroke-width="2"/>
+            <defs><linearGradient id="cd2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10B981" stop-opacity="0.3"/><stop offset="100%" stop-color="#10B981" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,55 C30,50 60,45 90,42 C120,38 150,36 180,32 C210,28 240,26 270,24 C300,22 330,20 360,18 C380,16 400,15 400,15 L400,80 L0,80 Z" fill="url(#cd2)"/>
+            <path d="M0,55 C30,50 60,45 90,42 C120,38 150,36 180,32 C210,28 240,26 270,24 C300,22 330,20 360,18 C380,16 400,15 400,15" fill="none" stroke="#10B981" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-title">时段分析</div>
+        <div class="detail-grid-3">
+          <div class="detail-item"><div class="detail-label">谷时充电 (00-06)</div><div class="detail-value" style="color:#10B981">128,420 kWh</div></div>
+          <div class="detail-item"><div class="detail-label">平时充电 (06-12)</div><div class="detail-value" style="color:#0EA5E9">89,680 kWh</div></div>
+          <div class="detail-item"><div class="detail-label">峰时放电 (08-21)</div><div class="detail-value" style="color:#F59E0B">276,840 kWh</div></div>
+        </div>
+      </div>
+    `;
+    openModal('<i class="fa-solid fa-rotate"></i> 充放电分析详情', content);
+  };
+
+  // Loss Analysis Modal
+  window.openLossDetail = function() {
+    const content = `
+      <div class="detail-section">
+        <div class="detail-title">损耗构成详情</div>
+        <div class="loss-bar"><span class="loss-bar-label">变流器</span><div class="loss-bar-track"><div class="loss-bar-fill" style="width:45%;background:#0EA5E9"></div></div><span class="loss-bar-val" style="color:#0EA5E9">3,474 kWh</span></div>
+        <div class="loss-bar"><span class="loss-bar-label">电池内阻</span><div class="loss-bar-track"><div class="loss-bar-fill" style="width:30%;background:#10B981"></div></div><span class="loss-bar-val" style="color:#10B981">2,316 kWh</span></div>
+        <div class="loss-bar"><span class="loss-bar-label">热管理</span><div class="loss-bar-track"><div class="loss-bar-fill" style="width:15%;background:#F59E0B"></div></div><span class="loss-bar-val" style="color:#F59E0B">1,158 kWh</span></div>
+        <div class="loss-bar"><span class="loss-bar-label">辅助系统</span><div class="loss-bar-track"><div class="loss-bar-fill" style="width:10%;background:#7C3AED"></div></div><span class="loss-bar-val" style="color:#7C3AED">772 kWh</span></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-title">优化建议</div>
+        <div class="analysis-list">
+          <div class="analysis-item"><div class="analysis-num">1</div><div class="analysis-text">建议优化PCS变流器工作点，提高逆变效率约0.5%</div></div>
+          <div class="analysis-item"><div class="analysis-num">2</div><div class="analysis-text">加强热管理系统控制策略，减少风扇功耗</div></div>
+          <div class="analysis-item"><div class="analysis-num">3</div><div class="analysis-text">电池簇#03内阻偏高，建议进行维护检查</div></div>
+          <div class="analysis-item"><div class="analysis-num">4</div><div class="analysis-text">考虑在谷时增加充电量，提高峰时放电比例</div></div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-title">本月损耗趋势</div>
+        <div class="mini-chart">
+          <svg viewBox="0 0 400 80">
+            <defs><linearGradient id="lt" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EF4444" stop-opacity="0.3"/><stop offset="100%" stop-color="#EF4444" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,50 C40,48 80,55 120,52 C160,49 200,45 240,42 C280,39 320,36 360,33 C380,31 400,30 400,30 L400,80 L0,80 Z" fill="url(#lt)"/>
+            <path d="M0,50 C40,48 80,55 120,52 C160,49 200,45 240,42 C280,39 320,36 360,33 C380,31 400,30 400,30" fill="none" stroke="#EF4444" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+    `;
+    openModal('<i class="fa-solid fa-chart-pie"></i> 损耗分析详情', content);
+  };
+</script>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header" id="modalHeader">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" onclick="closeModal()">关闭</button>
+      <button class="modal-btn primary"><i class="fa-solid fa-download"></i> 导出报告</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

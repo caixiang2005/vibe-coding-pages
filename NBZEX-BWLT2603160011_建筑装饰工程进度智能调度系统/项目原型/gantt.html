@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>进度总览 - 建筑装饰工程进度智能调度系统</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --surface: #FFFFFF;
+      --bg: #F5F5F7;
+      --sidebar-bg: #F0F0F2;
+      --text-primary: #1D1D1F;
+      --text-secondary: #86868B;
+      --text-tertiary: #AEAEB2;
+      --accent: #0071E3;
+      --green: #34C759;
+      --orange: #FF9500;
+      --red: #FF3B30;
+      --border: #E5E5EA;
+      --shadow-window: 0 22px 70px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: url('./static/bg.jpg') center/cover no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      padding: 20px;
+    }
+
+    .mac-window {
+      width: 1120px;
+      height: 720px;
+      background: var(--bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-window);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .titlebar {
+      height: 52px;
+      min-height: 52px;
+      background: linear-gradient(180deg, #FAFAFA 0%, #ECECEC 100%);
+      border-bottom: 1px solid #D5D5D5;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tl {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .tl-close {
+      background: #FF5F57;
+    }
+
+    .tl-min {
+      background: #FFBD2E;
+    }
+
+    .tl-max {
+      background: #28C840;
+    }
+
+    .titlebar-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: #6E6E73;
+    }
+
+    .titlebar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6E6E73;
+    }
+
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: linear-gradient(135deg, var(--accent), #40A0FF);
+      display: block;
+    }
+
+    .main-layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+      margin-bottom: 16px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .sidebar-item.active {
+      background: rgba(0, 113, 227, 0.1);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .sidebar-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .project-selector {
+      font-size: 12px;
+      padding: 8px 10px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .project-selector .proj-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .project-selector .proj-id {
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+
+    .project-switch {
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .project-switch svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .content-header {
+      padding: 20px 24px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: white;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .tab-group {
+      display: flex;
+      background: #F0F0F2;
+      border-radius: 6px;
+      padding: 2px;
+    }
+
+    .tab-btn {
+      padding: 5px 14px;
+      border-radius: 5px;
+      border: none;
+      background: transparent;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .tab-btn.active {
+      background: white;
+      color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .filter-btn {
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Gantt Area */
+    .gantt-container {
+      flex: 1;
+      overflow: auto;
+      background: white;
+    }
+
+    .gantt-table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+
+    .gantt-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #FAFAFA;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      padding: 10px 0;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .gantt-table thead th:first-child {
+      text-align: left;
+      padding-left: 24px;
+      min-width: 260px;
+      position: sticky;
+      left: 0;
+      background: #FAFAFA;
+      z-index: 11;
+      border-right: 1px solid var(--border);
+    }
+
+    .gantt-table thead .date-cell {
+      width: 46px;
+      min-width: 46px;
+      font-size: 10px;
+      border-left: 1px solid #F0F0F2;
+    }
+
+    .gantt-table thead .date-cell.today {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .gantt-table thead .date-cell.weekend {
+      color: var(--text-tertiary);
+      background: #FBFBFB;
+    }
+
+    .gantt-row td {
+      border-bottom: 1px solid #F5F5F7;
+      padding: 0;
+      height: 42px;
+      position: relative;
+    }
+
+    .gantt-row td:first-child {
+      position: sticky;
+      left: 0;
+      background: white;
+      z-index: 5;
+      border-right: 1px solid var(--border);
+      padding: 0 12px 0 24px;
+    }
+
+    .gantt-row:hover td {
+      background: #FAFBFF;
+    }
+
+    .gantt-row:hover td:first-child {
+      background: #FAFBFF;
+    }
+
+    .task-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 100%;
+    }
+
+    .task-indent {
+      width: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+
+    .task-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .task-label {
+      font-size: 12px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-label.parent {
+      font-weight: 600;
+    }
+
+    .date-td {
+      border-left: 1px solid #F5F5F7;
+    }
+
+    .date-td.weekend {
+      background: #FBFBFD;
+    }
+
+    .date-td.today-col {
+      background: rgba(0, 113, 227, 0.03);
+    }
+
+    .gantt-bar {
+      position: absolute;
+      height: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-radius: 4px;
+      z-index: 2;
+    }
+
+    .gantt-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      opacity: 0.85;
+    }
+
+    .gantt-bar-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 4px;
+      opacity: 0.2;
+    }
+
+    .today-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--accent);
+      z-index: 8;
+      pointer-events: none;
+    }
+
+    .today-marker {
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: white;
+      background: var(--accent);
+      padding: 1px 5px;
+      border-radius: 0 0 3px 3px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .milestone {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+      z-index: 3;
+    }
+
+    /* Legend */
+    .legend {
+      padding: 10px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: #FAFAFA;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-color {
+      width: 16px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      min-width: 400px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+      overflow: hidden;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: linear-gradient(180deg, #FAFAFA 0%, #F0F0F2 100%);
+    }
+
+    .modal-traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #FF5F57;
+      border: 0.5px solid #E14942;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #FFBD2E;
+      border: 0.5px solid #DEA123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28C840;
+      border: 0.5px solid #1DAD2B;
+    }
+
+    .modal-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #FAFAFA;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid var(--border);
+    }
+
+    .modal-btn-secondary {
+      background: white;
+      color: var(--text-primary);
+    }
+
+    .modal-btn-secondary:hover {
+      background: #F5F5F7;
+    }
+
+    .modal-btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .modal-btn-primary:hover {
+      background: #0077ED;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: white;
+      cursor: pointer;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .filter-section {
+      margin-bottom: 16px;
+    }
+
+    .filter-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .filter-chip {
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-family: inherit;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .filter-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .filter-chip.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <div class="tl tl-close"></div>
+        <div class="tl tl-min"></div>
+        <div class="tl tl-max"></div>
+      </div>
+      <span class="titlebar-center">建筑装饰工程进度智能调度系统</span>
+      <div class="titlebar-right">
+        <img class="user-avatar" src="https://i02piccdn.sogoucdn.com/4ae40945067239b4" alt="许作舟" />许作舟
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">导航</div>
+          <div class="sidebar-item" onclick="window.location.href='dashboard.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zM13 4v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z" />
+              </svg></div>
+            工作台
+          </div>
+          <div class="sidebar-item active" onclick="window.location.href='gantt.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z" />
+              </svg></div>
+            进度总览
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='schedule.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
+              </svg></div>
+            施工计划
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='tasks.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg></div>
+            任务调度
+            <span class="sidebar-badge">5</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='personnel.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+              </svg></div>
+            人员管理
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='ai_alerts.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+              </svg></div>
+            智能预警
+            <span class="sidebar-badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='resources.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z" />
+              </svg></div>
+            资源优化
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='reports.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+              </svg></div>
+            报表中心
+          </div>
+        </div>
+        
+        <div class="sidebar-bottom">
+          <div class="project-selector" id="projectSelector">
+            <div>
+              <div class="proj-name" id="projName">杭州绿城·翡翠湖项目</div>
+              <div class="proj-id" id="projId">项目编号 HZFC-2025-0318</div>
+            </div>
+            <div class="project-switch" id="projectSwitchInlineBtn" aria-label="切换项目">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7h5l-1.5-1.5L9 4l4 4-4 4-1.5-1.5L9 9H4V7zm16 10h-5l1.5 1.5L15 20l-4-4 4-4 1.5 1.5L15 13h5v2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="content-header">
+          <div class="page-title">进度总览 — 甘特图</div>
+          <div class="header-controls">
+            <div class="tab-group">
+              <button class="tab-btn active">甘特图</button>
+              <button class="tab-btn">看板</button>
+              <button class="tab-btn">列表</button>
+            </div>
+            <button class="filter-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
+              </svg>
+              筛选
+            </button>
+          </div>
+        </div>
+
+        <div class="gantt-container">
+          <table class="gantt-table">
+            <thead>
+              <tr>
+                <th>工序名称</th>
+                <th class="date-cell">3/17<br><span style="font-weight:400;color:#C7C7CC">一</span></th>
+                <th class="date-cell">3/18<br><span style="font-weight:400;color:#C7C7CC">二</span></th>
+                <th class="date-cell">3/19<br><span style="font-weight:400;color:#C7C7CC">三</span></th>
+                <th class="date-cell">3/20<br><span style="font-weight:400;color:#C7C7CC">四</span></th>
+                <th class="date-cell">3/21<br><span style="font-weight:400;color:#C7C7CC">五</span></th>
+                <th class="date-cell weekend">3/22<br><span style="font-weight:400">六</span></th>
+                <th class="date-cell weekend">3/23<br><span style="font-weight:400">日</span></th>
+                <th class="date-cell">3/24<br><span style="font-weight:400;color:#C7C7CC">一</span></th>
+                <th class="date-cell today">3/25<br><span style="font-weight:400">今</span></th>
+                <th class="date-cell">3/26<br><span style="font-weight:400;color:#C7C7CC">三</span></th>
+                <th class="date-cell">3/27<br><span style="font-weight:400;color:#C7C7CC">四</span></th>
+                <th class="date-cell">3/28<br><span style="font-weight:400;color:#C7C7CC">五</span></th>
+                <th class="date-cell weekend">3/29<br><span style="font-weight:400">六</span></th>
+                <th class="date-cell weekend">3/30<br><span style="font-weight:400">日</span></th>
+                <th class="date-cell">3/31<br><span style="font-weight:400;color:#C7C7CC">一</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- A区大堂 parent -->
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-dot" style="background:var(--accent)"></div><span
+                      class="task-label parent">A区大堂精装修</span>
+                  </div>
+                </td>
+                <td class="date-td" style="position:relative" colspan="15">
+                  <div class="gantt-bar" style="left:2%;width:82%;">
+                    <div class="gantt-bar-bg" style="background:var(--accent)"></div>
+                    <div class="gantt-bar-fill" style="width:82%;background:var(--accent)"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-indent"></div>
+                    <div class="task-dot" style="background:var(--green)"></div><span class="task-label">地面石材铺贴</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:2%;width:40%;">
+                    <div class="gantt-bar-bg" style="background:var(--green)"></div>
+                    <div class="gantt-bar-fill" style="width:95%;background:var(--green)"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-indent"></div>
+                    <div class="task-dot" style="background:var(--accent)"></div><span class="task-label">墙面木饰面安装</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:18%;width:45%;">
+                    <div class="gantt-bar-bg" style="background:var(--accent)"></div>
+                    <div class="gantt-bar-fill" style="width:70%;background:var(--accent)"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-indent"></div>
+                    <div class="task-dot" style="background:var(--orange)"></div><span class="task-label">吊顶龙骨及灯具</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:30%;width:50%;">
+                    <div class="gantt-bar-bg" style="background:var(--orange)"></div>
+                    <div class="gantt-bar-fill" style="width:45%;background:var(--orange)"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-indent"></div>
+                    <div class="task-dot" style="background:#AEAEB2"></div><span class="task-label">收尾清洁及验收</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:78%;width:18%;">
+                    <div class="gantt-bar-bg" style="background:#AEAEB2"></div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- B区 parent -->
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-dot" style="background:#5856D6"></div><span
+                      class="task-label parent">B区外立面幕墙</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:8%;width:72%;">
+                    <div class="gantt-bar-bg" style="background:#5856D6"></div>
+                    <div class="gantt-bar-fill" style="width:65%;background:#5856D6"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-indent"></div>
+                    <div class="task-dot" style="background:var(--green)"></div><span class="task-label">钢结构主龙骨焊接</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:8%;width:28%;">
+                    <div class="gantt-bar-bg" style="background:var(--green)"></div>
+                    <div class="gantt-bar-fill" style="width:100%;background:var(--green)"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-indent"></div>
+                    <div class="task-dot" style="background:var(--accent)"></div><span
+                      class="task-label">玻璃幕墙板块安装</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:28%;width:36%;">
+                    <div class="gantt-bar-bg" style="background:var(--accent)"></div>
+                    <div class="gantt-bar-fill" style="width:55%;background:var(--accent)"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-indent"></div>
+                    <div class="task-dot" style="background:#AEAEB2"></div><span class="task-label">密封胶注胶及清洗</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:58%;width:22%;">
+                    <div class="gantt-bar-bg" style="background:#AEAEB2"></div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- C区 -->
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-dot" style="background:var(--orange)"></div><span
+                      class="task-label parent">C区地下车库涂装</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:22%;width:65%;">
+                    <div class="gantt-bar-bg" style="background:var(--orange)"></div>
+                    <div class="gantt-bar-fill" style="width:43%;background:var(--orange)"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-indent"></div>
+                    <div class="task-dot" style="background:var(--green)"></div><span class="task-label">基层打磨处理</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:22%;width:20%;">
+                    <div class="gantt-bar-bg" style="background:var(--green)"></div>
+                    <div class="gantt-bar-fill" style="width:100%;background:var(--green)"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-indent"></div>
+                    <div class="task-dot" style="background:var(--red)"></div><span class="task-label">环氧底涂施工</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:38%;width:24%;">
+                    <div class="gantt-bar-bg" style="background:var(--red)"></div>
+                    <div class="gantt-bar-fill" style="width:30%;background:var(--red)"></div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 景观 -->
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-dot" style="background:#30D158"></div><span
+                      class="task-label parent">景观园林绿化工程</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:42%;width:55%;">
+                    <div class="gantt-bar-bg" style="background:#30D158"></div>
+                    <div class="gantt-bar-fill" style="width:28%;background:#30D158"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="gantt-row">
+                <td>
+                  <div class="task-cell">
+                    <div class="task-indent"></div>
+                    <div class="task-dot" style="background:var(--accent)"></div><span class="task-label">苗木采购及进场</span>
+                  </div>
+                </td>
+                <td class="date-td" colspan="15" style="position:relative">
+                  <div class="gantt-bar" style="left:42%;width:20%;">
+                    <div class="gantt-bar-bg" style="background:var(--accent)"></div>
+                    <div class="gantt-bar-fill" style="width:60%;background:var(--accent)"></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-color" style="background:var(--green)"></div>已完成
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:var(--accent)"></div>进行中
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:var(--orange)"></div>有风险
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:var(--red)"></div>已延期
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:#AEAEB2"></div>未开始
+          </div>
+          <span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">数据更新: 2026-03-25 09:30</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+<script>
+  (function() {
+    var modalOverlay = document.getElementById('modalOverlay');
+    var modalTitle = document.getElementById('modalTitle');
+    var modalBody = document.getElementById('modalBody');
+    var modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    window.closeModal = closeModal;
+
+    modalOverlay.addEventListener('click', function(e) {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        openModal(
+          '筛选任务',
+          '<div class="filter-section"><div class="filter-section-title">工序状态</div><div class="filter-chips"><span class="filter-chip active">全部</span><span class="filter-chip">进行中</span><span class="filter-chip">已完成</span><span class="filter-chip">有风险</span><span class="filter-chip">已延期</span><span class="filter-chip">未开始</span></div></div><div class="filter-section"><div class="filter-section-title">施工区域</div><div class="filter-chips"><span class="filter-chip active">全部</span><span class="filter-chip">A区大堂</span><span class="filter-chip">B区外立面</span><span class="filter-chip">C区车库</span><span class="filter-chip">景观园林</span></div></div><div class="filter-section"><div class="filter-section-title">时间范围</div><div class="form-row" style="display:flex;gap:12px"><div class="form-group" style="flex:1"><label class="form-label">开始日期</label><input type="date" class="form-input" value="2026-03-17"></div><div class="form-group" style="flex:1"><label class="form-label">结束日期</label><input type="date" class="form-input" value="2026-03-31"></div></div></div>',
+          '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">重置</button><button class="modal-btn modal-btn-primary" onclick="closeModal()">应用筛选</button>'
+        );
+        
+        document.querySelectorAll('.filter-chip').forEach(function(chip) {
+          chip.addEventListener('click', function() {
+            this.parentElement.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+            this.classList.add('active');
+          });
+        });
+      });
+    });
+
+    var inlineBtn = document.getElementById('projectSwitchInlineBtn');
+    var nameEl = document.getElementById('projName');
+    var idEl = document.getElementById('projId');
+    var projects = [
+      { name: '杭州绿城·翡翠湖项目', id: '项目编号 HZFC-2025-0318' },
+      { name: '上海万科·云栖项目', id: '项目编号 SHWK-2025-0421' },
+      { name: '成都保利·锦城项目', id: '项目编号 CDPL-2025-0507' }
+    ];
+    var idx = 0;
+    if (inlineBtn && nameEl && idEl) {
+      inlineBtn.addEventListener('click', function() {
+        idx = (idx + 1) % projects.length;
+        nameEl.textContent = projects[idx].name;
+        idEl.textContent = projects[idx].id;
+      });
+    }
+  })();
+</script>
+</body>
+
+</html>

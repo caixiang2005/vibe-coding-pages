@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多人房间 - 智能普法多人联机互动学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#0EA5E9',
+                        accent: '#38BDF8',
+                        dark: '#020617',
+                        surface: '#020617',
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .macos-window {
+            width: 1440px;
+            min-height: 900px;
+            background: #020617;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        }
+        .traffic-lights {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background: rgba(37, 99, 235, 0.16);
+            transform: translateX(4px);
+        }
+        .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.32), transparent);
+        }
+        .online-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .room-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .room-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.35);
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+    <div class="macos-window rounded-xl overflow-hidden">
+        <!-- macOS 标题栏 -->
+        <div class="bg-surface/80 backdrop-blur-xl px-5 py-3 flex items-center border-b border-white/5">
+            <div class="flex gap-2">
+                <div class="traffic-lights bg-red-500"></div>
+                <div class="traffic-lights bg-yellow-500"></div>
+                <div class="traffic-lights bg-green-500"></div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="text-sm font-medium text-white/80">智能普法多人联机互动学习系统</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10">
+                    <div class="online-indicator"></div>
+                    <span class="text-xs text-green-400 font-medium">1,247 人在线</span>
+                </div>
+                
+            </div>
+        </div>
+
+        <div class="flex h-[856px]">
+            <!-- 侧边栏 -->
+            <div class="w-64 bg-surface/40 border-r border-white/5 p-4">
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <img src="https://i04piccdn.sogoucdn.com/87df244df2301756"
+                             class="w-12 h-12 rounded-full border-2 border-primary/50" alt="用户头像">
+                        <div class="flex-1">
+                            <p class="text-white font-semibold text-sm">张明</p>
+                            <p class="text-xs text-white/50">中级学员 · Lv.8</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-white/5">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-white/60">学习进度</span>
+                            <span class="text-primary font-semibold">68%</span>
+                        </div>
+                        <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-primary to-secondary w-[68%] rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="space-y-1">
+                    <a href="main.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="home" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">学习大厅</span>
+                    </a>
+                    <div class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="users" class="w-5 h-5 text-primary"></i>
+                        <span class="text-sm font-medium text-white">多人房间</span>
+                        <span class="ml-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">3</span>
+                    </div>
+                    <a href="live.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="video" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">直播课堂</span>
+                    </a>
+                    <a href="law.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="book-open" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">法规库</span>
+                    </a>
+                    <a href="discuss.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="message-circle" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">案例讨论</span>
+                    </a>
+                    <a href="achievement.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="trophy" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">成就中心</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="flex-1 overflow-y-auto scrollbar-thin">
+                <div class="sticky top-0 bg-dark/95 backdrop-blur-xl border-b border-white/5 px-8 py-4 z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <h1 class="text-2xl font-bold text-white">多人学习房间</h1>
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <input id="roomSearchInput" type="text" placeholder="搜索房间..."
+                                       class="w-64 bg-white/5 border border-white/10 rounded-lg px-4 py-2 pl-10 text-sm text-white placeholder-white/40 focus:outline-none focus:border-primary/50 transition">
+                                <i data-lucide="search" class="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            </div>
+                            <button id="openCreateRoomButton" class="px-5 py-2 bg-gradient-to-r from-primary to-secondary rounded-lg text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary/50 transition flex items-center gap-2">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                创建房间
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <!-- 我正在参与的房间 -->
+                    <section class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-bold text-white">我正在参与</h2>
+                        </div>
+                        <div class="glass-card rounded-2xl p-6">
+                            <div class="flex items-center gap-6">
+                                <div class="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center">
+                                    <i data-lucide="scale" class="w-8 h-8 text-white"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h3 class="text-xl font-bold text-white">民法典婚姻编研讨室</h3>
+                                        <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">进行中</span>
+                                    </div>
+                                    <p class="text-sm text-white/60 mb-3">正在讨论：离婚冷静期制度的法律适用问题</p>
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex -space-x-2">
+                                            <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-8 h-8 rounded-full border-2 border-surface" alt="">
+                                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-8 h-8 rounded-full border-2 border-surface" alt="">
+                                            <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-8 h-8 rounded-full border-2 border-surface" alt="">
+                                            <div class="w-8 h-8 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-xs text-white/60">+5</div>
+                                        </div>
+                                        <span class="text-sm text-white/50">8人参与</span>
+                                    </div>
+                                </div>
+                                <a href="room-detail.html" class="px-6 py-2.5 bg-gradient-to-r from-primary to-secondary rounded-lg text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary/50 transition inline-block">
+                                    进入房间
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 房间列表 -->
+                    <section>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-bold text-white">热门房间</h2>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1.5 bg-primary/20 text-primary text-xs rounded-lg font-medium">全部</button>
+                                <button class="px-3 py-1.5 bg-white/5 text-white/60 text-xs rounded-lg font-medium hover:bg-white/10 transition">竞赛</button>
+                                <button class="px-3 py-1.5 bg-white/5 text-white/60 text-xs rounded-lg font-medium hover:bg-white/10 transition">研讨</button>
+                                <button class="px-3 py-1.5 bg-white/5 text-white/60 text-xs rounded-lg font-medium hover:bg-white/10 transition">刷题</button>
+                            </div>
+                        </div>
+                        <div id="roomGrid" class="grid grid-cols-2 gap-5">
+                            <!-- 房间卡片 1 -->
+                            <div class="room-card glass-card rounded-xl p-5 cursor-pointer">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="swords" class="w-6 h-6 text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-white font-bold">刑法知识竞赛擂台</h3>
+                                            <p class="text-xs text-white/50">房主：李检察官</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full">竞赛</span>
+                                </div>
+                                <p class="text-sm text-white/60 mb-4">刑法总则与分则知识对抗赛，实时计分排名，赢取学分奖励</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex -space-x-1.5">
+                                            <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                            <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                            <div class="w-7 h-7 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-[10px] text-white/60">+10</div>
+                                        </div>
+                                        <span class="text-xs text-white/50">12/20人</span>
+                                    </div>
+                                    <button class="px-4 py-1.5 bg-primary/20 text-primary text-sm rounded-lg font-medium hover:bg-primary/30 transition">加入</button>
+                                </div>
+                            </div>
+
+                            <!-- 房间卡片 2 -->
+                            <div class="room-card glass-card rounded-xl p-5 cursor-pointer">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="book-open" class="w-6 h-6 text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-white font-bold">合同法案例研讨室</h3>
+                                            <p class="text-xs text-white/50">房主：陈律师</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">研讨</span>
+                                </div>
+                                <p class="text-sm text-white/60 mb-4">围绕最新合同纠纷案例展开讨论，模拟法庭辩论</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex -space-x-1.5">
+                                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                            <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                            <div class="w-7 h-7 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-[10px] text-white/60">+4</div>
+                                        </div>
+                                        <span class="text-xs text-white/50">6/10人</span>
+                                    </div>
+                                    <button class="px-4 py-1.5 bg-primary/20 text-primary text-sm rounded-lg font-medium hover:bg-primary/30 transition">加入</button>
+                                </div>
+                            </div>
+
+                            <!-- 房间卡片 3 -->
+                            <div class="room-card glass-card rounded-xl p-5 cursor-pointer">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="pen-tool" class="w-6 h-6 text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-white font-bold">行政法每日刷题团</h3>
+                                            <p class="text-xs text-white/50">房主：郑法官</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">刷题</span>
+                                </div>
+                                <p class="text-sm text-white/60 mb-4">每天精选20道行政法真题，组队刷题，互相讲解</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex -space-x-1.5">
+                                            <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                            <div class="w-7 h-7 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-[10px] text-white/60">+14</div>
+                                        </div>
+                                        <span class="text-xs text-white/50">15/30人</span>
+                                    </div>
+                                    <button class="px-4 py-1.5 bg-primary/20 text-primary text-sm rounded-lg font-medium hover:bg-primary/30 transition">加入</button>
+                                </div>
+                            </div>
+
+                            <!-- 房间卡片 4 -->
+                            <div class="room-card glass-card rounded-xl p-5 cursor-pointer">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="graduation-cap" class="w-6 h-6 text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-white font-bold">劳动法专题互助组</h3>
+                                            <p class="text-xs text-white/50">房主：赵法官</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">互助</span>
+                                </div>
+                                <p class="text-sm text-white/60 mb-4">聚焦劳动争议热点问题，互相解答疑难，分享实务经验</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex -space-x-1.5">
+                                            <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                            <div class="w-7 h-7 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-[10px] text-white/60">+7</div>
+                                        </div>
+                                        <span class="text-xs text-white/50">9/15人</span>
+                                    </div>
+                                    <button class="px-4 py-1.5 bg-primary/20 text-primary text-sm rounded-lg font-medium hover:bg-primary/30 transition">加入</button>
+                                </div>
+                            </div>
+
+                            <!-- 房间卡片 5 -->
+                            <div class="room-card glass-card rounded-xl p-5 cursor-pointer">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="shield" class="w-6 h-6 text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-white font-bold">知识产权模拟法庭</h3>
+                                            <p class="text-xs text-white/50">房主：吴律师</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">模拟</span>
+                                </div>
+                                <p class="text-sm text-white/60 mb-4">模拟知识产权侵权案件审理全过程，角色扮演体验</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex -space-x-1.5">
+                                            <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                            <div class="w-7 h-7 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-[10px] text-white/60">+3</div>
+                                        </div>
+                                        <span class="text-xs text-white/50">4/8人</span>
+                                    </div>
+                                    <button class="px-4 py-1.5 bg-primary/20 text-primary text-sm rounded-lg font-medium hover:bg-primary/30 transition">加入</button>
+                                </div>
+                            </div>
+
+                            <!-- 房间卡片 6 -->
+                            <div class="room-card glass-card rounded-xl p-5 cursor-pointer">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="gavel" class="w-6 h-6 text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-white font-bold">宪法精读打卡房</h3>
+                                            <p class="text-xs text-white/50">房主：孙教授</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-teal-500/20 text-teal-400 text-xs rounded-full">打卡</span>
+                                </div>
+                                <p class="text-sm text-white/60 mb-4">每日精读宪法条文，集体打卡学习，养成良好习惯</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex -space-x-1.5">
+                                            <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                            <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                            <div class="w-7 h-7 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-[10px] text-white/60">+18</div>
+                                        </div>
+                                        <span class="text-xs text-white/50">20/50人</span>
+                                    </div>
+                                    <button class="px-4 py-1.5 bg-primary/20 text-primary text-sm rounded-lg font-medium hover:bg-primary/30 transition">加入</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- 右侧信息栏 -->
+            <div class="w-80 bg-surface/40 border-l border-white/5 p-6 overflow-y-auto scrollbar-thin">
+                <!-- 房间统计 -->
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-primary"></i>
+                        房间统计
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-3 bg-white/5 rounded-lg">
+                            <p class="text-2xl font-bold text-white">156</p>
+                            <p class="text-xs text-white/50 mt-1">活跃房间</p>
+                        </div>
+                        <div class="text-center p-3 bg-white/5 rounded-lg">
+                            <p class="text-2xl font-bold text-white">2,341</p>
+                            <p class="text-xs text-white/50 mt-1">在线学习</p>
+                        </div>
+                        <div class="text-center p-3 bg-white/5 rounded-lg">
+                            <p id="myRoomCount" class="text-2xl font-bold text-primary">3</p>
+                            <p class="text-xs text-white/50 mt-1">我的房间</p>
+                        </div>
+                        <div class="text-center p-3 bg-white/5 rounded-lg">
+                            <p class="text-2xl font-bold text-green-400">28</p>
+                            <p class="text-xs text-white/50 mt-1">完成对局</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 最近参与 -->
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="history" class="w-5 h-5 text-primary"></i>
+                        最近参与
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-white/5 rounded-lg">
+                            <p class="text-sm text-white font-medium">刑法知识竞赛擂台</p>
+                            <p class="text-xs text-white/40 mt-1">第3名 · 得分 890</p>
+                            <p class="text-xs text-white/30 mt-1">昨天 20:30</p>
+                        </div>
+                        <div class="p-3 bg-white/5 rounded-lg">
+                            <p class="text-sm text-white font-medium">合同法案例研讨</p>
+                            <p class="text-xs text-white/40 mt-1">发言12次 · 获赞8次</p>
+                            <p class="text-xs text-white/30 mt-1">前天 19:00</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="toastHost" class="fixed top-6 right-6 z-[60] space-y-2 pointer-events-none"></div>
+
+    <div id="createRoomOverlay" class="fixed inset-0 z-50 hidden pointer-events-none">
+        <div id="createRoomWindow" role="dialog" aria-modal="false" aria-labelledby="createRoomTitle" class="fixed w-full max-w-2xl rounded-2xl border border-white/10 bg-slate-950/70 backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.55)] pointer-events-auto" style="left:50%;top:120px;transform:translateX(-50%);">
+            <div id="createRoomTitlebar" class="relative px-5 py-3 border-b border-white/10 cursor-grab select-none">
+                <div class="absolute left-5 top-1/2 -translate-y-1/2 flex gap-2">
+                    <button id="closeCreateRoomButton" type="button" aria-label="关闭" class="traffic-lights bg-red-500 hover:brightness-110 transition"></button>
+                    <button type="button" tabindex="-1" aria-hidden="true" class="traffic-lights bg-yellow-500 opacity-70"></button>
+                    <button type="button" tabindex="-1" aria-hidden="true" class="traffic-lights bg-green-500 opacity-70"></button>
+                </div>
+                <h2 id="createRoomTitle" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-sm font-semibold text-white/85">创建学习房间</h2>
+                <div class="h-6"></div>
+            </div>
+
+            <form id="createRoomForm" class="px-6 py-5">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <p class="text-xs text-white/45">创建后可邀请同学进入并同步学习进度</p>
+                    <div class="flex items-center gap-2"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-xs text-white/60 mb-2">房间名称</label>
+                        <input id="createRoomName" maxlength="24" placeholder="例如：民法典婚姻编研讨室" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition" />
+                        <p id="createRoomNameError" class="mt-2 text-xs text-red-300 hidden">请输入 2–24 个字符的房间名称</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-white/60 mb-2">房间类型</label>
+                        <select id="createRoomMode" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition">
+                            <option value="竞赛" class="bg-slate-950">竞赛</option>
+                            <option value="研讨" class="bg-slate-950">研讨</option>
+                            <option value="刷题" class="bg-slate-950">刷题</option>
+                            <option value="模拟" class="bg-slate-950">模拟</option>
+                            <option value="打卡" class="bg-slate-950">打卡</option>
+                            <option value="互助" class="bg-slate-950">互助</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-white/60 mb-2">主题方向</label>
+                        <select id="createRoomTopic" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition">
+                            <option value="民法典" class="bg-slate-950">民法典</option>
+                            <option value="刑法" class="bg-slate-950">刑法</option>
+                            <option value="行政法" class="bg-slate-950">行政法</option>
+                            <option value="劳动法" class="bg-slate-950">劳动法</option>
+                            <option value="宪法" class="bg-slate-950">宪法</option>
+                            <option value="知识产权" class="bg-slate-950">知识产权</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-white/60 mb-2">难度</label>
+                        <select id="createRoomDifficulty" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition">
+                            <option value="初级" class="bg-slate-950">初级</option>
+                            <option value="中级" class="bg-slate-950" selected>中级</option>
+                            <option value="高级" class="bg-slate-950">高级</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-white/60 mb-2">人数上限</label>
+                        <input id="createRoomMaxMembers" type="number" min="2" max="50" value="12" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition" />
+                        <p id="createRoomMaxMembersError" class="mt-2 text-xs text-red-300 hidden">人数上限需在 2–50 之间</p>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-xs text-white/60 mb-2">学习目标 / 议题</label>
+                        <textarea id="createRoomAgenda" maxlength="80" rows="3" placeholder="例如：围绕离婚冷静期制度进行条文精读与案例讨论" class="w-full resize-none bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition"></textarea>
+                        <div class="mt-2 flex items-center justify-between">
+                            <p id="createRoomAgendaHint" class="text-xs text-white/35">最多 80 字</p>
+                            <p id="createRoomAgendaCount" class="text-xs text-white/35">0/80</p>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2">
+                        <div class="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                            <div>
+                                <p class="text-sm text-white font-semibold">设为私密房间</p>
+                                <p class="text-xs text-white/45 mt-0.5">需要密码才能加入，适合小组研讨</p>
+                            </div>
+                            <label class="inline-flex items-center cursor-pointer select-none">
+                                <input id="createRoomPrivate" type="checkbox" class="sr-only peer" />
+                                <div class="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-primary/30 relative transition">
+                                    <div class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white/70 peer-checked:translate-x-5 transition"></div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="createRoomPasswordRow" class="col-span-2 hidden">
+                        <label class="block text-xs text-white/60 mb-2">加入密码</label>
+                        <div class="flex items-center gap-3">
+                            <input id="createRoomPassword" type="password" maxlength="16" placeholder="4–16 位密码" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition" />
+                            <button id="toggleCreateRoomPassword" type="button" class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition flex items-center justify-center">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <p id="createRoomPasswordError" class="mt-2 text-xs text-red-300 hidden">私密房间需要 4–16 位密码</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center justify-between">
+                    <div id="createRoomSummary" class="text-xs text-white/45">
+                        <span id="createRoomSummaryText">将创建公开房间</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="cancelCreateRoomButton" type="button" class="px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/75 text-sm font-semibold hover:bg-white/10 transition">取消</button>
+                        <button id="submitCreateRoomButton" type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary/50 transition">创建</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="joinRoomOverlay" class="fixed inset-0 z-50 hidden pointer-events-none">
+        <div id="joinRoomWindow" role="dialog" aria-modal="false" aria-labelledby="joinRoomTitle" class="fixed w-full max-w-lg rounded-2xl border border-white/10 bg-slate-950/70 backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.55)] pointer-events-auto" style="left:50%;top:140px;transform:translateX(-50%);">
+            <div id="joinRoomTitlebar" class="relative px-5 py-3 border-b border-white/10 cursor-grab select-none">
+                <div class="absolute left-5 top-1/2 -translate-y-1/2 flex gap-2">
+                    <button id="closeJoinRoomButton" type="button" aria-label="关闭" class="traffic-lights bg-red-500 hover:brightness-110 transition"></button>
+                    <button type="button" tabindex="-1" aria-hidden="true" class="traffic-lights bg-yellow-500 opacity-70"></button>
+                    <button type="button" tabindex="-1" aria-hidden="true" class="traffic-lights bg-green-500 opacity-70"></button>
+                </div>
+                <h2 id="joinRoomTitle" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-sm font-semibold text-white/85">加入房间</h2>
+                <div class="h-6"></div>
+            </div>
+
+            <form id="joinRoomForm" class="px-6 py-5">
+                <div class="space-y-4">
+                    <p id="joinRoomSubtitle" class="text-xs text-white/45">请输入密码或确认加入</p>
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <p id="joinRoomName" class="text-white font-bold"></p>
+                        <p id="joinRoomMeta" class="text-xs text-white/45 mt-1"></p>
+                    </div>
+
+                    <div id="joinRoomPasswordRow" class="hidden">
+                        <label class="block text-xs text-white/60 mb-2">房间密码</label>
+                        <div class="flex items-center gap-3">
+                            <input id="joinRoomPassword" type="password" maxlength="16" placeholder="请输入密码" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition" />
+                            <button id="toggleJoinRoomPassword" type="button" class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition flex items-center justify-center">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <p id="joinRoomPasswordError" class="mt-2 text-xs text-red-300 hidden">密码不正确</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center justify-end gap-3">
+                    <button id="cancelJoinRoomButton" type="button" class="px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/75 text-sm font-semibold hover:bg-white/10 transition">取消</button>
+                    <button id="confirmJoinRoomButton" type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary/50 transition">加入</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+
+            const STORAGE_KEY = 'legalEduRooms:v1';
+            const roomGrid = document.getElementById('roomGrid');
+            const searchInput = document.getElementById('roomSearchInput');
+            const myRoomCountEl = document.getElementById('myRoomCount');
+
+            const createRoomOverlay = document.getElementById('createRoomOverlay');
+            const createRoomWindow = document.getElementById('createRoomWindow');
+            const createRoomTitlebar = document.getElementById('createRoomTitlebar');
+            const createRoomForm = document.getElementById('createRoomForm');
+            const openCreateRoomButton = document.getElementById('openCreateRoomButton');
+            const closeCreateRoomButton = document.getElementById('closeCreateRoomButton');
+            const cancelCreateRoomButton = document.getElementById('cancelCreateRoomButton');
+
+            const createRoomName = document.getElementById('createRoomName');
+            const createRoomNameError = document.getElementById('createRoomNameError');
+            const createRoomMode = document.getElementById('createRoomMode');
+            const createRoomTopic = document.getElementById('createRoomTopic');
+            const createRoomDifficulty = document.getElementById('createRoomDifficulty');
+            const createRoomMaxMembers = document.getElementById('createRoomMaxMembers');
+            const createRoomMaxMembersError = document.getElementById('createRoomMaxMembersError');
+            const createRoomAgenda = document.getElementById('createRoomAgenda');
+            const createRoomAgendaCount = document.getElementById('createRoomAgendaCount');
+            const createRoomPrivate = document.getElementById('createRoomPrivate');
+            const createRoomPasswordRow = document.getElementById('createRoomPasswordRow');
+            const createRoomPassword = document.getElementById('createRoomPassword');
+            const createRoomPasswordError = document.getElementById('createRoomPasswordError');
+            const toggleCreateRoomPassword = document.getElementById('toggleCreateRoomPassword');
+            const createRoomSummaryText = document.getElementById('createRoomSummaryText');
+
+            const joinRoomOverlay = document.getElementById('joinRoomOverlay');
+            const joinRoomWindow = document.getElementById('joinRoomWindow');
+            const joinRoomTitlebar = document.getElementById('joinRoomTitlebar');
+            const joinRoomForm = document.getElementById('joinRoomForm');
+            const closeJoinRoomButton = document.getElementById('closeJoinRoomButton');
+            const cancelJoinRoomButton = document.getElementById('cancelJoinRoomButton');
+            const joinRoomNameEl = document.getElementById('joinRoomName');
+            const joinRoomMetaEl = document.getElementById('joinRoomMeta');
+            const joinRoomSubtitle = document.getElementById('joinRoomSubtitle');
+            const joinRoomPasswordRow = document.getElementById('joinRoomPasswordRow');
+            const joinRoomPassword = document.getElementById('joinRoomPassword');
+            const joinRoomPasswordError = document.getElementById('joinRoomPasswordError');
+            const toggleJoinRoomPassword = document.getElementById('toggleJoinRoomPassword');
+
+            const toastHost = document.getElementById('toastHost');
+
+            const hostProfile = {
+                name: '张明',
+                avatar: 'https://i04piccdn.sogoucdn.com/87df244df2301756'
+            };
+
+            function safeJsonParse(value) {
+                try {
+                    return JSON.parse(value);
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function loadRooms() {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                const parsed = safeJsonParse(raw);
+                if (!Array.isArray(parsed)) return [];
+                return parsed.filter(r => r && typeof r === 'object' && typeof r.id === 'string');
+            }
+
+            function saveRooms(rooms) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(rooms));
+            }
+
+            function clampNumber(value, min, max) {
+                const n = Number(value);
+                if (!Number.isFinite(n)) return min;
+                return Math.min(max, Math.max(min, Math.floor(n)));
+            }
+
+            function toHex(buffer) {
+                const bytes = new Uint8Array(buffer);
+                let hex = '';
+                for (let i = 0; i < bytes.length; i++) {
+                    hex += bytes[i].toString(16).padStart(2, '0');
+                }
+                return hex;
+            }
+
+            async function digestPassword(password, salt) {
+                const input = `${salt}:${password}`;
+                if (!window.crypto || !window.crypto.subtle) return input;
+                const data = new TextEncoder().encode(input);
+                const hash = await window.crypto.subtle.digest('SHA-256', data);
+                return `sha256:${toHex(hash)}`;
+            }
+
+            function formatTime(iso) {
+                const d = new Date(iso);
+                if (Number.isNaN(d.getTime())) return '';
+                const hh = String(d.getHours()).padStart(2, '0');
+                const mm = String(d.getMinutes()).padStart(2, '0');
+                return `${hh}:${mm}`;
+            }
+
+            function showToast(message, tone) {
+                const el = document.createElement('div');
+                const base = 'pointer-events-none select-none rounded-2xl border px-4 py-3 backdrop-blur-2xl shadow-[0_18px_45px_rgba(0,0,0,0.45)]';
+                const palette = tone === 'error'
+                    ? 'bg-red-950/65 border-red-400/20 text-red-100'
+                    : tone === 'success'
+                        ? 'bg-emerald-950/60 border-emerald-400/20 text-emerald-50'
+                        : 'bg-slate-950/60 border-white/10 text-white/85';
+                el.className = `${base} ${palette}`;
+                el.textContent = message;
+                toastHost.appendChild(el);
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-6px)';
+                    el.style.transition = 'opacity 200ms ease, transform 200ms ease';
+                }, 1800);
+                setTimeout(() => {
+                    el.remove();
+                }, 2100);
+            }
+
+            function clamp(value, min, max) {
+                return Math.max(min, Math.min(max, value));
+            }
+
+            function centerWindow(windowEl, topOffset) {
+                const rect = windowEl.getBoundingClientRect();
+                const margin = 14;
+                const left = clamp(Math.round((window.innerWidth - rect.width) / 2), margin, Math.max(margin, window.innerWidth - rect.width - margin));
+                const top = clamp(Math.round((window.innerHeight - rect.height) / 2), margin, Math.max(margin, window.innerHeight - rect.height - margin));
+                windowEl.style.left = `${left}px`;
+                windowEl.style.top = `${typeof topOffset === 'number' ? clamp(topOffset, margin, Math.max(margin, window.innerHeight - rect.height - margin)) : top}px`;
+                windowEl.style.transform = 'none';
+            }
+
+            function openOverlay(overlayEl, windowEl, topOffset) {
+                overlayEl.classList.remove('hidden');
+                centerWindow(windowEl, topOffset);
+            }
+
+            function closeOverlay(overlayEl) {
+                overlayEl.classList.add('hidden');
+            }
+
+            function makeDraggable(windowEl, handleEl) {
+                let dragging = false;
+                let startX = 0;
+                let startY = 0;
+                let startLeft = 0;
+                let startTop = 0;
+
+                function onPointerMove(e) {
+                    if (!dragging) return;
+                    const rect = windowEl.getBoundingClientRect();
+                    const margin = 12;
+                    const nextLeft = startLeft + (e.clientX - startX);
+                    const nextTop = startTop + (e.clientY - startY);
+                    const clampedLeft = clamp(nextLeft, margin, Math.max(margin, window.innerWidth - rect.width - margin));
+                    const clampedTop = clamp(nextTop, margin, Math.max(margin, window.innerHeight - rect.height - margin));
+                    windowEl.style.left = `${clampedLeft}px`;
+                    windowEl.style.top = `${clampedTop}px`;
+                }
+
+                function stopDrag() {
+                    dragging = false;
+                    document.removeEventListener('pointermove', onPointerMove);
+                    document.removeEventListener('pointerup', stopDrag);
+                    document.removeEventListener('pointercancel', stopDrag);
+                    handleEl.classList.remove('cursor-grabbing');
+                    handleEl.classList.add('cursor-grab');
+                }
+
+                handleEl.addEventListener('pointerdown', (e) => {
+                    const target = e.target;
+                    if (target && (target.closest('button') || target.closest('input') || target.closest('select') || target.closest('textarea') || target.closest('a'))) return;
+                    dragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    const left = Number.parseFloat(windowEl.style.left);
+                    const top = Number.parseFloat(windowEl.style.top);
+                    const rect = windowEl.getBoundingClientRect();
+                    startLeft = Number.isFinite(left) ? left : rect.left;
+                    startTop = Number.isFinite(top) ? top : rect.top;
+                    windowEl.style.transform = 'none';
+                    handleEl.classList.remove('cursor-grab');
+                    handleEl.classList.add('cursor-grabbing');
+                    document.addEventListener('pointermove', onPointerMove);
+                    document.addEventListener('pointerup', stopDrag);
+                    document.addEventListener('pointercancel', stopDrag);
+                });
+            }
+
+            function resetCreateFormErrors() {
+                createRoomNameError.classList.add('hidden');
+                createRoomMaxMembersError.classList.add('hidden');
+                createRoomPasswordError.classList.add('hidden');
+            }
+
+            function setPasswordVisibility(inputEl, visible) {
+                inputEl.type = visible ? 'text' : 'password';
+            }
+
+            function updateCreateAgendaCount() {
+                const len = (createRoomAgenda.value || '').length;
+                createRoomAgendaCount.textContent = `${len}/80`;
+            }
+
+            function updateCreateSummary() {
+                const isPrivate = createRoomPrivate.checked;
+                const max = clampNumber(createRoomMaxMembers.value, 2, 50);
+                const mode = createRoomMode.value;
+                const topic = createRoomTopic.value;
+                createRoomSummaryText.textContent = `${isPrivate ? '将创建私密房间' : '将创建公开房间'} · ${topic} · ${mode} · 上限 ${max} 人`;
+            }
+
+            function getModeTagClasses(mode) {
+                switch (mode) {
+                    case '竞赛': return { tag: 'bg-red-500/20 text-red-300', iconBg: 'from-red-500 to-orange-500', icon: 'swords' };
+                    case '研讨': return { tag: 'bg-blue-500/20 text-blue-300', iconBg: 'from-blue-500 to-cyan-500', icon: 'book-open' };
+                    case '刷题': return { tag: 'bg-emerald-500/20 text-emerald-300', iconBg: 'from-green-500 to-emerald-500', icon: 'pen-tool' };
+                    case '模拟': return { tag: 'bg-yellow-500/20 text-yellow-300', iconBg: 'from-yellow-500 to-amber-500', icon: 'gavel' };
+                    case '打卡': return { tag: 'bg-teal-500/20 text-teal-300', iconBg: 'from-teal-500 to-cyan-500', icon: 'calendar' };
+                    case '互助': return { tag: 'bg-sky-500/20 text-sky-300', iconBg: 'from-sky-500 to-cyan-500', icon: 'graduation-cap' };
+                    default: return { tag: 'bg-white/10 text-white/70', iconBg: 'from-primary to-secondary', icon: 'users' };
+                }
+            }
+
+            function deriveAgendaFallback(topic, mode) {
+                if (mode === '竞赛') return `围绕「${topic}」高频考点进行限时对抗，实时计分排名`;
+                if (mode === '研讨') return `对「${topic}」典型争议问题做条文精读与案例讨论`;
+                if (mode === '刷题') return `精选「${topic}」真题与高频题组队刷题，错题复盘讲解`;
+                if (mode === '模拟') return `模拟「${topic}」相关案件审理流程，分角色推演与辩论`;
+                if (mode === '打卡') return `每日打卡精读「${topic}」条文，形成学习记录与排行`;
+                if (mode === '互助') return `集中解决「${topic}」学习疑难，互相答疑与资料分享`;
+                return `共同学习「${topic}」核心知识点，保持稳定进度`;
+            }
+
+            function renderRoomCard(room) {
+                const wrap = document.createElement('div');
+                wrap.className = 'room-card glass-card rounded-xl p-5';
+                wrap.setAttribute('data-room-id', room.id);
+
+                const modeUi = getModeTagClasses(room.mode);
+                const privacyChip = room.isPrivate
+                    ? `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/5 border border-white/10 text-white/70 text-xs rounded-full"><i data-lucide="lock" class="w-3.5 h-3.5"></i>私密</span>`
+                    : `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/5 border border-white/10 text-white/70 text-xs rounded-full"><i data-lucide="globe" class="w-3.5 h-3.5"></i>公开</span>`;
+
+                wrap.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-gradient-to-br ${modeUi.iconBg} rounded-xl flex items-center justify-center">
+                                <i data-lucide="${modeUi.icon}" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-bold">${room.name}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <p class="text-xs text-white/50">房主：${room.hostName}</p>
+                                    <span class="text-[11px] text-white/35">·</span>
+                                    <p class="text-xs text-white/40">${formatTime(room.createdAt)} 创建</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${privacyChip}
+                            <span class="px-2 py-0.5 ${modeUi.tag} text-xs rounded-full">${room.mode}</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-white/60 mb-4">${room.agenda}</p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="flex -space-x-1.5">
+                                <img src="${room.hostAvatar}" class="w-7 h-7 rounded-full border-2 border-surface" alt="">
+                                <div class="w-7 h-7 rounded-full border-2 border-surface bg-white/10 flex items-center justify-center text-[10px] text-white/60">+${Math.max(0, room.memberCount - 1)}</div>
+                            </div>
+                            <span class="text-xs text-white/50">${room.memberCount}/${room.maxMembers}人</span>
+                        </div>
+                        <button data-action="join-room" data-room-id="${room.id}" class="px-4 py-1.5 bg-primary/20 text-primary text-sm rounded-lg font-medium hover:bg-primary/30 transition">加入</button>
+                    </div>
+                `;
+                return wrap;
+            }
+
+            function applySearchFilter(query) {
+                const q = (query || '').trim().toLowerCase();
+                const cards = roomGrid.querySelectorAll('.room-card');
+                cards.forEach(card => {
+                    const text = (card.textContent || '').toLowerCase();
+                    card.style.display = q && !text.includes(q) ? 'none' : '';
+                });
+            }
+
+            function getMyRoomCount() {
+                const n = Number(myRoomCountEl.textContent.replace(/,/g, ''));
+                return Number.isFinite(n) ? n : 0;
+            }
+
+            function setMyRoomCount(value) {
+                const n = Math.max(0, Math.floor(Number(value) || 0));
+                myRoomCountEl.textContent = String(n);
+            }
+
+            function sanitizeText(value) {
+                return (value || '').replace(/\s+/g, ' ').trim();
+            }
+
+            function isValidRoomName(name) {
+                const len = name.length;
+                return len >= 2 && len <= 24;
+            }
+
+            function isValidPassword(pwd) {
+                const len = pwd.length;
+                return len >= 4 && len <= 16;
+            }
+
+            function focusFirstCreateField() {
+                setTimeout(() => {
+                    createRoomName.focus();
+                    createRoomName.select();
+                }, 0);
+            }
+
+            function openCreateRoom() {
+                resetCreateFormErrors();
+                updateCreateAgendaCount();
+                updateCreateSummary();
+                openOverlay(createRoomOverlay, createRoomWindow, 120);
+                focusFirstCreateField();
+            }
+
+            function closeCreateRoom() {
+                closeOverlay(createRoomOverlay);
+            }
+
+            function openJoinRoom(room) {
+                joinRoomPasswordError.classList.add('hidden');
+                joinRoomPassword.value = '';
+
+                joinRoomNameEl.textContent = room.name;
+                joinRoomMetaEl.textContent = `${room.topic} · ${room.mode} · ${room.difficulty} · ${room.memberCount}/${room.maxMembers}人`;
+
+                if (room.isPrivate) {
+                    joinRoomSubtitle.textContent = '这是私密房间，需要输入密码';
+                    joinRoomPasswordRow.classList.remove('hidden');
+                    setTimeout(() => joinRoomPassword.focus(), 0);
+                } else {
+                    joinRoomSubtitle.textContent = '确认后将加入房间并同步进度';
+                    joinRoomPasswordRow.classList.add('hidden');
+                }
+
+                joinRoomForm.setAttribute('data-room-id', room.id);
+                openOverlay(joinRoomOverlay, joinRoomWindow, 140);
+            }
+
+            function closeJoinRoom() {
+                closeOverlay(joinRoomOverlay);
+            }
+
+            let rooms = loadRooms();
+            let joinRoomTargetId = null;
+
+            function renderPersistedRooms() {
+                const existing = roomGrid.querySelectorAll('[data-room-id][data-origin="persisted"]');
+                existing.forEach(el => el.remove());
+                const head = roomGrid.firstElementChild;
+                const fragment = document.createDocumentFragment();
+                rooms.forEach(room => {
+                    const card = renderRoomCard(room);
+                    card.setAttribute('data-origin', 'persisted');
+                    fragment.appendChild(card);
+                });
+                roomGrid.insertBefore(fragment, head);
+                lucide.createIcons();
+            }
+
+            renderPersistedRooms();
+
+            openCreateRoomButton.addEventListener('click', openCreateRoom);
+            closeCreateRoomButton.addEventListener('click', closeCreateRoom);
+            cancelCreateRoomButton.addEventListener('click', closeCreateRoom);
+
+            closeJoinRoomButton.addEventListener('click', closeJoinRoom);
+            cancelJoinRoomButton.addEventListener('click', closeJoinRoom);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key !== 'Escape') return;
+                if (!createRoomOverlay.classList.contains('hidden')) closeCreateRoom();
+                if (!joinRoomOverlay.classList.contains('hidden')) closeJoinRoom();
+            });
+
+            makeDraggable(createRoomWindow, createRoomTitlebar);
+            makeDraggable(joinRoomWindow, joinRoomTitlebar);
+
+            createRoomPrivate.addEventListener('change', () => {
+                const checked = createRoomPrivate.checked;
+                createRoomPasswordRow.classList.toggle('hidden', !checked);
+                resetCreateFormErrors();
+                updateCreateSummary();
+                if (checked) {
+                    setTimeout(() => createRoomPassword.focus(), 0);
+                }
+            });
+
+            toggleCreateRoomPassword.addEventListener('click', () => {
+                const visible = createRoomPassword.type === 'password';
+                setPasswordVisibility(createRoomPassword, visible);
+                toggleCreateRoomPassword.setAttribute('aria-pressed', visible ? 'true' : 'false');
+            });
+
+            toggleJoinRoomPassword.addEventListener('click', () => {
+                const visible = joinRoomPassword.type === 'password';
+                setPasswordVisibility(joinRoomPassword, visible);
+                toggleJoinRoomPassword.setAttribute('aria-pressed', visible ? 'true' : 'false');
+            });
+
+            createRoomAgenda.addEventListener('input', () => {
+                updateCreateAgendaCount();
+            });
+            createRoomMode.addEventListener('change', updateCreateSummary);
+            createRoomTopic.addEventListener('change', updateCreateSummary);
+            createRoomMaxMembers.addEventListener('input', updateCreateSummary);
+
+            searchInput.addEventListener('input', () => {
+                applySearchFilter(searchInput.value);
+            });
+
+            createRoomForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                resetCreateFormErrors();
+
+                const name = sanitizeText(createRoomName.value);
+                const mode = createRoomMode.value;
+                const topic = createRoomTopic.value;
+                const difficulty = createRoomDifficulty.value;
+                const maxMembers = clampNumber(createRoomMaxMembers.value, 2, 50);
+                const agendaRaw = sanitizeText(createRoomAgenda.value);
+                const agenda = agendaRaw.length ? agendaRaw : deriveAgendaFallback(topic, mode);
+                const isPrivate = !!createRoomPrivate.checked;
+                const password = sanitizeText(createRoomPassword.value);
+
+                let ok = true;
+                if (!isValidRoomName(name)) {
+                    createRoomNameError.classList.remove('hidden');
+                    ok = false;
+                }
+                if (maxMembers < 2 || maxMembers > 50) {
+                    createRoomMaxMembersError.classList.remove('hidden');
+                    ok = false;
+                }
+                if (isPrivate && !isValidPassword(password)) {
+                    createRoomPasswordError.classList.remove('hidden');
+                    ok = false;
+                }
+                if (!ok) {
+                    showToast('请检查表单信息后再创建', 'error');
+                    return;
+                }
+
+                const createdAt = new Date().toISOString();
+                const salt = Math.random().toString(36).slice(2, 10);
+                const passwordDigest = isPrivate ? await digestPassword(password, salt) : null;
+                const id = `room_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+                const room = {
+                    id,
+                    name,
+                    mode,
+                    topic,
+                    difficulty,
+                    maxMembers,
+                    memberCount: 1,
+                    hostName: hostProfile.name,
+                    hostAvatar: hostProfile.avatar,
+                    isPrivate,
+                    passwordSalt: isPrivate ? salt : null,
+                    passwordDigest,
+                    createdAt,
+                    agenda
+                };
+
+                rooms.unshift(room);
+                saveRooms(rooms);
+                renderPersistedRooms();
+                applySearchFilter(searchInput.value);
+
+                setMyRoomCount(getMyRoomCount() + 1);
+
+                createRoomForm.reset();
+                createRoomPasswordRow.classList.add('hidden');
+                updateCreateAgendaCount();
+                updateCreateSummary();
+                closeCreateRoom();
+                showToast('房间创建成功，已加入为房主', 'success');
+            });
+
+            roomGrid.addEventListener('click', (e) => {
+                const btn = e.target && e.target.closest ? e.target.closest('button[data-action="join-room"]') : null;
+                if (!btn) return;
+                const roomId = btn.getAttribute('data-room-id');
+                const room = rooms.find(r => r.id === roomId);
+                if (!room) {
+                    showToast('房间信息已失效，请刷新页面', 'error');
+                    return;
+                }
+                if (room.memberCount >= room.maxMembers) {
+                    showToast('房间已满，暂时无法加入', 'error');
+                    return;
+                }
+                joinRoomTargetId = room.id;
+                openJoinRoom(room);
+            });
+
+            joinRoomForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                joinRoomPasswordError.classList.add('hidden');
+                const roomId = joinRoomTargetId || joinRoomForm.getAttribute('data-room-id');
+                const room = rooms.find(r => r.id === roomId);
+                if (!room) {
+                    showToast('房间信息已失效，请刷新页面', 'error');
+                    closeJoinRoom();
+                    return;
+                }
+                if (room.memberCount >= room.maxMembers) {
+                    showToast('房间已满，暂时无法加入', 'error');
+                    closeJoinRoom();
+                    return;
+                }
+                if (room.isPrivate) {
+                    const pwd = sanitizeText(joinRoomPassword.value);
+                    const digest = await digestPassword(pwd, room.passwordSalt || '');
+                    const ok = digest === room.passwordDigest;
+                    if (!ok) {
+                        joinRoomPasswordError.classList.remove('hidden');
+                        showToast('密码不正确', 'error');
+                        return;
+                    }
+                }
+                room.memberCount = clampNumber(room.memberCount + 1, 1, room.maxMembers);
+                saveRooms(rooms);
+                renderPersistedRooms();
+                applySearchFilter(searchInput.value);
+                closeJoinRoom();
+                showToast('已加入房间，学习进度已同步', 'success');
+            });
+        });
+    </script>
+</body>
+</html>

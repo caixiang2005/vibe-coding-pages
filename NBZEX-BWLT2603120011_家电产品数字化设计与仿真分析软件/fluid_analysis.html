@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>家电产品数字化设计与仿真分析软件</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root { --bg: #1e1e1e; --sidebar: #252526; --panel: #2d2d2d; --toolbar: #333; --border: #3c3c3c; --t1: #e0e0e0; --t2: #999; --t3: #666; --accent: #0a84ff; --green: #30d158; --orange: #ff9f0a; --red: #ff453a; --cyan: #64d2ff; --purple: #bf5af2; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: url('./static/bg.jpeg') no-repeat; background-size: cover; display: flex; align-items: center; justify-content: center; min-height: 100vh; color: var(--t1); overflow: hidden; }
+    .win { width: 1320px; height: 820px; background: var(--bg); border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 .5px rgba(255,255,255,.08), 0 30px 80px rgba(0,0,0,.6); display: flex; flex-direction: column; }
+    .titlebar { height: 38px; background: linear-gradient(180deg, #3a3a3a, #2d2d2d); display: flex; align-items: center; padding: 0 13px; flex-shrink: 0; border-bottom: 1px solid #1a1a1a; position: relative; }
+    .dots { display: flex; gap: 8px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.15); }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .titlebar-t { position: absolute; left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: 500; color: var(--t2); white-space: nowrap; }
+    .main { display: flex; flex: 1; overflow: hidden; }
+    .side { width: 220px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+    .side::-webkit-scrollbar { width: 4px; }
+    .side::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 2px; }
+    .sh { padding: 14px 14px 6px; font-size: 10px; font-weight: 600; color: var(--t3); letter-spacing: 1px; text-transform: uppercase; }
+    .ss { padding: 0 6px 2px; }
+    .si { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 6px; font-size: 12.5px; color: var(--t2); cursor: pointer; transition: all .15s; user-select: none; }
+    .si:hover { background: rgba(255,255,255,.06); color: var(--t1); }
+    .si.active { background: rgba(10,132,255,.18); color: var(--accent); }
+    .si svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .7; }
+    .si.active svg { opacity: 1; }
+    .sdiv { height: 1px; background: var(--border); margin: 6px 14px; }
+    .sproj { padding: 12px 14px; border-top: 1px solid var(--border); margin-top: auto; }
+    .sproj-n { font-size: 11.5px; font-weight: 600; color: var(--t1); }
+    .sproj-d { font-size: 10.5px; color: var(--t3); margin-top: 1px; }
+    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .tb { height: 42px; background: var(--toolbar); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; gap: 2px; flex-shrink: 0; }
+    .tg { display: flex; align-items: center; gap: 1px; }
+    .tg+.tg { margin-left: 6px; padding-left: 8px; border-left: 1px solid var(--border); }
+    .tbtn { display: flex; align-items: center; gap: 4px; padding: 5px 9px; border-radius: 5px; font-size: 11.5px; color: var(--t2); cursor: pointer; border: none; background: none; transition: all .15s; white-space: nowrap; font-family: inherit; }
+    .tbtn:hover { background: rgba(255,255,255,.07); color: var(--t1); }
+    .tbtn:active { transform: scale(0.97); }
+    .tbtn svg { width: 15px; height: 15px; }
+    .tsp { flex: 1; }
+    .vp-wrap { flex: 1; display: flex; overflow: hidden; }
+    .vp { flex: 1; position: relative; overflow: hidden; background: #161618; }
+    .sim-info { position: absolute; top: 10px; left: 12px; display: flex; flex-direction: column; gap: 4px; z-index: 2; }
+    .sim-tag { font-size: 10px; color: var(--t3); background: rgba(0,0,0,.55); padding: 3px 8px; border-radius: 4px; backdrop-filter: blur(4px); }
+    .flow-vis { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    .flow-body { width: 280px; height: 220px; border-radius: 12px; background: linear-gradient(135deg, #2a3a4a, #1a2a3a); position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(0,0,0,.5); }
+    .flow-path { position: absolute; inset: 0; }
+    .flow-inlet { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 20px; height: 60px; background: linear-gradient(90deg, var(--cyan), transparent); border-radius: 0 10px 10px 0; }
+    .flow-outlet { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 20px; height: 40px; background: linear-gradient(90deg, transparent, var(--purple)); border-radius: 10px 0 0 10px; }
+    .flow-arrow { position: absolute; color: rgba(100,210,255,.6); font-size: 14px; }
+    .legend-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+    .legend-bar { width: 200px; height: 10px; border-radius: 5px; }
+    .legend-labels { display: flex; justify-content: space-between; width: 200px; margin-top: 2px; }
+    .legend-labels span { font-size: 9px; color: var(--t3); }
+    .rp { width: 260px; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
+    .rp::-webkit-scrollbar { width: 5px; }
+    .rp::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 3px; }
+    .ps { padding: 13px 15px; border-bottom: 1px solid var(--border); }
+    .ps-t { font-size: 10.5px; font-weight: 600; color: var(--t3); letter-spacing: .4px; text-transform: uppercase; margin-bottom: 9px; }
+    .pr { display: flex; align-items: center; justify-content: space-between; padding: 3.5px 0; font-size: 12px; }
+    .pl { color: var(--t2); }
+    .pv { font-variant-numeric: tabular-nums; }
+    .pv-a { color: var(--accent); }
+    .pv-g { color: var(--green); }
+    .pv-c { color: var(--cyan); }
+    .pbar { height: 3px; background: rgba(255,255,255,.06); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+    .pfill { height: 100%; border-radius: 2px; }
+    .pill { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 8px; font-size: 9.5px; font-weight: 500; }
+    .pill-g { background: rgba(48,209,88,.12); color: var(--green); }
+    .pill-b { background: rgba(10,132,255,.12); color: var(--accent); }
+    .pill-c { background: rgba(100,210,255,.12); color: var(--cyan); }
+    .bb { height: 26px; background: var(--toolbar); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 12px; gap: 16px; flex-shrink: 0; }
+    .bi { font-size: 10.5px; color: var(--t3); display: flex; align-items: center; gap: 4px; }
+    .bdot { width: 6px; height: 6px; border-radius: 50%; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all .25s ease; }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal { background: #2a2a2a; border-radius: 10px; border: 1px solid #3a3a3a; box-shadow: 0 20px 60px rgba(0,0,0,.5); min-width: 380px; max-width: 480px; transform: scale(0.9) translateY(-20px); transition: transform .25s ease; }
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-header { padding: 14px 16px; border-bottom: 1px solid #3a3a3a; display: flex; align-items: center; justify-content: center; position: relative; background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%); border-radius: 10px 10px 0 0; }
+    .modal-traffic-lights { position: absolute; left: 14px; display: flex; gap: 8px; }
+    .modal-traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .modal-traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .modal-traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .modal-traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+    .modal-title { color: #ddd; font-size: 14px; font-weight: 500; text-align: center; }
+    .modal-body { padding: 16px; }
+    .modal-footer { padding: 12px 16px; border-top: 1px solid #3a3a3a; display: flex; justify-content: flex-end; gap: 8px; }
+    .btn { padding: 7px 16px; border-radius: 5px; font-size: 12px; cursor: pointer; transition: all .15s; border: none; font-family: inherit; }
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: #3a3a3a; color: #aaa; }
+    .btn-secondary:hover { background: #444; color: #fff; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #1e90ff; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; color: #888; font-size: 11px; margin-bottom: 5px; }
+    .form-input { width: 100%; padding: 8px 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 5px; color: #ccc; font-size: 12px; font-family: inherit; }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-select { width: 100%; padding: 8px 10px; background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 5px; color: #ccc; font-size: 12px; cursor: pointer; font-family: inherit; }
+    .form-select:focus { outline: none; border-color: var(--accent); }
+    .progress-container { padding: 15px; text-align: center; }
+    .progress-text { color: #888; font-size: 12px; margin-bottom: 12px; }
+    .progress-bar { height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--purple)); border-radius: 3px; transition: width 0.3s; }
+    .progress-percent { color: var(--cyan); font-size: 18px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="win">
+  <div class="titlebar">
+    <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+    <div class="titlebar-t">家电产品数字化设计与仿真分析软件</div>
+  </div>
+
+  <div class="main">
+    <div class="side">
+      <div class="sh">导航菜单</div>
+      <div class="ss">
+        <div class="si" onclick="location.href='main.html'"><i class="fa-solid fa-house"></i>首页总览</div>
+        <div class="si" onclick="location.href='project_management.html'"><i class="fa-solid fa-folder"></i>项目管理</div>
+        <div class="si" onclick="location.href='product_design.html'"><i class="fa-solid fa-cube"></i>产品设计</div>
+      </div>
+      <div class="sdiv"></div>
+      <div class="sh">仿真分析</div>
+      <div class="ss">
+        <div class="si" onclick="location.href='structural_analysis.html'"><i class="fa-solid fa-cube"></i>结构分析</div>
+        <div class="si" onclick="location.href='thermal_analysis.html'"><i class="fa-solid fa-temperature-half"></i>热分析</div>
+        <div class="si active"><i class="fa-solid fa-wind"></i>流体分析</div>
+      </div>
+      <div class="sdiv"></div>
+      <div class="ss">
+        <div class="si" onclick="location.href='results_view.html'"><i class="fa-solid fa-chart-line"></i>结果查看</div>
+        <div class="si" onclick="location.href='report_generation.html'"><i class="fa-solid fa-file-lines"></i>报告生成</div>
+        <div class="si" onclick="location.href='parameters.html'"><i class="fa-solid fa-gear"></i>参数设置</div>
+      </div>
+      <div class="sproj">
+        <div class="sproj-n">WM-X600 滚筒洗衣机</div>
+        <div class="sproj-d">修改于 2026-03-23 10:15</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="tb">
+        <div class="tg">
+          <button class="tbtn" onclick="location.href='product_design.html'"><i class="fa-solid fa-arrow-left"></i>返回</button>
+        </div>
+        <div class="tg">
+          <button class="tbtn" id="btnDomain"><i class="fa-solid fa-box"></i>计算域</button>
+          <button class="tbtn" id="btnBC"><i class="fa-solid fa-arrow-right-arrow-left"></i>边界条件</button>
+          <button class="tbtn" id="btnMesh"><i class="fa-solid fa-grip"></i>网格</button>
+        </div>
+        <div class="tg">
+          <button class="tbtn" id="btnRun" style="color:var(--cyan);"><i class="fa-solid fa-play"></i>运行CFD</button>
+        </div>
+        <div class="tsp"></div>
+        <button class="tbtn" onclick="location.href='results_view.html'"><i class="fa-solid fa-chart-line"></i>结果查看</button>
+      </div>
+
+      <div class="vp-wrap">
+        <div class="vp">
+          <div class="sim-info">
+            <span class="sim-tag">CFD 流体仿真</span>
+            <span class="sim-tag">Realizable k-ε 湍流模型</span>
+            <span class="sim-tag">SIMPLE 算法 · 128万网格</span>
+          </div>
+          <div class="flow-vis">
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <div class="flow-body">
+                <div class="flow-inlet"></div>
+                <div class="flow-outlet"></div>
+                <svg class="flow-path" viewBox="0 0 280 220">
+                  <path d="M 0 110 Q 60 110 80 80 T 140 80 T 200 110 T 280 110" fill="none" stroke="rgba(100,210,255,0.3)" stroke-width="2" stroke-dasharray="5,5">
+                    <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1s" repeatCount="indefinite"/>
+                  </path>
+                  <path d="M 0 110 Q 70 105 90 90 T 150 70 T 210 100 T 280 110" fill="none" stroke="rgba(100,210,255,0.4)" stroke-width="2" stroke-dasharray="5,5">
+                    <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="0.8s" repeatCount="indefinite"/>
+                  </path>
+                  <path d="M 0 110 Q 50 115 70 130 T 130 140 T 190 120 T 280 110" fill="none" stroke="rgba(100,210,255,0.3)" stroke-width="2" stroke-dasharray="5,5">
+                    <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1.2s" repeatCount="indefinite"/>
+                  </path>
+                  <circle cx="80" cy="85" r="4" fill="var(--cyan)" opacity="0.8">
+                    <animate attributeName="cx" from="20" to="260" dur="2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite"/>
+                  </circle>
+                  <circle cx="120" cy="75" r="3" fill="var(--cyan)" opacity="0.7">
+                    <animate attributeName="cx" from="20" to="260" dur="1.8s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite"/>
+                  </circle>
+                  <circle cx="160" cy="95" r="3.5" fill="var(--purple)" opacity="0.7">
+                    <animate attributeName="cx" from="20" to="260" dur="2.2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite"/>
+                  </circle>
+                  <circle cx="100" cy="135" r="3" fill="var(--cyan)" opacity="0.6">
+                    <animate attributeName="cx" from="20" to="260" dur="1.9s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0;1;0" dur="1.9s" repeatCount="indefinite"/>
+                  </circle>
+                </svg>
+              </div>
+              <div class="legend-row">
+                <span style="font-size:10px;color:var(--t3);">0 m/s</span>
+                <div class="legend-bar" style="background:linear-gradient(90deg,#1a3a8f,#0a84ff,#30d158,#ffd60a,#ff453a);"></div>
+                <span style="font-size:10px;color:var(--t3);">15 m/s</span>
+              </div>
+              <div class="legend-labels"><span>低速</span><span>中速</span><span>高速</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rp">
+          <div class="ps">
+            <div class="ps-t">CFD 设置</div>
+            <div class="pr"><span class="pl">湍流模型</span><span class="pv pv-a">Realizable k-ε</span></div>
+            <div class="pr"><span class="pl">算法</span><span class="pv">SIMPLE</span></div>
+            <div class="pr"><span class="pl">离散格式</span><span class="pv">二阶迎风</span></div>
+            <div class="pr"><span class="pl">网格</span><span class="pv pv-c">1,284,560</span></div>
+          </div>
+          <div class="ps">
+            <div class="ps-t">边界条件</div>
+            <div class="pr"><span class="pl">入口速度</span><span class="pv pv-c">5.2 m/s</span></div>
+            <div class="pr"><span class="pl">入口温度</span><span class="pv">25°C</span></div>
+            <div class="pr"><span class="pl">出口压力</span><span class="pv">101325 Pa</span></div>
+            <div class="pr"><span class="pl">壁面条件</span><span class="pv">无滑移</span></div>
+          </div>
+          <div class="ps">
+            <div class="ps-t">计算进度 <span class="pill pill-b">运行中</span></div>
+            <div class="pr"><span class="pl">迭代</span><span class="pv pv-a">2847 / 5000</span></div>
+            <div class="pr"><span class="pl">连续性残差</span><span class="pv pv-c">3.2×10⁻⁴</span></div>
+            <div class="pr"><span class="pl">X-动量</span><span class="pv pv-g">8.7×10⁻⁵</span></div>
+            <div class="pbar"><div class="pfill" style="width:57%;background:var(--cyan);"></div></div>
+            <div style="font-size:10px;color:var(--t3);margin-top:3px;">57% · 剩余约 12 min</div>
+          </div>
+          <div class="ps">
+            <div class="ps-t">结果预览</div>
+            <div class="pr"><span class="pl">最大速度</span><span class="pv pv-c">12.6 m/s</span></div>
+            <div class="pr"><span class="pl">最大压力</span><span class="pv">2458 Pa</span></div>
+            <div class="pr"><span class="pl">压降</span><span class="pv pv-g">186 Pa</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bb">
+        <div class="bi"><span class="bdot" style="background:var(--cyan);"></span>CFD 运行中</div>
+        <div class="bi">迭代: 2847</div>
+        <div class="bi">残差: 3.2×10⁻⁴</div>
+        <div class="bi" style="margin-left:auto;">网格 1,284,560</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-traffic-lights">
+        <div class="modal-traffic-light close" onclick="closeModal()"></div>
+        <div class="modal-traffic-light minimize"></div>
+        <div class="modal-traffic-light maximize"></div>
+      </div>
+      <span class="modal-title" id="modalTitle">弹窗标题</span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script>
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalFooter = document.getElementById('modalFooter');
+
+  function openModal(title, bodyHtml, footerHtml) { modalTitle.textContent = title; modalBody.innerHTML = bodyHtml; modalFooter.innerHTML = footerHtml; modalOverlay.classList.add('active'); }
+  function closeModal() { modalOverlay.classList.remove('active'); }
+  modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+  document.getElementById('btnDomain').addEventListener('click', () => {
+    openModal('计算域设置', '<div class="form-group"><label class="form-label">流体类型</label><select class="form-select"><option>空气</option><option>水</option><option>油</option><option>自定义</option></select></div><div class="form-group"><label class="form-label">流动类型</label><select class="form-select"><option>内流</option><option>外流</option></select></div><div class="form-group"><label class="form-label">时间类型</label><select class="form-select"><option selected>稳态</option><option>瞬态</option></select></div>', '<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">应用</button>');
+  });
+
+  document.getElementById('btnBC').addEventListener('click', () => {
+    openModal('边界条件设置', '<div class="form-group"><label class="form-label">入口边界</label><select class="form-select"><option>速度入口</option><option>压力入口</option><option>质量流量入口</option></select></div><div class="form-group"><label class="form-label">速度值 (m/s)</label><input type="text" class="form-input" value="5.2"></div><div class="form-group"><label class="form-label">出口边界</label><select class="form-select"><option>压力出口</option><option>自由出口</option></select></div><div class="form-group"><label class="form-label">出口压力 (Pa)</label><input type="text" class="form-input" value="101325"></div>', '<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">应用</button>');
+  });
+
+  document.getElementById('btnMesh').addEventListener('click', () => {
+    openModal('网格设置', '<div class="form-group"><label class="form-label">网格类型</label><select class="form-select"><option>非结构化 (Tet)</option><option>结构化 (Hex)</option><option>混合网格</option></select></div><div class="form-group"><label class="form-label">网格尺寸</label><select class="form-select"><option>粗糙 (100万)</option><option selected>标准 (128万)</option><option>精细 (200万)</option></select></div><div style="display:flex;align-items:center;gap:8px;margin-top:8px;"><input type="checkbox" checked style="accent-color:var(--accent);"><span style="font-size:11px;color:var(--t2);">边界层加密</span></div>', '<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">应用</button>');
+  });
+
+  document.getElementById('btnRun').addEventListener('click', () => {
+    let progress = 0;
+    openModal('运行 CFD 计算', '<div class="progress-container"><i class="fa-solid fa-wind" style="font-size:32px;color:var(--cyan);margin-bottom:12px;"></i><div class="progress-text">正在计算流体场...</div><div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div><div class="progress-percent" id="progressPercent">0%</div></div>', '<button class="btn btn-secondary" id="btnCancel">取消</button>');
+    const interval = setInterval(() => {
+      progress += Math.random() * 8;
+      if (progress >= 100) { progress = 100; clearInterval(interval); document.getElementById('progressPercent').textContent = '100%'; document.getElementById('progressFill').style.width = '100%'; document.getElementById('btnCancel').textContent = '完成'; document.getElementById('btnCancel').onclick = closeModal; document.getElementById('btnCancel').classList.remove('btn-secondary'); document.getElementById('btnCancel').classList.add('btn-primary'); }
+      else { document.getElementById('progressPercent').textContent = Math.round(progress) + '%'; document.getElementById('progressFill').style.width = progress + '%'; }
+    }, 300);
+    document.getElementById('btnCancel').addEventListener('click', () => { clearInterval(interval); closeModal(); });
+  });
+</script>
+</body>
+</html>

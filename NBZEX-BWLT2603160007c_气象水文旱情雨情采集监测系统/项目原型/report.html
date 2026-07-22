@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>气象水文旱情雨情采集监测系统 - 报表统计</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpg') center center no-repeat;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 30px;
+    }
+
+    .mac-window {
+      width: 1280px;
+      background: #1a1d23;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .titlebar {
+      height: 42px;
+      background: linear-gradient(180deg, #3a3d44 0%, #2d3038 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #1a1a1e;
+    }
+
+    .traffic-lights { display: flex; gap: 8px; }
+    .traffic-lights span { width: 12px; height: 12px; border-radius: 50%; display: inline-block; cursor: pointer; }
+    .tl-close { background: #ff5f57; border: 1px solid #e14640; }
+    .tl-minimize { background: #febc2e; border: 1px solid #d4a123; }
+    .tl-maximize { background: #28c840; border: 1px solid #1aab29; }
+
+    .titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      color: #b0b3ba;
+      font-weight: 500;
+    }
+
+    .main-layout { display: flex; height: 720px; }
+
+    .sidebar {
+      width: 220px;
+      background: #1f222a;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 16px 0;
+    }
+
+    .sidebar-header {
+      padding: 8px 20px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 12px;
+    }
+
+    .sidebar-header h3 {
+      font-size: 11px;
+      color: #5b8def;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-header p { font-size: 10px; color: #555a65; }
+
+    .nav-group { padding: 0 12px; margin-bottom: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      color: #8a8f9c;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nav-item:hover { background: rgba(255, 255, 255, 0.04); color: #c0c4ce; }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, #2d5dd4 0%, #3b6ce8 100%);
+      color: #fff;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(45, 93, 212, 0.3);
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .content { flex: 1; overflow-y: auto; padding: 24px; background: #14161c; }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .top-bar h1 { font-size: 20px; color: #e8eaf0; font-weight: 600; }
+
+    .toolbar { display: flex; gap: 10px; }
+
+    .toolbar-btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #a0a5b5;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .toolbar-btn:hover { background: rgba(255, 255, 255, 0.08); color: #c0c4ce; }
+    .toolbar-btn.primary { background: #2d5dd4; color: #fff; border-color: #2d5dd4; }
+    .toolbar-btn.primary:hover { background: #3b6ce8; }
+
+    .report-types {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .report-type-card {
+      background: linear-gradient(145deg, #1e2130 0%, #1a1d28 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .report-type-card:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .report-type-card.active {
+      border-color: #2d5dd4;
+      background: linear-gradient(145deg, #1e2540 0%, #1a1d30 100%);
+    }
+
+    .report-type-icon { font-size: 28px; margin-bottom: 10px; }
+    .report-type-name { font-size: 13px; color: #c0c4d0; font-weight: 500; margin-bottom: 4px; }
+    .report-type-desc { font-size: 10px; color: #5b6078; }
+
+    .filter-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    .filter-label { font-size: 12px; color: #6b7080; white-space: nowrap; }
+
+    .filter-select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #1a1d23;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #a0a5b5;
+      outline: none;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer;
+    }
+
+    .date-input {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #1a1d23;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #a0a5b5;
+      outline: none;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .report-table-wrap {
+      background: linear-gradient(145deg, #1e2130 0%, #1a1d28 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .report-table { width: 100%; border-collapse: collapse; }
+
+    .report-table th {
+      font-size: 10px;
+      color: #5b6078;
+      font-weight: 600;
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .report-table td {
+      font-size: 12px;
+      color: #a0a5b5;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .report-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    .report-status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .status-generated { background: rgba(34, 197, 94, 0.12); color: #4ade80; }
+    .status-pending { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+    .status-failed { background: rgba(239, 68, 68, 0.12); color: #f87171; }
+
+    .report-actions { display: flex; gap: 6px; }
+
+    .report-action {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: transparent;
+      color: #6b7080;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .report-action:hover { background: rgba(255, 255, 255, 0.04); color: #a0a5b5; }
+    .report-action.primary { background: rgba(45, 93, 212, 0.15); color: #60a5fa; border-color: rgba(45, 93, 212, 0.3); }
+
+    .table-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .table-info { font-size: 11px; color: #5b6078; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: #1e2130;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-header {
+      height: 42px;
+      background: linear-gradient(180deg, #3a3d44 0%, #2d3038 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #1a1a1e;
+    }
+
+    .modal-traffic-lights { display: flex; gap: 8px; }
+    .modal-traffic-lights span { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+    .modal-title {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      color: #b0b3ba;
+      font-weight: 500;
+    }
+
+    .modal-body { padding: 20px; }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-label {
+      font-size: 11px;
+      color: #6b7080;
+      font-weight: 500;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #14161c;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #a0a5b5;
+      outline: none;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .form-input:focus { border-color: #2d5dd4; }
+
+    .form-select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #14161c;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #a0a5b5;
+      outline: none;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer;
+    }
+
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #a0a5b5;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .modal-btn:hover { background: rgba(255, 255, 255, 0.08); color: #c0c4ce; }
+    .modal-btn.primary { background: #2d5dd4; color: #fff; border-color: #2d5dd4; }
+    .modal-btn.primary:hover { background: #3b6ce8; }
+
+    .preview-content {
+      background: #14161c;
+      padding: 20px;
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .preview-header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .preview-header h2 {
+      color: #e8eaf0;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .preview-header p {
+      color: #6b7080;
+      font-size: 11px;
+    }
+
+    .preview-section {
+      margin-bottom: 16px;
+    }
+
+    .preview-section h4 {
+      color: #60a5fa;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .preview-section p {
+      color: #a0a5b5;
+      font-size: 11px;
+      line-height: 1.8;
+    }
+
+    .preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    .preview-table th {
+      font-size: 10px;
+      color: #5b6078;
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .preview-table td {
+      font-size: 11px;
+      color: #a0a5b5;
+      padding: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <span class="tl-close"></span>
+        <span class="tl-minimize"></span>
+        <span class="tl-maximize"></span>
+      </div>
+      <div class="titlebar-text">气象水文旱情雨情采集监测系统</div>
+    </div>
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h3>监测中心</h3>
+          <p>水利部信息中心</p>
+        </div>
+        <div class="nav-group">
+          <div class="nav-item" onclick="window.location.href='dashboard.html'">
+            <span class="nav-icon">&#9632;</span> 综合总览
+          </div>
+          <div class="nav-item" onclick="window.location.href='warning.html'">
+            <span class="nav-icon">&#9733;</span> 预警管理
+          </div>
+          <div class="nav-item" onclick="window.location.href='stations.html'">
+            <span class="nav-icon">&#9881;</span> 站点管理
+          </div>
+          <div class="nav-item active" onclick="window.location.href='report.html'">
+            <span class="nav-icon">&#9776;</span> 报表统计
+          </div>
+          <div class="nav-item" onclick="window.location.href='rainfall.html'">
+            <span class="nav-icon">&#9650;</span> 雨情监测
+          </div>
+          <div class="nav-item" onclick="window.location.href='water.html'">
+            <span class="nav-icon">&#9644;</span> 水情监测
+          </div>
+          <div class="nav-item" onclick="window.location.href='drought.html'">
+            <span class="nav-icon">&#9673;</span> 旱情监测
+          </div>
+          <div class="nav-item" onclick="window.location.href='setting.html'">
+            <span class="nav-icon">&#9881;</span> 系统设置
+          </div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="top-bar">
+          <h1>报表统计</h1>
+          <div class="toolbar">
+            <button class="toolbar-btn" onclick="showModal('templateModal')">报表模板</button>
+            <button class="toolbar-btn" onclick="showModal('scheduleModal')">定时任务</button>
+            <button class="toolbar-btn primary" onclick="showModal('generateModal')">生成报表</button>
+          </div>
+        </div>
+        <div class="report-types">
+          <div class="report-type-card active" onclick="selectReportType(this)">
+            <div class="report-type-icon">&#128196;</div>
+            <div class="report-type-name">日报</div>
+            <div class="report-type-desc">每日数据汇总</div>
+          </div>
+          <div class="report-type-card" onclick="selectReportType(this)">
+            <div class="report-type-icon">&#128197;</div>
+            <div class="report-type-name">周报</div>
+            <div class="report-type-desc">每周数据汇总</div>
+          </div>
+          <div class="report-type-card" onclick="selectReportType(this)">
+            <div class="report-type-icon">&#128198;</div>
+            <div class="report-type-name">月报</div>
+            <div class="report-type-desc">每月数据汇总</div>
+          </div>
+          <div class="report-type-card" onclick="selectReportType(this)">
+            <div class="report-type-icon">&#128199;</div>
+            <div class="report-type-name">年报</div>
+            <div class="report-type-desc">年度数据汇总</div>
+          </div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">报表日期:</span>
+          <input type="date" class="date-input" value="2026-03-25">
+          <span class="filter-label">报表类型:</span>
+          <select class="filter-select">
+            <option>全部类型</option>
+            <option>雨情报表</option>
+            <option>水情报表</option>
+            <option>旱情报表</option>
+            <option>综合报表</option>
+          </select>
+          <span class="filter-label">生成状态:</span>
+          <select class="filter-select">
+            <option>全部状态</option>
+            <option>已生成</option>
+            <option>待生成</option>
+            <option>生成失败</option>
+          </select>
+        </div>
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>报表名称</th>
+                <th>报表类型</th>
+                <th>统计周期</th>
+                <th>生成时间</th>
+                <th>状态</th>
+                <th>操作人</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026年03月25日雨情日报</td>
+                <td>雨情报表</td>
+                <td>2026-03-25</td>
+                <td>08:30:15</td>
+                <td><span class="report-status status-generated">已生成</span></td>
+                <td>系统自动</td>
+                <td>
+                  <div class="report-actions">
+                    <button class="report-action primary" onclick="previewReport('rainfall')">预览</button>
+                    <button class="report-action" onclick="exportReport()">导出</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>2026年03月25日水情日报</td>
+                <td>水情报表</td>
+                <td>2026-03-25</td>
+                <td>08:30:22</td>
+                <td><span class="report-status status-generated">已生成</span></td>
+                <td>系统自动</td>
+                <td>
+                  <div class="report-actions">
+                    <button class="report-action primary" onclick="previewReport('water')">预览</button>
+                    <button class="report-action" onclick="exportReport()">导出</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>2026年第12周综合周报</td>
+                <td>综合报表</td>
+                <td>03/16-03/22</td>
+                <td>03/22 18:00:00</td>
+                <td><span class="report-status status-generated">已生成</span></td>
+                <td>系统自动</td>
+                <td>
+                  <div class="report-actions">
+                    <button class="report-action primary" onclick="previewReport('weekly')">预览</button>
+                    <button class="report-action" onclick="exportReport()">导出</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>2026年03月中旬旱情简报</td>
+                <td>旱情报表</td>
+                <td>03/11-03/20</td>
+                <td>03/20 18:00:00</td>
+                <td><span class="report-status status-generated">已生成</span></td>
+                <td>管理员</td>
+                <td>
+                  <div class="report-actions">
+                    <button class="report-action primary" onclick="previewReport('drought')">预览</button>
+                    <button class="report-action" onclick="exportReport()">导出</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>2026年03月份综合月报</td>
+                <td>综合报表</td>
+                <td>2026-03</td>
+                <td>待生成</td>
+                <td><span class="report-status status-pending">待生成</span></td>
+                <td>--</td>
+                <td>
+                  <div class="report-actions">
+                    <button class="report-action primary" onclick="generateNow()">立即生成</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="table-footer">
+            <span class="table-info">共 5 条报表记录</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="generateModal">
+    <div class="modal" style="width:480px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">生成报表</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">报表类型</label>
+          <select class="form-select" id="reportTypeSelect">
+            <option>雨情报表</option>
+            <option>水情报表</option>
+            <option>旱情报表</option>
+            <option>综合报表</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">开始日期</label>
+            <input type="date" class="form-input" value="2026-03-25">
+          </div>
+          <div class="form-group">
+            <label class="form-label">结束日期</label>
+            <input type="date" class="form-input" value="2026-03-25">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">备注说明</label>
+          <input type="text" class="form-input" placeholder="输入报表备注信息">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('generateModal')">取消</button>
+        <button class="modal-btn primary" onclick="confirmGenerate()">确认生成</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="templateModal">
+    <div class="modal" style="width:480px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">报表模板设置</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">模板名称</label>
+          <input type="text" class="form-input" placeholder="输入模板名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">包含内容</label>
+          <select class="form-select" multiple style="height:80px">
+            <option selected>雨情数据</option>
+            <option selected>水情数据</option>
+            <option selected>旱情数据</option>
+            <option>预警信息</option>
+            <option>站点状态</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">输出格式</label>
+          <select class="form-select">
+            <option>PDF</option>
+            <option>Excel</option>
+            <option>Word</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('templateModal')">取消</button>
+        <button class="modal-btn primary" onclick="saveTemplate()">保存模板</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="scheduleModal">
+    <div class="modal" style="width:480px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">定时任务设置</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">任务名称</label>
+          <input type="text" class="form-input" placeholder="输入任务名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">报表类型</label>
+          <select class="form-select">
+            <option>日报</option>
+            <option>周报</option>
+            <option>月报</option>
+            <option>年报</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">执行时间</label>
+            <input type="time" class="form-input" value="08:00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">执行周期</label>
+            <select class="form-select">
+              <option>每天</option>
+              <option>每周一</option>
+              <option>每月1日</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">通知邮箱</label>
+          <input type="email" class="form-input" placeholder="生成后通知的邮箱">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('scheduleModal')">取消</button>
+        <button class="modal-btn primary" onclick="saveSchedule()">保存任务</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="previewModal">
+    <div class="modal" style="width:700px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title" id="previewTitle">报表预览</div>
+      </div>
+      <div class="modal-body">
+        <div class="preview-content" id="previewContent"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('previewModal')">关闭</button>
+        <button class="modal-btn primary" onclick="exportReport()">导出报表</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="successModal">
+    <div class="modal" style="width:360px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">操作成功</div>
+      </div>
+      <div class="modal-body" style="text-align:center;padding:30px 20px">
+        <div style="font-size:40px;margin-bottom:12px;color:#22c55e">&#10003;</div>
+        <p style="color:#a0a5b5;font-size:13px" id="successMsg">操作已完成</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center">
+        <button class="modal-btn primary" onclick="closeModal('successModal')">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const reportTemplates = {
+      rainfall: {
+        title: '2026年03月25日雨情日报',
+        date: '发布日期: 2026-03-25 | 编制单位: 水利部信息中心',
+        sections: [
+          { title: '一、雨情概况', content: '3月25日08时至26日08时，全省有 386 个雨量站发生降雨，平均降雨量 2.8mm，其中暴雨(≥50mm)站点 0 个，大雨(≥25mm)站点 2 个，中雨(≥10mm)站点 18 个。' },
+          { title: '二、降雨分布', content: '汉中市降雨范围最大，有 45 个站点发生降雨；渭南市次之，有 38 个站点；西安市有 32 个站点。' },
+          { title: '三、重点降雨', content: '最大降雨量出现在勉县雨量站，为 28.6mm；次大降雨量出现在镇巴县，为 22.3mm。' }
+        ]
+      },
+      water: {
+        title: '2026年03月25日水情日报',
+        date: '发布日期: 2026-03-25 | 编制单位: 水利部信息中心',
+        sections: [
+          { title: '一、水情概况', content: '全省主要河流控制站水情总体平稳，其中渭河华县站水位326.45m，流量128.6m³/s；汉江安康站水位218.30m，流量856m³/s。' },
+          { title: '二、超警情况', content: '渭河临潼站水位341.82m，超警戒水位0.82m；泾河张家山站水位416.55m，距警戒水位3.45m。' },
+          { title: '三、水库蓄水', content: '石门水库蓄水量12.8亿m³，较昨日增加0.3亿m³；安康水库蓄水量18.5亿m³，较昨日增加0.5亿m³。' }
+        ]
+      },
+      drought: {
+        title: '2026年03月中旬旱情简报',
+        date: '发布日期: 2026-03-20 | 编制单位: 水利部信息中心',
+        sections: [
+          { title: '一、旱情概况', content: '3月中旬全省平均降水量较常年偏少42%，关中东部、陕北南部部分地区出现轻度干旱，受旱面积约4.2万km²。' },
+          { title: '二、土壤墒情', content: '关中东部10cm土壤相对湿度降至45%左右，低于适宜湿度下限；渭北灌区土壤墒情基本适宜。' },
+          { title: '三、应对措施', content: '已启动抗旱Ⅳ级应急响应，组织灌区开闸放水，积极开展春灌工作。' }
+        ]
+      },
+      weekly: {
+        title: '2026年第12周综合周报',
+        date: '发布日期: 2026-03-22 | 编制单位: 水利部信息中心',
+        sections: [
+          { title: '一、本周水雨情综述', content: '本周全省平均降雨量8.6mm，较多年同期偏少28%；主要河流水情总体平稳，渭河临潼站出现超警洪水一次。' },
+          { title: '二、监测预警情况', content: '本周共发布预警信息 12 条，其中红色预警 1 条，橙色预警 3 条，黄色预警 5 条，蓝色预警 3 条。' },
+          { title: '三、站点运行情况', content: '全省1247个监测站点中，在线率保持在95.6%以上，设备运行总体良好。' }
+        ]
+      }
+    };
+
+    function showModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function previewReport(type) {
+      const template = reportTemplates[type];
+      document.getElementById('previewTitle').textContent = template.title;
+      
+      let content = '<div class="preview-header"><h2>' + template.title + '</h2><p>' + template.date + '</p></div>';
+      
+      template.sections.forEach(section => {
+        content += '<div class="preview-section"><h4>' + section.title + '</h4><p>' + section.content + '</p></div>';
+      });
+      
+      content += '<div class="preview-section"><h4>四、数据统计表</h4><table class="preview-table"><thead><tr><th>站点</th><th>雨量(mm)</th><th>水位(m)</th><th>状态</th></tr></thead><tbody>';
+      content += '<tr><td>华县水文站</td><td>5.2</td><td>326.45</td><td>正常</td></tr>';
+      content += '<tr><td>临潼水文站</td><td>8.6</td><td>341.82</td><td>超警</td></tr>';
+      content += '<tr><td>勉县雨量站</td><td>28.6</td><td>--</td><td>正常</td></tr>';
+      content += '<tr><td>张家山站</td><td>2.1</td><td>416.55</td><td>正常</td></tr>';
+      content += '</tbody></table></div>';
+      
+      document.getElementById('previewContent').innerHTML = content;
+      showModal('previewModal');
+    }
+
+    function confirmGenerate() {
+      closeModal('generateModal');
+      document.getElementById('successMsg').textContent = '报表已成功生成';
+      showModal('successModal');
+    }
+
+    function generateNow() {
+      document.getElementById('successMsg').textContent = '报表正在生成中...';
+      showModal('successModal');
+    }
+
+    function exportReport() {
+      closeModal('previewModal');
+      document.getElementById('successMsg').textContent = '报表导出成功';
+      showModal('successModal');
+    }
+
+    function saveTemplate() {
+      closeModal('templateModal');
+      document.getElementById('successMsg').textContent = '模板保存成功';
+      showModal('successModal');
+    }
+
+    function saveSchedule() {
+      closeModal('scheduleModal');
+      document.getElementById('successMsg').textContent = '定时任务保存成功';
+      showModal('successModal');
+    }
+
+    function selectReportType(el) {
+      document.querySelectorAll('.report-type-card').forEach(card => card.classList.remove('active'));
+      el.classList.add('active');
+    }
+  </script>
+</body>
+
+</html>

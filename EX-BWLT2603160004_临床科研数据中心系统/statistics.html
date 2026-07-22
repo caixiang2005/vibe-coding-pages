@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统计分析 - 临床科研数据中心系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
+        body { background: #e8f4f8; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 20px; }
+        .app-window { width: 1200px; height: 720px; max-width: 100%; background: #f5f9fc; border-radius: 4px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); overflow: hidden; border: 1px solid #b8d4e8; display: flex; flex-direction: column; position: relative; }
+        .title-bar { background: linear-gradient(180deg, #c5dff0 0%, #a8cce4 100%); height: 32px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #8bb8d4; }
+        .title-bar-left { display: flex; align-items: center; gap: 8px; }
+        .title-bar-icon { width: 18px; height: 18px; background: linear-gradient(135deg, #4a90c2 0%, #2d6a9f 100%); border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; }
+        .title-bar-text { font-size: 13px; color: #1a3a52; font-weight: 500; }
+        .window-controls { display: flex; gap: 1px; }
+        .window-btn { width: 46px; height: 32px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #1a3a52; font-size: 10px; transition: background 0.15s; }
+        .window-btn:hover { background: rgba(0, 0, 0, 0.1); }
+        .window-btn.close:hover { background: #e81123; color: white; }
+        .window-btn-icon { width: 10px; height: 10px; display: flex; align-items: center; justify-content: center; }
+        .minimize-icon { width: 10px; height: 1px; background: currentColor; }
+        .maximize-icon { width: 10px; height: 10px; border: 1px solid currentColor; background: transparent; }
+        .close-icon { position: relative; width: 10px; height: 10px; }
+        .close-icon::before, .close-icon::after { content: ''; position: absolute; width: 12px; height: 1px; background: currentColor; top: 50%; left: 50%; }
+        .close-icon::before { transform: translate(-50%, -50%) rotate(45deg); }
+        .close-icon::after { transform: translate(-50%, -50%) rotate(-45deg); }
+        .main-nav { background: linear-gradient(180deg, #f0f7fc 0%, #dceaf5 100%); padding: 8px 12px; display: flex; gap: 6px; border-bottom: 1px solid #c5d9e8; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; min-width: 72px; text-decoration: none; }
+        .nav-item:hover { background: #e8f2fa; border-color: #b8d4e8; }
+        .nav-item.active { background: linear-gradient(180deg, #ffffff 0%, #e8f4fc 100%); border-color: #a0c8e0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+        .nav-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #5a9fcf 0%, #3a7fb0 100%); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; margin-bottom: 4px; }
+        .nav-item:nth-child(2) .nav-icon { background: linear-gradient(135deg, #6aaf70 0%, #4a9050 100%); }
+        .nav-item:nth-child(3) .nav-icon { background: linear-gradient(135deg, #e8a040 0%, #d08020 100%); }
+        .nav-item:nth-child(4) .nav-icon { background: linear-gradient(135deg, #9080c8 0%, #7060a8 100%); }
+        .nav-item:nth-child(5) .nav-icon { background: linear-gradient(135deg, #70a8b8 0%, #508898 100%); }
+        .nav-text { font-size: 12px; color: #2a4a60; }
+        .toolbar { background: #f8fbfd; padding: 8px 12px; display: flex; gap: 8px; border-bottom: 1px solid #d8e8f0; flex-wrap: wrap; align-items: center; }
+        .tool-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid #c0d4e4; background: linear-gradient(180deg, #ffffff 0%, #f0f6fa 100%); border-radius: 4px; cursor: pointer; font-size: 12px; color: #2a4a60; transition: all 0.2s; }
+        .tool-btn:hover { background: linear-gradient(180deg, #f0f8ff 0%, #e0f0fa 100%); border-color: #90b8d4; }
+        .tool-btn:active { transform: scale(0.96); }
+        .tool-btn i { color: #5090c0; }
+        .toolbar-separator { width: 1px; height: 24px; background: #d0e0ec; margin: 0 4px; }
+        .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+        .user-info { display: flex; align-items: center; gap: 8px; padding: 4px 12px; background: #eef5fa; border-radius: 4px; border: 1px solid #d0e0ec; }
+        .user-avatar { width: 28px; height: 28px; background: linear-gradient(135deg, #5a9fcf 0%, #3a7fb0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; }
+        .user-name { font-size: 12px; color: #2a4a60; }
+        .main-content { display: flex; flex: 1; overflow: hidden; }
+        .left-panel { width: 220px; background: #f0f6fa; border-right: 1px solid #d8e8f0; padding: 12px; overflow-y: auto; }
+        .panel-section { margin-bottom: 16px; }
+        .panel-title { font-size: 13px; font-weight: 600; color: #2a4a60; padding: 8px 10px; background: linear-gradient(180deg, #e8f2fa 0%, #dceaf4 100%); border: 1px solid #c8dcea; border-radius: 4px 4px 0 0; display: flex; align-items: center; gap: 8px; }
+        .panel-content { background: white; border: 1px solid #c8dcea; border-top: none; border-radius: 0 0 4px 4px; padding: 10px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .stat-item { text-align: center; padding: 10px 6px; background: #f8fbfd; border-radius: 4px; border: 1px solid #e8f0f6; }
+        .stat-value { font-size: 20px; font-weight: 600; color: #3080b0; }
+        .stat-label { font-size: 11px; color: #6090a8; margin-top: 2px; }
+        .quick-list { list-style: none; }
+        .quick-list li { padding: 8px 10px; font-size: 12px; color: #3a5a70; border-bottom: 1px dashed #e0ecf4; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+        .quick-list li:hover { background: #f0f8ff; }
+        .quick-list li:last-child { border-bottom: none; }
+        .quick-list li i { color: #80a8c4; width: 14px; }
+        .right-content { flex: 1; padding: 12px; background: #fafcfe; overflow-y: auto; display: flex; flex-direction: column; position: relative; }
+        .content-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e0ecf4; }
+        .content-title { font-size: 15px; font-weight: 600; color: #2a4a60; display: flex; align-items: center; gap: 8px; }
+        .content-title i { color: #5090c0; }
+        .search-box { display: flex; gap: 8px; }
+        .search-input { padding: 6px 12px; border: 1px solid #c0d4e4; border-radius: 4px; font-size: 12px; width: 120px; outline: none; }
+        .search-input:focus { border-color: #80b0d0; }
+        .search-btn { padding: 6px 14px; background: linear-gradient(180deg, #5a9fcf 0%, #4088b8 100%); border: 1px solid #3078a8; border-radius: 4px; color: white; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .search-btn:hover { background: linear-gradient(180deg, #6aafdf 0%, #5098c8 100%); }
+        .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .chart-card { background: white; border: 1px solid #d0e0ec; border-radius: 4px; padding: 12px; }
+        .chart-title { font-size: 13px; font-weight: 600; color: #2a4a60; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .chart-title i { color: #5090c0; }
+        .chart-container { height: 200px; }
+        .stat-card-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+        .stat-card { background: white; border: 1px solid #d0e0ec; border-radius: 4px; padding: 12px; text-align: center; }
+        .stat-card-value { font-size: 24px; font-weight: 600; color: #3080b0; }
+        .stat-card-label { font-size: 11px; color: #6090a8; margin-top: 4px; }
+        .table-card { background: white; border: 1px solid #d0e0ec; border-radius: 4px; overflow: hidden; }
+        .table-title { font-size: 13px; font-weight: 600; color: #2a4a60; padding: 10px 12px; border-bottom: 1px solid #d0e0ec; display: flex; align-items: center; gap: 6px; }
+        .table-title i { color: #5090c0; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table th { background: linear-gradient(180deg, #e8f2fa 0%, #dceaf4 100%); padding: 8px 12px; text-align: left; font-weight: 600; color: #2a4a60; border-bottom: 1px solid #c8dcea; white-space: nowrap; }
+        .data-table td { padding: 8px 12px; border-bottom: 1px solid #e8f2f8; color: #3a5a70; }
+        .data-table tr:hover { background: #f5fafd; }
+        .status-bar { background: linear-gradient(180deg, #e0ecf4 0%, #d0e0ec 100%); padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #4a6a80; border-top: 1px solid #c0d4e4; }
+        .status-left { display: flex; align-items: center; gap: 16px; }
+        .status-item { display: flex; align-items: center; gap: 6px; }
+        .status-dot { width: 8px; height: 8px; background: #50b060; border-radius: 50%; }
+        .modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #f5f9fc; border-radius: 4px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); width: auto; max-width: 90%; max-height: 90vh; overflow: hidden; border: 1px solid #a0c0d8; margin: auto; }
+        .modal-header { background: linear-gradient(180deg, #c5dff0 0%, #a8cce4 100%); padding: 10px 16px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #8bb8d4; position: relative; }
+        .modal-title { font-size: 14px; font-weight: 600; color: #1a3a52; text-align: center; }
+        .modal-close { position: absolute; right: 8px; width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #1a3a52; font-size: 14px; }
+        .modal-close:hover { background: rgba(0, 0, 0, 0.1); }
+        .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 0; }
+        .form-group.full-width { grid-column: span 2; }
+        .form-label { display: block; font-size: 12px; color: #2a4a60; margin-bottom: 6px; font-weight: 500; }
+        .form-input { width: 100%; padding: 8px 12px; border: 1px solid #c0d4e4; border-radius: 4px; font-size: 12px; outline: none; background: white; }
+        .form-input:focus { border-color: #80b0d0; box-shadow: 0 0 0 2px rgba(80, 144, 192, 0.1); }
+        .form-select { width: 100%; padding: 8px 12px; border: 1px solid #c0d4e4; border-radius: 4px; font-size: 12px; outline: none; background: white; cursor: pointer; }
+        .modal-footer { padding: 12px 20px; background: #f0f6fa; border-top: 1px solid #d8e8f0; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { padding: 8px 20px; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; border: 1px solid; }
+        .btn-primary { background: linear-gradient(180deg, #5a9fcf 0%, #4088b8 100%); border-color: #3078a8; color: white; }
+        .btn-primary:hover { background: linear-gradient(180deg, #6aafdf 0%, #5098c8 100%); }
+        .btn-secondary { background: linear-gradient(180deg, #ffffff 0%, #f0f6fa 100%); border-color: #c0d4e4; color: #4a6a80; }
+        .btn-secondary:hover { background: linear-gradient(180deg, #f0f8ff 0%, #e0f0fa 100%); }
+        .toast { position: fixed; top: 80px; right: 20px; padding: 12px 20px; background: #2a8040; color: white; border-radius: 4px; font-size: 13px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); z-index: 2000; display: none; align-items: center; gap: 8px; }
+        .toast.show { display: flex; }
+    </style>
+</head>
+<body>
+    <div class="app-window">
+        <div class="title-bar">
+            <div class="title-bar-left">
+                <div class="title-bar-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <span class="title-bar-text">临床科研数据中心系统</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize"><div class="window-btn-icon"><div class="minimize-icon"></div></div></button>
+                <button class="window-btn maximize"><div class="window-btn-icon"><div class="maximize-icon"></div></div></button>
+                <button class="window-btn close"><div class="window-btn-icon"><div class="close-icon"></div></div></button>
+            </div>
+        </div>
+        <div class="main-nav">
+            <a class="nav-item" href="project.html">
+                <div class="nav-icon"><i class="fas fa-folder-open"></i></div>
+                <span class="nav-text">项目管理</span>
+            </a>
+            <a class="nav-item" href="data-collection.html">
+                <div class="nav-icon"><i class="fas fa-edit"></i></div>
+                <span class="nav-text">数据采集</span>
+            </a>
+            <a class="nav-item" href="quality-control.html">
+                <div class="nav-icon"><i class="fas fa-check-circle"></i></div>
+                <span class="nav-text">质量控制</span>
+            </a>
+            <a class="nav-item active" href="statistics.html">
+                <div class="nav-icon"><i class="fas fa-chart-bar"></i></div>
+                <span class="nav-text">统计分析</span>
+            </a>
+            <a class="nav-item" href="system-settings.html">
+                <div class="nav-icon"><i class="fas fa-cog"></i></div>
+                <span class="nav-text">系统设置</span>
+            </a>
+        </div>
+        <div class="toolbar">
+            <button class="tool-btn" onclick="openModal('statConfig')">
+                <i class="fas fa-cogs"></i>统计配置
+            </button>
+            <button class="tool-btn" onclick="openModal('reportGenerate')">
+                <i class="fas fa-file-pdf"></i>生成报表
+            </button>
+            <button class="tool-btn" onclick="openModal('dataExport')">
+                <i class="fas fa-download"></i>数据导出
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="tool-btn" onclick="openModal('refreshData')">
+                <i class="fas fa-sync-alt"></i>刷新
+            </button>
+            <div class="toolbar-right">
+                <div class="user-info">
+                    <div class="user-avatar"><i class="fas fa-user"></i></div>
+                    <span class="user-name">王晓明</span>
+                </div>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="panel-section">
+                    <div class="panel-title">
+                        <i class="fas fa-chart-pie"></i>数据统计
+                    </div>
+                    <div class="panel-content">
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">1,847</div>
+                                <div class="stat-label">病例总数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">12</div>
+                                <div class="stat-label">在研项目</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">89%</div>
+                                <div class="stat-label">完成率</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">96%</div>
+                                <div class="stat-label">数据完整率</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <div class="panel-title">
+                        <i class="fas fa-clock"></i>快速操作
+                    </div>
+                    <div class="panel-content">
+                        <ul class="quick-list">
+                            <li onclick="openModal('statConfig')"><i class="fas fa-cogs"></i>统计配置</li>
+                            <li onclick="openModal('reportGenerate')"><i class="fas fa-file-pdf"></i>生成报表</li>
+                            <li onclick="openModal('dataExport')"><i class="fas fa-download"></i>数据导出</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="right-content">
+                <div class="content-header">
+                    <div class="content-title">
+                        <i class="fas fa-chart-bar"></i>统计分析
+                    </div>
+                    <div class="search-box">
+                        <select class="search-input">
+                            <option>全部项目</option>
+                            <option>NSCLC-2024-001</option>
+                            <option>CHD-2024-002</option>
+                            <option>DM-2024-003</option>
+                        </select>
+                        <select class="search-input">
+                            <option>近30天</option>
+                            <option>近90天</option>
+                            <option>近一年</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="stat-card-row">
+                    <div class="stat-card">
+                        <div class="stat-card-value">68.4%</div>
+                        <div class="stat-card-label">总入组进度</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value">89%</div>
+                        <div class="stat-card-label">CRF完成率</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value">96%</div>
+                        <div class="stat-card-label">数据完整率</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value">2.5%</div>
+                        <div class="stat-card-label">脱落率</div>
+                    </div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-card">
+                        <div class="chart-title"><i class="fas fa-chart-line"></i>入组趋势</div>
+                        <div class="chart-container" id="chart-enrollment"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title"><i class="fas fa-chart-pie"></i>项目分布</div>
+                        <div class="chart-container" id="chart-project"></div>
+                    </div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-card">
+                        <div class="chart-title"><i class="fas fa-chart-bar"></i>访视完成情况</div>
+                        <div class="chart-container" id="chart-visit"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title"><i class="fas fa-check-circle"></i>数据质量分布</div>
+                        <div class="chart-container" id="chart-quality"></div>
+                    </div>
+                </div>
+                <div class="table-card">
+                    <div class="table-title"><i class="fas fa-table"></i>项目统计汇总</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>项目编号</th>
+                                <th>项目名称</th>
+                                <th>计划入组</th>
+                                <th>实际入组</th>
+                                <th>完成率</th>
+                                <th>数据完整率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>NSCLC-2024-001</td>
+                                <td>非小细胞肺癌免疫治疗</td>
+                                <td>500</td>
+                                <td>342</td>
+                                <td>68.4%</td>
+                                <td>95.2%</td>
+                            </tr>
+                            <tr>
+                                <td>CHD-2024-002</td>
+                                <td>冠心病介入治疗预后分析</td>
+                                <td>600</td>
+                                <td>567</td>
+                                <td>94.5%</td>
+                                <td>97.8%</td>
+                            </tr>
+                            <tr>
+                                <td>DM-2024-003</td>
+                                <td>2型糖尿病队列随访</td>
+                                <td>450</td>
+                                <td>428</td>
+                                <td>95.1%</td>
+                                <td>94.6%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-item"><div class="status-dot"></div>系统正常</div>
+                <div class="status-item">当前用户：王晓明</div>
+            </div>
+            <div>临床科研数据中心系统</div>
+        </div>
+    </div>
+
+    <div id="modal-statConfig" class="modal-overlay">
+        <div class="modal" style="min-width: 560px;">
+            <div class="modal-header">
+                <span class="modal-title">统计配置</span>
+                <button class="modal-close" onclick="closeModal('statConfig')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 12px; padding: 10px 12px; background: #e8f4fc; border-radius: 4px; border-left: 3px solid #5090c0;">
+                    <i class="fas fa-cogs" style="color: #5090c0; margin-right: 6px;"></i>
+                    <span style="font-size: 12px; color: #2a4a60;">配置统计参数以生成符合研究需求的统计分析报告</span>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-database"></i>数据范围</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">统计项目</label>
+                        <select class="form-select">
+                            <option>全部项目</option>
+                            <option>NSCLC-2024-001 非小细胞肺癌</option>
+                            <option>CHD-2024-002 冠心病</option>
+                            <option>DM-2024-003 糖尿病</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">统计周期</label>
+                        <select class="form-select">
+                            <option>近30天</option>
+                            <option>近90天</option>
+                            <option>近一年</option>
+                            <option>自定义时间</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">起始日期</label>
+                        <input type="date" class="form-input" value="2024-01-01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">结束日期</label>
+                        <input type="date" class="form-input">
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-chart-bar"></i>统计指标</div>
+                <div style="background: #f8fbfd; border: 1px solid #d0e0ec; border-radius: 4px; padding: 12px;">
+                    <div style="margin-bottom: 12px; font-size: 12px; color: #2a4a60; font-weight: 500;">核心统计指标</div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> <b>入组进度统计</b> - 计划入组vs实际入组
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> <b>访视完成率</b> - 各访视点完成情况
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> <b>数据质量评分</b> - 数据完整性和准确性
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> <b>脱落与中止分析</b> - 脱落原因和趋势
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> <b>AE/SAE统计</b> - 不良事件汇总
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox"> <b>合并用药分析</b> - 用药频次统计
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-file-alt"></i>输出设置</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">显示小数位</label>
+                        <select class="form-select">
+                            <option>0位</option>
+                            <option selected>1位</option>
+                            <option>2位</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">图表风格</label>
+                        <select class="form-select">
+                            <option>简洁风格</option>
+                            <option selected>标准风格</option>
+                            <option>详细风格</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('statConfig')">取消</button>
+                <button class="btn btn-secondary"><i class="fas fa-history"></i>历史配置</button>
+                <button class="btn btn-primary" onclick="saveConfig()"><i class="fas fa-check"></i>保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-reportGenerate" class="modal-overlay">
+        <div class="modal" style="min-width: 600px;">
+            <div class="modal-header">
+                <span class="modal-title">生成报表</span>
+                <button class="modal-close" onclick="closeModal('reportGenerate')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 12px; padding: 10px 12px; background: #e8f8e8; border-radius: 4px; border-left: 3px solid #50b060;">
+                    <i class="fas fa-file-pdf" style="color: #50b060; margin-right: 6px;"></i>
+                    <span style="font-size: 12px; color: #2a4a60;">选择报表类型和参数，系统将生成专业的统计分析报表</span>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-file-alt"></i>报表信息</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">报表类型 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option>请选择报表类型</option>
+                            <option>数据汇总报表</option>
+                            <option>入组进度报表</option>
+                            <option>数据质量报表</option>
+                            <option>访视跟踪报表</option>
+                            <option>AE/SAE汇总报表</option>
+                            <option>合并用药统计报表</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">项目选择 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option>全部项目</option>
+                            <option>NSCLC-2024-001 非小细胞肺癌</option>
+                            <option>CHD-2024-002 冠心病</option>
+                            <option>DM-2024-003 糖尿病</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-calendar"></i>时间范围</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">起始日期</label>
+                        <input type="date" class="form-input" value="2024-01-01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">结束日期</label>
+                        <input type="date" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">报表格式 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option>PDF 格式</option>
+                            <option>Excel 格式</option>
+                            <option>Word 格式</option>
+                            <option>HTML 网页</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">语言</label>
+                        <select class="form-select">
+                            <option>中文</option>
+                            <option>英文</option>
+                            <option>中英文对照</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-cog"></i>报表选项</div>
+                <div style="background: #f8fbfd; border: 1px solid #d0e0ec; border-radius: 4px; padding: 12px;">
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 包含数据列表
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 包含统计图表
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 添加页眉页脚
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 包含数据趋势分析
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox"> 添加水印
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('reportGenerate')">取消</button>
+                <button class="btn btn-secondary"><i class="fas fa-eye"></i>预览</button>
+                <button class="btn btn-primary" onclick="generateReport()"><i class="fas fa-file-pdf"></i>生成报表</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-dataExport" class="modal-overlay">
+        <div class="modal" style="min-width: 580px;">
+            <div class="modal-header">
+                <span class="modal-title">数据导出</span>
+                <button class="modal-close" onclick="closeModal('dataExport')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 12px; padding: 10px 12px; background: #fff9e6; border-radius: 4px; border-left: 3px solid #e8a040;">
+                    <i class="fas fa-download" style="color: #e8a040; margin-right: 6px;"></i>
+                    <span style="font-size: 12px; color: #806020;">导出数据时请遵守数据安全规定，敏感信息需脱敏处理</span>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-database"></i>数据范围</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">导出范围 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option>全部项目全部数据</option>
+                            <option>NSCLC-2024-001 非小细胞肺癌</option>
+                            <option>CHD-2024-002 冠心病</option>
+                            <option>DM-2024-003 糖尿病</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">数据类型</label>
+                        <select class="form-select">
+                            <option>全部数据</option>
+                            <option>病例基本信息</option>
+                            <option>CRF 数据</option>
+                            <option>实验室检查</option>
+                            <option>不良事件</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">导出格式 <span class="required">*</span></label>
+                        <select class="form-select">
+                            <option>Excel (.xlsx)</option>
+                            <option>Excel (.xls)</option>
+                            <option>CSV (.csv)</option>
+                            <option>SPSS (.sav)</option>
+                            <option>SAS (.sas7bdat)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">编码格式</label>
+                        <select class="form-select">
+                            <option>UTF-8</option>
+                            <option>GB2312</option>
+                            <option>GBK</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-shield-alt"></i>安全设置</div>
+                <div style="background: #f8fbfd; border: 1px solid #d0e0ec; border-radius: 4px; padding: 12px;">
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> <b>数据脱敏</b> - 隐藏姓名、身份证号
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> <b>排除已删除记录</b>
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox"> <b>添加导出日志</b> - 记录导出操作
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox"> <b>加密文件</b> - 设置访问密码
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-file-alt"></i>文件命名</div>
+                <div class="form-group full-width">
+                    <label class="form-label">导出文件名</label>
+                    <input type="text" class="form-input" value="临床数据导出_20241220" placeholder="请输入文件名">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('dataExport')">取消</button>
+                <button class="btn btn-secondary"><i class="fas fa-history"></i>导出历史</button>
+                <button class="btn btn-primary" onclick="exportData()"><i class="fas fa-download"></i>确认导出</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-refreshData" class="modal-overlay">
+        <div class="modal" style="min-width: 520px;">
+            <div class="modal-header">
+                <span class="modal-title">刷新数据</span>
+                <button class="modal-close" onclick="closeModal('refreshData')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 12px; padding: 10px 12px; background: #e8f4fc; border-radius: 4px; border-left: 3px solid #5090c0;">
+                    <i class="fas fa-sync-alt" style="color: #5090c0; margin-right: 6px;"></i>
+                    <span style="font-size: 12px; color: #2a4a60;">选择需要刷新的数据范围和刷新选项</span>
+                </div>
+                <div class="form-section-title" style="margin-bottom: 12px;"><i class="fas fa-database"></i>刷新范围</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">项目范围</label>
+                        <select class="form-select">
+                            <option>全部项目</option>
+                            <option>NSCLC-2024-001 非小细胞肺癌</option>
+                            <option>CHD-2024-002 冠心病</option>
+                            <option>DM-2024-003 糖尿病</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">数据类型</label>
+                        <select class="form-select">
+                            <option>全部数据</option>
+                            <option>统计指标</option>
+                            <option>图表数据</option>
+                            <option>列表数据</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-section-title" style="margin: 16px 0 12px;"><i class="fas fa-cog"></i>刷新选项</div>
+                <div style="background: #f8fbfd; border: 1px solid #d0e0ec; border-radius: 4px; padding: 12px;">
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 刷新实时统计数据
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 重新加载图表
+                    </div>
+                    <div class="checkbox-item" style="margin-bottom: 10px;">
+                        <input type="checkbox" checked> 更新数据列表
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox"> 清除本地缓存
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('refreshData')">取消</button>
+                <button class="btn btn-primary" onclick="confirmRefresh()"><i class="fas fa-sync-alt"></i>立即刷新</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById('modal-' + id).classList.add('show');
+        }
+
+        function closeModal(id) {
+            document.getElementById('modal-' + id).classList.remove('show');
+        }
+
+        function showToast(message) {
+            var toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.add('show');
+            setTimeout(function() { toast.classList.remove('show'); }, 2000);
+        }
+
+        function saveConfig() {
+            closeModal('statConfig');
+            showToast('统计配置已保存');
+        }
+
+        function generateReport() {
+            closeModal('reportGenerate');
+            showToast('报表生成成功');
+        }
+
+        function exportData() {
+            closeModal('dataExport');
+            showToast('数据导出成功');
+        }
+
+        function confirmRefresh() {
+            closeModal('refreshData');
+            var btn = document.querySelector('.tool-btn[onclick="openModal(\'refreshData\')"]');
+            if (btn) {
+                var originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>刷新中...';
+                btn.disabled = true;
+                setTimeout(function() {
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                    showToast('数据已刷新');
+                    initCharts();
+                }, 1000);
+            }
+        }
+
+        function initCharts() {
+            var enrollmentChart = echarts.init(document.getElementById('chart-enrollment'));
+            enrollmentChart.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: ['1月', '2月', '3月', '4月', '5月', '6月'], axisLabel: { color: '#6090a8' } },
+                yAxis: { type: 'value', axisLabel: { color: '#6090a8' }, splitLine: { lineStyle: { color: '#e0ecf4' } } },
+                series: [{ name: '入组人数', type: 'line', data: [45, 68, 89, 120, 156, 189], smooth: true, itemStyle: { color: '#5090c0' }, areaStyle: { color: 'rgba(80, 144, 192, 0.1)' } }]
+            });
+
+            var projectChart = echarts.init(document.getElementById('chart-project'));
+            projectChart.setOption({
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    data: [
+                        { value: 342, name: 'NSCLC', itemStyle: { color: '#5090c0' } },
+                        { value: 567, name: 'CHD', itemStyle: { color: '#6aaf70' } },
+                        { value: 428, name: 'DM', itemStyle: { color: '#e8a040' } },
+                        { value: 510, name: '其他', itemStyle: { color: '#9080c8' } }
+                    ],
+                    label: { formatter: '{b}: {d}%' }
+                }]
+            });
+
+            var visitChart = echarts.init(document.getElementById('chart-visit'));
+            visitChart.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: ['V1筛选', 'V2基线', 'V3治疗', 'V4随访', 'V5随访', 'V6结束'], axisLabel: { color: '#6090a8' } },
+                yAxis: { type: 'value', axisLabel: { color: '#6090a8' }, splitLine: { lineStyle: { color: '#e0ecf4' } } },
+                series: [
+                    { name: '应完成', type: 'bar', data: [500, 480, 420, 380, 320, 280], itemStyle: { color: '#5090c0' } },
+                    { name: '实际完成', type: 'bar', data: [485, 465, 395, 350, 280, 240], itemStyle: { color: '#6aaf70' } }
+                ]
+            });
+
+            var qualityChart = echarts.init(document.getElementById('chart-quality'));
+            qualityChart.setOption({
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    data: [
+                        { value: 1580, name: '完整', itemStyle: { color: '#6aaf70' } },
+                        { value: 180, name: '轻微缺失', itemStyle: { color: '#e8a040' } },
+                        { value: 60, name: '严重缺失', itemStyle: { color: '#c04040' } },
+                        { value: 27, name: '待核查', itemStyle: { color: '#9080c8' } }
+                    ],
+                    label: { formatter: '{b}: {d}%' }
+                }]
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+        });
+
+        window.addEventListener('resize', function() {
+            echarts.getInstanceByDom(document.getElementById('chart-enrollment')) && echarts.getInstanceByDom(document.getElementById('chart-enrollment')).resize();
+            echarts.getInstanceByDom(document.getElementById('chart-project')) && echarts.getInstanceByDom(document.getElementById('chart-project')).resize();
+            echarts.getInstanceByDom(document.getElementById('chart-visit')) && echarts.getInstanceByDom(document.getElementById('chart-visit')).resize();
+            echarts.getInstanceByDom(document.getElementById('chart-quality')) && echarts.getInstanceByDom(document.getElementById('chart-quality')).resize();
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

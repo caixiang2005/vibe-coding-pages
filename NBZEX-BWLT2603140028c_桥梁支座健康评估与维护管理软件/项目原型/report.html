@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>报告输出 - 桥梁支座健康评估与维护管理系统</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpeg') no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .mac-window {
+      width: 1120px;
+      max-width: 96vw;
+      background: #f5f5f5;
+      border-radius: 10px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+
+    .mac-tb {
+      height: 52px;
+      background: linear-gradient(180deg, #e8e6e8 0%, #d6d3d6 100%);
+      border-bottom: 1px solid #b8b6b8;
+      display: flex;
+      align-items: center;
+      padding: 0 13px;
+      position: relative;
+    }
+
+    .mac-dots {
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .mac-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .mac-dot-r {
+      background: #ff5f57;
+      border: 0.5px solid #e14640;
+    }
+
+    .mac-dot-y {
+      background: #febc2e;
+      border: 0.5px solid #dfa123;
+    }
+
+    .mac-dot-g {
+      background: #28c840;
+      border: 0.5px solid #1dad2b;
+    }
+
+    .mac-tb-ctr {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .mac-tb-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      letter-spacing: -0.08px;
+      white-space: nowrap;
+    }
+
+    .mac-tb-sub {
+      font-size: 10px;
+      color: #888;
+      margin-top: 1px;
+    }
+
+    .mac-body {
+      display: flex;
+      height: 600px;
+      max-height: 600px;
+      overflow: hidden;
+    }
+
+    .mac-side {
+      width: 220px;
+      background: rgba(246, 244, 246, 0.95);
+      border-right: 1px solid #d1cfd1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mac-side-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #d1cfd1;
+      margin-bottom: 6px;
+    }
+
+    .mac-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #007aff, #5ac8fa);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .mac-side-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px;
+      margin: 0 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .mac-side-item:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .mac-side-item.active {
+      background: rgba(0, 122, 255, 0.12);
+      color: #0062cc;
+    }
+
+    .si-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      flex-shrink: 0;
+    }
+
+    .si-badge {
+      margin-left: auto;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      background: #ff3b30;
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      flex-shrink: 0;
+    }
+
+    .mc-proj-wrap {
+      padding: 10px 16px;
+      border-top: 1px solid #d1cfd1;
+      position: relative;
+      margin-top: auto;
+    }
+
+    .mc-proj-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .mc-proj-label {
+      font-size: 10px;
+      color: #aaa;
+    }
+
+    .mc-proj-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .mac-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .mac-toolbar {
+      height: 38px;
+      background: #fbfbfb;
+      border-bottom: 1px solid #e5e3e5;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 6px;
+    }
+
+    .mac-search {
+      height: 24px;
+      border-radius: 5px;
+      border: 0.5px solid #c0bec0;
+      background: #fff;
+      padding: 0 8px;
+      font-size: 12px;
+      width: 180px;
+      outline: none;
+      font-family: inherit;
+      color: #333;
+    }
+
+    .mac-tb-btn {
+      width: 28px;
+      height: 22px;
+      border-radius: 5px;
+      border: 0.5px solid #c0bec0;
+      background: linear-gradient(180deg, #fff 0%, #f0eef0 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .mac-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .mc-panel {
+      background: #fff;
+      border: 0.5px solid #e5e3e5;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .mc-panel-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mc-panel-link {
+      font-size: 11px;
+      font-weight: 400;
+      color: #007aff;
+      cursor: pointer;
+    }
+
+    .report-card {
+      background: #f9f9f9;
+      border: 0.5px solid #e8e6e8;
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .report-card:hover {
+      background: #f0f0f5;
+      border-color: #007aff;
+    }
+
+    .report-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 10px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .report-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .report-desc {
+      font-size: 10px;
+      color: #888;
+    }
+
+    .mc-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .mc-tbl th {
+      text-align: left;
+      padding: 6px 8px;
+      font-weight: 500;
+      color: #888;
+      font-size: 11px;
+      border-bottom: 1px solid #eee;
+      background: #fafafa;
+    }
+
+    .mc-tbl td {
+      padding: 7px 8px;
+      border-bottom: 0.5px solid #f2f2f2;
+      color: #333;
+    }
+
+    .mc-tbl tr:last-child td {
+      border-bottom: none;
+    }
+
+    .mc-tbl tr:hover td {
+      background: #f7f7ff;
+    }
+
+    .btn-primary {
+      height: 26px;
+      padding: 0 12px;
+      font-size: 11px;
+      border-radius: 5px;
+      border: none;
+      background: #007aff;
+      color: white;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+    }
+
+    .btn-primary:hover {
+      background: #0062cc;
+    }
+
+    .btn-secondary {
+      height: 26px;
+      padding: 0 10px;
+      font-size: 11px;
+      border-radius: 5px;
+      border: 0.5px solid #c0bec0;
+      background: linear-gradient(180deg, #fff, #f4f2f4);
+      cursor: pointer;
+      font-family: inherit;
+      color: #333;
+    }
+
+    .mac-statusbar {
+      height: 22px;
+      background: #f0eef0;
+      border-top: 1px solid #d1cfd1;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #888;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      border: 0.5px solid #d1cfd1;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      min-width: 420px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e3e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: linear-gradient(180deg, #f8f8f8 0%, #f0f0f0 100%);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .modal-traffic-lights {
+      position: absolute;
+      left: 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #ff5f57;
+      border: 0.5px solid #e14640;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #febc2e;
+      border: 0.5px solid #dfa123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28c840;
+      border: 0.5px solid #1dad2b;
+    }
+
+    .modal-title {
+      color: #333;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 16px;
+    }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #e5e3e5;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      color: #666;
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 7px 10px;
+      background: #fafafa;
+      border: 0.5px solid #d1cfd1;
+      border-radius: 5px;
+      color: #333;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .export-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: #f9f9f9;
+      border: 0.5px solid #e8e6e8;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .export-option:hover {
+      background: #f0f0f5;
+      border-color: #007aff;
+    }
+
+    .export-option.selected {
+      background: #e5f5ff;
+      border-color: #007aff;
+    }
+
+    .export-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .export-info {
+      flex: 1;
+    }
+
+    .export-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .export-desc {
+      font-size: 10px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .export-check {
+      color: #007aff;
+      font-size: 14px;
+    }
+
+    .generate-progress {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .generate-text {
+      color: #666;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .generate-bar {
+      height: 6px;
+      background: #e8e8e8;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .generate-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #007aff, #34c759);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .generate-percent {
+      color: #007aff;
+      font-size: 18px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="mac-window">
+  <div class="mac-tb">
+    <div class="mac-dots">
+      <div class="mac-dot mac-dot-r"></div>
+      <div class="mac-dot mac-dot-y"></div>
+      <div class="mac-dot mac-dot-g"></div>
+    </div>
+    <div class="mac-tb-ctr">
+      <div class="mac-tb-title">桥梁支座健康评估与维护管理系统</div>
+      <div class="mac-tb-sub">报告输出</div>
+    </div>
+  </div>
+
+  <div class="mac-body">
+    <div class="mac-side">
+      <div class="mac-side-user">
+        <div class="mac-avatar">
+          <img class="mac-avatar-img" src="https://i04piccdn.sogoucdn.com/c42ce10a21ee0932" alt="王海斌" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+        </div>
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: #222;">王海斌</div>
+          <div style="font-size: 10px; color: #999;">高级工程师 / 在线</div>
+        </div>
+      </div>
+
+      <div class="mac-side-item" onclick="location.href='main.html'">
+        <div class="si-icon"><i class="fa-solid fa-table-cells"></i></div>
+        综合面板
+      </div>
+      <div class="mac-side-item" onclick="location.href='inspect.html'">
+        <div class="si-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+        检测管理
+        <div class="si-badge">3</div>
+      </div>
+      <div class="mac-side-item" onclick="location.href='assess.html'">
+        <div class="si-icon"><i class="fa-solid fa-star"></i></div>
+        健康评估
+      </div>
+      <div class="mac-side-item" onclick="location.href='maintain.html'">
+        <div class="si-icon"><i class="fa-solid fa-wrench"></i></div>
+        维护计划
+        <div class="si-badge" style="background:#ff9f0a;">5</div>
+      </div>
+      <div class="mac-side-item" onclick="location.href='archive.html'">
+        <div class="si-icon"><i class="fa-solid fa-folder-open"></i></div>
+        数据档案
+      </div>
+      <div class="mac-side-item active">
+        <div class="si-icon"><i class="fa-solid fa-file-lines"></i></div>
+        报告输出
+      </div>
+
+      <div class="mc-proj-wrap">
+        <div class="mc-proj-head">
+          <div class="mc-proj-label">当前项目</div>
+        </div>
+        <div class="mc-proj-name">沪宁高速长江大桥</div>
+        <div style="font-size: 10px; color: #999; margin-top: 2px;">支座 128 组 / 盆式 72 / 板式 56</div>
+      </div>
+    </div>
+
+    <div class="mac-main">
+      <div class="mac-toolbar">
+        <input class="mac-search" type="text" placeholder="搜索报告名称..." />
+        <div style="flex:1;"></div>
+        <button class="btn-secondary" id="btnTemplate"><i class="fa-solid fa-gear" style="margin-right:4px;"></i>报告模板</button>
+        <button class="btn-primary" id="btnNewReport"><i class="fa-solid fa-plus" style="margin-right:4px;"></i>新建报告</button>
+      </div>
+
+      <div class="mac-content">
+        <div style="font-size:15px;font-weight:600;color:#222;margin-bottom:14px;">报告输出</div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px;">
+          <div class="report-card" id="reportTech" onclick="generateReport('tech')">
+            <div class="report-icon" style="background:#e5f5ff;color:#007aff;">
+              <i class="fa-solid fa-file-alt"></i>
+            </div>
+            <div class="report-name">技术状况评定报告</div>
+            <div class="report-desc">JTG/T H21-2011 标准格式</div>
+          </div>
+          <div class="report-card" id="reportMaintain" onclick="generateReport('maintain')">
+            <div class="report-icon" style="background:#fff8eb;color:#a86b00;">
+              <i class="fa-solid fa-clipboard-list"></i>
+            </div>
+            <div class="report-name">维护方案建议书</div>
+            <div class="report-desc">工程量清单及预算估算</div>
+          </div>
+          <div class="report-card" id="reportStat" onclick="generateReport('stat')">
+            <div class="report-icon" style="background:#eefae5;color:#3a7d0a;">
+              <i class="fa-solid fa-chart-bar"></i>
+            </div>
+            <div class="report-name">数据统计分析</div>
+            <div class="report-desc">趋势对比及可视化图表</div>
+          </div>
+        </div>
+
+        <div class="mc-panel">
+          <div class="mc-panel-title">已生成报告<span class="mc-panel-link">全部</span></div>
+          <table class="mc-tbl">
+            <thead>
+              <tr>
+                <th>报告名称</th>
+                <th>类型</th>
+                <th>日期</th>
+                <th>格式</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:500;">沪宁高速长江大桥支座 2026Q1 评定报告</td>
+                <td>技术评定</td>
+                <td>2026-03-20</td>
+                <td>PDF / Word</td>
+                <td><span style="color:#007aff;cursor:pointer;font-size:11px;" onclick="downloadReport()">下载</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">1# 墩支座专项检测报告</td>
+                <td>专项检测</td>
+                <td>2026-03-19</td>
+                <td>PDF</td>
+                <td><span style="color:#007aff;cursor:pointer;font-size:11px;" onclick="downloadReport()">下载</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">2025 年度维护总结报告</td>
+                <td>年度总结</td>
+                <td>2026-01-15</td>
+                <td>PDF / Word</td>
+                <td><span style="color:#007aff;cursor:pointer;font-size:11px;" onclick="downloadReport()">下载</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mac-statusbar">
+    <div><i class="fa-solid fa-circle" style="color:#34c759;font-size:6px;margin-right:4px;"></i>报告生成就绪 / 共生成 156 份报告</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-traffic-lights">
+        <div class="modal-traffic-light close" onclick="closeModal()"></div>
+        <div class="modal-traffic-light minimize"></div>
+        <div class="modal-traffic-light maximize"></div>
+      </div>
+      <span class="modal-title" id="modalTitle">弹窗标题</span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script>
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalFooter = document.getElementById('modalFooter');
+
+  function openModal(title, bodyHtml, footerHtml) {
+    modalTitle.textContent = title;
+    modalBody.innerHTML = bodyHtml;
+    modalFooter.innerHTML = footerHtml;
+    modalOverlay.classList.add('active');
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove('active');
+  }
+
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+
+  document.getElementById('btnTemplate').addEventListener('click', () => {
+    openModal(
+      '报告模板设置',
+      `<div class="form-group">
+        <label class="form-label">选择模板</label>
+        <select class="form-select">
+          <option>标准技术评定报告</option>
+          <option>简明检测报告</option>
+          <option>维护方案建议书</option>
+          <option>年度总结报告</option>
+        </select>
+      </div>
+      <div style="padding:10px;background:#f9f9f9;border-radius:5px;font-size:11px;color:#666;">
+        <div style="margin-bottom:6px;color:#333;font-weight:500;">模板包含内容：</div>
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
+          <i class="fa-solid fa-check" style="color:#34c759;font-size:10px;"></i>
+          支座基本信息汇总
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
+          <i class="fa-solid fa-check" style="color:#34c759;font-size:10px;"></i>
+          检测数据统计
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
+          <i class="fa-solid fa-check" style="color:#34c759;font-size:10px;"></i>
+          BCI 健康评估结果
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <i class="fa-solid fa-check" style="color:#34c759;font-size:10px;"></i>
+          维修建议清单
+        </div>
+      </div>`,
+      `<button class="btn-secondary" onclick="closeModal()">取消</button>
+       <button class="btn-primary">应用模板</button>`
+    );
+  });
+
+  document.getElementById('btnNewReport').addEventListener('click', () => {
+    openModal(
+      '新建报告',
+      `<div class="form-group">
+        <label class="form-label">报告类型</label>
+        <select class="form-select">
+          <option>技术状况评定报告</option>
+          <option>专项检测报告</option>
+          <option>维护方案建议书</option>
+          <option>年度总结报告</option>
+          <option>数据分析报告</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">报告名称</label>
+        <input type="text" class="form-input" placeholder="请输入报告名称" style="width:100%;padding:7px 10px;background:#fafafa;border:0.5px solid #d1cfd1;border-radius:5px;color:#333;font-size:12px;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">报告范围</label>
+        <select class="form-select">
+          <option>全桥所有支座</option>
+          <option>指定墩位</option>
+          <option>指定支座</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">输出格式</label>
+        <div style="display:flex;gap:8px;">
+          <div class="export-option selected" style="flex:1;margin-bottom:0;" onclick="toggleFormat(this)">
+            <div class="export-icon" style="background:#d42020;"><i class="fa-solid fa-file-pdf"></i></div>
+            <div class="export-info">
+              <div class="export-name">PDF</div>
+            </div>
+            <i class="fa-solid fa-check export-check"></i>
+          </div>
+          <div class="export-option" style="flex:1;margin-bottom:0;" onclick="toggleFormat(this)">
+            <div class="export-icon" style="background:#007aff;"><i class="fa-solid fa-file-word"></i></div>
+            <div class="export-info">
+              <div class="export-name">Word</div>
+            </div>
+          </div>
+        </div>
+      </div>`,
+      `<button class="btn-secondary" onclick="closeModal()">取消</button>
+       <button class="btn-primary" onclick="startGenerate()">生成报告</button>`
+    );
+  });
+
+  function toggleFormat(el) {
+    document.querySelectorAll('.export-option').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function startGenerate() {
+    let progress = 0;
+    openModal(
+      '正在生成报告',
+      `<div class="generate-progress">
+        <div class="generate-text">正在生成技术状况评定报告...</div>
+        <div class="generate-bar">
+          <div class="generate-fill" id="genProgressFill" style="width:0%;"></div>
+        </div>
+        <div class="generate-percent" id="genProgressPercent">0%</div>
+      </div>`,
+      `<button class="btn-secondary" id="btnCancelGen">取消</button>`
+    );
+
+    const interval = setInterval(() => {
+      progress += Math.random() * 15;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+        document.getElementById('genProgressPercent').textContent = '100%';
+        document.getElementById('genProgressFill').style.width = '100%';
+        document.getElementById('btnCancelGen').textContent = '完成';
+        document.getElementById('btnCancelGen').onclick = () => {
+          closeModal();
+          showGenComplete();
+        };
+      } else {
+        document.getElementById('genProgressPercent').textContent = Math.round(progress) + '%';
+        document.getElementById('genProgressFill').style.width = progress + '%';
+      }
+    }, 150);
+
+    document.getElementById('btnCancelGen').addEventListener('click', () => {
+      clearInterval(interval);
+      closeModal();
+    });
+  }
+
+  function showGenComplete() {
+    openModal(
+      '报告生成完成',
+      `<div style="text-align:center;padding:20px;">
+        <i class="fa-solid fa-circle-check" style="font-size:48px;color:#34c759;margin-bottom:12px;"></i>
+        <div style="color:#333;font-size:13px;margin-bottom:6px;">技术状况评定报告已生成</div>
+        <div style="color:#888;font-size:11px;margin-bottom:12px;">沪宁高速长江大桥 2026Q1 评定报告</div>
+        <div style="display:inline-flex;gap:8px;">
+          <span style="padding:4px 10px;background:#d42020;color:#fff;border-radius:4px;font-size:10px;"><i class="fa-solid fa-file-pdf" style="margin-right:4px;"></i>PDF</span>
+          <span style="padding:4px 10px;background:#007aff;color:#fff;border-radius:4px;font-size:10px;"><i class="fa-solid fa-file-word" style="margin-right:4px;"></i>Word</span>
+        </div>
+      </div>`,
+      `<button class="btn-secondary" onclick="closeModal()">关闭</button>
+       <button class="btn-primary" onclick="closeModal()">立即下载</button>`
+    );
+  }
+
+  function generateReport(type) {
+    const reportNames = {
+      'tech': '技术状况评定报告',
+      'maintain': '维护方案建议书',
+      'stat': '数据统计分析报告'
+    };
+    document.getElementById('btnNewReport').click();
+  }
+
+  function downloadReport() {
+    openModal(
+      '下载报告',
+      `<div style="padding:10px;">
+        <div style="font-size:11px;color:#888;margin-bottom:8px;">选择下载格式</div>
+        <div class="export-option selected" onclick="this.classList.toggle('selected')">
+          <div class="export-icon" style="background:#d42020;"><i class="fa-solid fa-file-pdf"></i></div>
+          <div class="export-info">
+            <div class="export-name">PDF 格式</div>
+            <div class="export-desc">适合存档和打印</div>
+          </div>
+          <i class="fa-solid fa-check export-check"></i>
+        </div>
+        <div class="export-option" onclick="this.classList.toggle('selected')">
+          <div class="export-icon" style="background:#007aff;"><i class="fa-solid fa-file-word"></i></div>
+          <div class="export-info">
+            <div class="export-name">Word 格式</div>
+            <div class="export-desc">适合编辑和修改</div>
+          </div>
+        </div>
+      </div>`,
+      `<button class="btn-secondary" onclick="closeModal()">取消</button>
+       <button class="btn-primary">确认下载</button>`
+    );
+  }
+</script>
+
+</body>
+</html>

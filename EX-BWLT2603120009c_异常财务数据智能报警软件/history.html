@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>历史审计 - 异常财务数据智能报警系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            min-height: 100vh;
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .main-content { margin-left: 260px; flex: 1; min-height: 100vh; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 2px;
+            color: #4b4b4b;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .nav-item:hover:not(.active) { background: rgba(0, 0, 0, 0.05); }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.12);
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .nav-item.active i { color: #2563eb; }
+
+        .traffic-lights { display: flex; gap: 8px; padding: 12px 16px; }
+
+        .light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: transform 0.1s; }
+        .light:hover { transform: scale(1.1); }
+        .light-red { background: #ff5f57; }
+        .light-yellow { background: #febc2e; }
+        .light-green { background: #28c840; }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #4b5563;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover { background: #e5e7eb; }
+
+        .timeline-card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            transition: all 0.25s;
+            cursor: pointer;
+        }
+
+        .timeline-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 7px;
+            top: 24px;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #e5e7eb, transparent);
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 6px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #e5e7eb;
+        }
+
+        .dot-blue { background: #3b82f6; }
+        .dot-green { background: #22c55e; }
+        .dot-red { background: #ef4444; }
+        .dot-amber { background: #f59e0b; }
+
+        .filter-select {
+            padding: 8px 32px 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            background: white;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 14px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 520px;
+            max-height: 85vh;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        .header-action { position: relative; }
+
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 360px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.25s ease;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .notification-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notification-header h4 { font-size: 14px; font-weight: 600; }
+
+        .notification-list { max-height: 400px; overflow-y: auto; }
+
+        .notification-item {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            padding: 14px 18px;
+            border-bottom: 1px solid #f9fafb;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover { background: #f9fafb; }
+        .notification-item:last-child { border-bottom: none; }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-content { flex: 1; min-width: 0; }
+
+        .notification-title { font-size: 13px; font-weight: 500; color: #1f2937; margin-bottom: 4px; }
+
+        .notification-desc { font-size: 12px; color: #6b7280; line-height: 1.4; }
+
+        .notification-time { font-size: 11px; color: #9ca3af; flex-shrink: 0; }
+
+        .notification-footer {
+            padding: 12px 18px;
+            border-top: 1px solid #f0f0f0;
+            text-align: center;
+        }
+
+        .notification-footer a {
+            font-size: 13px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .notification-footer a:hover { text-decoration: underline; }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-dots {
+            display: flex;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .modal-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .modal-dots span:nth-child(1) { background: #ff5f57; }
+        .modal-dots span:nth-child(2) { background: #febc2e; }
+        .modal-dots span:nth-child(3) { background: #28c840; }
+
+        .modal-dots:hover span { transform: scale(1.1); }
+
+        .modal-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            flex: 1;
+        }
+
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            text-align: center;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus { border-color: #2563eb; }
+
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .format-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f9fafb;
+        }
+
+        .format-option:hover { border-color: #d1d5db; }
+
+        .format-option.selected {
+            background: #eff6ff;
+            border-color: #3b82f6;
+        }
+
+        .format-option input { display: none; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="traffic-lights">
+            <div class="light light-red"></div>
+            <div class="light light-yellow"></div>
+            <div class="light light-green"></div>
+        </div>
+        <div class="px-4 mb-6">
+            <div class="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-black/5">
+                <div class="w-11 h-11 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center">
+                    <img src="static/bg.jpeg" alt="高子豪头像" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <div class="text-[11px] text-gray-400">当前账号</div>
+                    <div class="text-sm font-semibold">高子豪</div>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-3">
+            <div class="text-[10px] uppercase tracking-wider text-gray-400 font-bold px-3 mb-3">主菜单</div>
+            <a href="dashboard.html" class="nav-item">
+                <i class="fa-solid fa-grip text-base w-7"></i>
+                <span class="text-sm">控制面板</span>
+            </a>
+            <a href="alerts.html" class="nav-item">
+                <i class="fa-solid fa-triangle-exclamation text-base w-7"></i>
+                <span class="text-sm">异常中心</span>
+                <span class="ml-auto bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">12</span>
+            </a>
+            <a href="analysis.html" class="nav-item">
+                <i class="fa-solid fa-chart-line text-base w-7"></i>
+                <span class="text-sm">数据可视化</span>
+            </a>
+            <a href="history.html" class="nav-item active">
+                <i class="fa-solid fa-clock-rotate-left text-base w-7"></i>
+                <span class="text-sm">历史审计</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <i class="fa-solid fa-gear text-base w-7"></i>
+                <span class="text-sm">报警设置</span>
+            </a>
+        </nav>
+        <div class="mx-3 mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100/50">
+            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span class="text-[12px] font-bold">AI 实时监控中</span>
+            </div>
+            <div class="text-[11px] text-blue-400">上次扫描: 2026-03-21 09:30:15</div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="h-16 border-b border-black/5 flex items-center justify-between px-8 bg-white/60 backdrop-blur-xl sticky top-0 z-50">
+            <div class="flex items-center gap-5">
+                <div class="flex gap-1">
+                    <button class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-black/5 transition-colors">
+                        <i class="fa-solid fa-chevron-left text-gray-400 text-xs"></i>
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-black/5 transition-colors">
+                        <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
+                    </button>
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold">历史审计</h1>
+                    <p class="text-[11px] text-gray-400 mt-0.5">异常财务数据智能报警系统</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="搜索审计记录...">
+                </div>
+                <div class="header-action">
+                    <button class="w-9 h-9 flex items-center justify-center hover:bg-black/5 rounded-full relative transition-colors" onclick="toggleNotification()">
+                        <i class="fa-regular fa-bell text-gray-600 text-lg"></i>
+                        <div class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></div>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h4>通知中心</h4>
+                            <span class="text-xs text-blue-500 cursor-pointer" onclick="markAllRead()">全部已读</span>
+                        </div>
+                        <div class="notification-list">
+                            <div class="notification-item">
+                                <div class="notification-icon bg-blue-50">
+                                    <i class="fa-solid fa-file-alt text-blue-500"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">新报告生成</div>
+                                    <div class="notification-desc">Q1季度综合报告已生成完毕</div>
+                                </div>
+                                <div class="notification-time">刚刚</div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-icon bg-green-50">
+                                    <i class="fa-solid fa-check-circle text-green-500"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">审计事项已结案</div>
+                                    <div class="notification-desc">ERP系统对接错误已标记结案</div>
+                                </div>
+                                <div class="notification-time">1小时前</div>
+                            </div>
+                        </div>
+                        <div class="notification-footer">
+                            <a href="alerts.html">查看全部通知</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8">
+            <div class="grid grid-cols-4 gap-5 mb-8">
+                <div class="stat-card">
+                    <div class="w-12 h-12 mx-auto mb-3 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-file-alt text-blue-500 text-xl"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">156</div>
+                    <div class="text-xs text-gray-400 mt-1">本月审计报告</div>
+                </div>
+                <div class="stat-card">
+                    <div class="w-12 h-12 mx-auto mb-3 bg-green-50 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-check-circle text-green-500 text-xl"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">128</div>
+                    <div class="text-xs text-gray-400 mt-1">已处置事项</div>
+                </div>
+                <div class="stat-card">
+                    <div class="w-12 h-12 mx-auto mb-3 bg-amber-50 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-clock text-amber-500 text-xl"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">18</div>
+                    <div class="text-xs text-gray-400 mt-1">处理中</div>
+                </div>
+                <div class="stat-card">
+                    <div class="w-12 h-12 mx-auto mb-3 bg-red-50 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-exclamation-triangle text-red-500 text-xl"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-800">10</div>
+                    <div class="text-xs text-gray-400 mt-1">高风险持续中</div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-base font-semibold">审计链条追踪</h2>
+                <div class="flex items-center gap-3">
+                    <select class="filter-select">
+                        <option>2026年3月</option>
+                        <option>2026年2月</option>
+                        <option>2026年1月</option>
+                    </select>
+                    <select class="filter-select">
+                        <option>全部类型</option>
+                        <option>报告生成</option>
+                        <option>风险处置</option>
+                        <option>系统操作</option>
+                    </select>
+                    <button class="btn-secondary" onclick="openModal('exportModal')">
+                        <i class="fa-solid fa-download mr-2"></i>导出CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative pl-8 ml-4" id="timeline">
+                <div class="timeline-line"></div>
+
+                <div class="timeline-card mb-5 relative" onclick="openModal('detailModal')">
+                    <div class="timeline-dot dot-blue"></div>
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-file-pdf text-blue-500 text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] text-blue-500 font-medium mb-1">今天 10:20</div>
+                                <h4 class="font-semibold text-sm text-gray-900 mb-1">生成《Q1季度异常行为综合报告》</h4>
+                                <p class="text-xs text-gray-500 leading-relaxed">由 高子豪 通过系统智能模版生成，已提交至董事会财务委员会。</p>
+                                <div class="flex items-center gap-3 mt-3">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] rounded font-medium">
+                                        <i class="fa-solid fa-check mr-1"></i>已完成
+                                    </span>
+                                    <span class="text-[10px] text-gray-400">PDF 2.4MB</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="timeline-card mb-5 relative" onclick="openModal('detailModal')">
+                    <div class="timeline-dot dot-green"></div>
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-check-double text-green-500 text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] text-green-500 font-medium mb-1">昨天 14:45</div>
+                                <h4 class="font-semibold text-sm text-gray-900 mb-1">警报销号：ERP系统对接错误引起的资金冗余</h4>
+                                <p class="text-xs text-gray-500 leading-relaxed">处理结果：核查为技术接口同步误差，非人为挪用。已修正接口参数并手动平衡账目。</p>
+                                <div class="flex items-center gap-3 mt-3">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] rounded font-medium">
+                                        <i class="fa-solid fa-check mr-1"></i>已结案
+                                    </span>
+                                    <span class="text-[10px] text-gray-400">涉及金额 ¥3,200.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="timeline-card mb-5 relative" onclick="openModal('detailModal')">
+                    <div class="timeline-dot dot-amber"></div>
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-search text-amber-500 text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] text-amber-500 font-medium mb-1">2026-03-18 09:00</div>
+                                <h4 class="font-semibold text-sm text-gray-900 mb-1">自动预警：检测到海外子公司高频股权穿透风险</h4>
+                                <p class="text-xs text-red-600 leading-relaxed">高风险持续中 - 正在等待分公司CFO回应。</p>
+                                <div class="flex items-center gap-3 mt-3">
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-[10px] rounded font-medium">
+                                        <i class="fa-solid fa-spinner fa-spin mr-1"></i>调查中
+                                    </span>
+                                    <span class="text-[10px] text-gray-400">关联企业：3家</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="timeline-card mb-5 relative" onclick="openModal('detailModal')">
+                    <div class="timeline-dot dot-blue"></div>
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-user-shield text-blue-500 text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] text-blue-500 font-medium mb-1">2026-03-15 16:30</div>
+                                <h4 class="font-semibold text-sm text-gray-900 mb-1">权限变更：市场部批量开通数据导出权限</h4>
+                                <p class="text-xs text-gray-500 leading-relaxed">由 系统管理员 王建国 审批通过，临时授权5人，时间范围：2026-03-15 至 2026-03-22。</p>
+                                <div class="flex items-center gap-3 mt-3">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] rounded font-medium">
+                                        <i class="fa-solid fa-clock mr-1"></i>即将过期
+                                    </span>
+                                    <span class="text-[10px] text-gray-400">剩余 1 天</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="timeline-card relative" onclick="openModal('detailModal')">
+                    <div class="timeline-dot dot-red"></div>
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-triangle-exclamation text-red-500 text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] text-red-500 font-medium mb-1">2026-03-12 11:15</div>
+                                <h4 class="font-semibold text-sm text-gray-900 mb-1">紧急预警：第三方供应商资质过期</h4>
+                                <p class="text-xs text-gray-500 leading-relaxed">[顺程物流有限公司] 营业执照已过期15天，税务登记证即将到期（剩余3天）。</p>
+                                <div class="flex items-center gap-3 mt-3">
+                                    <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] rounded font-medium">
+                                        <i class="fa-solid fa-exclamation mr-1"></i>待处理
+                                    </span>
+                                    <span class="text-[10px] text-gray-400">关联合同：2份</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-dots" onclick="closeModal('detailModal')">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <h3>审计详情</h3>
+                <button onclick="closeModal('detailModal')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa-solid fa-xmark text-gray-400"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-file-pdf text-blue-500"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-sm">生成《Q1季度异常行为综合报告》</h4>
+                            <div class="text-[11px] text-gray-400">今天 10:20</div>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-xl">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <div class="text-[11px] text-gray-400 mb-1">操作人</div>
+                                <div class="text-sm font-medium">高子豪</div>
+                            </div>
+                            <div>
+                                <div class="text-[11px] text-gray-400 mb-1">操作类型</div>
+                                <div class="text-sm font-medium">报告生成</div>
+                            </div>
+                            <div>
+                                <div class="text-[11px] text-gray-400 mb-1">生成时间</div>
+                                <div class="text-sm font-medium">2026-03-21 10:20:15</div>
+                            </div>
+                            <div>
+                                <div class="text-[11px] text-gray-400 mb-1">文件大小</div>
+                                <div class="text-sm font-medium">2.4 MB</div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="text-[11px] text-gray-400 mb-1">报告摘要</div>
+                            <div class="text-sm text-gray-700 leading-relaxed">
+                                本报告汇总了2026年第一季度（1月-3月）的全部异常财务数据检测结果。共识别异常事项 89 项，其中特级风险 8 项，高风险 23 项。报告已同步至董事会财务委员会存档。
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-[11px] text-gray-400 mb-2">分发范围</div>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 bg-white border border-gray-200 text-xs rounded">董事会财务委员会</span>
+                                <span class="px-2 py-1 bg-white border border-gray-200 text-xs rounded">CEO 办公室</span>
+                                <span class="px-2 py-1 bg-white border border-gray-200 text-xs rounded">财务总监</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-5">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">操作日志</label>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <i class="fa-solid fa-robot text-blue-500"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-700">系统自动生成</div>
+                                <div class="text-[11px] text-gray-400">2026-03-21 10:20:15</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <i class="fa-solid fa-paper-plane text-green-500"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-700">已发送至指定邮箱</div>
+                                <div class="text-[11px] text-gray-400">2026-03-21 10:20:18 - 3个收件人</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-gray-100 flex gap-3">
+                <button class="btn-secondary flex-1" onclick="closeModal('detailModal')">关闭</button>
+                <button class="btn-primary flex-1">
+                    <i class="fa-solid fa-download mr-2"></i>下载报告
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-dots" onclick="closeModal('exportModal')">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <h3>导出审计记录</h3>
+                <button onclick="closeModal('exportModal')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa-solid fa-xmark text-gray-400"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-5">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">选择时间范围</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="date" class="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none" id="exportStartDate" value="2026-03-01" onchange="updateDateRange()">
+                        <input type="date" class="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none" id="exportEndDate" value="2026-03-21" onchange="updateDateRange()">
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500" id="dateRangePreview">已选择：2026-03-01 至 2026-03-21</div>
+                </div>
+                <div class="mb-5">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">导出格式</label>
+                    <div class="flex gap-3" id="historyFormatOptions">
+                        <div class="format-option selected" onclick="selectHistoryFormat(this, 'csv')">
+                            <input type="radio" name="historyFormat" value="csv" checked>
+                            <i class="fa-solid fa-file-csv text-green-500"></i>
+                            <span class="text-sm font-medium">CSV</span>
+                        </div>
+                        <div class="format-option" onclick="selectHistoryFormat(this, 'pdf')">
+                            <input type="radio" name="historyFormat" value="pdf">
+                            <i class="fa-solid fa-file-pdf text-red-500"></i>
+                            <span class="text-sm font-medium">PDF</span>
+                        </div>
+                        <div class="format-option" onclick="selectHistoryFormat(this, 'word')">
+                            <input type="radio" name="historyFormat" value="word">
+                            <i class="fa-solid fa-file-word text-blue-500"></i>
+                            <span class="text-sm font-medium">Word</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">导出内容</label>
+                    <div class="space-y-2" id="exportContentList">
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                            <input type="checkbox" checked class="w-4 h-4 text-blue-600 rounded" data-content="all">
+                            <span class="text-sm">全部审计记录</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded" data-content="highrisk">
+                            <span class="text-sm">仅高风险事项</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded" data-content="logs">
+                            <span class="text-sm">包含操作日志</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-gray-100 flex gap-3">
+                <button class="btn-secondary flex-1" onclick="closeModal('exportModal')">取消</button>
+                <button class="btn-primary flex-1" onclick="exportHistory()">
+                    <i class="fa-solid fa-download mr-2"></i>开始导出
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function toggleNotification() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function markAllRead() {
+            const items = document.querySelectorAll('.notification-item');
+            items.forEach(item => { item.style.opacity = '0.6'; });
+            const badge = document.querySelector('.header-action .bg-red-500');
+            if (badge) badge.style.display = 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const trigger = document.querySelector('.header-action');
+            if (trigger && !trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        function selectHistoryFormat(el, format) {
+            document.querySelectorAll('#historyFormatOptions .format-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            el.querySelector('input').checked = true;
+        }
+
+        function updateDateRange() {
+            const start = document.getElementById('exportStartDate').value;
+            const end = document.getElementById('exportEndDate').value;
+            const preview = document.getElementById('dateRangePreview');
+            preview.textContent = '已选择：' + start + ' 至 ' + end;
+
+            if (start > end) {
+                preview.textContent += ' (范围无效)';
+                preview.classList.add('text-red-500');
+            } else {
+                preview.classList.remove('text-red-500');
+            }
+        }
+
+        function exportHistory() {
+            const selectedFormats = [];
+            document.querySelectorAll('#historyFormatOptions input:checked').forEach(input => {
+                selectedFormats.push(input.value);
+            });
+
+            const selectedContents = [];
+            document.querySelectorAll('#exportContentList input:checked').forEach(cb => {
+                selectedContents.push(cb.dataset.content);
+            });
+
+            if (selectedContents.length === 0) {
+                alert('请至少选择一种导出内容');
+                return;
+            }
+
+            const format = document.querySelector('#historyFormatOptions .format-option.selected input').value.toUpperCase();
+            alert('审计记录正在导出，格式：' + format + '，请稍候...');
+            closeModal('exportModal');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        document.querySelectorAll('.timeline-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (!e.target.closest('button')) {
+                    openModal('detailModal');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

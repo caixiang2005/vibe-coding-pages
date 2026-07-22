@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佳晔新能源物联网终端管控系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: #0a1628; color: #fff; overflow: hidden; height: 100vh; }
+        .title-bar { height: 32px; background: linear-gradient(180deg, #1a2a4a 0%, #0d1a30 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #1e3a5f; }
+        .title-bar-left { display: flex; align-items: center; gap: 8px; }
+        .title-bar-icon { width: 16px; height: 16px; background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); border-radius: 2px; }
+        .title-bar-text { font-size: 12px; color: #a0c4e8; }
+        .title-bar-controls { display: flex; height: 100%; }
+        .title-bar-btn { width: 46px; height: 100%; border: none; background: transparent; color: #a0c4e8; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .title-bar-btn:hover { background: rgba(255,255,255,0.1); }
+        .title-bar-btn.close:hover { background: #e81123; color: #fff; }
+        .title-bar-btn svg { width: 10px; height: 10px; }
+        .maximize-icon { width: 10px; height: 10px; border: 1px solid #a0c4e8; background: transparent; }
+        .main-container { height: calc(100vh - 32px); display: flex; flex-direction: column; }
+        .nav-bar { height: 50px; background: linear-gradient(180deg, #0d2040 0%, #081830 100%); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #1e4a7a; position: relative; }
+        .nav-tabs { display: flex; gap: 4px; }
+        .nav-tab { padding: 8px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px 4px 0 0; color: #7ab8e0; cursor: pointer; font-size: 14px; transition: all 0.2s; text-decoration: none; }
+        .nav-tab:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); color: #9ad8ff; }
+        .nav-tab.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 15px; }
+        .nav-btn { padding: 6px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .nav-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; color: #9ad8ff; }
+        .content-area { flex: 1; display: flex; overflow: hidden; }
+        .left-panel { width: 200px; padding: 15px 10px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #1e4a7a; }
+        .menu-btn { padding: 12px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .menu-btn i { width: 16px; text-align: center; }
+        .menu-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; }
+        .menu-btn.active { background: linear-gradient(180deg, #006699 0%, #004466 100%); border-color: #00aadd; color: #fff; }
+        .main-content { flex: 1; padding: 15px; overflow: auto; background: linear-gradient(90deg, rgba(0,170,220,0.03) 1px, transparent 1px), linear-gradient(rgba(0,170,220,0.03) 1px, transparent 1px); background-size: 30px 30px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #2a5a8a; border-radius: 8px; width: 700px; max-height: 80vh; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-header { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-bottom: 1px solid #2a5a8a; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 16px; color: #00d4ff; font-weight: bold; text-align: center; flex: 1; }
+        .modal-close { width: 28px; height: 28px; background: transparent; border: 1px solid #3a5a7a; border-radius: 4px; color: #7ab8e0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .modal-close:hover { background: #e81123; border-color: #e81123; color: #fff; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; color: #7ab8e0; margin-bottom: 6px; }
+        .form-label .required { color: #ff4444; }
+        .form-input { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: #00aadd; }
+        .form-select { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; cursor: pointer; }
+        .form-select:focus { outline: none; border-color: #00aadd; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .modal-footer { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-top: 1px solid #2a5a8a; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { padding: 10px 25px; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all 0.2s; border: 1px solid; }
+        .btn-primary { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .btn-primary:hover { background: linear-gradient(180deg, #00b8f6 0%, #0098d6 100%); }
+        .btn-secondary { background: linear-gradient(180deg, #3a5a7a 0%, #2a4a6a 100%); border-color: #4a7a9a; color: #a0c4e8; }
+        .btn-secondary:hover { background: linear-gradient(180deg, #4a6a8a 0%, #3a5a7a 100%); color: #fff; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 15px; }
+        .search-input { flex: 1; max-width: 250px; padding: 8px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; }
+        .search-input:focus { outline: none; border-color: #00aadd; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th { background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); padding: 12px 10px; text-align: left; color: #00d4ff; border-bottom: 1px solid #2a5a8a; font-weight: normal; }
+        .data-table td { padding: 10px; border-bottom: 1px solid #1e3a5a; color: #a0c4e8; }
+        .data-table tr:hover td { background: rgba(0,170,220,0.05); }
+        .table-btn { padding: 4px 10px; background: linear-gradient(180deg, #1a4a6a 0%, #0d3555 100%); border: 1px solid #2a6a9a; border-radius: 3px; color: #7ab8e0; cursor: pointer; font-size: 11px; margin-right: 5px; }
+        .table-btn:hover { background: linear-gradient(180deg, #2a5a7a 0%, #1a4565 100%); color: #fff; }
+        .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 15px; }
+        .page-btn { padding: 6px 12px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 12px; }
+        .page-btn:hover, .page-btn.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .log-type-tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; }
+        .log-type-tag.info { background: rgba(0,170,220,0.2); color: #00d4ff; border: 1px solid #00aadd; }
+        .log-type-tag.warning { background: rgba(255,170,0,0.2); color: #ffaa00; border: 1px solid #cc8800; }
+        .log-type-tag.error { background: rgba(255,68,68,0.2); color: #ff4444; border: 1px solid #cc3333; }
+        .log-type-tag.success { background: rgba(0,255,136,0.2); color: #00ff88; border: 1px solid #00aa66; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a1628; }
+        ::-webkit-scrollbar-thumb { background: #2a5a8a; border-radius: 4px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 18px; color: #00d4ff; }
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #1e4a7a; border-radius: 6px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #00d4ff; margin-bottom: 5px; }
+        .stat-label { font-size: 13px; color: #7a9ab8; }
+        .tab-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { padding: 8px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .tab-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; }
+        .tab-btn.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .log-icon { width: 30px; text-align: center; margin-right: 8px; }
+        .log-icon.info { color: #00d4ff; }
+        .log-icon.warning { color: #ffaa00; }
+        .log-icon.error { color: #ff4444; }
+        .log-icon.success { color: #00ff88; }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <div class="title-bar-icon"></div>
+            <span class="title-bar-text">佳晔新能源物联网终端管控系统</span>
+        </div>
+        <div class="title-bar-controls">
+            <button class="title-bar-btn minimize" onclick="showMessage('窗口最小化')"><svg viewBox="0 0 10 10" fill="currentColor"><rect x="0" y="4.5" width="10" height="1"/></svg></button>
+            <button class="title-bar-btn maximize" onclick="showMessage('窗口最大化')"><div class="maximize-icon"></div></button>
+            <button class="title-bar-btn close" onclick="showMessage('系统关闭中...')"><svg viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2"><line x1="0" y1="0" x2="10" y2="10"/><line x1="10" y1="0" x2="0" y2="10"/></svg></button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="nav-bar">
+            <div class="nav-tabs">
+                <a href="index.html" class="nav-tab">主界面</a>
+                <a href="device-registry.html" class="nav-tab">设备台账</a>
+                <a href="alarm-center.html" class="nav-tab">告警中心</a>
+                <a href="data-report.html" class="nav-tab">数据报表</a>
+                <a href="user-management.html" class="nav-tab">用户管理</a>
+                <a href="role-permission.html" class="nav-tab">角色权限</a>
+                <a href="system-log.html" class="nav-tab active">系统日志</a>
+                <a href="system-setting.html" class="nav-tab">系统设置</a>
+            </div>
+            <div class="nav-right">
+                <button class="nav-btn" onclick="showMessage('跳转到告警管理')"><i class="fas fa-bell"></i> 告警管理</button>
+                <button class="nav-btn" onclick="showMessage('跳转到数据查询')"><i class="fas fa-search"></i> 数据查询</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="left-panel">
+                <button class="menu-btn active" onclick="switchTab('log-list', this)"><i class="fas fa-clipboard-list"></i> 日志列表</button>
+            </div>
+
+            <div class="main-content">
+                <div id="log-list">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-clipboard-list"></i> 系统日志管理</h2>
+                        <button class="btn btn-primary" onclick="showExportModal()"><i class="fas fa-download"></i> 导出日志</button>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card"><div class="stat-value">2,458</div><div class="stat-label">日志总数</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#00ff88;">1,856</div><div class="stat-label">信息日志</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#ffaa00;">485</div><div class="stat-label">警告日志</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#ff4444;">117</div><div class="stat-label">错误日志</div></div>
+                    </div>
+
+                    <div class="tab-container">
+                        <button class="tab-btn active" onclick="switchLogTab(this, 'all')">全部日志</button>
+                        <button class="tab-btn" onclick="switchLogTab(this, 'operation')">操作日志</button>
+                        <button class="tab-btn" onclick="switchLogTab(this, 'login')">登录日志</button>
+                        <button class="tab-btn" onclick="switchLogTab(this, 'system')">系统日志</button>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="搜索日志内容、用户名...">
+                        <select class="form-select" style="width:120px;">
+                            <option value="">全部级别</option>
+                            <option value="info">信息</option>
+                            <option value="warning">警告</option>
+                            <option value="error">错误</option>
+                        </select>
+                        <input type="date" class="form-input" style="width:150px;" value="2024-03-15">
+                        <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                        <button class="nav-btn"><i class="fas fa-redo"></i> 重置</button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">序号</th>
+                                <th style="width:80px;">类型</th>
+                                <th>日志内容</th>
+                                <th style="width:100px;">用户</th>
+                                <th style="width:100px;">级别</th>
+                                <th style="width:140px;">时间</th>
+                                <th style="width:80px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td><i class="fas fa-user-cog log-icon info"></i></td>
+                                <td>用户 admin 修改了设备 储能终端 A-01 的配置参数</td>
+                                <td>admin</td>
+                                <td><span class="log-type-tag info">信息</span></td>
+                                <td>2024-03-15 14:35:22</td>
+                                <td><button class="table-btn" onclick="showLogDetail('用户修改设备配置')">查看</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td><i class="fas fa-sign-in-alt log-icon success"></i></td>
+                                <td>用户 zhangsan 成功登录系统，IP 地址：192.168.1.105</td>
+                                <td>zhangsan</td>
+                                <td><span class="log-type-tag success">成功</span></td>
+                                <td>2024-03-15 14:28:15</td>
+                                <td><button class="table-btn" onclick="showLogDetail('用户登录成功')">查看</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td><i class="fas fa-exclamation-triangle log-icon warning"></i></td>
+                                <td>设备 充电桩 B-07 通信超时，已连续 3 次采集失败</td>
+                                <td>system</td>
+                                <td><span class="log-type-tag warning">警告</span></td>
+                                <td>2024-03-15 14:25:08</td>
+                                <td><button class="table-btn" onclick="showLogDetail('设备通信超时')">查看</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td><i class="fas fa-power-off log-icon error"></i></td>
+                                <td>设备 储能柜 A-03 发生严重故障：电池温度过高 (68°C)</td>
+                                <td>system</td>
+                                <td><span class="log-type-tag error">错误</span></td>
+                                <td>2024-03-15 14:20:33</td>
+                                <td><button class="table-btn" onclick="showLogDetail('设备严重故障')">查看</button></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td><i class="fas fa-edit log-icon info"></i></td>
+                                <td>用户 lisi 新增了设备 光伏逆变器 C-15 到系统</td>
+                                <td>lisi</td>
+                                <td><span class="log-type-tag info">信息</span></td>
+                                <td>2024-03-15 14:15:47</td>
+                                <td><button class="table-btn" onclick="showLogDetail('用户新增设备')">查看</button></td>
+                            </tr>
+                            <tr>
+                                <td>6</td>
+                                <td><i class="fas fa-sign-out-alt log-icon info"></i></td>
+                                <td>用户 wangwu 退出系统</td>
+                                <td>wangwu</td>
+                                <td><span class="log-type-tag info">信息</span></td>
+                                <td>2024-03-15 14:10:22</td>
+                                <td><button class="table-btn" onclick="showLogDetail('用户退出系统')">查看</button></td>
+                            </tr>
+                            <tr>
+                                <td>7</td>
+                                <td><i class="fas fa-key log-icon warning"></i></td>
+                                <td>用户 guest 登录失败：密码错误，剩余尝试次数：2</td>
+                                <td>guest</td>
+                                <td><span class="log-type-tag warning">警告</span></td>
+                                <td>2024-03-15 14:05:18</td>
+                                <td><button class="table-btn" onclick="showLogDetail('用户登录失败')">查看</button></td>
+                            </tr>
+                            <tr>
+                                <td>8</td>
+                                <td><i class="fas fa-database log-icon info"></i></td>
+                                <td>系统自动备份数据库完成，备份大小：256MB</td>
+                                <td>system</td>
+                                <td><span class="log-type-tag success">成功</span></td>
+                                <td>2024-03-15 14:00:00</td>
+                                <td><button class="table-btn" onclick="showLogDetail('数据库备份完成')">查看</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="pagination">
+                        <button class="page-btn">上一页</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">4</button>
+                        <button class="page-btn">5</button>
+                        <button class="page-btn">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">日志详情</span>
+                <button class="modal-close" onclick="closeModal('detailModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">日志类型</label><input type="text" class="form-input" value="操作日志" readonly></div>
+                    <div class="form-group"><label class="form-label">日志级别</label><input type="text" class="form-input" value="信息" readonly></div>
+                </div>
+                <div class="form-group"><label class="form-label">日志内容</label><input type="text" class="form-input" id="logContent" value="用户 admin 修改了设备 储能终端 A-01 的配置参数" readonly></div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">操作用户</label><input type="text" class="form-input" value="admin" readonly></div>
+                    <div class="form-group"><label class="form-label">用户 IP</label><input type="text" class="form-input" value="192.168.1.100" readonly></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">发生时间</label><input type="text" class="form-input" value="2024-03-15 14:35:22" readonly></div>
+                    <div class="form-group"><label class="form-label">模块</label><input type="text" class="form-input" value="设备管理" readonly></div>
+                </div>
+                <div class="form-group"><label class="form-label">详细信息</label><textarea class="form-input" style="min-height:100px;resize:vertical;" readonly>用户 admin 于 2024-03-15 14:35:22 修改了设备 储能终端 A-01 的配置参数：
+- 数据采集周期：10 秒 → 5 秒
+- 温度上限告警：55°C → 60°C
+- 功率限制：150 kW → 140 kW
+
+操作结果：成功</textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('detailModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal" style="width:500px;">
+            <div class="modal-header">
+                <span class="modal-title">导出日志</span>
+                <button class="modal-close" onclick="closeModal('exportModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">导出格式</label>
+                    <select class="form-select">
+                        <option value="excel">Excel (.xlsx)</option>
+                        <option value="csv">CSV (.csv)</option>
+                        <option value="txt">文本文件 (.txt)</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">开始日期</label>
+                        <input type="date" class="form-input" value="2024-03-01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">结束日期</label>
+                        <input type="date" class="form-input" value="2024-03-15">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">日志类型</label>
+                    <select class="form-select">
+                        <option value="all">全部日志</option>
+                        <option value="operation">操作日志</option>
+                        <option value="login">登录日志</option>
+                        <option value="system">系统日志</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('exportModal')">取消</button>
+                <button class="btn btn-primary" onclick="showMessage('日志导出成功');closeModal('exportModal');">导出</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.main-content > div').forEach(function(div) { div.style.display = 'none'; });
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelectorAll('.menu-btn').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+        }
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function switchLogTab(btn, type) { document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); }); btn.classList.add('active'); showMessage('已切换到' + btn.textContent); }
+        function showLogDetail(content) { document.getElementById('logContent').value = content; openModal('detailModal'); }
+        function showExportModal() { openModal('exportModal'); }
+        function showMessage(text) { var msg = document.createElement('div'); msg.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#00a8e6 0%,#0088c6 100%);color:#fff;padding:12px 30px;border-radius:4px;z-index:2000;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);'; msg.textContent = text; document.body.appendChild(msg); setTimeout(function() { msg.style.opacity = '0'; msg.style.transition = 'opacity 0.3s'; setTimeout(function() { msg.remove(); }, 300); }, 2000); }
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) { overlay.addEventListener('click', function(e) { if (e.target === this) { this.classList.remove('show'); } }); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.show').forEach(function(modal) { modal.classList.remove('show'); }); } });
+    </script>
+</body>
+</html>

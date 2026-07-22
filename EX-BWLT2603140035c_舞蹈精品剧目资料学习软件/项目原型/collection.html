@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的收藏</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8CC7A;
+    --red: #C0392B;
+    --red-light: #E74C3C;
+    --bg: #FDF8F0;
+    --bg2: #F5EFE0;
+    --text: #2C1810;
+    --text2: #6B4C3B;
+    --text3: #9C7B6B;
+    --white: #FFFFFF;
+    --card-shadow: 0 4px 20px rgba(44,24,16,0.12);
+  }
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #E8E0D0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .phone-frame {
+    width: 100%;
+    min-height: 852px;
+    background: var(--bg);
+    border-radius: 48px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.35), 0 0 0 10px #1a1a1a, 0 0 0 12px #333;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    background: linear-gradient(135deg, #8B1A1A 0%, #C9A84C 100%);
+    color: white;
+    padding: 12px 24px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .status-bar .time { font-weight: 700; font-size: 15px; }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+
+  .header {
+    background: linear-gradient(135deg, #8B1A1A 0%, #C0392B 60%, #C9A84C 100%);
+    padding: 14px 20px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .back-btn {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 16px;
+    text-decoration: none; cursor: pointer; border: none;
+    flex-shrink: 0;
+  }
+  .header-title {
+    flex: 1;
+    color: white;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .header-action {
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    background: white;
+    display: flex;
+    border-bottom: 1px solid #EDE0C8;
+  }
+  .stat-cell {
+    flex: 1;
+    text-align: center;
+    padding: 14px 8px;
+    border-right: 1px solid #EDE0C8;
+  }
+  .stat-cell:last-child { border-right: none; }
+  .stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--red);
+    font-family: 'Noto Serif SC', serif;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  /* Filter tabs */
+  .filter-tabs {
+    background: white;
+    display: flex;
+    padding: 12px 16px;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid #EDE0C8;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .ftab {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    border: none;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .ftab.active {
+    background: var(--red);
+    color: white;
+  }
+  .ftab.inactive {
+    background: var(--bg2);
+    color: var(--text2);
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* Sort bar */
+  .sort-bar {
+    background: var(--bg);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sort-count { font-size: 13px; color: var(--text3); }
+  .sort-btn {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--text2);
+    background: white;
+    border: 1px solid #E8D8C0;
+    border-radius: 16px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  /* Content */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px 90px;
+    scrollbar-width: none;
+  }
+  .content::-webkit-scrollbar { display: none; }
+
+  /* Collection grid - 2 columns */
+  .col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .col-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    text-decoration: none;
+    display: block;
+    position: relative;
+  }
+  .col-card-img {
+    width: 100%;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    display: block;
+  }
+  .col-card-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(44,24,16,0.9) 0%, transparent 100%);
+    padding: 32px 10px 10px;
+  }
+  .col-card-name {
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Noto Serif SC', serif;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .col-card-sub {
+    color: rgba(255,255,255,0.75);
+    font-size: 11px;
+    display: block;
+  }
+  .col-heart {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 28px; height: 28px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--red);
+    font-size: 13px;
+  }
+
+  /* Section title */
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 16px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    width: 4px; height: 18px;
+    background: var(--red);
+    border-radius: 2px;
+  }
+
+  /* Artist collection list */
+  .artist-list { display: flex; flex-direction: column; gap: 10px; }
+  .artist-row {
+    background: white;
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(44,24,16,0.07);
+  }
+  .artist-avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--gold-light, #E8CC7A);
+    flex-shrink: 0;
+  }
+  .artist-avatar-placeholder {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--red), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 18px; font-weight: 700;
+    font-family: 'Noto Serif SC', serif;
+    flex-shrink: 0;
+    border: 2px solid rgba(201,168,76,0.4);
+  }
+  .artist-info { flex: 1; }
+  .artist-name {
+    font-size: 15px; font-weight: 700;
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+  }
+  .artist-desc { font-size: 12px; color: var(--text3); margin-top: 3px; }
+  .artist-tag {
+    display: inline-block;
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 4px;
+  }
+  .artist-follow-btn {
+    padding: 6px 14px;
+    border-radius: 16px;
+    background: var(--bg2);
+    color: var(--red);
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(192,57,43,0.3);
+    cursor: pointer;
+  }
+
+  /* Notes collection */
+  .note-list { display: flex; flex-direction: column; gap: 10px; }
+  .note-row {
+    background: white;
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    text-decoration: none;
+    box-shadow: 0 2px 10px rgba(44,24,16,0.07);
+  }
+  .note-icon-box {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .note-content { flex: 1; }
+  .note-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .note-excerpt { font-size: 12px; color: var(--text3); line-height: 1.5; }
+  .note-meta { display: flex; justify-content: space-between; margin-top: 6px; }
+  .note-date { font-size: 11px; color: var(--text3); }
+  .note-tag-label {
+    font-size: 11px;
+    color: var(--gold);
+    background: rgba(201,168,76,0.1);
+    padding: 1px 8px;
+    border-radius: 8px;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    background: white;
+    border-top: 1px solid #EDE0C8;
+    display: flex;
+    padding: 8px 0 20px;
+    box-shadow: 0 -4px 20px rgba(44,24,16,0.08);
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    cursor: pointer; text-decoration: none; padding: 4px 0;
+    transition: all 0.2s;
+  }
+  .nav-item i { font-size: 20px; color: #BDB0A0; transition: all 0.2s; }
+  .nav-item span { font-size: 10px; color: #BDB0A0; font-weight: 500; transition: all 0.2s; }
+  .nav-item.active i { color: var(--red); }
+  .nav-item.active span { color: var(--red); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  
+
+  <!-- Header -->
+  <div class="header">
+    <a href="profile.html" class="back-btn"><i class="fa fa-arrow-left"></i></a>
+    <div class="header-title">我的收藏</div>
+    <a class="header-action"><i class="fa fa-ellipsis-vertical"></i></a>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-cell">
+      <div class="stat-num">18</div>
+      <div class="stat-label">收藏剧目</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">5</div>
+      <div class="stat-label">关注艺术家</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">12</div>
+      <div class="stat-label">收藏笔记</div>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-tabs">
+    <span class="ftab active" onclick="switchFtab(this,'all')">全部</span>
+    <span class="ftab inactive" onclick="switchFtab(this,'repertoire')">剧目</span>
+  </div>
+
+  <!-- Sort -->
+  <div class="sort-bar">
+    <span class="sort-count">共 35 项收藏</span>
+    <div class="sort-btn" onclick="showToast('排序功能')">
+      <i class="fa fa-clock" style="color:var(--gold)"></i>
+      最近收藏
+      <i class="fa fa-chevron-down" style="font-size:10px"></i>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- 全部 Tab -->
+    <div id="tab-all" class="tab-pane active">
+      <!-- 收藏剧目 -->
+      <div class="section-title">收藏剧目</div>
+      <div class="col-grid">
+        <a href="detail.html" class="col-card">
+          <img class="col-card-img" src="https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=300&q=80" alt="雀之灵">
+          <div class="col-card-overlay">
+            <span class="col-card-name">雀之灵</span>
+            <span class="col-card-sub">杨丽萍 · 中国古典舞</span>
+          </div>
+          <div class="col-heart"><i class="fa-solid fa-heart"></i></div>
+        </a>
+        <a href="detail.html" class="col-card">
+          <img class="col-card-img" src="https://images.unsplash.com/photo-1546427660-eb346c344ba5?w=300&q=80" alt="洛神水赋">
+          <div class="col-card-overlay">
+            <span class="col-card-name">洛神水赋</span>
+            <span class="col-card-sub">河南卫视 · 水下舞蹈</span>
+          </div>
+          <div class="col-heart"><i class="fa-solid fa-heart"></i></div>
+        </a>
+        <a href="detail.html" class="col-card">
+          <img class="col-card-img" src="https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=300&q=80" alt="天鹅湖">
+          <div class="col-card-overlay">
+            <span class="col-card-name">天鹅湖</span>
+            <span class="col-card-sub">柴可夫斯基 · 芭蕾舞</span>
+          </div>
+          <div class="col-heart"><i class="fa-solid fa-heart"></i></div>
+        </a>
+        <a href="detail.html" class="col-card">
+          <img class="col-card-img" src="https://ts1.tc.mm.bing.net/th/id/OIP-C.DwZNcNgU7fH0EYyz_U9JNwHaJg?w=300&h=400&c=1&ps=1&pid=ImgDetMain" alt="千手观音">
+          <div class="col-card-overlay">
+            <span class="col-card-name">千手观音</span>
+            <span class="col-card-sub">邰丽华 · 中国古典舞</span>
+          </div>
+          <div class="col-heart"><i class="fa-solid fa-heart"></i></div>
+        </a>
+      </div>
+    </div>
+
+    <!-- 剧目 Tab -->
+    <div id="tab-repertoire" class="tab-pane">
+      <div class="section-title">收藏剧目</div>
+      <div class="col-grid">
+        <a href="detail.html" class="col-card">
+          <img class="col-card-img" src="https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=300&q=80" alt="雀之灵">
+          <div class="col-card-overlay">
+            <span class="col-card-name">雀之灵</span>
+            <span class="col-card-sub">杨丽萍 · 中国古典舞</span>
+          </div>
+          <div class="col-heart"><i class="fa-solid fa-heart"></i></div>
+        </a>
+        <a href="detail.html" class="col-card">
+          <img class="col-card-img" src="https://images.unsplash.com/photo-1546427660-eb346c344ba5?w=300&q=80" alt="洛神水赋">
+          <div class="col-card-overlay">
+            <span class="col-card-name">洛神水赋</span>
+            <span class="col-card-sub">河南卫视 · 水下舞蹈</span>
+          </div>
+          <div class="col-heart"><i class="fa-solid fa-heart"></i></div>
+        </a>
+        <a href="detail.html" class="col-card">
+          <img class="col-card-img" src="https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=300&q=80" alt="天鹅湖">
+          <div class="col-card-overlay">
+            <span class="col-card-name">天鹅湖</span>
+            <span class="col-card-sub">柴可夫斯基 · 芭蕾舞</span>
+          </div>
+          <div class="col-heart"><i class="fa-solid fa-heart"></i></div>
+        </a>
+        <a href="detail.html" class="col-card">
+          <img class="col-card-img" src="https://ts1.tc.mm.bing.net/th/id/OIP-C.DwZNcNgU7fH0EYyz_U9JNwHaJg?w=300&h=400&c=1&ps=1&pid=ImgDetMain" alt="千手观音">
+          <div class="col-card-overlay">
+            <span class="col-card-name">千手观音</span>
+            <span class="col-card-sub">邰丽华 · 中国古典舞</span>
+          </div>
+          <div class="col-heart"><i class="fa-solid fa-heart"></i></div>
+        </a>
+        <a href="detail.html" class="col-card">
+          <img class="col-card-img" src="https://images.unsplash.com/photo-1561863463-a3f6bc5a23ad?w=300&q=80" alt="扇舞丹青">
+          <div class="col-card-overlay">
+            <span class="col-card-name">扇舞丹青</span>
+            <span class="col-card-sub">中央民族歌舞团</span>
+          </div>
+          <div class="col-heart"><i class="fa-solid fa-heart"></i></div>
+        </a>
+        <a href="detail.html" class="col-card">
+          <img class="col-card-img" src="https://www.sznews.com/news/pic/2021-04/26/f18ce0da-fe25-459a-9362-6043c55e6ae3.jpg?w=300&h=400&c=1" alt="红色娘子军">
+          <div class="col-card-overlay">
+            <span class="col-card-name">红色娘子军</span>
+            <span class="col-card-sub">中央芭蕾舞团</span>
+          </div>
+          <div class="col-heart"><i class="fa-solid fa-heart"></i></div>
+        </a>
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <i class="fa-solid fa-house"></i><span>首页</span>
+    </a>
+    <a href="repertoire.html" class="nav-item">
+      <i class="fa-solid fa-film"></i><span>剧目</span>
+    </a>
+    <a href="study.html" class="nav-item">
+      <i class="fa-solid fa-graduation-cap"></i><span>学习</span>
+    </a>
+    <a href="exam.html" class="nav-item">
+      <i class="fa-solid fa-pen-to-square"></i><span>练习</span>
+    </a>
+    <a href="profile.html" class="nav-item active">
+      <i class="fa-regular fa-circle-user"></i><span>我的</span>
+    </a>
+  </div>
+</div>
+
+<script>
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeIn 0.3s';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 1500);
+}
+
+function switchFtab(el, id) {
+  document.querySelectorAll('.ftab').forEach(t => {
+    t.classList.remove('active');
+    t.classList.add('inactive');
+  });
+  el.classList.remove('inactive');
+  el.classList.add('active');
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+}
+</script>
+<style>
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.8); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+</style>
+</body>
+</html>

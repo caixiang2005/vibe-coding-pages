@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>家电产品数字化设计与仿真分析软件</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #1e1e1e;
+      --sidebar: #252526;
+      --panel: #2d2d2d;
+      --toolbar: #333;
+      --border: #3c3c3c;
+      --t1: #e0e0e0;
+      --t2: #999;
+      --t3: #666;
+      --accent: #0a84ff;
+      --green: #30d158;
+      --orange: #ff9f0a;
+      --red: #ff453a;
+      --cyan: #64d2ff;
+      --purple: #bf5af2;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: url('./static/bg.jpeg') no-repeat;
+      background-size: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: var(--t1);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .win {
+      width: 1320px;
+      height: 820px;
+      background: var(--bg);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 0 .5px rgba(255, 255, 255, .08), 0 30px 80px rgba(0, 0, 0, .6);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .titlebar {
+      height: 38px;
+      background: linear-gradient(180deg, #3a3a3a, #2d2d2d);
+      display: flex;
+      align-items: center;
+      padding: 0 13px;
+      flex-shrink: 0;
+      border-bottom: 1px solid #1a1a1a;
+      position: relative;
+    }
+
+    .dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .15);
+    }
+
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+
+    .titlebar-t {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t2);
+      white-space: nowrap;
+    }
+
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .side {
+      width: 220px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+
+    .side::-webkit-scrollbar { width: 4px; }
+    .side::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .08); border-radius: 2px; }
+
+    .sh {
+      padding: 14px 14px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--t3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .ss { padding: 0 6px 2px; }
+
+    .si {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      color: var(--t2);
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none;
+    }
+
+    .si:hover {
+      background: rgba(255, 255, 255, .06);
+      color: var(--t1);
+    }
+
+    .si.active {
+      background: rgba(10, 132, 255, .18);
+      color: var(--accent);
+    }
+
+    .si svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      opacity: .7;
+    }
+
+    .si.active svg { opacity: 1; }
+
+    .si .badge {
+      margin-left: auto;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    .badge-ok { background: rgba(48, 209, 88, .15); color: var(--green); }
+    .badge-run { background: rgba(10, 132, 255, .15); color: var(--accent); }
+
+    .sdiv { height: 1px; background: var(--border); margin: 6px 14px; }
+
+    .sproj {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+
+    .sproj-n { font-size: 11.5px; font-weight: 600; color: var(--t1); }
+    .sproj-d { font-size: 10.5px; color: var(--t3); margin-top: 1px; }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tb {
+      height: 42px;
+      background: var(--toolbar);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .tg {
+      display: flex;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .tg+.tg {
+      margin-left: 6px;
+      padding-left: 8px;
+      border-left: 1px solid var(--border);
+    }
+
+    .tbtn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 9px;
+      border-radius: 5px;
+      font-size: 11.5px;
+      color: var(--t2);
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: all .15s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .tbtn:hover {
+      background: rgba(255, 255, 255, .07);
+      color: var(--t1);
+    }
+
+    .tbtn:active { transform: scale(0.97); }
+
+    .tbtn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .tsp { flex: 1; }
+
+    .tsearch {
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      color: var(--t1);
+      width: 170px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .tsearch::placeholder { color: var(--t3); }
+
+    .vp {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .vp::-webkit-scrollbar { width: 6px; }
+    .vp::-webkit-scrollbar-track { background: transparent; }
+    .vp::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .1); border-radius: 3px; }
+
+    .welcome-card {
+      background: linear-gradient(135deg, rgba(10, 132, 255, .15), rgba(100, 210, 255, .08));
+      border: 1px solid rgba(10, 132, 255, .25);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .welcome-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--t1);
+      margin-bottom: 8px;
+    }
+
+    .welcome-sub {
+      font-size: 12.5px;
+      color: var(--t2);
+      line-height: 1.6;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--t1);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .project-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .project-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .project-card.active {
+      border-color: var(--accent);
+      background: rgba(10, 132, 255, .1);
+    }
+
+    .project-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      font-size: 20px;
+    }
+
+    .icon-blue { background: rgba(10, 132, 255, .15); color: var(--accent); }
+    .icon-green { background: rgba(48, 209, 88, .15); color: var(--green); }
+    .icon-orange { background: rgba(255, 159, 10, .15); color: var(--orange); }
+    .icon-purple { background: rgba(191, 90, 242, .15); color: var(--purple); }
+    .icon-red { background: rgba(255, 69, 58, .15); color: var(--red); }
+    .icon-cyan { background: rgba(100, 210, 255, .15); color: var(--cyan); }
+
+    .project-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--t1);
+      margin-bottom: 4px;
+    }
+
+    .project-desc {
+      font-size: 11px;
+      color: var(--t3);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .project-meta {
+      display: flex;
+      gap: 10px;
+      font-size: 10px;
+      color: var(--t3);
+    }
+
+    .project-meta span {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .quick-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .quick-btn:hover {
+      background: rgba(255, 255, 255, .05);
+      border-color: var(--accent);
+    }
+
+    .quick-btn:active { transform: scale(0.97); }
+
+    .quick-btn i {
+      font-size: 22px;
+      color: var(--accent);
+    }
+
+    .quick-btn span {
+      font-size: 11px;
+      color: var(--t2);
+    }
+
+    .recent-section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .03);
+      cursor: pointer;
+      transition: background .15s;
+      border-radius: 6px;
+      padding: 8px;
+    }
+
+    .recent-item:hover { background: rgba(255, 255, 255, .03); }
+    .recent-item:last-child { border-bottom: none; }
+
+    .recent-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 132, 255, .1);
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .recent-info { flex: 1; }
+    .recent-name { font-size: 12px; color: var(--t1); margin-bottom: 2px; }
+    .recent-time { font-size: 10px; color: var(--t3); }
+
+    .bb {
+      height: 26px;
+      background: var(--toolbar);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .bi {
+      font-size: 10.5px;
+      color: var(--t3);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bdot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, .65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all .25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #2a2a2a;
+      border-radius: 10px;
+      border: 1px solid #3a3a3a;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+      min-width: 400px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform .25s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid #3a3a3a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .modal-traffic-lights {
+      position: absolute;
+      left: 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .modal-traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .modal-traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .modal-title {
+      color: #ddd;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .modal-body { padding: 16px; }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #3a3a3a;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 7px 16px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .15s;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: #3a3a3a; color: #aaa; }
+    .btn-secondary:hover { background: #444; color: #fff; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #1e90ff; }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-label {
+      display: block;
+      color: #888;
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 12px;
+      font-family: inherit;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 8px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .form-select:focus { outline: none; border-color: var(--accent); }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .form-row .form-group { flex: 1; }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .template-item {
+      padding: 12px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+    }
+
+    .template-item:hover {
+      border-color: var(--accent);
+      background: rgba(10, 132, 255, .05);
+    }
+
+    .template-item.selected {
+      border-color: var(--accent);
+      background: rgba(10, 132, 255, .1);
+    }
+
+    .template-item i {
+      font-size: 20px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .template-item span {
+      font-size: 10.5px;
+      color: var(--t2);
+    }
+  </style>
+</head>
+<body>
+
+<div class="win">
+  <div class="titlebar">
+    <div class="dots">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+    </div>
+    <div class="titlebar-t">家电产品数字化设计与仿真分析软件</div>
+  </div>
+
+  <div class="main">
+    <div class="side">
+      <div class="sh">导航菜单</div>
+      <div class="ss">
+        <div class="si active" onclick="location.href='main.html'">
+          <i class="fa-solid fa-house"></i>
+          首页总览
+        </div>
+        <div class="si" onclick="location.href='project_management.html'">
+          <i class="fa-solid fa-folder"></i>
+          项目管理
+        </div>
+        <div class="si" onclick="location.href='product_design.html'">
+          <i class="fa-solid fa-cube"></i>
+          产品设计
+        </div>
+      </div>
+      <div class="sdiv"></div>
+      <div class="sh">仿真分析</div>
+      <div class="ss">
+        <div class="si" onclick="location.href='structural_analysis.html'">
+          <i class="fa-solid fa-cube"></i>
+          结构分析
+        </div>
+        <div class="si" onclick="location.href='thermal_analysis.html'">
+          <i class="fa-solid fa-temperature-half"></i>
+          热分析
+        </div>
+        <div class="si" onclick="location.href='fluid_analysis.html'">
+          <i class="fa-solid fa-wind"></i>
+          流体分析
+        </div>
+      </div>
+      <div class="sdiv"></div>
+      <div class="ss">
+        <div class="si" onclick="location.href='results_view.html'">
+          <i class="fa-solid fa-chart-line"></i>
+          结果查看
+        </div>
+        <div class="si" onclick="location.href='report_generation.html'">
+          <i class="fa-solid fa-file-lines"></i>
+          报告生成
+        </div>
+        <div class="si" onclick="location.href='parameters.html'">
+          <i class="fa-solid fa-gear"></i>
+          参数设置
+        </div>
+      </div>
+      <div class="sproj">
+        <div class="sproj-n">WM-X600 滚筒洗衣机</div>
+        <div class="sproj-d">修改于 2026-03-23 10:15</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="tb">
+        <div class="tg">
+          <button class="tbtn" id="btnNewProject">
+            <i class="fa-solid fa-plus"></i>
+            新建项目
+          </button>
+          <button class="tbtn" id="btnOpenProject">
+            <i class="fa-solid fa-folder-open"></i>
+            打开项目
+          </button>
+          <button class="tbtn" id="btnSaveProject">
+            <i class="fa-solid fa-floppy-disk"></i>
+            保存
+          </button>
+        </div>
+        <div class="tg">
+          <button class="tbtn" onclick="location.href='product_design.html'">
+            <i class="fa-solid fa-pen"></i>
+            编辑
+          </button>
+          <button class="tbtn" style="color:var(--accent);" onclick="location.href='structural_analysis.html'">
+            <i class="fa-solid fa-play"></i>
+            运行仿真
+          </button>
+        </div>
+        <div class="tsp"></div>
+        <input class="tsearch" placeholder="搜索项目...">
+      </div>
+
+      <div class="vp">
+        <div class="welcome-card">
+          <div class="welcome-title">欢迎使用家电产品数字化设计与仿真分析软件</div>
+          <div class="welcome-sub">本系统提供完整的家电产品数字化设计与仿真分析解决方案，支持结构分析、热分析、流体分析等多种仿真功能，帮助工程师快速完成产品设计与验证。</div>
+        </div>
+
+        <div class="section-title">快速操作</div>
+        <div class="quick-actions">
+          <div class="quick-btn" onclick="openNewProjectModal()">
+            <i class="fa-solid fa-plus"></i>
+            <span>新建项目</span>
+          </div>
+          <div class="quick-btn" onclick="openOpenProjectModal()">
+            <i class="fa-solid fa-folder-open"></i>
+            <span>打开项目</span>
+          </div>
+          <div class="quick-btn" onclick="location.href='product_design.html'">
+            <i class="fa-solid fa-pen"></i>
+            <span>开始设计</span>
+          </div>
+          <div class="quick-btn" onclick="location.href='report_generation.html'">
+            <i class="fa-solid fa-file-export"></i>
+            <span>生成报告</span>
+          </div>
+        </div>
+
+        <div class="section-title">仿真分析模块</div>
+        <div class="project-grid">
+          <div class="project-card" onclick="location.href='structural_analysis.html'">
+            <div class="project-icon icon-blue">
+              <i class="fa-solid fa-cube"></i>
+            </div>
+            <div class="project-name">结构分析</div>
+            <div class="project-desc">静力学、模态、屈曲等结构仿真分析</div>
+            <div class="project-meta">
+              <span><i class="fa-solid fa-check"></i> 就绪</span>
+              <span><i class="fa-solid fa-clock"></i> 5-30min</span>
+            </div>
+          </div>
+          <div class="project-card" onclick="location.href='thermal_analysis.html'">
+            <div class="project-icon icon-orange">
+              <i class="fa-solid fa-temperature-half"></i>
+            </div>
+            <div class="project-name">热分析</div>
+            <div class="project-desc">稳态传热、瞬态热分析、热应力耦合</div>
+            <div class="project-meta">
+              <span><i class="fa-solid fa-check"></i> 就绪</span>
+              <span><i class="fa-solid fa-clock"></i> 10-45min</span>
+            </div>
+          </div>
+          <div class="project-card" onclick="location.href='fluid_analysis.html'">
+            <div class="project-icon icon-cyan">
+              <i class="fa-solid fa-wind"></i>
+            </div>
+            <div class="project-name">流体分析</div>
+            <div class="project-desc">CFD仿真、风道优化、换热分析</div>
+            <div class="project-meta">
+              <span><i class="fa-solid fa-check"></i> 就绪</span>
+              <span><i class="fa-solid fa-clock"></i> 20-120min</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">最近项目</div>
+        <div class="recent-section">
+          <div class="recent-item" onclick="location.href='product_design.html'">
+            <div class="recent-icon">
+              <i class="fa-solid fa-cube"></i>
+            </div>
+            <div class="recent-info">
+              <div class="recent-name">WM-X600 滚筒洗衣机 - 结构改进方案</div>
+              <div class="recent-time">2026-03-23 10:15 · 修改于 今天</div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="color: var(--t3); font-size: 12px;"></i>
+          </div>
+          <div class="recent-item" onclick="location.href='thermal_analysis.html'">
+            <div class="recent-icon">
+              <i class="fa-solid fa-temperature-half"></i>
+            </div>
+            <div class="recent-info">
+              <div class="recent-name">空调室内机 - 换热器优化分析</div>
+              <div class="recent-time">2026-03-22 16:30 · 修改于 昨天</div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="color: var(--t3); font-size: 12px;"></i>
+          </div>
+          <div class="recent-item" onclick="location.href='fluid_analysis.html'">
+            <div class="recent-icon">
+              <i class="fa-solid fa-wind"></i>
+            </div>
+            <div class="recent-info">
+              <div class="recent-name">电风扇 - 风道流场分析</div>
+              <div class="recent-time">2026-03-21 14:20 · 修改于 2天前</div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="color: var(--t3); font-size: 12px;"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bb">
+        <div class="bi"><span class="bdot" style="background:var(--green);"></span>求解器就绪</div>
+        <div class="bi">项目数: 3</div>
+        <div class="bi">v3.6.2</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-traffic-lights">
+        <div class="modal-traffic-light close" onclick="closeModal()"></div>
+        <div class="modal-traffic-light minimize"></div>
+        <div class="modal-traffic-light maximize"></div>
+      </div>
+      <span class="modal-title" id="modalTitle">弹窗标题</span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script>
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalFooter = document.getElementById('modalFooter');
+
+  function openModal(title, bodyHtml, footerHtml) {
+    modalTitle.textContent = title;
+    modalBody.innerHTML = bodyHtml;
+    modalFooter.innerHTML = footerHtml;
+    modalOverlay.classList.add('active');
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove('active');
+  }
+
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+
+  document.getElementById('btnNewProject').addEventListener('click', openNewProjectModal);
+  document.getElementById('btnOpenProject').addEventListener('click', openOpenProjectModal);
+  document.getElementById('btnSaveProject').addEventListener('click', openSaveProjectModal);
+
+  function openNewProjectModal() {
+    openModal(
+      '新建项目',
+      `<div class="form-group">
+        <label class="form-label">项目名称</label>
+        <input type="text" class="form-input" placeholder="请输入项目名称">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">产品类型</label>
+          <select class="form-select">
+            <option>滚筒洗衣机</option>
+            <option>波轮洗衣机</option>
+            <option>空调室内机</option>
+            <option>空调室外机</option>
+            <option>电冰箱</option>
+            <option>电风扇</option>
+            <option>其他家电</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">项目版本</label>
+          <input type="text" class="form-input" value="V1.0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">选择模板</label>
+        <div class="template-grid">
+          <div class="template-item selected">
+            <i class="fa-solid fa-cube"></i>
+            <div>空白项目</div>
+          </div>
+          <div class="template-item">
+            <i class="fa-solid fa-copy"></i>
+            <div>复制现有</div>
+          </div>
+          <div class="template-item">
+            <i class="fa-solid fa-upload"></i>
+            <div>导入模型</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">项目描述</label>
+        <input type="text" class="form-input" placeholder="请输入项目描述（选填）">
+      </div>`,
+      `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+       <button class="btn btn-primary" onclick="createProject()">创建</button>`
+    );
+  }
+
+  function createProject() {
+    openModal(
+      '创建成功',
+      `<div style="text-align:center;padding:20px;">
+        <i class="fa-solid fa-circle-check" style="font-size:48px;color:var(--green);margin-bottom:12px;"></i>
+        <div style="color:#aaa;font-size:13px;margin-bottom:6px;">项目创建成功</div>
+        <div style="color:#888;font-size:11px;margin-top:8px;">即将跳转到产品设计页面...</div>
+      </div>`,
+      `<button class="btn btn-primary" onclick="goToDesign()">确定</button>`
+    );
+  }
+
+  function goToDesign() {
+    closeModal();
+    location.href='product_design.html';
+  }
+
+  function openOpenProjectModal() {
+    openModal(
+      '打开项目',
+      `<div class="form-group">
+        <label class="form-label">选择项目</label>
+        <select class="form-select" id="projectSelect">
+          <option value="product_design.html">WM-X600 滚筒洗衣机 - 结构改进方案</option>
+          <option value="thermal_analysis.html">空调室内机 - 换热器优化分析</option>
+          <option value="fluid_analysis.html">电风扇 - 风道流场分析</option>
+          <option value="structural_analysis.html">BCD-520 冰箱 - 制冷系统分析</option>
+        </select>
+      </div>
+      <div style="margin-top:10px;padding:10px;background:#1e1e1e;border-radius:5px;border:1px solid #3a3a3a;">
+        <div style="color:#888;font-size:10px;margin-bottom:6px;">最近打开</div>
+        <div style="color:#aaa;font-size:11.5px;line-height:1.8;">
+          <div style="margin-bottom:4px;"><i class="fa-solid fa-folder" style="color:var(--orange);margin-right:6px;"></i>WM-X600 滚筒洗衣机</div>
+          <div style="color:#666;font-size:10px;margin-left:22px;">2026-03-23 修改</div>
+        </div>
+      </div>`,
+      `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+       <button class="btn btn-primary" onclick="openProject()">打开</button>`
+    );
+  }
+
+  function openProject() {
+    const select = document.getElementById('projectSelect');
+    const url = select.value;
+    closeModal();
+    location.href = url;
+  }
+  }
+
+  function openSaveProjectModal() {
+    openModal(
+      '保存项目',
+      `<div style="text-align:center;padding:15px;">
+        <i class="fa-solid fa-floppy-disk" style="font-size:36px;color:var(--accent);margin-bottom:14px;"></i>
+        <div style="color:#aaa;font-size:12px;">项目已保存</div>
+        <div style="color:#888;font-size:11px;margin-top:6px;">WM-X600 滚筒洗衣机</div>
+      </div>`,
+      `<button class="btn btn-primary" onclick="closeModal()">确定</button>`
+    );
+  }
+</script>
+
+</body>
+</html>

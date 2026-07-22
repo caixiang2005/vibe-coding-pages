@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>历史数据报表 - 木质纤维素水热解聚能耗优化系统</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial;
+        }
+        .sidebar-item-active {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+        }
+        .sidebar-item:hover:not(.sidebar-item-active) {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+        }
+        .glass-card {
+            background: rgba(28, 28, 28, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .mac-traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .content-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .content-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        .btn-success {
+            background: #16a34a;
+            transition: all 0.2s;
+        }
+        .btn-success:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: modalIn 0.2s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .modal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .hover-lift {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .table-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .tab-active {
+            background: #3b82f6;
+            color: white;
+        }
+        .select-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            padding-right: 32px;
+        }
+        .select-field:focus {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #3b82f6;
+            outline: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-black">
+    <div id="modal-container"></div>
+    <div class="w-[1280px] max-w-[95vw] h-[900px] max-h-[90vh] flex overflow-hidden rounded-[24px] border border-white/10 bg-[#050505]">
+        <aside class="w-[240px] h-full flex flex-col p-4 bg-[#1e1e1e] border-r border-white/5">
+            <div class="flex gap-2 mb-8 px-2">
+                <div class="mac-traffic-light bg-[#ff5f56]"></div>
+                <div class="mac-traffic-light bg-[#ffbd2e]"></div>
+                <div class="mac-traffic-light bg-[#27c93f]"></div>
+            </div>
+            <div class="px-2 mb-4">
+                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest">核心任务</p>
+            </div>
+            <nav class="flex-1 space-y-1">
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="index.html">
+                    <i class="fa-solid fa-table-cells"></i>
+                    主控制面板
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="settings.html">
+                    <i class="fa-solid fa-gear"></i>
+                    工艺参数设置
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="monitor.html">
+                    <i class="fa-solid fa-chart-line"></i>
+                    实时监测仪表盘
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="energy.html">
+                    <i class="fa-solid fa-leaf"></i>
+                    能耗优化分析
+                </a>
+                <a class="sidebar-item sidebar-item-active flex items-center gap-3 px-3 py-2 text-[13px]" href="data.html">
+                    <i class="fa-solid fa-database text-blue-400"></i>
+                    历史数据报表
+                </a>
+            </nav>
+            <div class="mt-auto p-3 glass-card rounded-xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full overflow-hidden">
+                        <img src="https://i01piccdn.sogoucdn.com/9f0c81ee016b30c7" alt="郑鹏" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium">郑鹏</p>
+                        <p class="text-[10px] text-gray-500">在线 (已授权)</p>
+                    </div>
+                    <a class="ml-auto text-gray-500 hover:text-red-400 transition-colors" href="login.html">
+                        <i class="fa-solid fa-door-open"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 h-full flex flex-col bg-[#121212] overflow-hidden">
+            <header class="h-16 flex items-center justify-between px-8 border-b border-white/5 bg-[#1e1e1e]/50">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-database text-blue-500"></i>
+                    <span>木质纤维素水热解聚能耗优化系统</span>
+                </h2>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-xs">
+                        <i class="fa-solid fa-file-lines"></i>
+                        数据已归档至 2026.03
+                    </div>
+                    <div class="text-gray-400 text-sm" id="current-time"></div>
+                </div>
+            </header>
+            <div class="flex-1 p-6 overflow-y-auto content-scroll">
+                <div class="flex gap-2 mb-6">
+                    <button id="tab-run" onclick="switchTab('run')" class="px-4 py-2 tab-active rounded-lg text-sm"><i class="fa-solid fa-clock-rotate-left mr-1"></i>运行记录</button>
+                    <button id="tab-alarm" onclick="switchTab('alarm')" class="px-4 py-2 bg-white/10 rounded-lg text-sm hover:bg-white/20 transition-colors"><i class="fa-solid fa-triangle-exclamation mr-1"></i>告警记录</button>
+                    <button id="tab-export" onclick="switchTab('export')" class="px-4 py-2 bg-white/10 rounded-lg text-sm hover:bg-white/20 transition-colors"><i class="fa-solid fa-download mr-1"></i>导出数据</button>
+                </div>
+                <div id="content-run" class="glass-card rounded-[20px] p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-list text-cyan-400"></i>
+                            批次运行记录
+                        </h3>
+                        <div class="flex gap-3">
+                            <div class="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-1.5">
+                                <i class="fa-solid fa-calendar text-gray-500 text-xs"></i>
+                                <input type="date" id="date-start" value="2026-03-01" class="bg-transparent text-xs text-white outline-none">
+                            </div>
+                            <span class="text-gray-500">至</span>
+                            <div class="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-1.5">
+                                <i class="fa-solid fa-calendar text-gray-500 text-xs"></i>
+                                <input type="date" id="date-end" value="2026-03-21" class="bg-transparent text-xs text-white outline-none">
+                            </div>
+                            <button onclick="doSearch()" class="btn-primary px-4 py-1.5 rounded-lg text-xs"><i class="fa-solid fa-magnifying-glass mr-1"></i>查询</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-gray-500 text-xs border-b border-white/10">
+                                    <th class="text-left py-3 px-2">批次号</th>
+                                    <th class="text-left py-3 px-2">开始时间</th>
+                                    <th class="text-left py-3 px-2">物料类型</th>
+                                    <th class="text-left py-3 px-2">处理量</th>
+                                    <th class="text-left py-3 px-2">转化率</th>
+                                    <th class="text-left py-3 px-2">能耗</th>
+                                    <th class="text-left py-3 px-2">状态</th>
+                                    <th class="text-left py-3 px-2">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300">
+                                <tr class="table-row border-b border-white/5">
+                                    <td class="py-3 px-2 font-mono">BT-20260321-001</td>
+                                    <td class="py-3 px-2">03-21 08:00</td>
+                                    <td class="py-3 px-2">玉米秸秆</td>
+                                    <td class="py-3 px-2">1250 kg</td>
+                                    <td class="py-3 px-2 text-green-400">86.4%</td>
+                                    <td class="py-3 px-2">0.42 kWh/kg</td>
+                                    <td class="py-3 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">完成</span></td>
+                                    <td class="py-3 px-2"><button onclick="showModal('batch-detail')" class="text-blue-400 hover:text-blue-300 text-xs"><i class="fa-solid fa-eye mr-1"></i>详情</button></td>
+                                </tr>
+                                <tr class="table-row border-b border-white/5">
+                                    <td class="py-3 px-2 font-mono">BT-20260321-002</td>
+                                    <td class="py-3 px-2">03-21 10:15</td>
+                                    <td class="py-3 px-2">玉米秸秆</td>
+                                    <td class="py-3 px-2">1200 kg</td>
+                                    <td class="py-3 px-2 text-green-400">85.8%</td>
+                                    <td class="py-3 px-2">0.44 kWh/kg</td>
+                                    <td class="py-3 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">完成</span></td>
+                                    <td class="py-3 px-2"><button onclick="showModal('batch-detail')" class="text-blue-400 hover:text-blue-300 text-xs"><i class="fa-solid fa-eye mr-1"></i>详情</button></td>
+                                </tr>
+                                <tr class="table-row border-b border-white/5">
+                                    <td class="py-3 px-2 font-mono">BT-20260320-001</td>
+                                    <td class="py-3 px-2">03-20 08:30</td>
+                                    <td class="py-3 px-2">稻壳</td>
+                                    <td class="py-3 px-2">1100 kg</td>
+                                    <td class="py-3 px-2 text-green-400">82.3%</td>
+                                    <td class="py-3 px-2">0.48 kWh/kg</td>
+                                    <td class="py-3 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">完成</span></td>
+                                    <td class="py-3 px-2"><button onclick="showModal('batch-detail')" class="text-blue-400 hover:text-blue-300 text-xs"><i class="fa-solid fa-eye mr-1"></i>详情</button></td>
+                                </tr>
+                                <tr class="table-row border-b border-white/5">
+                                    <td class="py-3 px-2 font-mono">BT-20260319-001</td>
+                                    <td class="py-3 px-2">03-19 09:00</td>
+                                    <td class="py-3 px-2">木屑</td>
+                                    <td class="py-3 px-2">1050 kg</td>
+                                    <td class="py-3 px-2 text-yellow-400">78.5%</td>
+                                    <td class="py-3 px-2">0.52 kWh/kg</td>
+                                    <td class="py-3 px-2"><span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded text-xs">异常</span></td>
+                                    <td class="py-3 px-2"><button onclick="showModal('batch-detail')" class="text-blue-400 hover:text-blue-300 text-xs"><i class="fa-solid fa-eye mr-1"></i>详情</button></td>
+                                </tr>
+                                <tr class="table-row border-b border-white/5">
+                                    <td class="py-3 px-2 font-mono">BT-20260318-001</td>
+                                    <td class="py-3 px-2">03-18 08:00</td>
+                                    <td class="py-3 px-2">芦竹</td>
+                                    <td class="py-3 px-2">1150 kg</td>
+                                    <td class="py-3 px-2 text-green-400">84.2%</td>
+                                    <td class="py-3 px-2">0.45 kWh/kg</td>
+                                    <td class="py-3 px-2"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">完成</span></td>
+                                    <td class="py-3 px-2"><button onclick="showModal('batch-detail')" class="text-blue-400 hover:text-blue-300 text-xs"><i class="fa-solid fa-eye mr-1"></i>详情</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="content-alarm" class="glass-card rounded-[20px] p-6 mb-6" style="display: none;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-yellow-400"></i>
+                            告警记录
+                        </h3>
+                        <div class="flex gap-3">
+                            <select class="select-field px-3 py-1.5 rounded-lg text-xs">
+                                <option value="">全部类型</option>
+                                <option value="temp">温度告警</option>
+                                <option value="pres">压力告警</option>
+                                <option value="level">液位告警</option>
+                                <option value="energy">能耗告警</option>
+                            </select>
+                            <select class="select-field px-3 py-1.5 rounded-lg text-xs">
+                                <option value="">全部状态</option>
+                                <option value="active">进行中</option>
+                                <option value="resolved">已恢复</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                            <i class="fa-solid fa-triangle-exclamation text-yellow-400"></i>
+                            <div class="flex-1"><p class="font-medium">液位传感器告警</p><p class="text-xs text-gray-400">L-01 液位超过上限 80%</p></div>
+                            <span class="text-yellow-400 text-xs px-2 py-0.5 bg-yellow-500/20 rounded">进行中</span>
+                            <span class="text-gray-500 text-xs">03-21 09:45</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                            <i class="fa-solid fa-triangle-exclamation text-yellow-400"></i>
+                            <div class="flex-1"><p class="font-medium">温度波动告警</p><p class="text-xs text-gray-400">T-01 温度波动超过 ±3℃</p></div>
+                            <span class="text-green-400 text-xs px-2 py-0.5 bg-green-500/20 rounded">已恢复</span>
+                            <span class="text-gray-500 text-xs">03-20 15:30</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                            <i class="fa-solid fa-circle-xmark text-red-400"></i>
+                            <div class="flex-1"><p class="font-medium">压力异常</p><p class="text-xs text-gray-400">P-01 压力短暂降至 11.2 MPa</p></div>
+                            <span class="text-green-400 text-xs px-2 py-0.5 bg-green-500/20 rounded">已恢复</span>
+                            <span class="text-gray-500 text-xs">03-19 14:22</span>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                            <i class="fa-solid fa-triangle-exclamation text-yellow-400"></i>
+                            <div class="flex-1"><p class="font-medium">能耗超标提醒</p><p class="text-xs text-gray-400">批次 BT-20260319-001 能耗偏高</p></div>
+                            <span class="text-green-400 text-xs px-2 py-0.5 bg-green-500/20 rounded">已恢复</span>
+                            <span class="text-gray-500 text-xs">03-19 10:15</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="content-export" class="glass-card rounded-[20px] p-6 mb-6" style="display: none;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-download text-green-400"></i>
+                            导出数据
+                        </h3>
+                    </div>
+                    <div class="grid grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2">数据类型</label>
+                            <select id="exportType" class="select-field w-full px-3 py-2 rounded-lg">
+                                <option value="run">运行记录</option>
+                                <option value="alarm">告警记录</option>
+                                <option value="energy">能耗数据</option>
+                                <option value="all">全部数据</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2">时间范围</label>
+                            <select id="exportRange" class="select-field w-full px-3 py-2 rounded-lg">
+                                <option value="week">最近一周</option>
+                                <option value="month">最近一月</option>
+                                <option value="quarter">最近三月</option>
+                                <option value="custom">自定义</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-2">导出格式</label>
+                            <select id="exportFormat" class="select-field w-full px-3 py-2 rounded-lg">
+                                <option value="xlsx">Excel (.xlsx)</option>
+                                <option value="csv">CSV (.csv)</option>
+                                <option value="pdf">PDF (.pdf)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button onclick="doExport()" class="btn-success px-6 py-2 rounded-lg text-sm"><i class="fa-solid fa-download mr-1"></i>导出数据</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="glass-card rounded-[20px] p-6">
+                        <h3 class="font-medium flex items-center gap-2 mb-4">
+                            <i class="fa-solid fa-chart-pie text-blue-400"></i>
+                            月度处理量统计
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">本月批次</span>
+                                <span class="text-lg font-light">42 批</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">总处理量</span>
+                                <span class="text-lg font-light text-blue-400">48.5 吨</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">平均转化率</span>
+                                <span class="text-lg font-light text-green-400">84.6%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-[20px] p-6">
+                        <h3 class="font-medium flex items-center gap-2 mb-4">
+                            <i class="fa-solid fa-bolt text-yellow-400"></i>
+                            能耗统计
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">本月总能耗</span>
+                                <span class="text-lg font-light">2856 kWh</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">单位能耗均值</span>
+                                <span class="text-lg font-light text-green-400">0.46 kWh/kg</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">节能率</span>
+                                <span class="text-lg font-light text-green-400">+5.2%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-[20px] p-6">
+                        <h3 class="font-medium flex items-center gap-2 mb-4">
+                            <i class="fa-solid fa-clock text-purple-400"></i>
+                            运行时间统计
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">本月运行时长</span>
+                                <span class="text-lg font-light">326 小时</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">设备利用率</span>
+                                <span class="text-lg font-light text-purple-400">78.5%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">平均批次时间</span>
+                                <span class="text-lg font-light">58 分钟</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).replace(/\//g, '.');
+            document.getElementById('current-time').textContent = timeStr;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        function switchTab(tab) {
+            const tabs = ['run', 'alarm', 'export'];
+            tabs.forEach(t => {
+                document.getElementById('tab-' + t).className = t === tab ? 'px-4 py-2 tab-active rounded-lg text-sm' : 'px-4 py-2 bg-white/10 rounded-lg text-sm hover:bg-white/20 transition-colors';
+            });
+            const contentRun = document.getElementById('content-run');
+            const contentAlarm = document.getElementById('content-alarm');
+            const contentExport = document.getElementById('content-export');
+            if (tab === 'run') {
+                if (contentRun) contentRun.style.display = 'block';
+                if (contentAlarm) contentAlarm.style.display = 'none';
+                if (contentExport) contentExport.style.display = 'none';
+            } else if (tab === 'alarm') {
+                if (contentRun) contentRun.style.display = 'none';
+                if (contentAlarm) contentAlarm.style.display = 'block';
+                if (contentExport) contentExport.style.display = 'none';
+            } else if (tab === 'export') {
+                if (contentRun) contentRun.style.display = 'none';
+                if (contentAlarm) contentAlarm.style.display = 'none';
+                if (contentExport) contentExport.style.display = 'block';
+            }
+        }
+
+        function doSearch() {
+            const startDate = document.getElementById('date-start').value;
+            const endDate = document.getElementById('date-end').value;
+            console.log('查询数据:', { startDate, endDate });
+            showModal('search-result');
+        }
+
+        function showModal(type) {
+            const container = document.getElementById('modal-container');
+            let content = '';
+            if (type === 'batch-detail') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[600px] max-w-[90vw] overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-file-lines text-cyan-400 mr-2"></i>批次详情: BT-20260321-001</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">物料类型</span><p class="mt-1">玉米秸秆</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">工艺方案</span><p class="mt-1">玉米秸秆_低温_V2</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">处理量</span><p class="mt-1">1250 kg</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">转化率</span><p class="mt-1 text-green-400">86.4%</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">总能耗</span><p class="mt-1">525 kWh</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">单位能耗</span><p class="mt-1 text-green-400">0.42 kWh/kg</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">开始时间</span><p class="mt-1">2026.03.21 08:00</p></div>
+                                <div class="bg-white/5 rounded-lg p-3"><span class="text-gray-500 text-xs">结束时间</span><p class="mt-1">2026.03.21 09:15</p></div>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-4 text-sm">
+                                <p class="text-gray-500 text-xs mb-2">工艺参数</p>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <span>温度: 117.5℃</span>
+                                    <span>压力: 12.8 MPa</span>
+                                    <span>流量: 125 kg/h</span>
+                                    <span>停留时间: 25 min</span>
+                                    <span>热量回收: 78.5%</span>
+                                    <span>COP: 3.42</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex justify-center">
+                            <button onclick="closeModal()" class="btn-primary px-6 py-2 rounded-lg"><i class="fa-solid fa-xmark mr-1"></i>关闭</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'alarm-records') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[650px] max-w-[90vw] max-h-[80vh] overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-triangle-exclamation text-yellow-400 mr-2"></i>告警记录</h3>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-4 space-y-2 text-sm">
+                            <div class="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                <i class="fa-solid fa-triangle-exclamation text-yellow-400"></i>
+                                <div class="flex-1"><p class="font-medium">液位传感器告警</p><p class="text-xs text-gray-400">L-01 液位超过上限 80%</p></div>
+                                <span class="text-gray-500 text-xs">03-21 09:45</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                <i class="fa-solid fa-triangle-exclamation text-yellow-400"></i>
+                                <div class="flex-1"><p class="font-medium">温度波动告警</p><p class="text-xs text-gray-400">T-01 温度波动超过 ±3℃</p></div>
+                                <span class="text-gray-500 text-xs">03-20 15:30</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                                <i class="fa-solid fa-circle-xmark text-red-400"></i>
+                                <div class="flex-1"><p class="font-medium">压力异常 (已恢复)</p><p class="text-xs text-gray-400">P-01 压力短暂降至 11.2 MPa</p></div>
+                                <span class="text-gray-500 text-xs">03-19 14:22</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                <i class="fa-solid fa-triangle-exclamation text-yellow-400"></i>
+                                <div class="flex-1"><p class="font-medium">能耗超标提醒</p><p class="text-xs text-gray-400">批次 BT-20260319-001 能耗偏高</p></div>
+                                <span class="text-gray-500 text-xs">03-19 10:15</span>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex justify-center">
+                            <button onclick="closeModal()" class="btn-primary px-6 py-2 rounded-lg"><i class="fa-solid fa-xmark mr-1"></i>关闭</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'export-data') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[450px] max-w-[90vw] overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-download text-green-400 mr-2"></i>导出数据</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">数据类型</label>
+                                <select id="exportType" class="select-field w-full px-3 py-2 rounded-lg">
+                                    <option value="run">运行记录</option>
+                                    <option value="alarm">告警记录</option>
+                                    <option value="energy">能耗数据</option>
+                                    <option value="all">全部数据</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">时间范围</label>
+                                <select id="exportRange" class="select-field w-full px-3 py-2 rounded-lg">
+                                    <option value="week">最近一周</option>
+                                    <option value="month">最近一月</option>
+                                    <option value="quarter">最近三月</option>
+                                    <option value="custom">自定义</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">导出格式</label>
+                                <select id="exportFormat" class="select-field w-full px-3 py-2 rounded-lg">
+                                    <option value="xlsx">Excel (.xlsx)</option>
+                                    <option value="csv">CSV (.csv)</option>
+                                    <option value="pdf">PDF (.pdf)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex gap-3">
+                            <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"><i class="fa-solid fa-xmark mr-1"></i>取消</button>
+                            <button onclick="doExport()" class="flex-1 btn-success px-4 py-2 rounded-lg"><i class="fa-solid fa-download mr-1"></i>导出</button>
+                        </div>
+                    </div></div>`;
+            } else if (type === 'search-result') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[350px] max-w-[90vw] text-center overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium flex-1 pr-12">查询结果</h3>
+                        </div>
+                        <div class="p-8">
+                            <i class="fa-solid fa-magnifying-glass-chart text-5xl text-blue-500 mb-4"></i>
+                            <h3 class="text-lg font-bold">查询完成</h3>
+                            <p class="text-gray-400 mt-1 text-sm">共找到 5 条匹配记录</p>
+                        </div>
+                    </div></div>`;
+                setTimeout(closeModal, 1500);
+            } else if (type === 'export-success') {
+                content = `<div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                    <div class="modal-content glass-card rounded-2xl w-[350px] max-w-[90vw] text-center overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium flex-1 pr-12">操作结果</h3>
+                        </div>
+                        <div class="p-8">
+                            <i class="fa-solid fa-circle-check text-5xl text-green-500 mb-4"></i>
+                            <h3 class="text-lg font-bold">导出成功</h3>
+                            <p class="text-gray-400 mt-1 text-sm">文件已生成并下载</p>
+                        </div>
+                    </div></div>`;
+                setTimeout(closeModal, 1500);
+            }
+            container.innerHTML = content;
+        }
+
+        function doExport() {
+            const type = document.getElementById('exportType').value;
+            const range = document.getElementById('exportRange').value;
+            const format = document.getElementById('exportFormat').value;
+            console.log('导出数据:', { type, range, format });
+            showModal('export-success');
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modal-container').innerHTML = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

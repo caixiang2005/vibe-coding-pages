@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>AI预警 - 建筑装饰工程进度智能调度系统</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --surface: #FFFFFF;
+      --bg: #F5F5F7;
+      --sidebar-bg: #F0F0F2;
+      --text-primary: #1D1D1F;
+      --text-secondary: #86868B;
+      --text-tertiary: #AEAEB2;
+      --accent: #0071E3;
+      --green: #34C759;
+      --orange: #FF9500;
+      --red: #FF3B30;
+      --purple: #5856D6;
+      --border: #E5E5EA;
+      --shadow-window: 0 22px 70px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: url('./static/bg.jpg') center/cover no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      padding: 20px;
+    }
+
+    .mac-window {
+      width: 1120px;
+      height: 720px;
+      background: var(--bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-window);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .titlebar {
+      height: 52px;
+      min-height: 52px;
+      background: linear-gradient(180deg, #FAFAFA 0%, #ECECEC 100%);
+      border-bottom: 1px solid #D5D5D5;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tl {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .tl-close {
+      background: #FF5F57;
+    }
+
+    .tl-min {
+      background: #FFBD2E;
+    }
+
+    .tl-max {
+      background: #28C840;
+    }
+
+    .titlebar-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: #6E6E73;
+    }
+
+    .titlebar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6E6E73;
+    }
+
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: linear-gradient(135deg, var(--accent), #40A0FF);
+      display: block;
+    }
+
+    .main-layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+      margin-bottom: 16px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .sidebar-item.active {
+      background: rgba(0, 113, 227, 0.1);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .sidebar-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .project-selector {
+      font-size: 12px;
+      padding: 8px 10px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .project-selector .proj-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .project-selector .proj-id {
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+    .project-switch {
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .project-switch svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .content-header {
+      padding: 20px 24px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    /* Summary strip */
+    .risk-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .risk-stat {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .risk-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .risk-stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+
+    /* Alert Cards */
+    .alert-card {
+      background: white;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .alert-card:hover {
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .alert-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      cursor: pointer;
+    }
+
+    .alert-severity {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .alert-severity svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
+
+    .severity-critical {
+      background: linear-gradient(135deg, #FF3B30, #FF6B6B);
+    }
+
+    .severity-high {
+      background: linear-gradient(135deg, #FF9500, #FFCC00);
+    }
+
+    .severity-medium {
+      background: linear-gradient(135deg, #5856D6, #AF52DE);
+    }
+
+    .alert-info {
+      flex: 1;
+    }
+
+    .alert-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+
+    .alert-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .alert-meta {
+      text-align: right;
+    }
+
+    .alert-time {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-bottom: 3px;
+    }
+
+    .alert-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .tag-critical {
+      background: #FFEBEE;
+      color: #C62828;
+    }
+
+    .tag-high {
+      background: #FFF3E0;
+      color: #E65100;
+    }
+
+    .tag-medium {
+      background: #F3E5F5;
+      color: #6A1B9A;
+    }
+
+    .alert-body {
+      padding: 0 20px 16px;
+      border-top: 1px solid #F5F5F7;
+      margin-top: 0;
+    }
+
+    .alert-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding-top: 14px;
+    }
+
+    .detail-section {}
+
+    .detail-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .detail-text {
+      font-size: 12px;
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+
+    .impact-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .impact-list li {
+      font-size: 12px;
+      color: var(--text-primary);
+      padding: 3px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .impact-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ai-solution {
+      background: #F8F6FF;
+      border: 1px solid #E8E4F5;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-top: 12px;
+    }
+
+    .ai-solution-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--purple);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ai-solution-text {
+      font-size: 12px;
+      color: #4A4577;
+      line-height: 1.6;
+    }
+
+    .alert-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #F0F0F2;
+    }
+
+    .action-btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+    }
+
+    .action-btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .action-btn-secondary {
+      background: #F0F0F2;
+      color: var(--text-primary);
+    }
+
+    .action-btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      min-width: 400px;
+      max-width: 480px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+      overflow: hidden;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: linear-gradient(180deg, #FAFAFA 0%, #F0F0F2 100%);
+    }
+
+    .modal-traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #FF5F57;
+      border: 0.5px solid #E14942;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #FFBD2E;
+      border: 0.5px solid #DEA123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28C840;
+      border: 0.5px solid #1DAD2B;
+    }
+
+    .modal-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #FAFAFA;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid var(--border);
+    }
+
+    .modal-btn-secondary {
+      background: white;
+      color: var(--text-primary);
+    }
+
+    .modal-btn-secondary:hover {
+      background: #F5F5F7;
+    }
+
+    .modal-btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .modal-btn-primary:hover {
+      background: #0077ED;
+    }
+
+    .modal-btn-orange {
+      background: var(--orange);
+      color: white;
+      border-color: var(--orange);
+    }
+
+    .modal-btn-orange:hover {
+      background: #E68600;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <div class="tl tl-close"></div>
+        <div class="tl tl-min"></div>
+        <div class="tl tl-max"></div>
+      </div>
+      <span class="titlebar-center">建筑装饰工程进度智能调度系统</span>
+      <div class="titlebar-right">
+        <img class="user-avatar" src="https://i02piccdn.sogoucdn.com/4ae40945067239b4" alt="许作舟" />许作舟
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">导航</div>
+          <div class="sidebar-item" onclick="window.location.href='dashboard.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zM13 4v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z" />
+              </svg></div>
+            工作台
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='gantt.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z" />
+              </svg></div>
+            进度总览
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='schedule.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
+              </svg></div>
+            施工计划
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='tasks.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg></div>
+            任务调度
+            <span class="sidebar-badge">5</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='personnel.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+              </svg></div>
+            人员管理
+          </div>
+          <div class="sidebar-item active" onclick="window.location.href='ai_alerts.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+              </svg></div>
+            智能预警
+            <span class="sidebar-badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='resources.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z" />
+              </svg></div>
+            资源优化
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='reports.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path
+                  d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+              </svg></div>
+            报表中心
+          </div>
+        </div>
+
+        <div class="sidebar-bottom">
+          <div class="project-selector" id="projectSelector">
+            <div>
+              <div class="proj-name" id="projName">杭州绿城·翡翠湖项目</div>
+              <div class="proj-id" id="projId">项目编号 HZFC-2025-0318</div>
+            </div>
+            <div class="project-switch" id="projectSwitchInlineBtn" aria-label="切换项目">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7h5l-1.5-1.5L9 4l4 4-4 4-1.5-1.5L9 9H4V7zm16 10h-5l1.5 1.5L15 20l-4-4 4-4 1.5 1.5L15 13h5v2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="content-header">
+          <div class="page-title">AI预警中心</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:11px;color:var(--text-tertiary)">模型: DeepSchedule v2.4 / 最后分析: 今日 08:15</span>
+          </div>
+        </div>
+
+        <div class="content-body">
+          <div class="risk-summary">
+            <div class="risk-stat">
+              <div class="risk-stat-value" style="color:var(--red)">3</div>
+              <div class="risk-stat-label">活跃预警</div>
+            </div>
+            <div class="risk-stat">
+              <div class="risk-stat-value" style="color:var(--orange)">1</div>
+              <div class="risk-stat-label">严重风险</div>
+            </div>
+            <div class="risk-stat">
+              <div class="risk-stat-value" style="color:var(--green)">7</div>
+              <div class="risk-stat-label">本月已解决</div>
+            </div>
+            <div class="risk-stat">
+              <div class="risk-stat-value" style="color:var(--purple)">92%</div>
+              <div class="risk-stat-label">预测准确率</div>
+            </div>
+          </div>
+
+          <!-- Alert 1 - Critical -->
+          <div class="alert-card">
+            <div class="alert-header">
+              <div class="alert-severity severity-critical">
+                <svg viewBox="0 0 24 24">
+                  <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                </svg>
+              </div>
+              <div class="alert-info">
+                <div class="alert-title">B区幕墙工期延误风险 — 预计超期4天</div>
+                <div class="alert-subtitle">关联工序: 钢结构龙骨焊接 / 玻璃板块安装 / 密封注胶</div>
+              </div>
+              <div class="alert-meta">
+                <div class="alert-time">25分钟前</div>
+                <span class="alert-tag tag-critical">严重</span>
+              </div>
+            </div>
+            <div class="alert-body">
+              <div class="alert-detail-grid">
+                <div class="detail-section">
+                  <div class="detail-label">风险分析</div>
+                  <div class="detail-text">
+                    当前B区焊工仅到位12人，实际需求18人，人员缺口率33%。按当前施工速率，龙骨焊接工序将在3月31日完工，较计划晚4天。后续玻璃板块安装将被迫顺延，影响整体竣工节点。
+                  </div>
+                </div>
+                <div class="detail-section">
+                  <div class="detail-label">影响范围</div>
+                  <ul class="impact-list">
+                    <li><span class="impact-dot" style="background:var(--red)"></span>玻璃幕墙安装延后4天</li>
+                    <li><span class="impact-dot" style="background:var(--red)"></span>密封注胶工序顺延</li>
+                    <li><span class="impact-dot" style="background:var(--orange)"></span>B区整体竣工推迟至4月18日</li>
+                    <li><span class="impact-dot" style="background:var(--orange)"></span>可能影响外墙涂料施工窗口期</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="ai-solution">
+                <div class="ai-solution-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#5856D6">
+                    <path
+                      d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+                  </svg>
+                  AI优化方案 (置信度 89%)
+                </div>
+                <div class="ai-solution-text">
+                  方案一：从外协单位「宏达钢构」紧急调配焊工6名，预计3月27日到位，增加成本约2.8万元/周，可将延误压缩至1天。<br>
+                  方案二：启用夜间施工（18:00-22:00），增加照明及安全措施投入约1.5万元，利用现有人员每日增加4工时，预计可追回3天工期。
+                </div>
+              </div>
+              <div class="alert-actions">
+                <button class="action-btn action-btn-primary">采纳方案一</button>
+                <button class="action-btn action-btn-secondary">采纳方案二</button>
+                <button class="action-btn action-btn-outline">标记已知晓</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alert 2 -->
+          <div class="alert-card">
+            <div class="alert-header">
+              <div class="alert-severity severity-high">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                </svg>
+              </div>
+              <div class="alert-info">
+                <div class="alert-title">意大利灰大理石到货延迟 — 物流异常</div>
+                <div class="alert-subtitle">供应商: 佛山南海恒达石材 / 物流单号: SF2026032418756</div>
+              </div>
+              <div class="alert-meta">
+                <div class="alert-time">2小时前</div>
+                <span class="alert-tag tag-high">高风险</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alert 3 -->
+          <div class="alert-card">
+            <div class="alert-header">
+              <div class="alert-severity severity-medium">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                </svg>
+              </div>
+              <div class="alert-info">
+                <div class="alert-title">C区环氧涂料施工温湿度不达标</div>
+                <div class="alert-subtitle">3月27-29日预报: 气温8-12°C / 湿度82% / 不满足施工条件</div>
+              </div>
+              <div class="alert-meta">
+                <div class="alert-time">今日 08:15</div>
+                <span class="alert-tag tag-medium">中风险</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+<script>
+  (function() {
+    var modalOverlay = document.getElementById('modalOverlay');
+    var modalTitle = document.getElementById('modalTitle');
+    var modalBody = document.getElementById('modalBody');
+    var modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    window.closeModal = closeModal;
+
+    modalOverlay.addEventListener('click', function(e) {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.querySelectorAll('.action-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var text = btn.textContent.trim();
+        if (text === '采纳方案一') {
+          openModal(
+            '确认采纳方案一',
+            '<div style="text-align:center;padding:10px"><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">从外协单位「宏达钢构」紧急调配焊工6名</div><div style="color:var(--text-secondary);font-size:12px;margin-bottom:12px">预计3月27日到位，增加成本约2.8万元/周，可将延误压缩至1天。</div><div style="background:#FFF3E0;border-radius:6px;padding:10px;font-size:12px;color:#E65100">提示：需确认外协单位有足够的焊工资源可调配。</div></div>',
+            '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button><button class="modal-btn modal-btn-orange" onclick="closeModal()">确认采纳</button>'
+          );
+        } else if (text === '采纳方案二') {
+          openModal(
+            '确认采纳方案二',
+            '<div style="text-align:center;padding:10px"><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">启用夜间施工（18:00-22:00）</div><div style="color:var(--text-secondary);font-size:12px;margin-bottom:12px">增加照明及安全措施投入约1.5万元，利用现有人员每日增加4工时，预计可追回3天工期。</div><div style="background:#FFF3E0;border-radius:6px;padding:10px;font-size:12px;color:#E65100">提示：需确保夜间施工安全措施到位，并按规定支付加班费。</div></div>',
+            '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button><button class="modal-btn modal-btn-primary" onclick="closeModal()">确认采纳</button>'
+          );
+        } else if (text === '标记已知晓') {
+          openModal(
+            '标记预警',
+            '<div style="text-align:center;padding:10px"><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确定要标记此预警为"已知晓"吗？</div><div style="color:var(--text-secondary);font-size:12px">该预警将移至历史记录，但不会被处理。</div></div>',
+            '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button><button class="modal-btn modal-btn-primary" onclick="closeModal()">确认</button>'
+          );
+        }
+      });
+    });
+
+    var inlineBtn = document.getElementById('projectSwitchInlineBtn');
+    var nameEl = document.getElementById('projName');
+    var idEl = document.getElementById('projId');
+    var projects = [
+      { name: '杭州绿城·翡翠湖项目', id: '项目编号 HZFC-2025-0318' },
+      { name: '上海万科·云栖项目', id: '项目编号 SHWK-2025-0421' },
+      { name: '成都保利·锦城项目', id: '项目编号 CDPL-2025-0507' }
+    ];
+    var idx = 0;
+    if (inlineBtn && nameEl && idEl) {
+      inlineBtn.addEventListener('click', function() {
+        idx = (idx + 1) % projects.length;
+        nameEl.textContent = projects[idx].name;
+        idEl.textContent = projects[idx].id;
+      });
+    }
+
+    document.querySelectorAll('.alert-card').forEach(function(card) {
+      var header = card.querySelector('.alert-header');
+      var body = card.querySelector('.alert-body');
+      var isExpanded = body !== null;
+      header.style.cursor = 'pointer';
+      header.addEventListener('click', function(e) {
+        if (e.target.closest('.action-btn')) return;
+        if (body) {
+          body.style.display = body.style.display === 'none' ? 'block' : 'none';
+        }
+      });
+    });
+  })();
+</script>
+</body>
+
+</html>

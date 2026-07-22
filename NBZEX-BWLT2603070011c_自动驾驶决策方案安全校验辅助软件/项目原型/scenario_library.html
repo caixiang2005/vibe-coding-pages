@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景库 - 自动驾驶决策方案安全校验辅助软件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <style>
+        :root { --mac-bg-0: #0b0c0f; --mac-bg-1: #0f1117; --mac-surface: rgba(28, 28, 30, 0.72); --mac-surface-strong: rgba(28, 28, 30, 0.86); --mac-border: rgba(255, 255, 255, 0.10); --mac-border-soft: rgba(255, 255, 255, 0.08); --mac-text: rgba(255, 255, 255, 0.92); --mac-text-dim: rgba(255, 255, 255, 0.68); --mac-text-muted: rgba(255, 255, 255, 0.48); --mac-blue: #0a84ff; --mac-blue-dim: rgba(10, 132, 255, 0.22); --mac-shadow: 0 20px 60px rgba(0, 0, 0, 0.55); --mac-window-radius: 18px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: url('./static/bg.jpeg'); background-size: cover; background-position: center; color: var(--mac-text); overflow: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .liquid-glass { background: var(--mac-surface); backdrop-filter: saturate(180%) blur(26px); -webkit-backdrop-filter: saturate(180%) blur(26px); border: 1px solid var(--mac-border-soft); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset; }
+        .mac-desktop { width: 100vw; height: 100vh; padding: 18px; display: flex; align-items: center; justify-content: center; }
+        .mac-window { width: 1440px; height: 900px; border-radius: var(--mac-window-radius); box-shadow: var(--mac-shadow); border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; background: rgba(15, 17, 23, 0.35); display: flex; flex-direction: column; }
+        .mac-titlebar { height: 52px; padding: 0 14px; display: flex; align-items: center; gap: 12px; background: var(--mac-surface-strong); backdrop-filter: saturate(180%) blur(26px); -webkit-backdrop-filter: saturate(180%) blur(26px); border-bottom: 1px solid var(--mac-border-soft); user-select: none; flex-shrink: 0; }
+        .mac-traffic { display: flex; align-items: center; gap: 8px; padding: 0 4px; }
+        .mac-dot { width: 12px; height: 12px; border-radius: 9999px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28) inset; }
+        .mac-dot.red { background: #ff5f57; } .mac-dot.yellow { background: #febc2e; } .mac-dot.green { background: #28c840; } .mac-dot.gray { background: rgba(255, 255, 255, 0.28); }
+        .mac-title { flex: 1; text-align: center; font-size: 13px; font-weight: 600; letter-spacing: 0.2px; color: rgba(255, 255, 255, 0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-item { display: flex; align-items: center; padding: 10px 12px; font-size: 14px; color: rgba(255, 255, 255, 0.68); border-radius: 10px; transition: all 0.2s ease; text-decoration: none; margin-bottom: 4px; cursor: pointer; }
+        .sidebar-item:hover { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.92); }
+        .sidebar-item.active { background: var(--mac-blue-dim); color: var(--mac-blue); box-shadow: 0 0 0 1px rgba(10, 132, 255, 0.20) inset; }
+        .sidebar-item i { margin-right: 12px; font-size: 16px; width: 20px; text-align: center; }
+        .control-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border: none; outline: none; }
+        .control-btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+        .control-btn:active { transform: scale(0.95); }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); }
+        .draggable-window { position: fixed; z-index: 1000; background: var(--mac-surface-strong); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden; display: flex; flex-direction: column; }
+        .window-header { height: 38px; padding: 0 12px; display: flex; align-items: center; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: move; user-select: none; }
+        .window-body { padding: 16px; color: var(--mac-text); overflow-y: auto; max-height: 80vh; }
+        .btn-primary { background-color: var(--mac-blue); color: white; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+        .btn-secondary { background-color: rgba(255, 255, 255, 0.1); color: white; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+        .btn-danger { background-color: #ff453a; color: white; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+        .input-field { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 8px 12px; border-radius: 6px; width: 100%; outline: none; transition: border-color 0.2s; }
+        .input-field:focus { border-color: var(--mac-blue); }
+        @supports not ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) { .liquid-glass, .mac-titlebar, .draggable-window { background: rgba(28, 28, 30, 0.95); } }
+    </style>
+</head>
+<body class="overflow-hidden">
+    <div class="mac-desktop">
+        <div class="mac-window">
+            <header class="mac-titlebar">
+                <div class="mac-traffic"><span class="mac-dot red"></span><span class="mac-dot yellow"></span><span class="mac-dot green"></span></div>
+                <div class="mac-title" style="text-align: center;">自动驾驶决策方案安全校验辅助软件</div>
+            </header>
+            <div class="flex h-[calc(100%-52px)] overflow-hidden">
+                <aside class="w-[280px] liquid-glass border-r border-white/10 flex flex-col p-4">
+                    <nav class="flex-1 space-y-1">
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="index.html">
+                            <i class="fa-solid fa-gauge-high"></i>
+                            主校验台
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="data_analysis.html">
+                            <i class="fa-solid fa-chart-line"></i>
+                            数据分析
+                        </a>
+                        <a class="sidebar-item active flex items-center px-3 py-2.5 text-sm" href="scenario_library.html">
+                            <i class="fa-solid fa-layer-group"></i>
+                            场景库
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="compliance_check.html">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            合规性检查
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="sotif_verification.html">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            SOTIF 验证
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="system_settings.html">
+                            <i class="fa-solid fa-gear"></i>
+                            系统设置
+                        </a>
+                    </nav>
+                    <div class="mt-auto pt-4 border-t border-white/10 flex items-center gap-3 px-2">
+                        <div class="relative w-10 h-10 flex items-center justify-center font-bold text-white">
+                            <img class="w-full h-full object-cover rounded-full " alt="王一辰"
+                                src="https://i02piccdn.sogoucdn.com/40248540f6e11524" />
+                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black/50 rounded-full"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-white/90">王一辰</span>
+                            <span class="text-[10px] text-white/55 leading-none">高级校验工程师</span>
+                        </div>
+                        <button class="ml-auto text-white/55 hover:text-white/85 transition-colors">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                </aside>
+                <main class="flex-1 flex flex-col relative bg-black/40 p-6 overflow-y-auto custom-scrollbar">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-xl font-semibold text-white">场景库管理</h1>
+                        <button id="btn-add-scenario" class="control-btn px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
+                            <i class="fa-solid fa-plus mr-2"></i> 新增场景
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Scenario Card 1 -->
+                        <div class="liquid-glass rounded-xl overflow-hidden group">
+                            <div class="h-32 bg-gray-800 relative">
+                                <img src="https://modao.cc/agent-py/media/generated_images/2026-03-16/f1c9b2f0699c4ee0932878931145efb1.jpg" class="w-full h-full object-cover opacity-60">
+                                <div class="absolute top-2 right-2">
+                                    <span class="px-2 py-1 bg-green-500/80 text-white text-[10px] rounded">高速</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-semibold text-white mb-1">高速公路汇入</h3>
+                                <p class="text-xs text-gray-400 mb-3">模拟主路车辆汇入匝道的场景，测试车辆汇入决策逻辑。</p>
+                                <div class="flex justify-between items-center border-t border-white/10 pt-3">
+                                    <span class="text-xs text-gray-500">更新时间: 2小时前</span>
+                                    <div class="flex gap-2">
+                                        <button class="text-blue-400 hover:text-blue-300 text-xs" onclick="runTest('高速公路汇入')"><i class="fa-solid fa-play"></i> 测试</button>
+                                        <button class="text-gray-400 hover:text-white text-xs" onclick="editScenario('高速公路汇入', '模拟主路车辆汇入匝道的场景，测试车辆汇入决策逻辑。', '高速')"><i class="fa-solid fa-pen"></i></button>
+                                        <button class="text-red-400 hover:text-red-300 text-xs" onclick="deleteScenario('高速公路汇入')"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scenario Card 2 -->
+                        <div class="liquid-glass rounded-xl overflow-hidden group">
+                            <div class="h-32 bg-gray-800 relative">
+                                <img src="./static/left.png" class="w-full h-full object-cover opacity-80">
+                                <div class="absolute top-2 right-2">
+                                    <span class="px-2 py-1 bg-blue-500/80 text-white text-[10px] rounded">城市</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-semibold text-white mb-1">城市路口左转</h3>
+                                <p class="text-xs text-gray-400 mb-3">复杂十字路口环境，涉及对向直行车辆与行人的优先级判断。</p>
+                                <div class="flex justify-between items-center border-t border-white/10 pt-3">
+                                    <span class="text-xs text-gray-500">更新时间: 1天前</span>
+                                    <div class="flex gap-2">
+                                        <button class="text-blue-400 hover:text-blue-300 text-xs" onclick="runTest('城市路口左转')"><i class="fa-solid fa-play"></i> 测试</button>
+                                        <button class="text-gray-400 hover:text-white text-xs" onclick="editScenario('城市路口左转', '复杂十字路口环境，涉及对向直行车辆与行人的优先级判断。', '城市')"><i class="fa-solid fa-pen"></i></button>
+                                        <button class="text-red-400 hover:text-red-300 text-xs" onclick="deleteScenario('城市路口左转')"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scenario Card 3 -->
+                        <div class="liquid-glass rounded-xl overflow-hidden group">
+                            <div class="h-32 bg-gray-800 relative">
+                                <img src="./static/avoid.png" class="w-full h-full object-cover opacity-80">
+                                <div class="absolute top-2 right-2">
+                                    <span class="px-2 py-1 bg-yellow-500/80 text-white text-[10px] rounded">特殊</span>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-semibold text-white mb-1">施工占道避让</h3>
+                                <p class="text-xs text-gray-400 mb-3">模拟道路施工场景，锥桶导流，测试安全距离保持。</p>
+                                <div class="flex justify-between items-center border-t border-white/10 pt-3">
+                                    <span class="text-xs text-gray-500">更新时间: 3天前</span>
+                                    <div class="flex gap-2">
+                                        <button class="text-blue-400 hover:text-blue-300 text-xs" onclick="runTest('施工占道避让')"><i class="fa-solid fa-play"></i> 测试</button>
+                                        <button class="text-gray-400 hover:text-white text-xs" onclick="editScenario('施工占道避让', '模拟道路施工场景，锥桶导流，测试安全距离保持。', '特殊')"><i class="fa-solid fa-pen"></i></button>
+                                        <button class="text-red-400 hover:text-red-300 text-xs" onclick="deleteScenario('施工占道避让')"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Common JS Functions
+        function initDraggableWindow(windowElement) {
+            const header = windowElement.querySelector('.window-header');
+            if (!header) return;
+            let isDragging = false, startX, startY, initialLeft, initialTop;
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.closest('button')) return;
+                isDragging = true;
+                startX = e.clientX; startY = e.clientY;
+                initialLeft = windowElement.offsetLeft; initialTop = windowElement.offsetTop;
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                windowElement.style.left = (initialLeft + e.clientX - startX) + 'px';
+                windowElement.style.top = (initialTop + e.clientY - startY) + 'px';
+            }
+            function onMouseUp() { isDragging = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }
+        }
+        function createWindow(title, contentHtml, options = {}) {
+            const { width = '500px' } = options;
+            const win = document.createElement('div');
+            win.className = 'draggable-window';
+            win.style.width = width;
+            win.style.left = '50%'; win.style.top = '50%'; win.style.transform = 'translate(-50%, -50%)';
+            win.innerHTML = `<div class="window-header"><div class="mac-traffic"><span class="mac-dot red" data-close="1"></span><span class="mac-dot yellow"></span><span class="mac-dot green"></span></div><div class="mac-title" style="font-size:12px;text-align:center;">${title}</div></div><div class="window-body">${contentHtml}</div>`;
+            document.body.appendChild(win);
+            initDraggableWindow(win);
+            win.querySelector('[data-close="1"]')?.addEventListener('click', () => win.remove());
+            return win;
+        }
+        function showConfirm(title, message, onConfirm) {
+            const html = `<div style="margin-bottom:15px;">${message}</div><div style="display:flex;justify-content:flex-end;gap:10px;"><button class="btn-secondary" id="mc">取消</button><button class="btn-primary" id="mk">确认</button></div>`;
+            const win = createWindow(title, html);
+            win.querySelector('#mk').addEventListener('click', () => { win.remove(); if(onConfirm) onConfirm(); });
+            win.querySelector('#mc').addEventListener('click', () => win.remove());
+        }
+        function showAlert(type, message) {
+            const colors = {success:'text-green-400',error:'text-red-400',info:'text-blue-400',warning:'text-yellow-400'};
+            const icons = {success:'fa-check-circle',error:'fa-circle-xmark',info:'fa-circle-info',warning:'fa-triangle-exclamation'};
+            const html = `<div class="flex items-center gap-3 py-2"><i class="fa-solid ${icons[type]} ${colors[type]} text-xl"></i><span class="text-white">${message}</span></div><div class="flex justify-end mt-2"><button class="btn-primary text-xs" id="alert-ok">确定</button></div>`;
+            const win = createWindow('提示', html, {width:'300px'});
+            win.querySelector('#alert-ok').addEventListener('click', () => win.remove());
+        }
+
+        function runTest(scenarioName) {
+            const content = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-center py-4">
+                        <div class="text-center">
+                            <i class="fa-solid fa-car-on-side text-4xl text-blue-400 mb-3"></i>
+                            <div class="text-white font-medium">正在初始化仿真环境</div>
+                            <div class="text-xs text-gray-500 mt-2">场景: ${scenarioName}</div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>环境加载</span>
+                            <span class="text-green-400">完成</span>
+                        </div>
+                        <div class="h-1 bg-gray-700 rounded overflow-hidden">
+                            <div class="h-full bg-green-500 w-full"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>交通流注入</span>
+                            <span class="text-green-400">完成</span>
+                        </div>
+                        <div class="h-1 bg-gray-700 rounded overflow-hidden">
+                            <div class="h-full bg-green-500 w-full"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>决策算法校验</span>
+                            <span class="text-yellow-400">进行中...</span>
+                        </div>
+                        <div class="h-1 bg-gray-700 rounded overflow-hidden">
+                            <div class="h-full bg-yellow-500 w-2/3"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button class="btn-secondary" onclick="this.closest('.draggable-window').remove()">取消</button>
+                        <button class="btn-primary" onclick="showAlert('success', '场景测试完成，正在生成报告...')">查看结果</button>
+                    </div>
+                </div>
+            `;
+            createWindow('场景测试', content, {width: '450px'});
+        }
+
+        function editScenario(name, description, type) {
+            const content = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">场景名称</label>
+                        <input type="text" class="input-field" value="${name}" id="edit-name">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">场景类型</label>
+                        <select class="input-field" id="edit-type">
+                            <option ${type === '高速' ? 'selected' : ''}>高速公路</option>
+                            <option ${type === '城市' ? 'selected' : ''}>城市道路</option>
+                            <option ${type === '特殊' ? 'selected' : ''}>停车场</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">描述</label>
+                        <textarea class="input-field h-20" id="edit-desc">${description}</textarea>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button class="btn-secondary" onclick="this.closest('.draggable-window').remove()">取消</button>
+                        <button class="btn-primary" id="save-scenario">保存</button>
+                    </div>
+                </div>
+            `;
+            const win = createWindow('编辑场景', content, {width: '450px'});
+            win.querySelector('#save-scenario').addEventListener('click', () => {
+                win.remove();
+                showAlert('success', '场景已更新');
+            });
+        }
+
+        function deleteScenario(name) {
+            showConfirm('删除场景', `确定要删除场景"${name}"吗？此操作不可撤销。`, () => {
+                showAlert('success', '场景已删除');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('btn-add-scenario').addEventListener('click', () => {
+                const content = `
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">场景名称</label>
+                            <input type="text" class="input-field" placeholder="例如: 高速入口汇入">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">场景类型</label>
+                            <select class="input-field">
+                                <option>高速公路</option>
+                                <option>城市道路</option>
+                                <option>停车场</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">描述</label>
+                            <textarea class="input-field h-20" placeholder="描述场景的具体环境参数..."></textarea>
+                        </div>
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button class="btn-secondary" id="cancel-add">取消</button>
+                            <button class="btn-primary" id="save-add">保存</button>
+                        </div>
+                    </div>
+                `;
+                const win = createWindow('新增场景', content);
+
+                win.querySelector('#cancel-add').addEventListener('click', () => win.remove());
+                win.querySelector('#save-add').addEventListener('click', () => {
+                    win.remove();
+                    showAlert('success', '场景已成功添加');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

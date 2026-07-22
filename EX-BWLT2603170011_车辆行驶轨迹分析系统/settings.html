@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置 - 车辆行驶轨迹分析系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .window-frame {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            border: 1px solid #3a3a5a;
+        }
+
+        .title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #2d2d4a;
+            height: 32px;
+            padding: 0 8px;
+            user-select: none;
+        }
+
+        .title-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title-bar-icon {
+            width: 16px;
+            height: 16px;
+            color: #6c9fff;
+        }
+
+        .title-bar-text {
+            font-size: 12px;
+            color: #e0e0e0;
+        }
+
+        .window-controls {
+            display: flex;
+            height: 100%;
+        }
+
+        .window-btn {
+            width: 46px;
+            height: 100%;
+            border: none;
+            background: transparent;
+            color: #e0e0e0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .window-btn:hover {
+            background: #4a4a6a;
+        }
+
+        .window-btn.close:hover {
+            background: #e81123;
+        }
+
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            background: #252542;
+            padding: 0 12px;
+            height: 42px;
+            gap: 4px;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: #b0b0c0;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            background: #3a3a5a;
+            color: #fff;
+        }
+
+        .nav-btn.active {
+            background: #4a7cff;
+            color: #fff;
+        }
+
+        .nav-divider {
+            width: 1px;
+            height: 24px;
+            background: #3a3a5a;
+            margin: 0 8px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: #1e1e36;
+            border-right: 1px solid #3a3a5a;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu {
+            padding: 8px 0;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: #b0b0c0;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 10px;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(74, 124, 255, 0.1);
+            color: #e0e0e0;
+        }
+
+        .sidebar-item.active {
+            background: rgba(74, 124, 255, 0.15);
+            color: #4a7cff;
+            border-left-color: #4a7cff;
+        }
+
+        .sidebar-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: #3a3a5a;
+            margin: 8px 16px;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .page-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .settings-section {
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            background: #222240;
+            border-bottom: 1px solid #3a3a5a;
+            gap: 10px;
+        }
+
+        .settings-header i {
+            font-size: 16px;
+            color: #6c9fff;
+        }
+
+        .settings-header h3 {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+
+        .settings-body {
+            padding: 20px;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .settings-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .settings-row:first-child {
+            padding-top: 0;
+        }
+
+        .settings-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .settings-label {
+            font-size: 13px;
+            color: #e0e0e0;
+        }
+
+        .settings-desc {
+            font-size: 11px;
+            color: #7070a0;
+        }
+
+        .settings-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-select {
+            padding: 8px 12px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+            min-width: 140px;
+        }
+
+        .settings-select:focus {
+            border-color: #4a7cff;
+        }
+
+        .settings-input {
+            padding: 8px 12px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 12px;
+            outline: none;
+            min-width: 200px;
+        }
+
+        .settings-input:focus {
+            border-color: #4a7cff;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #3a3a5a;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #e0e0e0;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4a7cff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4a7cff;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #5a8cff;
+        }
+
+        .btn-secondary {
+            background: #3a3a5a;
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #4a4a6a;
+        }
+
+        .settings-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(74, 124, 255, 0.1);
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .account-avatar {
+            width: 60px;
+            height: 60px;
+            background: #4a7cff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #fff;
+        }
+
+        .account-details {
+            flex: 1;
+        }
+
+        .account-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .account-role {
+            font-size: 12px;
+            color: #7070a0;
+        }
+
+        .account-meta {
+            text-align: right;
+        }
+
+        .account-meta-item {
+            font-size: 12px;
+            color: #7070a0;
+            margin-bottom: 4px;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1e1e36;
+            padding: 6px 16px;
+            font-size: 11px;
+            color: #7070a0;
+            border-top: 1px solid #3a3a5a;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3a3a5a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a4a6a;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #252542;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            min-width: 400px;
+            max-width: 90%;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: #2d2d4a;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .modal-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            color: #9090a0;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #e81123;
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 20px;
+            background: #2d2d4a;
+            border-top: 1px solid #3a3a5a;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            color: #9090a0;
+            margin-bottom: 6px;
+        }
+
+        .form-label .required {
+            color: #ef4444;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #4a7cff;
+        }
+    </style>
+</head>
+<body>
+    <div class="window-frame">
+        <div class="title-bar">
+            <div class="title-bar-left">
+                <i class="fa-solid fa-route title-bar-icon"></i>
+                <span class="title-bar-text">车辆行驶轨迹分析系统</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn" title="最小化">
+                    <i class="fa-solid fa-minus"></i>
+                </button>
+                <button class="window-btn" title="最大化">
+                    <div style="width:10px;height:10px;border:1px solid #e0e0e0;"></div>
+                </button>
+                <button class="window-btn close" title="关闭">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-bar">
+            <button class="nav-btn" onclick="navigateTo('index.html')">
+                <i class="fa-solid fa-map-location-dot"></i>
+                轨迹查询
+            </button>
+            <button class="nav-btn" onclick="navigateTo('trip.html')">
+                <i class="fa-solid fa-route"></i>
+                行程记录
+            </button>
+            <button class="nav-btn" onclick="navigateTo('vehicle.html')">
+                <i class="fa-solid fa-car"></i>
+                车辆管理
+            </button>
+            <button class="nav-btn" onclick="navigateTo('driver.html')">
+                <i class="fa-solid fa-id-card"></i>
+                驾驶员管理
+            </button>
+            <button class="nav-btn" onclick="navigateTo('statistics.html')">
+                <i class="fa-solid fa-chart-line"></i>
+                数据统计
+            </button>
+            <div class="nav-divider"></div>
+            <button class="nav-btn" onclick="navigateTo('alarm.html')">
+                <i class="fa-solid fa-bell"></i>
+                报警记录
+            </button>
+            <button class="nav-btn" onclick="navigateTo('fence.html')">
+                <i class="fa-solid fa-draw-polygon"></i>
+                电子围栏
+            </button>
+            <div class="nav-divider"></div>
+            <button class="nav-btn active" onclick="navigateTo('settings.html')">
+                <i class="fa-solid fa-gear"></i>
+                系统设置
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="content-wrapper">
+                <div class="sidebar">
+                    <div class="sidebar-menu">
+                        <div class="sidebar-item" onclick="navigateTo('index.html')">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <span>轨迹查询</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('trip.html')">
+                            <i class="fa-solid fa-route"></i>
+                            <span>行程记录</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('vehicle.html')">
+                            <i class="fa-solid fa-car"></i>
+                            <span>车辆管理</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('driver.html')">
+                            <i class="fa-solid fa-id-card"></i>
+                            <span>驾驶员管理</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('statistics.html')">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>数据统计</span>
+                        </div>
+                        <div class="sidebar-divider"></div>
+                        <div class="sidebar-item" onclick="navigateTo('alarm.html')">
+                            <i class="fa-solid fa-bell"></i>
+                            <span>报警记录</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateTo('fence.html')">
+                            <i class="fa-solid fa-draw-polygon"></i>
+                            <span>电子围栏</span>
+                        </div>
+                        <div class="sidebar-divider"></div>
+                        <div class="sidebar-item active" onclick="navigateTo('settings.html')">
+                            <i class="fa-solid fa-gear"></i>
+                            <span>系统设置</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page-content">
+                    <div class="content-area">
+                        <div class="settings-container">
+                            <div class="account-info">
+                                <div class="account-avatar">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="account-details">
+                                    <div class="account-name">系统管理员</div>
+                                    <div class="account-role">管理员</div>
+                                </div>
+                                <div class="account-meta">
+                                    <div class="account-meta-item">当前登录时间</div>
+                                    <div class="account-meta-item">2024-03-15 08:30:00</div>
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <div class="settings-header">
+                                    <i class="fa-solid fa-bell"></i>
+                                    <h3>通知设置</h3>
+                                </div>
+                                <div class="settings-body">
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">报警声音提示</span>
+                                            <span class="settings-desc">当有新报警时播放声音提醒</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <label class="switch">
+                                                <input type="checkbox" checked>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">短信通知</span>
+                                            <span class="settings-desc">将重要报警信息发送至手机</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <label class="switch">
+                                                <input type="checkbox" checked>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">邮件通知</span>
+                                            <span class="settings-desc">将报警汇总信息发送至邮箱</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <label class="switch">
+                                                <input type="checkbox">
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">桌面弹窗提醒</span>
+                                            <span class="settings-desc">在屏幕右下角弹出报警通知</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <label class="switch">
+                                                <input type="checkbox" checked>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <div class="settings-header">
+                                    <i class="fa-solid fa-display"></i>
+                                    <h3>显示设置</h3>
+                                </div>
+                                <div class="settings-body">
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">界面主题</span>
+                                            <span class="settings-desc">选择系统界面显示模式</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <select class="settings-select">
+                                                <option value="dark" selected>深色模式</option>
+                                                <option value="light">浅色模式</option>
+                                                <option value="auto">跟随系统</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">地图默认类型</span>
+                                            <span class="settings-desc">轨迹查询时的默认地图显示</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <select class="settings-select">
+                                                <option value="standard" selected>标准地图</option>
+                                                <option value="satellite">卫星地图</option>
+                                                <option value="hybrid">混合地图</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">列表每页条数</span>
+                                            <span class="settings-desc">数据列表每页显示的记录数量</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <select class="settings-select">
+                                                <option value="10">10 条</option>
+                                                <option value="20" selected>20 条</option>
+                                                <option value="50">50 条</option>
+                                                <option value="100">100 条</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <div class="settings-header">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <h3>安全设置</h3>
+                                </div>
+                                <div class="settings-body">
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">自动登出时间</span>
+                                            <span class="settings-desc">无操作后自动退出登录的时间</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <select class="settings-select">
+                                                <option value="15">15 分钟</option>
+                                                <option value="30">30 分钟</option>
+                                                <option value="60" selected>60 分钟</option>
+                                                <option value="120">120 分钟</option>
+                                                <option value="never">永不</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">修改密码</span>
+                                            <span class="settings-desc">更新当前账户的登录密码</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <button class="btn btn-secondary" onclick="openModal('changePasswordModal')">
+                                                <i class="fa-solid fa-key"></i>
+                                                修改密码
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <div class="settings-header">
+                                    <i class="fa-solid fa-server"></i>
+                                    <h3>报警阈值设置</h3>
+                                </div>
+                                <div class="settings-body">
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">超速报警阈值</span>
+                                            <span class="settings-desc">超出限速的百分比达到此值时触发报警</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <input type="number" class="settings-input" value="20" style="width:80px;"> %
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">停留报警时长</span>
+                                            <span class="settings-desc">车辆停止移动超过此时间时触发报警</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <input type="number" class="settings-input" value="30" style="width:80px;"> 分钟
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">路线偏离距离</span>
+                                            <span class="settings-desc">偏离预定路线超过此距离时触发报警</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <input type="number" class="settings-input" value="500" style="width:80px;"> 米
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-info">
+                                            <span class="settings-label">GPS信号超时</span>
+                                            <span class="settings-desc">超过此时间未收到GPS信号时提醒</span>
+                                        </div>
+                                        <div class="settings-control">
+                                            <input type="number" class="settings-input" value="120" style="width:80px;"> 秒
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="settings-actions">
+                                <button class="btn btn-primary" onclick="saveSettings()">
+                                    <i class="fa-solid fa-check"></i>
+                                    保存设置
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetSettings()">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                    恢复默认
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span><i class="fa-solid fa-gear"></i> 系统设置</span>
+            </div>
+            <div class="status-item">
+                <span>当前用户: 系统管理员</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="changePasswordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">
+                    <i class="fa-solid fa-key"></i>
+                    修改密码
+                </span>
+                <button class="modal-close" onclick="closeModal('changePasswordModal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">当前密码 <span class="required">*</span></label>
+                    <input type="password" class="form-input" id="currentPwd" placeholder="请输入当前密码">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">新密码 <span class="required">*</span></label>
+                    <input type="password" class="form-input" id="newPwd" placeholder="请输入新密码">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">确认新密码 <span class="required">*</span></label>
+                    <input type="password" class="form-input" id="confirmPwd" placeholder="请再次输入新密码">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('changePasswordModal')">取消</button>
+                <button class="btn btn-primary" onclick="submitPassword()">
+                    <i class="fa-solid fa-check"></i>
+                    确认修改
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        function saveSettings() {
+            alert('系统设置已保存');
+        }
+
+        function resetSettings() {
+            if (confirm('确定要恢复默认设置吗？')) {
+                alert('已恢复默认设置');
+            }
+        }
+
+        function submitPassword() {
+            const currentPwd = document.getElementById('currentPwd').value;
+            const newPwd = document.getElementById('newPwd').value;
+            const confirmPwd = document.getElementById('confirmPwd').value;
+
+            if (!currentPwd || !newPwd || !confirmPwd) {
+                alert('请填写所有密码字段');
+                return;
+            }
+
+            if (newPwd !== confirmPwd) {
+                alert('新密码与确认密码不一致');
+                return;
+            }
+
+            if (newPwd.length < 6) {
+                alert('新密码长度不能少于6位');
+                return;
+            }
+
+            alert('密码修改成功');
+            closeModal('changePasswordModal');
+            document.getElementById('currentPwd').value = '';
+            document.getElementById('newPwd').value = '';
+            document.getElementById('confirmPwd').value = '';
+        }
+
+        document.querySelector('.window-btn.close').addEventListener('click', function() {
+            if (confirm('确定要关闭系统吗？')) {
+                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#666;">系统已关闭</div>';
+            }
+        });
+    </script>
+</body>
+</html>

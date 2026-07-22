@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>问题整改 - 水利项目质量验收审核软件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: #f0f4f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .android-container {
+            width: 100%;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+        .android-container::-webkit-scrollbar { display: none; }
+        .btn-press:active { transform: scale(0.96); transition: transform 0.1s; }
+        .card-hover { transition: all 0.2s; cursor: pointer; }
+        .card-hover:active { transform: scale(0.98); }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); z-index: 1000; display: none;
+            justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            position: absolute; background: white; border-radius: 16px;
+            width: 90%; max-width: 340px; max-height: 80vh; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            background: #1e40af; color: white; padding: 16px;
+            cursor: move; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px; border-top: 1px solid #e5e7eb; display: flex; gap: 12px; }
+        .input-field {
+            width: 100%; padding: 10px 12px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .input-field.error { border-color: #ef4444; }
+        .btn-primary {
+            background: #2563eb; color: white; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; border: none; cursor: pointer; flex: 1;
+            transition: background 0.2s;
+        }
+        .btn-primary:active { background: #1d4ed8; }
+        .btn-secondary {
+            background: #f3f4f6; color: #374151; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; border: none; cursor: pointer; flex: 1;
+            transition: background 0.2s;
+        }
+        .btn-secondary:active { background: #e5e7eb; }
+        .btn-danger {
+            background: #ef4444; color: white; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; border: none; cursor: pointer; flex: 1;
+            transition: background 0.2s;
+        }
+        .btn-danger:active { background: #dc2626; }
+        .tab-btn { padding: 6px 12px; border-radius: 16px; font-size: 12px; transition: all 0.2s; white-space: nowrap; }
+        .tab-btn.active { background: #2563eb; color: white; }
+        .tab-btn:not(.active) { background: white; color: #6b7280; }
+        .status-tag { padding: 2px 8px; border-radius: 4px; font-size: 10px; }
+        .action-btn { padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+        .error-msg { color: #ef4444; font-size: 10px; margin-top: 4px; }
+        .active-tab { color: #1d4ed8; }
+        .tab-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab-scroll::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-900">
+    <div class="android-container bg-gray-50 flex flex-col relative">
+        <header class="bg-blue-700 text-white pt-12 pb-5 px-5 rounded-b-3xl shadow-lg">
+            <div class="flex items-center justify-between">
+                <a href="index.html" class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 active:bg-blue-500">
+                    <span class="iconify text-xl" data-icon="material-symbols:arrow-back"></span>
+                </a>
+                <h1 class="text-base font-bold text-center flex-1 mx-2">水利项目质量验收审核软件</h1>
+                <div class="w-10"></div>
+            </div>
+            <p class="text-center text-blue-200 text-xs mt-1">问题整改</p>
+        </header>
+
+        <main class="flex-1 px-4 py-4 pb-24 -mt-2">
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold text-gray-800">整改统计</h3>
+                    <span class="text-[10px] text-blue-600">更新于 10:30</span>
+                </div>
+                <div class="grid grid-cols-4 gap-2 text-center">
+                    <div class="bg-red-50 rounded-xl p-2">
+                        <p class="text-lg font-bold text-red-600">2</p>
+                        <p class="text-[10px] text-red-500">待整改</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-xl p-2">
+                        <p class="text-lg font-bold text-orange-600">1</p>
+                        <p class="text-[10px] text-orange-500">待复查</p>
+                    </div>
+                    <div class="bg-green-50 rounded-xl p-2">
+                        <p class="text-lg font-bold text-green-600">1</p>
+                        <p class="text-[10px] text-green-500">已关闭</p>
+                    </div>
+                    <div class="bg-blue-50 rounded-xl p-2">
+                        <p class="text-lg font-bold text-blue-600">4</p>
+                        <p class="text-[10px] text-blue-500">全部</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mb-4 tab-scroll">
+                <button class="tab-btn active" onclick="switchTab(this, 'all')">全部</button>
+                <button class="tab-btn" onclick="switchTab(this, 'pending')">待整改</button>
+                <button class="tab-btn" onclick="switchTab(this, 'review')">待复查</button>
+                <button class="tab-btn" onclick="switchTab(this, 'closed')">已关闭</button>
+            </div>
+
+            <div id="problemList">
+                <div class="bg-white rounded-xl shadow-sm mb-3 overflow-hidden card-hover" data-status="pending" onclick="openDetailModal(0)">
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="status-tag bg-red-100 text-red-600">待整改</span>
+                                    <span class="text-[10px] text-orange-500 bg-orange-50 px-2 py-0.5 rounded">较严重</span>
+                                </div>
+                                <h4 class="text-sm font-semibold text-gray-800 leading-tight">护坡混凝土强度不足</h4>
+                            </div>
+                            <span class="iconify text-gray-300" data-icon="material-symbols:chevron-right"></span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">丹江口库区护坡工程 - 3号分部</p>
+                        <div class="flex justify-between text-[10px] text-gray-400">
+                            <span class="flex items-center gap-1">
+                                <span class="iconify text-xs" data-icon="material-symbols:event"></span>
+                                发现：2026-03-15
+                            </span>
+                            <span class="flex items-center gap-1 text-red-500">
+                                <span class="iconify text-xs" data-icon="material-symbols:schedule"></span>
+                                期限：2026-03-25
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex border-t border-gray-100">
+                        <button class="flex-1 py-2.5 text-xs text-blue-600 flex items-center justify-center gap-1 active:bg-blue-50" onclick="event.stopPropagation(); openDetailModal(0)">
+                            <span class="iconify text-sm" data-icon="material-symbols:visibility"></span>
+                            详情
+                        </button>
+                        <button class="flex-1 py-2.5 text-xs text-green-600 flex items-center justify-center gap-1 border-l border-gray-100 active:bg-green-50" onclick="event.stopPropagation(); submitFix(0)">
+                            <span class="iconify text-sm" data-icon="material-symbols:check-circle"></span>
+                            提交整改
+                        </button>
+                        <button class="flex-1 py-2.5 text-xs text-red-500 flex items-center justify-center gap-1 border-l border-gray-100 active:bg-red-50" onclick="event.stopPropagation(); deleteProblem(0)">
+                            <span class="iconify text-sm" data-icon="material-symbols:delete"></span>
+                            删除
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm mb-3 overflow-hidden card-hover" data-status="review" onclick="openDetailModal(1)">
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="status-tag bg-orange-100 text-orange-600">待复查</span>
+                                </div>
+                                <h4 class="text-sm font-semibold text-gray-800 leading-tight">钢筋绑扎间距偏差</h4>
+                            </div>
+                            <span class="iconify text-gray-300" data-icon="material-symbols:chevron-right"></span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">二号闸室结构工程 - 单元A-12</p>
+                        <div class="flex justify-between text-[10px] text-gray-400">
+                            <span class="flex items-center gap-1">
+                                <span class="iconify text-xs" data-icon="material-symbols:event"></span>
+                                整改完成：2026-03-17
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <span class="iconify text-xs" data-icon="material-symbols:person"></span>
+                                张志明
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex border-t border-gray-100">
+                        <button class="flex-1 py-2.5 text-xs text-blue-600 flex items-center justify-center gap-1 active:bg-blue-50" onclick="event.stopPropagation(); openDetailModal(1)">
+                            <span class="iconify text-sm" data-icon="material-symbols:visibility"></span>
+                            详情
+                        </button>
+                        <button class="flex-1 py-2.5 text-xs text-green-600 flex items-center justify-center gap-1 border-l border-gray-100 active:bg-green-50" onclick="event.stopPropagation(); submitReview(1)">
+                            <span class="iconify text-sm" data-icon="material-symbols:check-circle"></span>
+                            提交复查
+                        </button>
+                        <button class="flex-1 py-2.5 text-xs text-red-500 flex items-center justify-center gap-1 border-l border-gray-100 active:bg-red-50" onclick="event.stopPropagation(); deleteProblem(1)">
+                            <span class="iconify text-sm" data-icon="material-symbols:delete"></span>
+                            删除
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm mb-3 overflow-hidden card-hover" data-status="closed" onclick="openDetailModal(2)">
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="status-tag bg-green-100 text-green-600">已关闭</span>
+                                </div>
+                                <h4 class="text-sm font-semibold text-gray-800 leading-tight">模板支撑稳定性不足</h4>
+                            </div>
+                            <span class="iconify text-gray-300" data-icon="material-symbols:chevron-right"></span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">引水隧道工程 - 2号支洞</p>
+                        <div class="flex justify-between text-[10px] text-gray-400">
+                            <span class="flex items-center gap-1">
+                                <span class="iconify text-xs" data-icon="material-symbols:event"></span>
+                                关闭：2026-03-14
+                            </span>
+                            <span class="flex items-center gap-1 text-green-600">
+                                <span class="iconify text-xs" data-icon="material-symbols:verified"></span>
+                                整改合格
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex border-t border-gray-100">
+                        <button class="flex-1 py-2.5 text-xs text-blue-600 flex items-center justify-center gap-1 active:bg-blue-50" onclick="event.stopPropagation(); openDetailModal(2)">
+                            <span class="iconify text-sm" data-icon="material-symbols:visibility"></span>
+                            详情
+                        </button>
+                        <button class="flex-1 py-2.5 text-xs text-gray-400 flex items-center justify-center gap-1 border-l border-gray-100 cursor-not-allowed" disabled>
+                            <span class="iconify text-sm" data-icon="material-symbols:check-circle"></span>
+                            已关闭
+                        </button>
+                        <button class="flex-1 py-2.5 text-xs text-gray-400 flex items-center justify-center gap-1 border-l border-gray-100">
+                            <span class="iconify text-sm" data-icon="material-symbols:delete"></span>
+                            删除
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm mb-3 overflow-hidden card-hover" data-status="pending" onclick="openDetailModal(3)">
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="status-tag bg-red-100 text-red-600">待整改</span>
+                                    <span class="text-[10px] text-orange-500 bg-orange-50 px-2 py-0.5 rounded">较严重</span>
+                                </div>
+                                <h4 class="text-sm font-semibold text-gray-800 leading-tight">防水涂层漏刷</h4>
+                            </div>
+                            <span class="iconify text-gray-300" data-icon="material-symbols:chevron-right"></span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">导流洞工程 - 出口段</p>
+                        <div class="flex justify-between text-[10px] text-gray-400">
+                            <span class="flex items-center gap-1">
+                                <span class="iconify text-xs" data-icon="material-symbols:event"></span>
+                                发现：2026-03-18
+                            </span>
+                            <span class="flex items-center gap-1 text-red-500">
+                                <span class="iconify text-xs" data-icon="material-symbols:schedule"></span>
+                                期限：2026-03-28
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex border-t border-gray-100">
+                        <button class="flex-1 py-2.5 text-xs text-blue-600 flex items-center justify-center gap-1 active:bg-blue-50" onclick="event.stopPropagation(); openDetailModal(3)">
+                            <span class="iconify text-sm" data-icon="material-symbols:visibility"></span>
+                            详情
+                        </button>
+                        <button class="flex-1 py-2.5 text-xs text-green-600 flex items-center justify-center gap-1 border-l border-gray-100 active:bg-green-50" onclick="event.stopPropagation(); submitFix(3)">
+                            <span class="iconify text-sm" data-icon="material-symbols:check-circle"></span>
+                            提交整改
+                        </button>
+                        <button class="flex-1 py-2.5 text-xs text-red-500 flex items-center justify-center gap-1 border-l border-gray-100 active:bg-red-50" onclick="event.stopPropagation(); deleteProblem(3)">
+                            <span class="iconify text-sm" data-icon="material-symbols:delete"></span>
+                            删除
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="fixed bottom-20 right-4 z-50">
+            <button onclick="openAddModal()" class="w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center btn-press active:bg-blue-500">
+                <span class="iconify text-2xl" data-icon="material-symbols:add"></span>
+            </button>
+        </div>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center py-2 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+            <a href="index.html" class="flex flex-col items-center space-y-1 text-gray-400">
+                <span class="iconify text-xl" data-icon="material-symbols:home-rounded"></span>
+                <span class="text-[10px] font-medium">工作台</span>
+            </a>
+            <a href="acceptance.html" class="flex flex-col items-center space-y-1 text-gray-400">
+                <span class="iconify text-xl" data-icon="material-symbols:approval-rounded"></span>
+                <span class="text-[10px] font-medium">验收</span>
+            </a>
+            <a href="charts.html" class="flex flex-col items-center space-y-1 text-gray-400">
+                <span class="iconify text-xl" data-icon="material-symbols:equalizer-rounded"></span>
+                <span class="text-[10px] font-medium">图表</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center space-y-1 active-tab">
+                <span class="iconify text-xl" data-icon="material-symbols:person-outline"></span>
+                <span class="text-[10px] font-medium">我的</span>
+            </a>
+        </nav>
+    </div>
+
+    <div id="detailModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header" id="detailDragHandle">
+                <span class="font-bold">问题详情</span>
+                <span class="iconify cursor-pointer" data-icon="material-symbols:close" onclick="closeModal('detailModal')"></span>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-500">问题标题</label>
+                        <p class="text-sm font-medium mt-1" id="detailTitle">护坡混凝土强度不足</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">所属项目</label>
+                        <p class="text-sm font-medium mt-1" id="detailProject">丹江口库区护坡工程</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">问题描述</label>
+                        <p class="text-sm mt-1 text-gray-600" id="detailDesc">3号分部桩号K2+150处护坡混凝土回弹强度检测值为28MPa，低于设计要求35MPa，需进行整改处理。</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-500">发现日期</label>
+                            <p class="text-sm font-medium mt-1" id="detailDate">2026-03-15</p>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">整改期限</label>
+                            <p class="text-sm font-medium mt-1 text-red-500" id="detailDeadline">2026-03-25</p>
+                        </div>
+                    </div>
+                    <div id="fixSection">
+                        <label class="text-xs text-gray-500">整改措施</label>
+                        <textarea class="input-field mt-1" rows="2" id="fixMeasure" placeholder="请输入整改措施..."></textarea>
+                    </div>
+                    <div id="reviewSection" style="display:none;">
+                        <label class="text-xs text-gray-500">复查意见</label>
+                        <textarea class="input-field mt-1" rows="2" id="reviewOpinion" placeholder="请输入复查意见..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('detailModal')">关闭</button>
+                <button class="btn-primary" id="detailSubmitBtn" onclick="submitFromDetail()">提交整改</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header" id="addDragHandle">
+                <span class="font-bold">新增问题</span>
+                <span class="iconify cursor-pointer" data-icon="material-symbols:close" onclick="closeModal('addModal')"></span>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-500">问题标题 *</label>
+                        <input type="text" class="input-field mt-1" id="addTitle" placeholder="请输入问题标题">
+                        <p class="error-msg hidden" id="errorTitle">请输入问题标题</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">所属项目 *</label>
+                        <select class="input-field mt-1" id="addProject">
+                            <option value="">请选择项目</option>
+                            <option>丹江口库区护坡工程</option>
+                            <option>二号闸室结构工程</option>
+                            <option>引水隧道工程</option>
+                            <option>导流洞工程</option>
+                        </select>
+                        <p class="error-msg hidden" id="errorProject">请选择所属项目</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">问题描述 *</label>
+                        <textarea class="input-field mt-1" rows="3" id="addDesc" placeholder="请详细描述问题..."></textarea>
+                        <p class="error-msg hidden" id="errorDesc">请输入问题描述</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">整改期限 *</label>
+                        <input type="date" class="input-field mt-1" id="addDeadline">
+                        <p class="error-msg hidden" id="errorDeadline">请选择整改期限</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">问题等级</label>
+                        <div class="flex gap-3 mt-2">
+                            <label class="flex items-center gap-1">
+                                <input type="radio" name="level" value="low"> <span class="text-xs">一般</span>
+                            </label>
+                            <label class="flex items-center gap-1">
+                                <input type="radio" name="level" value="medium" checked> <span class="text-xs">较大</span>
+                            </label>
+                            <label class="flex items-center gap-1">
+                                <input type="radio" name="level" value="high"> <span class="text-xs">重大</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('addModal')">取消</button>
+                <button class="btn-primary" onclick="submitNew()">提交</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-content" style="max-width:300px;">
+            <div class="modal-header" id="deleteDragHandle">
+                <span class="font-bold">确认删除</span>
+                <span class="iconify cursor-pointer" data-icon="material-symbols:close" onclick="closeModal('deleteModal')"></span>
+            </div>
+            <div class="modal-body text-center py-6">
+                <span class="iconify text-5xl text-red-500" data-icon="material-symbols:warning"></span>
+                <p class="text-sm text-gray-600 mt-3">确定要删除这个问题吗？</p>
+                <p class="text-xs text-gray-400 mt-1">删除后无法恢复</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('deleteModal')">取消</button>
+                <button class="btn-danger" onclick="confirmDelete()">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var problems = [
+            { title: '护坡混凝土强度不足', project: '丹江口库区护坡工程 - 3号分部', status: 'pending' },
+            { title: '钢筋绑扎间距偏差', project: '二号闸室结构工程 - 单元A-12', status: 'review' },
+            { title: '模板支撑稳定性不足', project: '引水隧道工程 - 2号支洞', status: 'closed' },
+            { title: '防水涂层漏刷', project: '导流洞工程 - 出口段', status: 'pending' }
+        ];
+        var currentTab = 'all';
+        var currentDeleteIndex = -1;
+
+        function switchTab(btn, type) {
+            currentTab = type;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterProblems();
+        }
+
+        function filterProblems() {
+            var items = document.querySelectorAll('#problemList > div');
+            items.forEach(function(item, index) {
+                var status = item.dataset.status;
+                if (currentTab === 'all' || status === currentTab) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function openDetailModal(index) {
+            var item = document.querySelectorAll('#problemList > div')[index];
+            var status = item.dataset.status;
+            document.getElementById('detailTitle').textContent = problems[index].title;
+            document.getElementById('detailProject').textContent = problems[index].project;
+            document.getElementById('fixSection').style.display = status === 'pending' ? 'block' : 'none';
+            document.getElementById('reviewSection').style.display = status === 'review' ? 'block' : 'none';
+            document.getElementById('detailSubmitBtn').textContent = status === 'pending' ? '提交整改' : '提交复查';
+            document.getElementById('detailModal').dataset.index = index;
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function openAddModal() {
+            clearAddForm();
+            document.getElementById('addModal').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function clearAddForm() {
+            document.getElementById('addTitle').value = '';
+            document.getElementById('addProject').value = '';
+            document.getElementById('addDesc').value = '';
+            document.getElementById('addDeadline').value = '';
+            document.querySelectorAll('.error-msg').forEach(e => e.classList.add('hidden'));
+            document.querySelectorAll('.input-field').forEach(e => e.classList.remove('error'));
+        }
+
+        function validateAddForm() {
+            var valid = true;
+            var title = document.getElementById('addTitle').value.trim();
+            var project = document.getElementById('addProject').value;
+            var desc = document.getElementById('addDesc').value.trim();
+            var deadline = document.getElementById('addDeadline').value;
+
+            if (!title) {
+                document.getElementById('addTitle').classList.add('error');
+                document.getElementById('errorTitle').classList.remove('hidden');
+                valid = false;
+            } else {
+                document.getElementById('addTitle').classList.remove('error');
+                document.getElementById('errorTitle').classList.add('hidden');
+            }
+
+            if (!project) {
+                document.getElementById('addProject').classList.add('error');
+                document.getElementById('errorProject').classList.remove('hidden');
+                valid = false;
+            } else {
+                document.getElementById('addProject').classList.remove('error');
+                document.getElementById('errorProject').classList.add('hidden');
+            }
+
+            if (!desc) {
+                document.getElementById('addDesc').classList.add('error');
+                document.getElementById('errorDesc').classList.remove('hidden');
+                valid = false;
+            } else {
+                document.getElementById('addDesc').classList.remove('error');
+                document.getElementById('errorDesc').classList.add('hidden');
+            }
+
+            if (!deadline) {
+                document.getElementById('addDeadline').classList.add('error');
+                document.getElementById('errorDeadline').classList.remove('hidden');
+                valid = false;
+            } else {
+                document.getElementById('addDeadline').classList.remove('error');
+                document.getElementById('errorDeadline').classList.add('hidden');
+            }
+
+            return valid;
+        }
+
+        function submitNew() {
+            if (!validateAddForm()) return;
+            alert('问题新增成功！');
+            closeModal('addModal');
+        }
+
+        function submitFromDetail() {
+            var modal = document.getElementById('detailModal');
+            var index = parseInt(modal.dataset.index);
+            var status = document.querySelectorAll('#problemList > div')[index].dataset.status;
+            if (status === 'pending') {
+                var measure = document.getElementById('fixMeasure').value;
+                if (!measure) { alert('请输入整改措施'); return; }
+                alert('整改提交成功！');
+            } else if (status === 'review') {
+                var opinion = document.getElementById('reviewOpinion').value;
+                if (!opinion) { alert('请输入复查意见'); return; }
+                alert('复查提交成功！');
+            }
+            closeModal('detailModal');
+        }
+
+        function submitFix(index) {
+            openDetailModal(index);
+        }
+
+        function submitReview(index) {
+            openDetailModal(index);
+        }
+
+        function deleteProblem(index) {
+            currentDeleteIndex = index;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function confirmDelete() {
+            if (currentDeleteIndex >= 0) {
+                var items = document.querySelectorAll('#problemList > div');
+                if (items[currentDeleteIndex]) {
+                    items[currentDeleteIndex].remove();
+                }
+                problems.splice(currentDeleteIndex, 1);
+                currentDeleteIndex = -1;
+            }
+            alert('删除成功！');
+            closeModal('deleteModal');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) closeModal(this.id);
+            });
+        });
+
+        function initDrag(modalId, handleId) {
+            var modal = document.querySelector('#' + modalId + ' .modal-content');
+            var handle = document.getElementById(handleId);
+            var isDragging = false, startX, startY, initialX, initialY;
+
+            handle.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                startX = e.clientX; startY = e.clientY;
+                var rect = modal.getBoundingClientRect();
+                initialX = rect.left; initialY = rect.top;
+                handle.style.cursor = 'grabbing';
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                modal.style.left = (initialX + e.clientX - startX) + 'px';
+                modal.style.top = (initialY + e.clientY - startY) + 'px';
+                modal.style.right = 'auto'; modal.style.bottom = 'auto';
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging) { isDragging = false; handle.style.cursor = 'move'; }
+            });
+
+            handle.addEventListener('touchstart', function(e) {
+                isDragging = true;
+                startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+                var rect = modal.getBoundingClientRect();
+                initialX = rect.left; initialY = rect.top;
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+                modal.style.left = (initialX + e.touches[0].clientX - startX) + 'px';
+                modal.style.top = (initialY + e.touches[0].clientY - startY) + 'px';
+                modal.style.right = 'auto'; modal.style.bottom = 'auto';
+            });
+
+            document.addEventListener('touchend', function() { isDragging = false; });
+        }
+
+        initDrag('detailModal', 'detailDragHandle');
+        initDrag('addModal', 'addDragHandle');
+        initDrag('deleteModal', 'deleteDragHandle');
+    </script>
+</body>
+</html>

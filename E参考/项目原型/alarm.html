@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>告警管理 - 新能源储能系统</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary:#0EA5E9;--primary-light:#E0F2FE;--accent:#10B981;--danger:#EF4444;--warning:#F97316;
+    --bg:#F0F6FF;--sidebar-bg:#0F2744;--text-primary:#0F2744;--text-secondary:#5A7A99;--text-light:#94A3B8;
+    --border:#DCE8F5;--shadow-card:0 2px 12px rgba(15,39,68,0.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text-primary);display:flex;height:100vh;overflow:hidden}
+  .sidebar{width:220px;background:var(--sidebar-bg);display:flex;flex-direction:column;position:relative;z-index:10;flex-shrink:0}
+  .logo-area{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.07)}
+  .logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#0EA5E9,#10B981);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+  .logo-icon i{color:white;font-size:18px}
+  .logo-title{color:white;font-size:13px;font-weight:600;line-height:1.4}
+  .logo-sub{color:rgba(255,255,255,0.4);font-size:10px;margin-top:2px;font-family:'Rajdhani';letter-spacing:1px}
+  .nav-section{flex:1;padding:16px 12px;overflow-y:auto}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:2px;color:rgba(255,255,255,0.55);font-size:13px;font-weight:500;transition:all 0.2s;text-decoration:none}
+  .nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9)}
+  .nav-item.active{background:linear-gradient(135deg,#0EA5E9,#0284C7);color:white;box-shadow:0 4px 12px rgba(14,165,233,0.3)}
+  .nav-item i{width:18px;text-align:center;font-size:14px}
+  .nav-badge{margin-left:auto;background:var(--danger);color:white;font-size:10px;padding:2px 6px;border-radius:10px;font-family:'JetBrains Mono'}
+  .sidebar-footer{padding:16px 12px;border-top:1px solid rgba(255,255,255,0.07)}
+  .user-card{display:flex;align-items:center;gap:10px}
+  .user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0EA5E9,#10B981);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .user-avatar img{width:100%;height:100%;display:block;object-fit:cover}
+  .user-info .name{color:white;font-size:12px;font-weight:600}
+  .user-info .role{color:rgba(255,255,255,0.4);font-size:10px}
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .topbar{height:60px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;box-shadow:0 1px 8px rgba(15,39,68,0.06)}
+  .topbar-breadcrumb{display:flex;align-items:center;gap:8px;flex:1}
+  .breadcrumb-item{color:var(--text-secondary);font-size:13px}
+  .breadcrumb-item.current{color:var(--text-primary);font-weight:600}
+  .breadcrumb-sep{color:var(--text-light);font-size:12px}
+  .topbar-right{display:flex;align-items:center;gap:12px}
+  .topbar-time{font-family:'JetBrains Mono';font-size:13px;color:var(--text-secondary);background:var(--bg);padding:6px 12px;border-radius:6px}
+  .topbar-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);position:relative;transition:all 0.2s}
+  .topbar-btn .dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:var(--danger);border-radius:50%;border:1.5px solid white}
+  .content{flex:1;overflow-y:auto;padding:24px 28px}
+  .panel{background:white;border-radius:14px;padding:20px;box-shadow:var(--shadow-card);border:1px solid var(--border)}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .panel-title{font-size:14px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:8px}
+  .panel-title i{color:var(--primary)}
+
+  .alarm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+  .alarm-stat{background:white;border-radius:12px;padding:16px 20px;box-shadow:var(--shadow-card);border:1px solid var(--border);display:flex;align-items:center;gap:14px;border-left:4px solid transparent}
+  .alarm-stat.crit{border-left-color:#EF4444}
+  .alarm-stat.warn{border-left-color:#F59E0B}
+  .alarm-stat.info{border-left-color:#0EA5E9}
+  .alarm-stat.ok{border-left-color:#10B981}
+  .alarm-stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .alarm-stat-icon.crit{background:#FEF2F2;color:#EF4444}
+  .alarm-stat-icon.warn{background:#FFFBEB;color:#F59E0B}
+  .alarm-stat-icon.info{background:#EFF8FF;color:#0EA5E9}
+  .alarm-stat-icon.ok{background:#ECFDF5;color:#10B981}
+  .alarm-stat-val{font-size:28px;font-weight:700;font-family:'Rajdhani';line-height:1}
+  .alarm-stat-label{font-size:12px;color:var(--text-secondary);margin-top:2px}
+
+  .filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .filter-input{flex:1;min-width:200px;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Noto Sans SC';outline:none;color:var(--text-primary)}
+  .filter-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(14,165,233,0.1)}
+  .filter-select{padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:'Noto Sans SC';outline:none;color:var(--text-primary);background:white;cursor:pointer}
+  .filter-btn{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-family:'Noto Sans SC';font-weight:500;transition:all 0.2s}
+  .filter-btn.primary{background:var(--primary);color:white}
+  .filter-btn.primary:hover{background:var(--primary-dark)}
+  .filter-btn.secondary{background:white;color:var(--text-secondary);border:1px solid var(--border)}
+
+  .alarm-table{width:100%;border-collapse:collapse}
+  .alarm-table th{font-size:12px;font-weight:600;color:var(--text-secondary);padding:10px 14px;text-align:left;background:var(--bg);border-bottom:2px solid var(--border)}
+  .alarm-table td{font-size:13px;padding:13px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .alarm-table tr:last-child td{border-bottom:none}
+  .alarm-table tr:hover td{background:#F8FAFF}
+
+  .severity-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .severity-badge.critical{background:#FEF2F2;color:#DC2626}
+  .severity-badge.warning{background:#FFFBEB;color:#D97706}
+  .severity-badge.info{background:#EFF8FF;color:#0284C7}
+  .severity-badge i{font-size:9px}
+
+  .status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .status-badge.active{background:#FEF2F2;color:#DC2626}
+  .status-badge.ack{background:#FFFBEB;color:#D97706}
+  .status-badge.resolved{background:#ECFDF5;color:#059669}
+
+  .action-btn{padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-family:'Noto Sans SC';font-weight:500;transition:all 0.2s}
+  .action-btn.confirm{background:var(--primary-light);color:var(--primary)}
+  .action-btn.confirm:hover{background:var(--primary);color:white}
+  .action-btn.resolve{background:#ECFDF5;color:#059669}
+  .action-btn.detail{background:var(--bg);color:var(--text-secondary)}
+
+  .alarm-chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .alarm-2col{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+  .blink{animation:blink 1.5s infinite}
+
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,39,68,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: white; border-radius: 16px; width: 90%; max-width: 600px; max-height: 85vh; overflow: hidden; box-shadow: 0 20px 60px rgba(15,39,68,0.3); }
+  .modal-header { padding: 18px 24px; background: linear-gradient(135deg, #0F2744, #1a4a80); color: white; display: flex; align-items: center; justify-content: space-between; cursor: move; }
+  .modal-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .modal-close { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.1); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .modal-close:hover { background: rgba(255,255,255,0.2); }
+  .modal-body { padding: 24px; max-height: calc(85vh - 140px); overflow-y: auto; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end; }
+  .modal-btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Noto Sans SC'; }
+  .modal-btn.primary { background: linear-gradient(135deg, #0EA5E9, #0284C7); color: white; }
+  .modal-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.3); }
+  .modal-btn.secondary { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+  .modal-btn.secondary:hover { background: var(--border); }
+  .modal-btn.danger { background: #FEF2F2; color: #EF4444; border: 1px solid #FECACA; }
+  .modal-btn.danger:hover { background: #EF4444; color: white; }
+  .modal-form-group { margin-bottom: 16px; }
+  .modal-form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
+  .modal-form-input, .modal-form-select { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Noto Sans SC'; outline: none; }
+  .modal-form-input:focus, .modal-form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+  .alarm-detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .alarm-detail-row:last-child { border-bottom: none; }
+  .alarm-detail-label { font-size: 12px; color: var(--text-secondary); }
+  .alarm-detail-value { font-size: 13px; font-weight: 500; font-family: 'JetBrains Mono'; }
+  .action-btn { padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-family: 'Noto Sans SC'; font-weight: 500; transition: all 0.2s; }
+  .action-btn:hover { transform: translateY(-1px); }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo-area">
+    <div class="logo-title">新能源储能系统运行监控与能效分析系统</div>
+  </div>
+  <nav class="nav-section">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i>总览仪表板</a>
+    <a href="monitor.html" class="nav-item"><i class="fa-solid fa-display"></i>实时监控</a>
+    <a href="efficiency.html" class="nav-item"><i class="fa-solid fa-chart-line"></i>能效分析</a>
+    <a href="alarm.html" class="nav-item active"><i class="fa-solid fa-bell"></i>告警管理<span class="nav-badge">5</span></a>
+    <a href="device.html" class="nav-item"><i class="fa-solid fa-server"></i>设备管理</a>
+    <a href="report.html" class="nav-item"><i class="fa-solid fa-file-lines"></i>报表中心</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button onclick="window.location.href='login.html'" style="width:100%;padding:10px;margin-bottom:12px;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;font-size:13px;font-family:'Noto Sans SC';display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s">
+      <i class="fa-solid fa-sign-out-alt"></i> 退出登录
+    </button>
+    <div class="user-card">
+      <div class="user-avatar"><img src="static/avatar.jpg" alt="用户头像"></div>
+      <div class="user-info"><div class="name">华南农业大学</div><div class="role">系统管理员</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      <span class="breadcrumb-item">首页</span>
+      <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right" style="font-size:10px"></i></span>
+      <span class="breadcrumb-item current">告警管理</span>
+    </div>
+    <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#EF4444;background:#FEF2F2;padding:6px 12px;border-radius:6px;font-weight:600">
+        <i class="fa-solid fa-circle-exclamation blink"></i>5条活跃告警需处理
+      </div>
+      <div class="topbar-time" id="clock">--:--:--</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="alarm-stats">
+      <div class="alarm-stat crit">
+        <div class="alarm-stat-icon crit">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12" stroke="white" stroke-width="2"/>
+              <circle cx="12" cy="16" r="1.5" fill="white"/>
+            </svg>
+          </div>
+        <div>
+          <div class="alarm-stat-val" style="color:#EF4444">2</div>
+          <div class="alarm-stat-label">严重告警</div>
+          <svg width="50" height="20" style="margin-top:4px">
+            <polyline points="0,18 10,16 20,17 30,12 40,14 50,8" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="50" cy="8" r="3" fill="#EF4444"/>
+          </svg>
+        </div>
+      </div>
+      <div class="alarm-stat warn">
+        <div class="alarm-stat-icon warn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 22h20L12 2z"/>
+              <line x1="12" y1="9" x2="12" y2="14" stroke="white" stroke-width="2"/>
+              <circle cx="12" cy="18" r="1.5" fill="white"/>
+            </svg>
+          </div>
+        <div>
+          <div class="alarm-stat-val" style="color:#F59E0B">3</div>
+          <div class="alarm-stat-label">警告告警</div>
+          <svg width="50" height="20" style="margin-top:4px">
+            <polyline points="0,14 10,12 20,15 30,10 40,8 50,12" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="50" cy="12" r="3" fill="#F59E0B"/>
+          </svg>
+        </div>
+      </div>
+      <div class="alarm-stat info">
+        <div class="alarm-stat-icon info">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="11" x2="12" y2="17" stroke="white" stroke-width="2"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+            </svg>
+          </div>
+        <div>
+          <div class="alarm-stat-val" style="color:#0EA5E9">8</div>
+          <div class="alarm-stat-label">今日已处理</div>
+          <svg width="50" height="20" style="margin-top:4px">
+            <polyline points="0,16 10,14 20,12 30,10 40,8 50,5" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="50" cy="5" r="3" fill="#0EA5E9"/>
+          </svg>
+        </div>
+      </div>
+      <div class="alarm-stat ok">
+        <div class="alarm-stat-icon ok">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L4 6v6c0 5.5 3.5 10 8 11 4.5-1 8-5.5 8-11V6l-8-4z"/>
+              <polyline points="9,12 11,14 15,10"/>
+            </svg>
+          </div>
+        <div>
+          <div class="alarm-stat-val" style="color:#10B981">147</div>
+          <div class="alarm-stat-label">本月告警总计</div>
+          <svg width="50" height="20" style="margin-top:4px">
+            <polyline points="0,10 10,12 20,8 30,10 40,6 50,4" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="50" cy="4" r="3" fill="#10B981"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="alarm-chart-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-chart-pie"></i>告警级别分布</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:24px;padding:10px 0">
+          <svg id="alarmDonut" viewBox="0 0 180 180" style="width:160px;height:160px;flex-shrink:0">
+            <defs>
+              <filter id="donutShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(15,39,68,0.1)"/>
+              </filter>
+            </defs>
+            <circle cx="90" cy="90" r="65" fill="none" stroke="#F1F5F9" stroke-width="22"/>
+            <circle cx="90" cy="90" r="65" fill="none" stroke="#EF4444" stroke-width="22"
+              stroke-dasharray="82 408" stroke-dashoffset="103" transform="rotate(-90,90,90)" filter="url(#donutShadow)"/>
+            <circle cx="90" cy="90" r="65" fill="none" stroke="#F59E0B" stroke-width="22"
+              stroke-dasharray="123 408" stroke-dashoffset="21" transform="rotate(-90,90,90)"/>
+            <circle cx="90" cy="90" r="65" fill="none" stroke="#0EA5E9" stroke-width="22"
+              stroke-dasharray="205 408" stroke-dashoffset="-102" transform="rotate(-90,90,90)"/>
+            <circle cx="90" cy="90" r="65" fill="none" stroke="#10B981" stroke-width="22"
+              stroke-dasharray="0 408" stroke-dashoffset="-307" transform="rotate(-90,90,90)"/>
+            <text x="90" y="85" text-anchor="middle" font-size="12" fill="#94A3B8" font-family="Noto Sans SC">总计</text>
+            <text x="90" y="105" text-anchor="middle" font-size="24" font-weight="700" fill="#0F2744" font-family="Rajdhani" id="donutTotal">147</text>
+          </svg>
+          <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:12px;height:12px;border-radius:3px;background:#EF4444"></div>
+              <div style="flex:1">
+                <div style="display:flex;justify-content:space-between;font-size:12px"><span>严重</span><span style="font-weight:600;font-family:'JetBrains Mono'">28 <span style="font-size:10px;color:#94A3B8">(19%)</span></span></div>
+                <div style="height:4px;background:#FEF2F2;border-radius:2px;margin-top:4px"><div style="height:4px;width:19%;background:#EF4444;border-radius:2px"></div></div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:12px;height:12px;border-radius:3px;background:#F59E0B"></div>
+              <div style="flex:1">
+                <div style="display:flex;justify-content:space-between;font-size:12px"><span>警告</span><span style="font-weight:600;font-family:'JetBrains Mono'">52 <span style="font-size:10px;color:#94A3B8">(35%)</span></span></div>
+                <div style="height:4px;background:#FFFBEB;border-radius:2px;margin-top:4px"><div style="height:4px;width:35%;background:#F59E0B;border-radius:2px"></div></div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:12px;height:12px;border-radius:3px;background:#0EA5E9"></div>
+              <div style="flex:1">
+                <div style="display:flex;justify-content:space-between;font-size:12px"><span>信息</span><span style="font-weight:600;font-family:'JetBrains Mono'">67 <span style="font-size:10px;color:#94A3B8">(46%)</span></span></div>
+                <div style="height:4px;background:#EFF8FF;border-radius:2px;margin-top:4px"><div style="height:4px;width:46%;background:#0EA5E9;border-radius:2px"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-chart-area"></i>告警时间分布</div>
+        </div>
+        <svg id="alarmRadar" viewBox="0 0 280 180" style="width:100%;height:180px">
+          <defs>
+            <linearGradient id="radarGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0EA5E9" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <g transform="translate(140,85)">
+            <circle r="65" fill="none" stroke="#E2EEF9" stroke-width="1"/>
+            <circle r="48" fill="none" stroke="#E2EEF9" stroke-width="1"/>
+            <circle r="32" fill="none" stroke="#E2EEF9" stroke-width="1"/>
+            <circle r="16" fill="none" stroke="#E2EEF9" stroke-width="1"/>
+            <line x1="0" y1="-65" x2="0" y2="65" stroke="#E2EEF9" stroke-width="1"/>
+            <line x1="-65" y1="0" x2="65" y2="0" stroke="#E2EEF9" stroke-width="1"/>
+            <line x1="-46" y1="-46" x2="46" y2="46" stroke="#E2EEF9" stroke-width="1"/>
+            <line x1="46" y1="-46" x2="-46" y2="46" stroke="#E2EEF9" stroke-width="1"/>
+            <polygon points="0,-52 39,-39 52,0 39,39 0,52 -39,39 -52,0 -39,-39" fill="url(#radarGrad)" stroke="#0EA5E9" stroke-width="2"/>
+            <circle cx="0" cy="-52" r="4" fill="#0EA5E9"/>
+            <circle cx="39" cy="-39" r="4" fill="#0EA5E9"/>
+            <circle cx="52" cy="0" r="4" fill="#0EA5E9"/>
+            <circle cx="39" cy="39" r="4" fill="#0EA5E9"/>
+            <circle cx="0" cy="52" r="4" fill="#0EA5E9"/>
+            <circle cx="-39" cy="39" r="4" fill="#0EA5E9"/>
+            <circle cx="-52" cy="0" r="4" fill="#0EA5E9"/>
+            <circle cx="-39" cy="-39" r="4" fill="#0EA5E9"/>
+          </g>
+          <text x="140" y="168" text-anchor="middle" font-size="10" fill="#5A7A99" font-family="Noto Sans SC">告警时段分布 (24小时)</text>
+          <text x="140" y="14" text-anchor="middle" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">00:00</text>
+          <text x="205" y="88" text-anchor="middle" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">06:00</text>
+          <text x="140" y="158" text-anchor="middle" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">12:00</text>
+          <text x="75" y="88" text-anchor="middle" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">18:00</text>
+        </svg>
+        <div style="display:flex;justify-content:space-around;padding:8px 0;border-top:1px solid var(--border);margin-top:8px">
+          <div style="text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#0EA5E9;font-family:'Rajdhani'">23</div>
+            <div style="font-size:10px;color:var(--text-light)">凌晨(0-6)</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#10B981;font-family:'Rajdhani'">18</div>
+            <div style="font-size:10px;color:var(--text-light)">上午(6-12)</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#F59E0B;font-family:'Rajdhani'">12</div>
+            <div style="font-size:10px;color:var(--text-light)">下午(12-18)</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:14px;font-weight:700;color:#7C3AED;font-family:'Rajdhani'">8</div>
+            <div style="font-size:10px;color:var(--text-light)">夜间(18-24)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alarm-2col">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-chart-line"></i>近30日告警趋势</div>
+          <div style="display:flex;gap:10px;font-size:11px;align-items:center">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#EF4444;border-radius:1px;display:inline-block"></span>严重</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#F59E0B;border-radius:1px;display:inline-block"></span>警告</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#0EA5E9;border-radius:1px;display:inline-block"></span>信息</span>
+          </div>
+        </div>
+        <svg viewBox="0 0 500 160" style="width:100%;height:160px">
+          <defs>
+            <linearGradient id="cGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EF4444" stop-opacity="0.2"/><stop offset="100%" stop-color="#EF4444" stop-opacity="0"/></linearGradient>
+            <linearGradient id="wGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F59E0B" stop-opacity="0.2"/><stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/></linearGradient>
+          </defs>
+          <line x1="0" y1="40" x2="500" y2="40" stroke="#DCE8F5" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="0" y1="80" x2="500" y2="80" stroke="#DCE8F5" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="0" y1="120" x2="500" y2="120" stroke="#DCE8F5" stroke-width="1" stroke-dasharray="4,4"/>
+          <path d="M0,120 C30,110 60,115 90,100 C120,85 150,120 180,108 C210,96 240,80 270,72 C300,64 330,100 360,88 C390,76 430,120 460,105 C480,96 490,100 500,95" fill="none" stroke="#EF4444" stroke-width="2"/>
+          <path d="M0,100 C30,90 60,80 90,85 C120,90 150,70 180,65 C210,60 240,75 270,70 C300,65 330,80 360,72 C390,64 430,90 460,75 C480,64 490,70 500,68" fill="none" stroke="#F59E0B" stroke-width="2"/>
+          <path d="M0,80 C30,70 60,60 90,65 C120,70 150,55 180,50 C210,45 240,58 270,52 C300,46 330,60 360,55 C390,50 430,65 460,58 C480,52 490,55 500,52" fill="none" stroke="#0EA5E9" stroke-width="2"/>
+          <text x="0" y="155" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">12/16</text>
+          <text x="120" y="155" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">12/22</text>
+          <text x="240" y="155" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">12/28</text>
+          <text x="360" y="155" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">01/04</text>
+          <text x="468" y="155" font-size="9" fill="#94A3B8" font-family="JetBrains Mono">今天</text>
+        </svg>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-chart-column"></i>各设备告警统计</div>
+        </div>
+        <svg id="alarmBarChart" viewBox="0 0 200 140" style="width:100%;height:140px">
+          <defs>
+            <linearGradient id="barGrad1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#EF4444"/>
+              <stop offset="100%" stop-color="#FCA5A5"/>
+            </linearGradient>
+            <linearGradient id="barGrad2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#F59E0B"/>
+              <stop offset="100%" stop-color="#FCD34D"/>
+            </linearGradient>
+            <linearGradient id="barGrad3" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0EA5E9"/>
+              <stop offset="100%" stop-color="#7DD3FC"/>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="120" x2="200" y2="120" stroke="#E2EEF9" stroke-width="1"/>
+          <line x1="0" y1="80" x2="200" y2="80" stroke="#E2EEF9" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="0" y1="40" x2="200" y2="40" stroke="#E2EEF9" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="-3" y="124" font-size="8" fill="#94A3B8" text-anchor="end" font-family="JetBrains Mono">0</text>
+          <text x="-3" y="84" font-size="8" fill="#94A3B8" text-anchor="end" font-family="JetBrains Mono">30</text>
+          <text x="-3" y="44" font-size="8" fill="#94A3B8" text-anchor="end" font-family="JetBrains Mono">60</text>
+          <rect x="8" y="50" width="22" height="70" rx="3" fill="url(#barGrad1)" class="alarm-bar"/>
+          <rect x="35" y="20" width="22" height="100" rx="3" fill="url(#barGrad2)" class="alarm-bar"/>
+          <rect x="62" y="70" width="22" height="50" rx="3" fill="url(#barGrad3)" class="alarm-bar"/>
+          <rect x="89" y="85" width="22" height="35" rx="3" fill="url(#barGrad1)" class="alarm-bar"/>
+          <rect x="116" y="95" width="22" height="25" rx="3" fill="url(#barGrad2)" class="alarm-bar"/>
+          <rect x="143" y="90" width="22" height="30" rx="3" fill="url(#barGrad3)" class="alarm-bar"/>
+          <rect x="170" y="105" width="22" height="15" rx="3" fill="url(#barGrad1)" class="alarm-bar"/>
+          <text x="19" y="135" font-size="7" fill="#5A7A99" text-anchor="middle" font-family="Noto Sans SC">BMS</text>
+          <text x="46" y="135" font-size="7" fill="#5A7A99" text-anchor="middle" font-family="Noto Sans SC">PCS</text>
+          <text x="73" y="135" font-size="7" fill="#5A7A99" text-anchor="middle" font-family="Noto Sans SC">热管</text>
+          <text x="100" y="135" font-size="7" fill="#5A7A99" text-anchor="middle" font-family="Noto Sans SC">电池</text>
+          <text x="127" y="135" font-size="7" fill="#5A7A99" text-anchor="middle" font-family="Noto Sans SC">变压</text>
+          <text x="154" y="135" font-size="7" fill="#5A7A99" text-anchor="middle" font-family="Noto Sans SC">空调</text>
+          <text x="181" y="135" font-size="7" fill="#5A7A99" text-anchor="middle" font-family="Noto Sans SC">其他</text>
+          <text x="19" y="44" font-size="8" fill="#EF4444" text-anchor="middle" font-weight="600" font-family="Rajdhani">48</text>
+          <text x="46" y="14" font-size="8" fill="#F59E0B" text-anchor="middle" font-weight="600" font-family="Rajdhani">68</text>
+          <text x="73" y="64" font-size="8" fill="#0EA5E9" text-anchor="middle" font-weight="600" font-family="Rajdhani">28</text>
+          <text x="100" y="79" font-size="8" fill="#EF4444" text-anchor="middle" font-weight="600" font-family="Rajdhani">20</text>
+          <text x="127" y="89" font-size="8" fill="#F59E0B" text-anchor="middle" font-weight="600" font-family="Rajdhani">12</text>
+          <text x="154" y="84" font-size="8" fill="#0EA5E9" text-anchor="middle" font-weight="600" font-family="Rajdhani">16</text>
+          <text x="181" y="99" font-size="8" fill="#EF4444" text-anchor="middle" font-weight="600" font-family="Rajdhani">8</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><i class="fa-solid fa-list-check"></i>告警列表</div>
+        <div style="display:flex;gap:8px">
+          <button class="filter-btn primary"><i class="fa-solid fa-check-double"></i> 批量确认</button>
+          <button class="filter-btn secondary"><i class="fa-solid fa-download"></i> 导出</button>
+        </div>
+      </div>
+
+      <div class="filter-bar" style="margin-bottom:16px">
+        <input class="filter-input" type="text" placeholder="搜索告警内容、设备名称...">
+        <select class="filter-select">
+          <option>全部级别</option>
+          <option>严重</option>
+          <option>警告</option>
+          <option>信息</option>
+        </select>
+        <select class="filter-select">
+          <option>全部状态</option>
+          <option>活跃</option>
+          <option>已确认</option>
+          <option>已恢复</option>
+        </select>
+        <select class="filter-select">
+          <option>全部设备</option>
+          <option>BMS系统</option>
+          <option>PCS变流器</option>
+          <option>热管理系统</option>
+        </select>
+        <button class="filter-btn primary"><i class="fa-solid fa-magnifying-glass"></i> 搜索</button>
+        <button class="filter-btn secondary">重置</button>
+      </div>
+
+      <table class="alarm-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox"></th>
+            <th>告警ID</th>
+            <th>级别</th>
+            <th>告警内容</th>
+            <th>设备</th>
+            <th>发生时间</th>
+            <th>持续时长</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="alarmTableBody">
+          <tr style="background:#FFF9F9">
+            <td><input type="checkbox" onclick="event.stopPropagation()"></td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-light)">ALM-2025011401</td>
+            <td><span class="severity-badge critical"><i class="fa-solid fa-circle"></i>严重</span></td>
+            <td style="font-weight:500">BMS#03 电芯温度超过高温保护阈值 (58.2°C > 55°C)</td>
+            <td style="font-size:12px;color:var(--text-secondary)">BMS电池管理 #03</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px">2025-01-14 14:32:10</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:#EF4444">02:18:45</td>
+            <td><span class="status-badge active"><i class="fa-solid fa-circle" style="font-size:7px"></i>活跃</span></td>
+            <td><button class="action-btn detail" onclick="openAlarmDetail('ALM-2025011401')">详情</button></td>
+          </tr>
+          <tr style="background:#FFF9F9">
+            <td><input type="checkbox" onclick="event.stopPropagation()"></td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-light)">ALM-2025011402</td>
+            <td><span class="severity-badge critical"><i class="fa-solid fa-circle"></i>严重</span></td>
+            <td style="font-weight:500">PCS#03 直流母线电压低于下限 (672.1V < 680V)</td>
+            <td style="font-size:12px;color:var(--text-secondary)">PCS变流器 #03</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px">2025-01-14 13:58:44</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:#EF4444">02:52:11</td>
+            <td><span class="status-badge active"><i class="fa-solid fa-circle" style="font-size:7px"></i>活跃</span></td>
+            <td><button class="action-btn detail" onclick="openAlarmDetail('ALM-2025011402')">详情</button></td>
+          </tr>
+          <tr style="background:#FFFDF5">
+            <td><input type="checkbox" onclick="event.stopPropagation()"></td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-light)">ALM-2025011403</td>
+            <td><span class="severity-badge warning"><i class="fa-solid fa-circle"></i>警告</span></td>
+            <td style="font-weight:500">热管理系统 HVAC-02 风扇转速低于额定值 20%</td>
+            <td style="font-size:12px;color:var(--text-secondary)">热管理系统 HVAC</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px">2025-01-14 13:21:05</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:#F59E0B">03:29:50</td>
+            <td><span class="status-badge ack"><i class="fa-solid fa-circle" style="font-size:7px"></i>已确认</span></td>
+            <td><button class="action-btn detail" onclick="openAlarmDetail('ALM-2025011403')">详情</button></td>
+          </tr>
+          <tr style="background:#FFFDF5">
+            <td><input type="checkbox"></td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-light)">ALM-2025011404</td>
+            <td><span class="severity-badge warning"><i class="fa-solid fa-circle"></i>警告</span></td>
+            <td style="font-weight:500">电池簇#04 SOC差异超过告警阈值 (8.3% > 5%)</td>
+            <td style="font-size:12px;color:var(--text-secondary)">BMS电池管理 #04</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px">2025-01-14 11:15:22</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:#F59E0B">05:35:33</td>
+            <td><span class="status-badge ack"><i class="fa-solid fa-circle" style="font-size:7px"></i>已确认</span></td>
+            <td><button class="action-btn detail" onclick="openAlarmDetail('ALM-2025011404')">详情</button></td>
+          </tr>
+          <tr style="background:#FFFDF5">
+            <td><input type="checkbox"></td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-light)">ALM-2025011405</td>
+            <td><span class="severity-badge warning"><i class="fa-solid fa-circle"></i>警告</span></td>
+            <td style="font-weight:500">辅助变压器 #02 通信中断超过 5 分钟</td>
+            <td style="font-size:12px;color:var(--text-secondary)">辅助变压器 #02</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px">2025-01-14 09:42:18</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:#F59E0B">07:08:37</td>
+            <td><span class="status-badge active"><i class="fa-solid fa-circle" style="font-size:7px"></i>活跃</span></td>
+            <td><button class="action-btn detail" onclick="openAlarmDetail('ALM-2025011405')">详情</button></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-light)">ALM-2025011406</td>
+            <td><span class="severity-badge info"><i class="fa-solid fa-circle"></i>信息</span></td>
+            <td style="font-weight:500">系统完成第1284次充放电循环</td>
+            <td style="font-size:12px;color:var(--text-secondary)">EMS能量管理主机</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px">2025-01-14 12:05:30</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-light)">04:45:25</td>
+            <td><span class="status-badge resolved"><i class="fa-solid fa-circle" style="font-size:7px"></i>已恢复</span></td>
+            <td><button class="action-btn detail" onclick="openAlarmDetail('ALM-2025011406')">详情</button></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-light)">ALM-2025011407</td>
+            <td><span class="severity-badge info"><i class="fa-solid fa-circle"></i>信息</span></td>
+            <td style="font-weight:500">EMS与SCADA系统通信恢复正常</td>
+            <td style="font-size:12px;color:var(--text-secondary)">EMS能量管理主机</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px">2025-01-14 11:44:17</td>
+            <td style="font-family:'JetBrains Mono';font-size:11px;color:var(--text-light)">--</td>
+            <td><span class="status-badge resolved"><i class="fa-solid fa-circle" style="font-size:7px"></i>已恢复</span></td>
+            <td><button class="action-btn detail" onclick="openAlarmDetail('ALM-2025011407')">详情</button></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <span id="pageInfo" style="font-size:12px;color:var(--text-secondary)">共 147 条，显示 1-7</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="prevPage()" style="width:30px;height:30px;border:1px solid var(--border);border-radius:6px;background:white;cursor:pointer;font-size:12px;color:var(--text-secondary)"><i class="fa-solid fa-chevron-left"></i></button>
+          <span id="pageNum" style="font-size:12px;font-family:'JetBrains Mono';min-width:60px;text-align:center">1 / 21</span>
+          <button onclick="nextPage()" style="width:30px;height:30px;border:1px solid var(--border);border-radius:6px;background:white;cursor:pointer;font-size:12px;color:var(--text-secondary)"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateClock(){const now=new Date();document.getElementById('clock').textContent=now.toLocaleTimeString('zh-CN',{hour12:false})}
+  updateClock();setInterval(updateClock,1000);
+
+  // Pagination
+  let currentPage = 1;
+  const pageSize = 7;
+  const totalCount = 147;
+
+  function getTotalPages() {
+    return Math.ceil(totalCount / pageSize);
+  }
+
+  function updatePageDisplay() {
+    const start = (currentPage - 1) * pageSize + 1;
+    const end = Math.min(currentPage * pageSize, totalCount);
+    document.getElementById('pageInfo').textContent = `共 ${totalCount} 条，显示 ${start}-${end}`;
+    document.getElementById('pageNum').textContent = `${currentPage} / ${getTotalPages()}`;
+  }
+
+  function prevPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      updatePageDisplay();
+    }
+  }
+
+  function nextPage() {
+    if (currentPage < getTotalPages()) {
+      currentPage++;
+      updatePageDisplay();
+    }
+  }
+
+  function openModal(title, content) {
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    modalTitle.innerHTML = title;
+    modalBody.innerHTML = content;
+    modalOverlay.classList.add('active');
+    modal.style.position = 'fixed';
+    modal.style.left = '50%';
+    modal.style.top = '50%';
+    modal.style.transform = 'translate(-50%, -50%)';
+    modal.style.margin = '0';
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove('active');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const modalHeader = document.querySelector('.modal-header');
+    if (modalHeader) {
+      let isDragging = false;
+      let dragOffsetX, dragOffsetY;
+
+      modalHeader.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        dragOffsetX = e.clientX - modal.getBoundingClientRect().left;
+        dragOffsetY = e.clientY - modal.getBoundingClientRect().top;
+        modal.style.transition = 'none';
+      });
+
+      document.addEventListener('mousemove', function(e) {
+        if (isDragging) {
+          modal.style.left = (e.clientX - dragOffsetX) + 'px';
+          modal.style.top = (e.clientY - dragOffsetY) + 'px';
+          modal.style.position = 'fixed';
+        }
+      });
+
+      document.addEventListener('mouseup', function() {
+        isDragging = false;
+      });
+    }
+  });
+
+  window.openAlarmDetail = function(alarmId) {
+    const alarmData = {
+      'ALM-2025011401': { id: 'ALM-2025011401', level: '严重', title: 'BMS#03 电芯温度超过高温保护阈值', device: 'BMS电池管理 #03', time: '2025-01-14 14:32:10', duration: '02:18:45', status: '活跃', detail: '电池簇#03第58节电芯温度达到58.2°C，超过高温保护阈值55°C，建议立即检查冷却系统。' },
+      'ALM-2025011402': { id: 'ALM-2025011402', level: '严重', title: 'PCS#03 直流母线电压低于下限', device: 'PCS变流器 #03', time: '2025-01-14 13:58:44', duration: '02:52:11', status: '活跃', detail: '直流母线电压672.1V，低于安全下限680V，PCS#03已自动停机保护。' },
+      'ALM-2025011403': { id: 'ALM-2025011403', level: '警告', title: '热管理系统 HVAC-02 风扇转速低于额定值', device: '热管理系统 HVAC', time: '2025-01-14 13:21:05', duration: '03:29:50', status: '已确认', detail: 'HVAC-02风扇转速下降至额定值的80%，可能存在风扇故障或滤网堵塞。' },
+    };
+    const data = alarmData[alarmId] || alarmData['ALM-2025011401'];
+    const content = `
+      <div class="alarm-detail-row"><span class="alarm-detail-label">告警ID</span><span class="alarm-detail-value">${data.id}</span></div>
+      <div class="alarm-detail-row"><span class="alarm-detail-label">告警级别</span><span class="alarm-detail-value" style="color:${data.level === '严重' ? '#EF4444' : '#F59E0B'}">${data.level}</span></div>
+      <div class="alarm-detail-row"><span class="alarm-detail-label">告警内容</span><span class="alarm-detail-value">${data.title}</span></div>
+      <div class="alarm-detail-row"><span class="alarm-detail-label">设备名称</span><span class="alarm-detail-value">${data.device}</span></div>
+      <div class="alarm-detail-row"><span class="alarm-detail-label">发生时间</span><span class="alarm-detail-value">${data.time}</span></div>
+      <div class="alarm-detail-row"><span class="alarm-detail-label">持续时长</span><span class="alarm-detail-value" style="color:#EF4444">${data.duration}</span></div>
+      <div class="alarm-detail-row"><span class="alarm-detail-label">当前状态</span><span class="alarm-detail-value">${data.status}</span></div>
+      <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text-secondary)">
+        <strong style="color:var(--text-primary)">详细说明：</strong><br>${data.detail}
+      </div>
+    `;
+    openModal(`<i class="fa-solid fa-circle-exclamation"></i> 告警详情 - ${data.id}`, content);
+  };
+
+  window.openHandleAlarm = function(alarmId) {
+    const content = `
+      <div class="modal-form-group">
+        <label class="modal-form-label">告警ID</label>
+        <input class="modal-form-input" value="${alarmId}" readonly>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">处理方式</label>
+        <select class="modal-form-select">
+          <option>确认告警</option>
+          <option>现场处理</option>
+          <option>远程复位</option>
+          <option>忽略处理</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">处理说明</label>
+        <textarea class="modal-form-input" rows="3" placeholder="请输入处理说明..."></textarea>
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-form-label">处理人</label>
+        <input class="modal-form-input" value="系统管理员" readonly>
+      </div>
+    `;
+    openModal(`<i class="fa-solid fa-clipboard-check"></i> 处理告警`, content);
+  };
+</script>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header" id="modalHeader">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" onclick="closeModal()">取消</button>
+      <button class="modal-btn primary" onclick="closeModal()"><i class="fa-solid fa-check"></i> 确认处理</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

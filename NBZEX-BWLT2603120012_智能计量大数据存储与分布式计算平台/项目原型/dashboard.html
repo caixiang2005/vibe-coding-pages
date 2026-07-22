@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能计量大数据存储与分布式计算平台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #111827;
+    --bg-card: #161f33;
+    --bg-card-hover: #1c2742;
+    --border: rgba(255,255,255,0.06);
+    --border-active: rgba(99,179,237,0.4);
+    --text-primary: #e8ecf4;
+    --text-secondary: #8594b0;
+    --text-muted: #4a5878;
+    --accent: #3b82f6;
+    --accent-glow: rgba(59,130,246,0.15);
+    --green: #22c55e;
+    --green-glow: rgba(34,197,94,0.12);
+    --amber: #f59e0b;
+    --amber-glow: rgba(245,158,11,0.12);
+    --red: #ef4444;
+    --red-glow: rgba(239,68,68,0.12);
+    --purple: #8b5cf6;
+    --window-bg: #1a1f2e;
+    --sidebar-w: 220px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .mac-window {
+    width: 1200px;
+    max-width: 95vw;
+    background: var(--window-bg);
+    border-radius: 12px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+
+  .title-bar {
+    height: 38px;
+    background: linear-gradient(180deg, #2a3142 0%, #222838 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    position: relative;
+  }
+
+  .traffic-lights {
+    display: flex;
+    gap: 8px;
+    z-index: 2;
+  }
+
+  .traffic-light {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .traffic-light.close { background: #ff5f57; }
+  .traffic-light.minimize { background: #febc2e; }
+  .traffic-light.maximize { background: #28c840; }
+
+  .traffic-light:hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.15);
+  }
+
+  .title-bar-text {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .main-layout {
+    display: flex;
+    height: 680px;
+  }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--bg-secondary);
+    border-right: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-brand {
+    padding: 16px 16px 14px;
+  }
+
+  .sidebar-brand h1 {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+    color: var(--text-primary);
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 8px 10px;
+    overflow-y: auto;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    margin-bottom: 2px;
+    text-decoration: none;
+  }
+
+  .nav-item:hover {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-primary);
+  }
+
+  .nav-item.active {
+    background: rgba(59,130,246,0.15);
+    color: #93c5fd;
+  }
+
+  .nav-item svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.65;
+    flex-shrink: 0;
+  }
+
+  .nav-item.active svg { opacity: 1; }
+
+  .sidebar-footer {
+    padding: 12px 14px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .user-info .name { font-size: 12px; font-weight: 500; }
+  .user-info .role { font-size: 10px; color: var(--text-muted); }
+
+  .content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--window-bg);
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: 44px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    background: rgba(26,31,46,0.8);
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-left h2 {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .topbar-left span {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .topbar-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .topbar-btn:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+  }
+
+  .topbar-btn svg { width: 16px; height: 16px; }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .topbar-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 320px;
+    max-height: 400px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    overflow: hidden;
+  }
+
+  .notification-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .notification-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    position: relative;
+    background: var(--bg-card);
+    border-radius: 10px 10px 0 0;
+  }
+
+  .notification-traffic-lights {
+    display: flex;
+    gap: 8px;
+    z-index: 2;
+  }
+
+  .notification-traffic-light {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .notification-traffic-light.close { background: #ff5f57; }
+  .notification-traffic-light.minimize { background: #febc2e; }
+  .notification-traffic-light.maximize { background: #28c840; }
+
+  .notification-header h3 {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .notification-header .mark-read {
+    position: absolute;
+    right: 12px;
+    font-size: 11px;
+    color: var(--accent);
+    cursor: pointer;
+  }
+
+  .notification-header .mark-read:hover {
+    text-decoration: underline;
+  }
+
+  .notification-list {
+    max-height: 340px;
+    overflow-y: auto;
+  }
+
+  .notification-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+
+  .notification-item:hover {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .notification-item:last-child {
+    border-bottom: none;
+  }
+
+  .notification-item.unread {
+    background: rgba(59,130,246,0.05);
+  }
+
+  .notification-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  .notification-icon.red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .notification-icon.amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .notification-icon.green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .notification-icon.blue { background: rgba(59,130,246,0.15); color: var(--accent); }
+
+  .notification-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .notification-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .notification-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .notification-time {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-left: 10px;
+    flex-shrink: 0;
+  }
+
+  .content-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .content-body::-webkit-scrollbar { width: 6px; }
+  .content-body::-webkit-scrollbar-track { background: transparent; }
+  .content-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    transition: all 0.3s;
+  }
+
+  .stat-card:hover {
+    border-color: rgba(255,255,255,0.1);
+    transform: translateY(-2px);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  .stat-sub .up { color: var(--green); }
+  .stat-sub .down { color: var(--red); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .grid-3-1 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+
+  .card-title {
+    font-size: 12.5px;
+    font-weight: 500;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title .badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .chart-area {
+    height: 160px;
+    position: relative;
+  }
+
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 100%;
+    padding-top: 10px;
+  }
+
+  .chart-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    height: 100%;
+  }
+
+  .chart-bar {
+    width: 100%;
+    max-width: 30px;
+    border-radius: 3px 3px 0 0;
+    background: linear-gradient(180deg, var(--accent), rgba(59,130,246,0.3));
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .chart-bar:hover {
+    background: linear-gradient(180deg, #60a5fa, rgba(96,165,250,0.4));
+  }
+
+  .chart-bar-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .node-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .node-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .node-item:hover {
+    background: rgba(255,255,255,0.04);
+  }
+
+  .node-info { display: flex; align-items: center; gap: 8px; }
+
+  .node-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .node-dot.online { background: var(--green); box-shadow: 0 0 5px var(--green); }
+  .node-dot.warning { background: var(--amber); box-shadow: 0 0 5px var(--amber); }
+  .node-dot.offline { background: var(--red); box-shadow: 0 0 5px var(--red); }
+
+  .node-name { font-size: 12px; }
+  .node-ip { font-size: 10px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+  .node-metrics {
+    display: flex;
+    gap: 14px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .node-metric-label { color: var(--text-muted); margin-right: 2px; }
+
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    white-space: nowrap;
+  }
+
+  tr:hover td { background: rgba(255,255,255,0.015); }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .tag-success { background: var(--green-glow); color: var(--green); }
+  .tag-warning { background: var(--amber-glow); color: var(--amber); }
+  .tag-error { background: var(--red-glow); color: var(--red); }
+  .tag-info { background: var(--accent-glow); color: #93c5fd; }
+
+  .mono {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .progress {
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+    width: 60px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .progress-fill.blue { background: var(--accent); }
+  .progress-fill.green { background: var(--green); }
+  .progress-fill.amber { background: var(--amber); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in {
+    animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0;
+  }
+
+  .delay-1 { animation-delay: 0.06s; }
+  .delay-2 { animation-delay: 0.12s; }
+  .delay-3 { animation-delay: 0.18s; }
+  .delay-4 { animation-delay: 0.24s; }
+  .delay-5 { animation-delay: 0.30s; }
+
+  .status-bar {
+    height: 26px;
+    padding: 0 16px;
+    background: rgba(0,0,0,0.2);
+    border-top: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .status-item {
+    color: var(--text-muted);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .status-item .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+
+  .status-item .dot.green { background: var(--green); }
+  .status-item .dot.amber { background: var(--amber); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="mac-window">
+  <div class="title-bar">
+    <div class="traffic-lights">
+      <div class="traffic-light close"></div>
+      <div class="traffic-light minimize"></div>
+      <div class="traffic-light maximize"></div>
+    </div>
+    <span class="title-bar-text">智能计量大数据存储与分布式计算平台</span>
+  </div>
+
+  <div class="main-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h1>智能计量大数据存储与分布式计算平台</h1>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          平台总览
+        </a>
+        <a href="data_collection.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          数据采集监控
+        </a>
+        <a href="storage_cluster.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          存储集群管理
+        </a>
+        <a href="compute_task.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0-4h18"/></svg>
+          计算任务调度
+        </a>
+        <a href="meter_data_analysis.html" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+          计量数据分析
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <img class="avatar" src="https://i02piccdn.sogoucdn.com/576b5215a1204f09" alt="管理员头像" />
+        <div class="user-info">
+          <div class="name">管理员</div>
+          <div class="role">super_admin</div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="content-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <h2>平台总览</h2>
+          <span>2026-03-23 周一</span>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-status">
+            <div class="status-dot"></div>
+            集群运行正常
+          </div>
+          <div style="position:relative;">
+            <button class="topbar-btn" title="通知" id="btnNotification">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span style="position:absolute;top:4px;right:4px;width:8px;height:8px;background:#ef4444;border-radius:50%;"></span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <div class="notification-traffic-lights">
+                  <div class="notification-traffic-light close"></div>
+                  <div class="notification-traffic-light minimize"></div>
+                  <div class="notification-traffic-light maximize"></div>
+                </div>
+                <h3>通知中心</h3>
+                <span class="mark-read">全部已读</span>
+              </div>
+              <div class="notification-list">
+                <div class="notification-item unread">
+                  <div class="notification-icon red">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-title">存储集群告警</div>
+                    <div class="notification-desc">Kafka-Broker-03 磁盘使用率超过90%</div>
+                  </div>
+                  <span class="notification-time">5分钟前</span>
+                </div>
+                <div class="notification-item unread">
+                  <div class="notification-icon amber">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-title">任务执行警告</div>
+                    <div class="notification-desc">台区负荷预测模型训练任务运行时间过长</div>
+                  </div>
+                  <span class="notification-time">12分钟前</span>
+                </div>
+                <div class="notification-item">
+                  <div class="notification-icon green">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-title">任务完成</div>
+                    <div class="notification-desc">日冻结电量数据汇总任务已完成</div>
+                  </div>
+                  <span class="notification-time">1小时前</span>
+                </div>
+                <div class="notification-item">
+                  <div class="notification-icon blue">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-title">数据采集报告</div>
+                    <div class="notification-desc">昨日数据采集成功率达99.7%</div>
+                  </div>
+                  <span class="notification-time">2小时前</span>
+                </div>
+                <div class="notification-item">
+                  <div class="notification-icon green">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <div class="notification-content">
+                    <div class="notification-title">系统更新</div>
+                    <div class="notification-desc">集群节点 DataNode-12 已恢复在线</div>
+                  </div>
+                  <span class="notification-time">3小时前</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="topbar-btn" title="刷新">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="content-body">
+        <div class="stats-row">
+          <div class="stat-card animate-in delay-1">
+            <div class="stat-label">接入电表总量</div>
+            <div class="stat-value">8,423,716</div>
+            <div class="stat-sub"><span class="up">↑ 1.2%</span>&nbsp;较上月</div>
+          </div>
+          <div class="stat-card animate-in delay-2">
+            <div class="stat-label">今日采集数据量</div>
+            <div class="stat-value">56.8 <span style="font-size:14px;color:var(--text-muted)">TB</span></div>
+            <div class="stat-sub"><span class="up">↑ 3.4%</span>&nbsp;较昨日</div>
+          </div>
+          <div class="stat-card animate-in delay-3">
+            <div class="stat-label">存储集群利用率</div>
+            <div class="stat-value">73.6<span style="font-size:14px;color:var(--text-muted)">%</span></div>
+            <div class="stat-sub">总容量 2.4 PB</div>
+          </div>
+          <div class="stat-card animate-in delay-4">
+            <div class="stat-label">运行计算任务</div>
+            <div class="stat-value">1,247</div>
+            <div class="stat-sub"><span class="down">↓ 5</span>&nbsp;排队中</div>
+          </div>
+        </div>
+
+        <div class="grid-3-1 animate-in delay-3">
+          <div class="card">
+            <div class="card-title">
+              近12小时数据采集量（万条/小时）
+              <span class="badge">实时</span>
+            </div>
+            <div class="chart-area">
+              <div class="chart-bars" id="chartBars"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">集群节点状态</div>
+            <div class="node-list">
+              <div class="node-item">
+                <div class="node-info">
+                  <div class="node-dot online"></div>
+                  <div>
+                    <div class="node-name">HDFS-Master-01</div>
+                    <div class="node-ip">10.28.1.11</div>
+                  </div>
+                </div>
+                <div class="node-metrics">
+                  <span><span class="node-metric-label">CPU</span>34%</span>
+                  <span><span class="node-metric-label">MEM</span>61%</span>
+                </div>
+              </div>
+              <div class="node-item">
+                <div class="node-info">
+                  <div class="node-dot online"></div>
+                  <div>
+                    <div class="node-name">Spark-Worker-03</div>
+                    <div class="node-ip">10.28.2.33</div>
+                  </div>
+                </div>
+                <div class="node-metrics">
+                  <span><span class="node-metric-label">CPU</span>72%</span>
+                  <span><span class="node-metric-label">MEM</span>85%</span>
+                </div>
+              </div>
+              <div class="node-item">
+                <div class="node-info">
+                  <div class="node-dot warning"></div>
+                  <div>
+                    <div class="node-name">HBase-Region-07</div>
+                    <div class="node-ip">10.28.3.47</div>
+                  </div>
+                </div>
+                <div class="node-metrics">
+                  <span><span class="node-metric-label">CPU</span>89%</span>
+                  <span><span class="node-metric-label">MEM</span>92%</span>
+                </div>
+              </div>
+              <div class="node-item">
+                <div class="node-info">
+                  <div class="node-dot online"></div>
+                  <div>
+                    <div class="node-name">Kafka-Broker-02</div>
+                    <div class="node-ip">10.28.1.52</div>
+                  </div>
+                </div>
+                <div class="node-metrics">
+                  <span><span class="node-metric-label">CPU</span>28%</span>
+                  <span><span class="node-metric-label">MEM</span>45%</span>
+                </div>
+              </div>
+              <div class="node-item">
+                <div class="node-info">
+                  <div class="node-dot offline"></div>
+                  <div>
+                    <div class="node-name">DataNode-12</div>
+                    <div class="node-ip">10.28.4.12</div>
+                  </div>
+                </div>
+                <div class="node-metrics">
+                  <span><span class="node-metric-label">CPU</span>—</span>
+                  <span><span class="node-metric-label">MEM</span>—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card animate-in delay-4">
+          <div class="card-title">
+            近期计算任务
+            <span class="badge">最近 7 条</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>任务ID</th>
+                  <th>任务名称</th>
+                  <th>类型</th>
+                  <th>提交时间</th>
+                  <th>耗时</th>
+                  <th>状态</th>
+                  <th>进度</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">JOB-20260323-0841</td>
+                  <td>日冻结电量数据汇总</td>
+                  <td><span class="tag tag-info">Spark</span></td>
+                  <td class="mono">08:41:12</td>
+                  <td class="mono">14m 32s</td>
+                  <td><span class="tag tag-success">完成</span></td>
+                  <td><div class="progress"><div class="progress-fill green" style="width:100%"></div></div></td>
+                </tr>
+                <tr>
+                  <td class="mono">JOB-20260323-0900</td>
+                  <td>线损异常用户筛查</td>
+                  <td><span class="tag tag-info">MapReduce</span></td>
+                  <td class="mono">09:00:05</td>
+                  <td class="mono">—</td>
+                  <td><span class="tag tag-warning">运行中</span></td>
+                  <td><div class="progress"><div class="progress-fill blue" style="width:67%"></div></div></td>
+                </tr>
+                <tr>
+                  <td class="mono">JOB-20260323-0915</td>
+                  <td>台区负荷预测模型训练</td>
+                  <td><span class="tag tag-info">Spark ML</span></td>
+                  <td class="mono">09:15:30</td>
+                  <td class="mono">—</td>
+                  <td><span class="tag tag-warning">运行中</span></td>
+                  <td><div class="progress"><div class="progress-fill blue" style="width:42%"></div></div></td>
+                </tr>
+                <tr>
+                  <td class="mono">JOB-20260323-0730</td>
+                  <td>月度电费结算批处理</td>
+                  <td><span class="tag tag-info">Spark</span></td>
+                  <td class="mono">07:30:00</td>
+                  <td class="mono">48m 17s</td>
+                  <td><span class="tag tag-success">完成</span></td>
+                  <td><div class="progress"><div class="progress-fill green" style="width:100%"></div></div></td>
+                </tr>
+                <tr>
+                  <td class="mono">JOB-20260323-0650</td>
+                  <td>采集终端心跳异常检测</td>
+                  <td><span class="tag tag-info">Flink</span></td>
+                  <td class="mono">06:50:44</td>
+                  <td class="mono">持续运行</td>
+                  <td><span class="tag tag-success">在线</span></td>
+                  <td><div class="progress"><div class="progress-fill green" style="width:100%"></div></div></td>
+                </tr>
+                <tr>
+                  <td class="mono">JOB-20260322-2300</td>
+                  <td>数据质量校验（全量）</td>
+                  <td><span class="tag tag-info">MapReduce</span></td>
+                  <td class="mono">23:00:00</td>
+                  <td class="mono">2h 14m</td>
+                  <td><span class="tag tag-success">完成</span></td>
+                  <td><div class="progress"><div class="progress-fill green" style="width:100%"></div></div></td>
+                </tr>
+                <tr>
+                  <td class="mono">JOB-20260323-0932</td>
+                  <td>窃电嫌疑用户画像分析</td>
+                  <td><span class="tag tag-info">Spark ML</span></td>
+                  <td class="mono">09:32:18</td>
+                  <td class="mono">—</td>
+                  <td><span class="tag tag-warning">排队中</span></td>
+                  <td><div class="progress"><div class="progress-fill amber" style="width:0%"></div></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-item">
+          <span class="dot green"></span>
+          计算引擎就绪
+        </div>
+        <div class="status-item">数据库: 已连接</div>
+        <div class="status-item">
+          <span class="dot amber"></span>
+          负载正常
+        </div>
+        <div class="status-item" style="margin-left:auto;">集群: 8节点在线 / 48总节点</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var hours = ['22:00','23:00','00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00','08:00','09:00'];
+  var values = [1420, 980, 340, 180, 150, 210, 680, 1580, 2340, 2810, 3120, 2960];
+  var maxVal = Math.max.apply(null, values);
+
+  function renderChartBars() {
+    var chartBars = document.getElementById('chartBars');
+    if (!chartBars) return;
+    while (chartBars.firstChild) { chartBars.removeChild(chartBars.firstChild); }
+    var containerHeight = chartBars.clientHeight || 160;
+    var availableHeight = containerHeight - 26;
+    if (availableHeight < 60) availableHeight = containerHeight;
+
+    for (var i = 0; i < hours.length; i += 1) {
+      (function (h, value, index) {
+        var group = document.createElement('div');
+        group.className = 'chart-bar-group';
+        var bar = document.createElement('div');
+        bar.className = 'chart-bar';
+        bar.style.height = '0px';
+        bar.title = h + ' — ' + value + ' 万条';
+        var label = document.createElement('div');
+        label.className = 'chart-bar-label';
+        label.textContent = h.split(':')[0];
+        group.appendChild(bar);
+        group.appendChild(label);
+        chartBars.appendChild(group);
+        var targetHeight = Math.round((value / maxVal) * availableHeight);
+        if (targetHeight < 6) targetHeight = 6;
+        setTimeout(function () { bar.style.height = targetHeight + 'px'; }, 30 + 60 * index);
+      })(hours[i], values[i], i);
+    }
+  }
+
+  var notifBtn = document.getElementById('btnNotification');
+  var notifDropdown = document.getElementById('notificationDropdown');
+  var notifIsOpen = false;
+
+  notifBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    notifIsOpen = !notifIsOpen;
+    if (notifIsOpen) {
+      notifDropdown.classList.add('active');
+    } else {
+      notifDropdown.classList.remove('active');
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    if (notifIsOpen && !notifDropdown.contains(e.target)) {
+      notifIsOpen = false;
+      notifDropdown.classList.remove('active');
+    }
+  });
+
+  document.querySelectorAll('.mark-read').forEach(function(el) {
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.notification-item.unread').forEach(function(item) {
+        item.classList.remove('unread');
+      });
+    });
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderChartBars);
+  } else {
+    renderChartBars();
+  }
+</script>
+</body>
+</html>

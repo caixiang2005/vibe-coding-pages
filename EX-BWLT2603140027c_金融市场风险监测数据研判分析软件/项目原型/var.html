@@ -1,0 +1,587 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VaR模型 - 金融市场风险监测数据研判分析软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--mac-title:#e8e6e3;--mac-title-inactive:#f6f6f6;--sidebar-bg:#1e1e2e;--sidebar-text:#a6adc8;--sidebar-active:rgba(137,180,250,.12);--sidebar-active-text:#89b4fa;--content-bg:#11111b;--content-bg-2:#181825;--card-bg:#1e1e2e;--card-border:rgba(255,255,255,.04);--text-primary:#cdd6f4;--text-secondary:#6c7086;--text-dim:#45475a;--accent-blue:#89b4fa;--accent-green:#a6e3a1;--accent-red:#f38ba8;--accent-yellow:#f9e2af;--accent-mauve:#cba6f7;--accent-peach:#fab387;--accent-teal:#94e2d5;--shadow-heavy:0 30px 80px rgba(0,0,0,.6),0 0 1px rgba(255,255,255,.05);--radius:10px}
+    body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a12;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;color:var(--text-primary)}
+    .desktop-bg{position:fixed;inset:0;background:linear-gradient(135deg,#0c0c1d 0%,#1a1a2e 40%,#16213e 70%,#0f3460 100%);z-index:0}
+    .desktop-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 20%,rgba(137,180,250,.04) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(203,166,247,.03) 0%,transparent 50%)}
+    .mac-window{position:relative;z-index:1;width:1280px;max-width:96vw;height:820px;max-height:90vh;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-heavy);display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.06)}
+    .title-bar{height:52px;min-height:52px;background:linear-gradient(180deg,#2a2a3c 0%,#232336 100%);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid rgba(0,0,0,.4);-webkit-app-region:drag;position:relative}
+    .traffic-lights{display:flex;gap:8px;z-index:2}
+    .traffic-light{width:12px;height:12px;border-radius:50%;position:relative}
+    .traffic-light.close{background:#ec6a5e;border:1px solid #d14f44}
+    .traffic-light.minimize{background:#f4be4f;border:1px solid #d69e2e}
+    .traffic-light.maximize{background:#61c554;border:1px solid #4da83f}
+    .title-bar-text{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;font-weight:500;color:#a0a0b8;letter-spacing:.3px;white-space:nowrap}
+    .title-bar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);padding:4px 12px 4px 8px;border-radius:6px;font-size:12px;color:var(--text-secondary)}
+    .user-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent-blue),var(--accent-mauve));display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:10px;color:#fff;font-weight:600}
+    .main-body{flex:1;display:flex;overflow:hidden;background:var(--content-bg)}
+    .sidebar{width:220px;min-width:220px;background:var(--sidebar-bg);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;padding:12px 0;overflow-y:auto}
+    .sidebar-section{padding:0 12px;margin-bottom:4px}
+    .sidebar-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);padding:12px 12px 6px}
+    .sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--sidebar-text);transition:all .15s;position:relative;margin-bottom:1px}
+    .sidebar-item:hover{background:rgba(255,255,255,.04);color:var(--text-primary)}
+    .sidebar-item.active{background:var(--sidebar-active);color:var(--sidebar-active-text)}
+    .sidebar-item .icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:13px;opacity:.7}
+    .sidebar-item.active .icon{opacity:1}
+    .sidebar-item .badge{margin-left:auto;background:var(--accent-red);color:#11111b;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+    .sidebar-status{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.04)}
+    .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px}
+    .status-dot.online{background:var(--accent-green);box-shadow:0 0 6px rgba(166,227,161,.4)}
+    .status-text{font-size:11px;color:var(--text-secondary)}
+    .content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .content-header{display:flex;flex-direction:column;gap:12px;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.03);background:var(--content-bg-2)}
+    .content-title{font-size:18px;font-weight:600;color:var(--text-primary);letter-spacing:-.2px}
+    .content-subtitle{font-size:12px;color:var(--text-secondary);margin-top:2px}
+    .header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;width:100%}
+    .btn{padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+    .btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary)}
+    .btn.primary{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.2);color:var(--accent-blue)}
+    .btn.primary:hover{background:rgba(137,180,250,.25)}
+    .btn.warning{background:rgba(243,139,168,.15);border-color:rgba(243,139,168,.2);color:var(--accent-red)}
+    .btn.warning:hover{background:rgba(243,139,168,.25)}
+    .btn.info{background:rgba(137,180,250,.12);border-color:rgba(137,180,250,.18);color:var(--accent-blue)}
+    .btn.info:hover{background:rgba(137,180,250,.22)}
+    .time-display{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim)}
+    .tab-bar{display:flex;gap:2px;margin-bottom:14px}
+    .tab-item{padding:5px 12px;font-size:11px;color:var(--text-dim);border-radius:4px;cursor:pointer;transition:all .15s}
+    .tab-item:hover{color:var(--text-secondary)}
+    .tab-item.active{background:rgba(137,180,250,.1);color:var(--accent-blue)}
+    .market-filter{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    .filter-chip{padding:4px 12px;font-size:11px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-secondary);cursor:pointer;transition:all .15s}
+    .filter-chip:hover{background:rgba(255,255,255,.08)}
+    .filter-chip.active{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.3);color:var(--accent-blue)}
+    .content-scroll{flex:1;overflow-y:auto;padding:20px 24px}
+    .content-scroll::-webkit-scrollbar{width:6px}
+    .content-scroll::-webkit-scrollbar-track{background:transparent}
+    .content-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+    .tab-bar{display:flex;gap:2px;margin-bottom:14px}
+    .tab-item{padding:5px 12px;font-size:11px;color:var(--text-dim);border-radius:4px;cursor:pointer;transition:all .15s}
+    .tab-item:hover{color:var(--text-secondary)}
+    .tab-item.active{background:rgba(137,180,250,.1);color:var(--accent-blue)}
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+    .kpi-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:16px 18px}
+    .kpi-label{font-size:11px;color:var(--text-secondary);margin-bottom:8px;letter-spacing:.3px}
+    .kpi-value{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;letter-spacing:-1px}
+    .kpi-sub{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px}
+    .kpi-change{font-family:'JetBrains Mono',monospace;font-weight:500}
+    .kpi-change.up{color:var(--accent-red)}
+    .kpi-change.down{color:var(--accent-green)}
+    .kpi-change.neutral{color:var(--accent-yellow)}
+    .kpi-desc{color:var(--text-dim)}
+    .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:18px;overflow:hidden}
+    .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .card-title{font-size:13px;font-weight:600;color:var(--text-primary)}
+    .card-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500}
+    .tag-warn{background:rgba(243,139,168,.12);color:var(--accent-red)}
+    .tag-safe{background:rgba(166,227,161,.12);color:var(--accent-green)}
+    .tag-info{background:rgba(137,180,250,.12);color:var(--accent-blue)}
+    .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .bar-label{font-size:11px;color:var(--text-secondary);width:70px;text-align:right;flex-shrink:0}
+    .bar-track{flex:1;height:8px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:4px;transition:width 1s ease}
+    .bar-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);width:40px;flex-shrink:0}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .kpi-card,.card{animation:fadeIn .4s ease both}
+    .kpi-card:nth-child(2){animation-delay:.05s}
+    .kpi-card:nth-child(3){animation-delay:.1s}
+    .kpi-card:nth-child(4){animation-delay:.15s}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s ease}
+    .modal-content{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;width:400px;max-width:90vw;overflow:hidden}
+    .modal-header{display:flex;align-items:center;justify-content:center;padding:16px 20px;background:var(--content-bg-2);border-bottom:1px solid rgba(255,255,255,.05);position:relative}
+    .modal-header .traffic-lights{display:flex;gap:8px;position:absolute;left:20px;top:50%;transform:translateY(-50%)}
+    .modal-header .traffic-light{width:12px;height:12px;border-radius:50%;cursor:pointer}
+    .modal-header .traffic-light.close{background:#ff5f57}
+    .modal-header .traffic-light.minimize{background:#febc2e}
+    .modal-header .traffic-light.maximize{background:#28c840}
+    .modal-title{font-size:14px;font-weight:600;color:var(--text-primary)}
+    .modal-body{padding:24px 20px}
+    .modal-body p{font-size:13px;color:var(--text-secondary);margin-bottom:16px}
+    .report-progress{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:12px}
+    .progress-fill{height:100%;background:var(--accent-blue);border-radius:3px;width:0;transition:width .4s ease}
+    .report-status{font-size:11px;color:var(--text-dim)}
+    .report-success{text-align:center;padding:20px 0}
+    .success-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:rgba(166,227,161,.15);color:var(--accent-green);border-radius:50%;font-size:24px;margin-bottom:16px}
+    .report-filename{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);margin:8px 0 20px}
+    .toast-notification{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 20px;font-size:13px;color:var(--text-primary);z-index:1001;transition:transform .3s ease;display:flex;align-items:center;gap:10px}
+    .toast-notification.show{transform:translateX(-50%) translateY(0)}
+    .toast-notification.success{border-left:3px solid var(--accent-green)}
+    .toast-notification.warning{border-left:3px solid var(--accent-yellow)}
+    .toast-notification.error{border-left:3px solid var(--accent-red)}
+    .trend-chart{height:180px;display:flex;align-items:flex-end;gap:3px;padding:10px 0;position:relative}
+    .trend-chart::before{content:'';position:absolute;left:0;right:0;bottom:40px;height:1px;background:rgba(255,255,255,.06)}
+    .chart-bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:pointer;transition:all .2s}
+    .chart-bar:hover .bar-fill{filter:brightness(1.2)}
+    .bar-fill{border-radius:3px 3px 0 0;min-height:4px;transition:height .6s ease}
+    .chart-label{font-size:9px;color:var(--text-dim);margin-top:6px;text-align:center}
+    .chart-val{font-family:'JetBrains Mono';font-size:9px;margin-bottom:4px;opacity:0}
+    .chart-bar:hover .chart-val{opacity:1}
+    .trend-legend{display:flex;gap:20px;margin-top:12px}
+    .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary)}
+    .legend-dot{width:8px;height:8px;border-radius:2px}
+    .time-selector{display:flex;gap:6px}
+    .time-btn{padding:4px 10px;font-size:10px;border-radius:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:var(--text-secondary);cursor:pointer;transition:all .15s}
+    .time-btn:hover{background:rgba(255,255,255,.08)}
+    .time-btn.active{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.2);color:var(--accent-blue)}
+    .asset-bar-row{cursor:pointer;padding:8px;border-radius:6px;transition:background .15s}
+    .asset-bar-row:hover{background:rgba(255,255,255,.04)}
+    .var-action-btn{padding:4px 10px;font-size:10px;border-radius:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-secondary);cursor:pointer}
+    .var-action-btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary)}
+  </style>
+</head>
+<body>
+  <div class="desktop-bg"></div>
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <div class="title-bar-text">金融市场风险监测数据研判分析软件</div>
+      <div class="title-bar-right">
+        <div class="time-display" id="clock"></div>
+        <div class="user-badge">
+          <div class="user-avatar">鲍</div>
+          <span>鲍姝帆</span>
+        </div>
+      </div>
+    </div>
+    <div class="main-body">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">软件功能</div>
+          <div class="sidebar-item" onclick="location.href='dashboard.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            风险总览
+          </div>
+          <div class="sidebar-item" onclick="location.href='market.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+            市场监测
+          </div>
+          <div class="sidebar-item" onclick="location.href='credit.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            信用风险
+            <span class="badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="location.href='liquidity.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
+            流动性分析
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="location.href='stress.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            压力测试
+          </div>
+          <div class="sidebar-item active">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span>
+            VaR模型
+          </div>
+          <div class="sidebar-item" onclick="location.href='correlation.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+            关联分析
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="location.href='system.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+            系统设置
+          </div>
+        </div>
+        <div class="sidebar-status">
+          <span class="status-dot online"></span>
+          <span class="status-text">数据源连接正常 · 延迟 12ms</span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="content-header">
+          <div>
+            <div class="content-title">VaR模型</div>
+            <div class="content-subtitle">在险价值计算与回溯检验 · 数据更新于 <span id="updateTime"></span></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn" onclick="showVarConfig()">模型配置</button>
+            <button class="btn" onclick="showModelCompare()">模型对比</button>
+            <button class="btn" onclick="showRiskAttribution()">风险归因</button>
+            <button class="btn" onclick="showVarStressTest()">压力测试</button>
+            <button class="btn" onclick="showBackTesting()">回溯检验</button>
+            <button class="btn" onclick="showExpectedShortfall()">Expected Shortfall</button>
+            <button class="btn" onclick="showPnLAnalysis()">盈亏分析</button>
+            <button class="btn warning" onclick="pushVarAlert()"><i class="fas fa-bell"></i> 一键预警推送</button>
+            <button class="btn" onclick="showVarHistory()"><i class="fas fa-history"></i> 历史 VaR 回溯</button>
+            <button class="btn" onclick="showVarForecast()"><i class="fas fa-chart-line"></i> VaR 预测</button>
+            <button class="btn" onclick="exportData()">导出数据</button>
+            <button class="btn primary" onclick="generateReport()">生成报告</button>
+          </div>
+        </div>
+        <div class="content-scroll">
+          <div class="tab-bar">
+            <div class="tab-item active" onclick="switchVarTab(this,'historical')">历史模拟法</div>
+            <div class="tab-item" onclick="switchVarTab(this,'variance')">方差-协方差法</div>
+            <div class="tab-item" onclick="switchVarTab(this,'montecarlo')">蒙特卡洛模拟</div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-card" onclick="showKpiDetail('VaR(95%, 1D)','1.67%','VaR(Value at Risk)在95%置信水平下，1天内最大可能损失。表示在未来1天内，有95%的把握认为损失不会超过1.67%。该指标基于历史模拟法计算，使用过去250个交易日的收益率数据。')">
+              <div class="kpi-label">VaR(95%, 1D) <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-blue)">1.67%</div>
+              <div class="kpi-sub"><span class="kpi-change up">+0.12%</span><span class="kpi-desc">置信水平 95%</span></div>
+            </div>
+            <div class="kpi-card" onclick="showKpiDetail('VaR(99%, 1D)','2.34%','VaR(Value at Risk)在99%置信水平下，1天内最大可能损失。表示在未来1天内，有99%的把握认为损失不会超过2.34%。该指标较VaR(95%)更为保守，用于极端风险度量。')">
+              <div class="kpi-label">VaR(99%, 1D) <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-mauve)">2.34%</div>
+              <div class="kpi-sub"><span class="kpi-change up">+0.18%</span><span class="kpi-desc">置信水平 99%</span></div>
+            </div>
+            <div class="kpi-card" onclick="showKpiDetail('CVaR(99%, 1D)','3.12%','CVaR(Conditional VaR)条件在险价值，也称为Expected Shortfall。表示在损失超过VaR阈值时的平均损失水平。该指标更好地捕捉了极端损失风险，比VaR更具尾部敏感性。')">
+              <div class="kpi-label">CVaR(99%, 1D) <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-red)">3.12%</div>
+              <div class="kpi-sub"><span class="kpi-change up">+0.24%</span><span class="kpi-desc">条件在险价值</span></div>
+            </div>
+            <div class="kpi-card" onclick="showKpiDetail('回溯检验突破','4次','回溯检验用于验证VaR模型的准确性。统计近250个交易日内，实际损失超过VaR预测的天数。4次突破说明模型表现良好(预期约12.5次突破，实际仅4次)。绿灯区表示模型验证通过。')">
+              <div class="kpi-label">回溯检验突破 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-yellow)">4次</div>
+              <div class="kpi-sub"><span class="kpi-change neutral">近250日</span><span class="kpi-desc">绿灯区</span></div>
+            </div>
+          </div>
+            <div class="card" style="margin-bottom:20px;">
+            <div class="card-head"><span class="card-title">VaR历史趋势</span>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <div class="time-selector">
+                  <button class="time-btn" onclick="switchVarTrend(this,'1m')">1月</button>
+                  <button class="time-btn active" onclick="switchVarTrend(this,'3m')">3月</button>
+                  <button class="time-btn" onclick="switchVarTrend(this,'6m')">6月</button>
+                  <button class="time-btn" onclick="switchVarTrend(this,'1y')">1年</button>
+                </div>
+                <button class="var-action-btn" onclick="showBackTest()">回溯检验</button>
+                <button class="var-action-btn" onclick="exportVarData()">导出</button>
+              </div>
+            </div>
+            <div class="trend-chart" id="varTrendChart"></div>
+            <div class="trend-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div>VaR(95%,1D)</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent-mauve)"></div>VaR(99%,1D)</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent-red)"></div>实际损失</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">VaR分解 - 各资产类别贡献</span>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button class="var-action-btn" onclick="sortVarAssets('pct')">按占比</button>
+                <button class="var-action-btn" onclick="sortVarAssets('name')">按名称</button>
+                <button class="var-action-btn" onclick="exportVarContribution()">导出分解</button>
+              </div>
+            </div>
+            <div style="padding:6px 0;" id="varBarChart">
+              <div class="asset-bar-row" onclick="showAssetVarDetail('利率债','35.2%','1.52%','利率债组合对总VaR的贡献度最高，主要受久期风险影响')">
+                <div class="bar-row"><span class="bar-label">利率债</span><div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--accent-blue)"></div></div><span class="bar-val">35.2%</span><button class="var-action-btn" onclick="event.stopPropagation();viewVarTrend('利率债')" style="margin-left:8px;padding:2px 6px;font-size:9px;">趋势</button></div>
+              </div>
+              <div class="asset-bar-row" onclick="showAssetVarDetail('信用债','27.8%','1.18%','信用债组合受信用利差扩大影响较大')">
+                <div class="bar-row"><span class="bar-label">信用债</span><div class="bar-track"><div class="bar-fill" style="width:28%;background:var(--accent-mauve)"></div></div><span class="bar-val">27.8%</span><button class="var-action-btn" onclick="event.stopPropagation();viewVarTrend('信用债')" style="margin-left:8px;padding:2px 6px;font-size:9px;">趋势</button></div>
+              </div>
+              <div class="asset-bar-row" onclick="showAssetVarDetail('权益类','18.1%','0.76%','权益类资产受市场波动影响显著')">
+                <div class="bar-row"><span class="bar-label">权益类</span><div class="bar-track"><div class="bar-fill" style="width:18%;background:var(--accent-peach)"></div></div><span class="bar-val">18.1%</span><button class="var-action-btn" onclick="event.stopPropagation();viewVarTrend('权益类')" style="margin-left:8px;padding:2px 6px;font-size:9px;">趋势</button></div>
+              </div>
+              <div class="asset-bar-row" onclick="showAssetVarDetail('外汇','11.6%','0.49%','外汇敞口主要来自美元资产')">
+                <div class="bar-row"><span class="bar-label">外汇</span><div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--accent-yellow)"></div></div><span class="bar-val">11.6%</span><button class="var-action-btn" onclick="event.stopPropagation();viewVarTrend('外汇')" style="margin-left:8px;padding:2px 6px;font-size:9px;">趋势</button></div>
+              </div>
+              <div class="asset-bar-row" onclick="showAssetVarDetail('商品','7.3%','0.31%')">
+                <div class="bar-row"><span class="bar-label">商品</span><div class="bar-track"><div class="bar-fill" style="width:7%;background:var(--accent-teal)"></div></div><span class="bar-val">7.3%</span><button class="var-action-btn" onclick="event.stopPropagation();viewVarTrend('商品')" style="margin-left:8px;padding:2px 6px;font-size:9px;">趋势</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function updateClock(){
+      const now=new Date();
+      const h=String(now.getHours()).padStart(2,'0');
+      const m=String(now.getMinutes()).padStart(2,'0');
+      const s=String(now.getSeconds()).padStart(2,'0');
+      document.getElementById('clock').textContent=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${h}:${m}:${s}`;
+      document.getElementById('updateTime').textContent=`${h}:${m}`;
+    }
+    updateClock();
+    setInterval(updateClock,1000);
+
+    function switchVarTab(el,method){
+      el.closest('.tab-bar').querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+      const methodTag=document.getElementById('varMethodTag');
+      const barChart=document.getElementById('varBarChart');
+      const kpiValues=document.querySelectorAll('.kpi-value');
+      const methods={
+        historical:{
+          name:'历史模拟法',
+          kpi:['1.67%','2.34%','3.12%','4次'],
+          kpiSub:['+0.12%','+0.18%','+0.24%','近250日'],
+          data:[
+            ['利率债','35.2%','35','var(--accent-blue)'],
+            ['信用债','27.8%','28','var(--accent-mauve)'],
+            ['权益类','18.1%','18','var(--accent-peach)'],
+            ['外汇','11.6%','12','var(--accent-yellow)'],
+            ['商品','7.3%','7','var(--accent-teal)']
+          ]
+        },
+        variance:{
+          name:'方差-协方差法',
+          kpi:['1.52%','2.18%','2.89%','3次'],
+          kpiSub:['+0.08%','+0.12%','+0.18%','近250日'],
+          data:[
+            ['利率债','38.5%','39','var(--accent-blue)'],
+            ['信用债','25.2%','25','var(--accent-mauve)'],
+            ['权益类','21.3%','21','var(--accent-peach)'],
+            ['外汇','9.8%','10','var(--accent-yellow)'],
+            ['商品','5.2%','5','var(--accent-teal)']
+          ]
+        },
+        montecarlo:{
+          name:'蒙特卡洛模拟',
+          kpi:['1.78%','2.51%','3.34%','5次'],
+          kpiSub:['+0.15%','+0.22%','+0.31%','近250日'],
+          data:[
+            ['利率债','32.1%','32','var(--accent-blue)'],
+            ['信用债','30.5%','31','var(--accent-mauve)'],
+            ['权益类','20.8%','21','var(--accent-peach)'],
+            ['外汇','10.2%','10','var(--accent-yellow)'],
+            ['商品','6.4%','6','var(--accent-teal)']
+          ]
+        }
+      };
+      const m=methods[method];
+      if(m&&methodTag&&barChart){
+        methodTag.textContent=m.name;
+        m.kpi.forEach((v,i)=>{if(kpiValues[i])kpiValues[i].textContent=v;});
+        const kpiSubs=document.querySelectorAll('.kpi-sub');
+        m.kpiSub.forEach((v,i)=>{if(kpiSubs[i]){const change=kpiSubs[i].querySelector('.kpi-change');if(change)change.textContent=v;}});
+        barChart.innerHTML=m.data.map(row=>
+          '<div class="bar-row"><span class="bar-label">'+row[0]+'</span><div class="bar-track"><div class="bar-fill" style="width:'+row[2]+'%;background:'+row[3]+'"></div></div><span class="bar-val">'+row[1]+'</span></div>'
+        ).join('');
+        showToast('已切换至'+m.name,'success');
+      }
+    }
+
+    const trendData={
+      '1m':{labels:['3/1','3/5','3/8','3/12','3/15','3/19','3/22','3/26'],var95:[1.45,1.52,1.48,1.61,1.55,1.62,1.58,1.67],var99:[2.01,2.12,2.08,2.25,2.18,2.31,2.24,2.34],loss:[1.32,1.45,1.38,1.55,1.62,1.48,1.71,1.68]},
+      '3m':{labels:['1月','2月','3月'],var95:[1.42,1.58,1.67],var99:[1.98,2.21,2.34],loss:[1.28,1.65,1.68]},
+      '6m':{labels:['10月','11月','12月','1月','2月','3月'],var95:[1.35,1.44,1.52,1.55,1.62,1.67],var99:[1.89,2.01,2.12,2.18,2.28,2.34],loss:[1.22,1.38,1.48,1.55,1.72,1.68]},
+      '1y':{labels:['Q1','Q2','Q3','Q4'],var95:[1.38,1.45,1.58,1.67],var99:[1.92,2.02,2.21,2.34],loss:[1.25,1.42,1.68,1.68]}
+    };
+
+    function renderVarTrend(data){
+      const chart=document.getElementById('varTrendChart');
+      if(!chart)return;
+      const maxVar=Math.max(...data.var95,...data.var99);
+      const maxLoss=Math.max(...data.loss);
+      const maxVal=Math.max(maxVar,maxLoss);
+      chart.innerHTML=data.labels.map((label,i)=>{
+        const h95=(data.var95[i]/maxVal*140).toFixed(1);
+        const h99=(data.var99[i]/maxVal*140).toFixed(1);
+        const hl=(data.loss[i]/maxVal*140).toFixed(1);
+        return`<div class="chart-bar" onclick="showVarTrendDetail('${label}',${data.var95[i]},${data.var99[i]},${data.loss[i]})">
+          <div class="chart-val" style="color:var(--accent-red)">${data.loss[i]}%</div>
+          <div style="display:flex;align-items:flex-end;gap:2px;height:140px;">
+            <div class="bar-fill" style="width:8px;height:${h95}px;background:var(--accent-blue)"></div>
+            <div class="bar-fill" style="width:8px;height:${h99}px;background:var(--accent-mauve)"></div>
+            <div class="bar-fill" style="width:8px;height:${hl}px;background:var(--accent-red)"></div>
+          </div>
+          <div class="chart-label">${label}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function switchVarTrend(el,period){
+      el.closest('.time-selector').querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
+      el.classList.add('active');
+      renderVarTrend(trendData[period]);
+      const periodMap = {'1m':'1 个月','3m':'3 个月','6m':'6 个月','1y':'1 年'};
+      showToast('已切换至'+(periodMap[period]||'历史')+'趋势','success');
+    }
+
+    function showVarTrendDetail(date,var95,var99,loss){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">${date} VaR详情</span></div><div class="modal-body"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;"><div style="text-align:center;padding:12px;background:rgba(137,180,250,.08);border-radius:8px;"><div style="font-size:11px;color:var(--text-secondary)">VaR(95%)</div><div style="font-family:'JetBrains Mono';font-size:22px;color:var(--accent-blue)">${var95}%</div></div><div style="text-align:center;padding:12px;background:rgba(203,166,247,.08);border-radius:8px;"><div style="font-size:11px;color:var(--text-secondary)">VaR(99%)</div><div style="font-family:'JetBrains Mono';font-size:22px;color:var(--accent-mauve)">${var99}%</div></div><div style="text-align:center;padding:12px;background:rgba(243,139,168,.08);border-radius:8px;"><div style="font-size:11px;color:var(--text-secondary)">实际损失</div><div style="font-family:'JetBrains Mono';font-size:22px;color:var(--accent-red)">${loss}%</div></div></div><p style="font-size:12px;color:var(--text-dim);text-align:center;">${loss>var95?'该日实际损失超过95% VaR阈值，触发回溯检验异常':'该日实际损失在VaR阈值范围内'}</p><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showAssetVarDetail(name,pct,varContribution,analysis){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">${name} - VaR详情</span></div><div class="modal-body" style="padding:20px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;"><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">VaR占比</div><div style="font-size:20px;font-family:'JetBrains Mono';color:var(--accent-blue)">${pct}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">VaR贡献值</div><div style="font-size:20px;font-family:'JetBrains Mono';color:var(--text-primary)">${varContribution}</div></div></div><div style="background:rgba(255,255,255,.03);padding:12px;border-radius:6px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;">风险分析</div><p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">${analysis||'该资产类别对整体VaR有一定贡献，需关注其风险变化。'}</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showBackTest(){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:480px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">回溯检验报告</span></div><div class="modal-body" style="padding:20px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;"><div style="background:rgba(137,180,250,.08);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">检验区间</div><div style="font-size:14px;color:var(--text-primary)">近250日</div></div><div style="background:rgba(166,227,161,.08);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">突破次数</div><div style="font-size:20px;color:var(--accent-green)">4次</div></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;"> Kupiec检验</div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:11px;color:var(--text-secondary)">失败率</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--text-primary)">1.6%</span></div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:11px;color:var(--text-secondary)">预期失败率</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--text-primary)">5.0%</span></div><div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-secondary)">P值</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-green)">0.82 > 0.05</span></div></div><p style="font-size:11px;color:var(--accent-green);margin-bottom:12px;">✓ 模型检验通过，实际失败率低于预期</p><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function exportVarData(){
+      let csv='\uFEFF日期,VaR(95%),VaR(99%),实际损失\n';
+      const data=trendData['3m'];
+      data.labels.forEach((label,i)=>{
+        csv+=`${label},${data.var95[i]}%,${data.var99[i]}%,${data.loss[i]}%\n`;
+      });
+      const now=new Date();
+      const filename='var_trend_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.csv';
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename;link.click();
+      URL.revokeObjectURL(link.href);
+      showToast('VaR数据已导出: '+filename,'success');
+    }
+
+    renderVarTrend(trendData['3m']);
+
+    function exportData(){
+      const tables=document.querySelectorAll('.data-table');
+      if(tables.length===0){showToast('当前页面暂无数据可导出','warning');return;}
+      let csv='\uFEFF';
+      tables.forEach((table,idx)=>{if(idx>0)csv+='\n\n';table.querySelectorAll('tr').forEach(row=>{const cells=row.querySelectorAll('th,td');const rowData=[];cells.forEach(cell=>{rowData.push('"'+cell.textContent.trim().replace(/"/g,'""')+'"');});csv+=rowData.join(',')+'\n';});});
+      const now=new Date();const filename='var_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.csv';
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename;link.click();URL.revokeObjectURL(link.href);
+      showToast('数据已导出: '+filename,'success');
+    }
+    function generateReport(){showReportModal('VaR模型');}
+    function showReportModal(panelName){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML='<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest(\'.modal-overlay\').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">生成报告</span></div><div class="modal-body"><p>正在为 "<strong>'+panelName+'</strong>" 生成分析报告...</p><div class="report-progress"><div class="progress-bar"><div class="progress-fill"></div></div></div><p class="report-status">正在提取数据...</p></div></div>';
+      document.body.appendChild(modal);
+      setTimeout(()=>{const progressFill=modal.querySelector('.progress-fill');const reportStatus=modal.querySelector('.report-status');let progress=0;const stages=['正在提取数据...','正在生成图表...','正在计算指标...','正在生成报告...','报告生成完成'];const interval=setInterval(()=>{progress+=20;progressFill.style.width=progress+'%';if(progress<=100)reportStatus.textContent=stages[Math.floor(progress/25)];if(progress>=100){clearInterval(interval);setTimeout(()=>{modal.querySelector('.modal-body').innerHTML='<div class="report-success"><span class="success-icon">✓</span><p>报告生成成功！</p><p class="report-filename">'+panelName+'_报告_'+new Date().toLocaleDateString()+'.pdf</p><button class="btn primary" onclick="this.closest(\'.modal-overlay\').remove()">确定</button></div>';},300);}},400);},100);
+    }
+    function showKpiDetail(name,value,description){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">指标说明</span></div><div class="modal-body" style="padding:20px"><div style="text-align:center;margin-bottom:16px;"><div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${name}</div><div style="font-size:28px;font-family:'JetBrains Mono';color:var(--accent-blue);font-weight:600">${value}</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:16px;"><p style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${description}</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:16px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+    function showToast(message,type){const existing=document.querySelector('.toast-notification');if(existing)existing.remove();const toast=document.createElement('div');toast.className='toast-notification '+type;toast.innerHTML='<span>'+message+'</span>';document.body.appendChild(toast);setTimeout(()=>toast.classList.add('show'),10);setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),300);},3000);}
+
+    function sortVarAssets(criteria){
+      const barChart = document.getElementById('varBarChart');
+      const rows = Array.from(barChart.querySelectorAll('.asset-bar-row'));
+      rows.sort((a, b) => {
+        const aText = a.querySelector('.bar-label').textContent;
+        const aVal = parseFloat(a.querySelector('.bar-val').textContent);
+        const bVal = parseFloat(b.querySelector('.bar-val').textContent);
+        if(criteria === 'name') return aText.localeCompare(bText);
+        return bVal - aVal;
+      });
+      rows.forEach(row => barChart.appendChild(row));
+      showToast('已按'+{pct:'占比',name:'名称'}[criteria]+'排序','success');
+    }
+
+    function exportVarContribution(){
+      let csv = '\uFEFF资产类别,VaR占比,VaR贡献值\n';
+      document.querySelectorAll('#varBarChart .asset-bar-row').forEach(row => {
+        const name = row.querySelector('.bar-label').textContent;
+        const pct = row.querySelector('.bar-val').textContent;
+        csv += name + ',' + pct + ',-\n';
+      });
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'var_contribution.csv';
+      link.click();
+      showToast('VaR分解已导出','success');
+    }
+
+    function viewVarTrend(asset){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:450px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">${asset} VaR趋势</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:16px;margin-bottom:12px;"><div style="height:80px;display:flex;align-items:flex-end;gap:4px;padding:10px 0;"><div style="flex:1;height:70%;background:var(--accent-blue);border-radius:3px 3px 0 0;"></div><div style="flex:1;height:75%;background:var(--accent-blue);border-radius:3px 3px 0 0;"></div><div style="flex:1;height:68%;background:var(--accent-blue);border-radius:3px 3px 0 0;"></div><div style="flex:1;height:82%;background:var(--accent-blue);border-radius:3px 3px 0 0;"></div><div style="flex:1;height:78%;background:var(--accent-blue);border-radius:3px 3px 0 0;"></div><div style="flex:1;height:85%;background:var(--accent-blue);border-radius:3px 3px 0 0;"></div><div style="flex:1;height:80%;background:var(--accent-blue);border-radius:3px 3px 0 0;"></div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;"><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">近7日均值</div><div style="font-size:18px;font-family:'JetBrains Mono';color:var(--accent-blue)">32.4%</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">趋势</div><div style="font-size:18px;color:var(--accent-yellow)">↑上升</div></div></div><div style="display:flex;gap:8px;"><button class="btn" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">关闭</button><button class="btn primary" onclick="exportVarTrendData('${asset}')" style="flex:1;">导出数据</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function exportVarTrendData(asset){
+      showToast(asset + ' 趋势数据已导出','success');
+    }
+
+    function showRiskAttribution(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">VaR风险归因分析</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">各资产类别对VaR的贡献度</div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">利率债</span><span style="font-family:'JetBrains Mono';color:var(--accent-blue)">35.2%</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">信用债</span><span style="font-family:'JetBrains Mono';color:var(--accent-mauve)">27.8%</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">权益类</span><span style="font-family:'JetBrains Mono';color:var(--accent-peach)">18.1%</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">外汇</span><span style="font-family:'JetBrains Mono';color:var(--accent-yellow)">11.6%</span></div><div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-secondary);">商品</span><span style="font-family:'JetBrains Mono';color:var(--accent-teal)">7.3%</span></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">边际VaR分析</div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">利率风险边际VaR</span><span style="font-family:'JetBrains Mono';color:var(--text-primary)">0.59%</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">信用风险边际VaR</span><span style="font-family:'JetBrains Mono';color:var(--text-primary)">0.42%</span></div><div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-secondary);">权益风险边际VaR</span><span style="font-family:'JetBrains Mono';color:var(--text-primary)">0.31%</span></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showVarStressTest(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:480px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">VaR压力测试</span></div><div class="modal-body" style="padding:20px;"><p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">设定压力情景参数:</p><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">股市冲击 (%)</label><input type="range" min="0" max="50" value="20" style="width:100%;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:2px;"><span>0%</span><span style="color:var(--accent-red)">-20%</span><span>50%</span></div></div><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">利率变动 (bp)</label><input type="range" min="-100" max="200" value="50" style="width:100%;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:2px;"><span>-100bp</span><span style="color:var(--accent-yellow)">+50bp</span><span>+200bp</span></div></div><div><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">信用利差扩大 (bp)</label><input type="range" min="0" max="300" value="100" style="width:100%;"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:2px;"><span>0bp</span><span style="color:var(--accent-peach)">+100bp</span><span>300bp</span></div></div></div><div style="background:rgba(137,180,250,.08);border-radius:8px;padding:12px;margin-bottom:12px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">压力情景下VaR预估值</div><div style="font-size:28px;font-family:'JetBrains Mono';color:var(--accent-blue);font-weight:600;">4.82%</div></div><button class="btn primary" onclick="runVarStressTest()" style="width:100%;">运行压力测试</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function runVarStressTest(){
+      showToast('VaR 压力测试计算完成','success');
+    }
+
+    function showVarConfig(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">VaR 模型配置</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">模型参数配置</div><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">置信水平</label><select style="width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"><option>99%</option><option>95%</option><option>90%</option></select></div><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">持有期</label><select style="width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"><option>1 天</option><option>5 天</option><option>10 天</option></select></div><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">计算方法</label><select style="width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"><option>历史模拟法</option><option>蒙特卡洛模拟</option><option>方差 - 协方差法</option></select></div></div><div style="display:flex;gap:8px;"><button class="btn" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">取消</button><button class="btn primary" onclick="saveVarConfig()" style="flex:1;">保存配置</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function saveVarConfig(){
+      showToast('VaR 模型配置已保存','success');
+    }
+
+    function showModelCompare(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">VaR 模型对比</span></div><div class="modal-body" style="padding:16px;"><table class="data-table" style="margin-bottom:12px;"><thead><tr><th>模型</th><th>VaR(99%,1D)</th><th>VaR(95%,1D)</th><th>回测失败率</th></tr></thead><tbody><tr><td class="name-col">历史模拟法</td><td style="color:var(--accent-red)">2.85%</td><td style="color:var(--accent-yellow)">1.92%</td><td style="color:var(--accent-green)">3.2%</td></tr><tr><td class="name-col">蒙特卡洛</td><td style="color:var(--accent-red)">2.94%</td><td style="color:var(--accent-yellow)">2.05%</td><td style="color:var(--accent-green)">2.8%</td></tr><tr><td class="name-col">方差协方差</td><td style="color:var(--accent-mauve)">2.34%</td><td style="color:var(--accent-blue)">1.68%</td><td style="color:var(--accent-yellow)">5.1%</td></tr></tbody></table><div style="background:rgba(137,180,250,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">模型选择建议</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">蒙特卡洛模拟法回测表现最优，建议作为主要 VaR 计量模型；历史模拟法作为辅助验证。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showBackTesting(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">VaR 回溯检验</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">过去 250 个交易日回测结果</div><table class="data-table"><thead><tr><th>模型</th><th>例外次数</th><th>预期次数</th><th>失败率</th><th> Kupiec 检验</th></tr></thead><tbody><tr><td class="name-col">历史模拟法</td><td style="color:var(--accent-yellow)">8</td><td>2.5</td><td>3.2%</td><td style="color:var(--accent-green)">通过</td></tr><tr><td class="name-col">蒙特卡洛</td><td style="color:var(--accent-green)">7</td><td>2.5</td><td>2.8%</td><td style="color:var(--accent-green)">通过</td></tr><tr><td class="name-col">方差协方差</td><td style="color:var(--accent-red)">13</td><td>2.5</td><td>5.1%</td><td style="color:var(--accent-red)">未通过</td></tr></tbody></table></div><div style="background:rgba(249,226,175,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">回测结论</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">蒙特卡洛模拟法回测表现最佳，例外次数接近预期水平；方差协方差法存在模型风险，建议谨慎使用。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    document.querySelectorAll('.toggle-switch').forEach(function(sw){sw.addEventListener('click',function(){this.classList.toggle('active');});});
+
+    function showExpectedShortfall(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">Expected Shortfall (ES) 分析</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">Expected Shortfall (97.5%)</div><div style="font-size:32px;font-family:'JetBrains Mono';color:var(--accent-red);font-weight:600;">3.85%</div><div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">高于 VaR(99%) = 2.68%</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">各资产 Expected Shortfall</div><table class="data-table"><thead><tr><th>资产</th><th>ES (97.5%)</th><th>ES (99%)</th><th>贡献度</th></tr></thead><tbody><tr><td class="name-col">股票组合</td><td style="color:var(--accent-red)">5.82%</td><td style="color:var(--accent-yellow)">4.25%</td><td style="color:var(--accent-red)">45%</td></tr><tr><td class="name-col">债券组合</td><td style="color:var(--accent-yellow)">1.85%</td><td style="color:var(--accent-blue)">1.42%</td><td style="color:var(--accent-blue)">25%</td></tr><tr><td class="name-col">外汇组合</td><td style="color:var(--accent-mauve)">3.15%</td><td style="color:var(--accent-yellow)">2.68%</td><td style="color:var(--accent-yellow)">20%</td></tr><tr><td class="name-col">商品组合</td><td style="color:var(--accent-yellow)">2.95%</td><td style="color:var(--accent-yellow)">2.35%</td><td style="color:var(--accent-yellow)">10%</td></tr></tbody></table></div><div style="background:rgba(137,180,250,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">ES 分析结论</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">Expected Shortfall 考虑尾部风险，比 VaR 更能反映极端损失。股票组合贡献近一半的尾部风险。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showPnLAnalysis(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">盈亏 (PnL) 分析</span></div><div class="modal-body" style="padding:16px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div style="background:rgba(166,227,161,.08);padding:14px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">今日盈亏</div><div style="font-size:24px;font-family:'JetBrains Mono';color:var(--accent-green);font-weight:600;">+2,850 万</div></div><div style="background:rgba(243,139,168,.08);padding:14px;border-radius:8px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">本周盈亏</div><div style="font-size:24px;font-family:'JetBrains Mono';color:var(--accent-green);font-weight:600;">+8,520 万</div></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">盈亏分解</div><table class="data-table"><thead><tr><th>来源</th><th>金额</th><th>占比</th></tr></thead><tbody><tr><td class="name-col">利率收入</td><td style="color:var(--accent-green)">+5,200 万</td><td>61%</td></tr><tr><td class="name-col">信用收入</td><td style="color:var(--accent-green)">+3,800 万</td><td>45%</td></tr><tr><td class="name-col">交易损益</td><td style="color:var(--accent-red)">-1,200 万</td><td>-14%</td></tr><tr><td class="name-col">费用支出</td><td style="color:var(--accent-red)">-1,480 万</td><td>-17%</td></tr></tbody></table></div><div style="background:rgba(137,180,250,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">盈亏分析</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">本周整体盈利，主要来源于利差收入和信用收入。交易组合出现小幅亏损，需关注市场风险敞口。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function pushVarAlert(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-bell" style="color:var(--accent-red);margin-right:8px;"></i>VaR 风险预警推送</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;"><i class="fas fa-check-circle" style="color:var(--accent-green);margin-right:8px;"></i>预警推送已发送</div><div style="font-size:11px;color:var(--text-secondary);">VaR 超出阈值预警已发送</div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showVarHistory(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-history" style="color:var(--accent-blue);margin-right:8px;"></i>历史 VaR 回溯</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><table class="data-table"><thead><tr><th>日期</th><th>VaR(99%)</th><th>实际损失</th><th>例外次数</th></tr></thead><tbody><tr><td class="name-col">2025-03-20</td><td>2.68%</td><td style="color:var(--accent-green)">1.85%</td><td>0</td></tr><tr><td class="name-col">2025-03-19</td><td>2.65%</td><td style="color:var(--accent-red)">3.12%</td><td style="color:var(--accent-red)">1</td></tr></tbody></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showVarForecast(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-chart-line" style="color:var(--accent-green);margin-right:8px;"></i>VaR 预测</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(137,180,250,.08);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">预测未来 5 日 VaR</div><div style="font-size:28px;font-family:'JetBrains Mono';color:var(--accent-yellow);font-weight:600;">2.85%</div><div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">较当前上升 6.3%</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><table class="data-table"><thead><tr><th>日期</th><th>预测 VaR</th><th>置信区间</th></tr></thead><tbody><tr><td class="name-col">T+1</td><td>2.75%</td><td>2.5%-3.0%</td></tr><tr><td class="name-col">T+3</td><td>2.82%</td><td>2.6%-3.1%</td></tr><tr><td class="name-col">T+5</td><td>2.85%</td><td>2.6%-3.2%</td></tr></tbody></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+  </script>
+</body>
+</html>

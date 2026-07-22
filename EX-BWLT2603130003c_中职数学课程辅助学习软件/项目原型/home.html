@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4A6CF7">
+  <title>中职数学课程辅助学习软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    :root{--primary:#4A6CF7;--primary-light:#6B8AFF;--primary-dark:#3451D1;--accent:#FF6B6B;--accent-orange:#FF9F43;--accent-green:#2ED573;--accent-purple:#A66CFF;--bg:#F5F7FB;--card:#FFFFFF;--text:#1E293B;--text-sec:#64748B;--text-light:#94A3B8;--border:#E2E8F0;--shadow:0 2px 12px rgba(74,108,247,0.08);--shadow-lg:0 8px 32px rgba(74,108,247,0.12);--radius:16px;--bottom-nav:64px}
+    html,body{font-family:'Noto Sans SC',sans-serif;background:#1a1a2e;height:100%;overflow:hidden}
+    .phone-frame{width:100%;height:100vh;background:var(--bg);overflow:hidden;position:relative}
+    .pages-container{height:calc(100% - var(--bottom-nav));overflow:hidden;position:relative}
+    .page{position:absolute;top:0;left:0;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;background:var(--bg);opacity:0;transform:translateX(30px);transition:all 0.35s cubic-bezier(0.4,0,0.2,1);pointer-events:none;-webkit-overflow-scrolling:touch}
+    .page.active{opacity:1;transform:translateX(0);pointer-events:auto}
+    .page::-webkit-scrollbar{display:none}
+    .bottom-nav{height:var(--bottom-nav);background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;position:fixed;bottom:0;left:0;width:100%;z-index:100}
+    .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:all 0.3s;padding:4px 12px}
+    .nav-item i{font-size:22px;color:var(--text-light);transition:all 0.3s}
+    .nav-item span{font-size:10px;color:var(--text-light);transition:all 0.3s;font-weight:500}
+    .nav-item.active i{color:var(--primary)}
+    .nav-item.active span{color:var(--primary)}
+    .home-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:20px;position:relative;overflow:hidden}
+    .home-header-deco{position:absolute;top:-20px;right:-20px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,0.08)}
+    .home-header-deco2{position:absolute;bottom:30px;left:-30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05)}
+    .user-row{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
+    .avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#FFD93D,#FF6B6B);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;border:3px solid rgba(255,255,255,0.3);flex-shrink:0}
+    .avatar img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0}
+    .avatar.has-img .avatar-text{opacity:0}
+    .user-info{flex:1}
+    .user-greeting{color:rgba(255,255,255,0.85);font-size:13px}
+    .user-name{color:#fff;font-size:20px;font-weight:700;margin-top:2px}
+    .header-actions{display:flex;gap:10px}
+    .header-btn{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;transition:all 0.2s;backdrop-filter:blur(10px);position:relative}
+    .header-btn:active{transform:scale(0.92)}
+    .notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+    .banner-section{padding:0 20px;position:relative;z-index:2;margin-top:20px}
+    .banner{border-radius:var(--radius);overflow:hidden;height:140px;position:relative;box-shadow:var(--shadow-lg)}
+    .banner img{width:100%;height:100%;object-fit:cover}
+    .banner-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(74,108,247,0.85),rgba(166,108,255,0.7));display:flex;flex-direction:column;justify-content:center;padding:20px 24px}
+    .banner-tag{background:rgba(255,255,255,0.2);color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;display:inline-block;width:fit-content;backdrop-filter:blur(8px);font-weight:500;margin-bottom:8px}
+    .banner-title{color:#fff;font-size:19px;font-weight:700;line-height:1.3}
+    .banner-desc{color:rgba(255,255,255,0.85);font-size:12px;margin-top:6px}
+    .section-header{display:flex;justify-content:space-between;align-items:center;padding:20px 20px 12px}
+    .section-title{font-size:17px;font-weight:700;color:var(--text)}
+    .section-more{font-size:13px;color:var(--primary);cursor:pointer;font-weight:500;display:flex;align-items:center;gap:2px}
+    .progress-card{margin:0 20px;background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .progress-row{display:flex;justify-content:space-between;margin-bottom:12px}
+    .progress-label{font-size:13px;color:var(--text-sec)}
+    .progress-value{font-size:13px;color:var(--primary);font-weight:700}
+    .progress-bar{height:8px;background:#E8EDFF;border-radius:10px;overflow:hidden}
+    .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary-light));border-radius:10px;transition:width 1s ease}
+    .progress-stats{display:flex;gap:12px;margin-top:16px}
+    .stat-item{flex:1;background:var(--bg);border-radius:12px;padding:12px;text-align:center}
+    .stat-num{font-size:20px;font-weight:900;color:var(--text)}
+    .stat-label{font-size:11px;color:var(--text-light);margin-top:2px}
+    .menu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 20px 20px}
+    .menu-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 4px;cursor:pointer;border-radius:16px;transition:all 0.25s}
+    .menu-item:active{transform:scale(0.92);background:rgba(74,108,247,0.05)}
+    .menu-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;position:relative;overflow:hidden}
+    .menu-icon::after{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:rgba(255,255,255,0.15);border-radius:50%}
+    .menu-label{font-size:12px;color:var(--text);font-weight:500;text-align:center;line-height:1.3}
+    .mi-blue{background:linear-gradient(135deg,#4A6CF7,#6B8AFF)}
+    .mi-orange{background:linear-gradient(135deg,#FF9F43,#FFB976)}
+    .mi-green{background:linear-gradient(135deg,#2ED573,#7BF0A5)}
+    .mi-purple{background:linear-gradient(135deg,#A66CFF,#C9A0FF)}
+    .mi-red{background:linear-gradient(135deg,#FF6B6B,#FF9999)}
+    .mi-teal{background:linear-gradient(135deg,#00B4D8,#48CAE4)}
+    .quick-actions{display:flex;gap:12px;padding:0 20px 20px;overflow-x:auto}
+    .quick-actions::-webkit-scrollbar{display:none}
+    .quick-card{min-width:150px;background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden}
+    .quick-card:active{transform:scale(0.96)}
+    .quick-card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px}
+    .quick-card-title{font-size:14px;font-weight:600;color:var(--text)}
+    .quick-card-desc{font-size:11px;color:var(--text-light);margin-top:4px}
+    .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#1E293B;color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;font-weight:500;z-index:1000;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:all 0.3s}
+    .modal-overlay.show{opacity:1;pointer-events:auto}
+    .modal{background:var(--card);border-radius:var(--radius);width:85%;max-width:320px;transform:scale(0.9);transition:all 0.3s}
+    .modal.show{transform:scale(1)}
+    .modal-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:16px;border-radius:var(--radius) var(--radius) 0 0;text-align:center}
+    .modal-title{color:#fff;font-size:16px;font-weight:700}
+    .modal-body{padding:20px}
+    .modal-text{font-size:14px;color:var(--text);line-height:1.7;text-align:center}
+    .modal-btn{display:block;width:100%;padding:14px;background:var(--primary);color:#fff;font-size:15px;font-weight:600;border:none;border-radius:0 0 var(--radius) var(--radius);cursor:pointer;font-family:inherit;transition:all 0.2s}
+    .modal-btn:active{background:var(--primary-dark)}
+    .modal-btns{display:flex;gap:10px}
+    .modal-btns .modal-btn{flex:1;border-radius:10px;margin:0}
+    .modal-btn.secondary{background:var(--bg);color:var(--text)}
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="pages-container">
+      <div class="page active" id="page-home">
+        <div class="home-header">
+          <div class="home-header-deco"></div>
+          <div class="home-header-deco2"></div>
+          <div class="user-row">
+            <div class="avatar">
+              <img src="https://i01piccdn.sogoucdn.com/6a1989b5704715dc" alt="" onload="this.parentElement.classList.add('has-img')" onerror="this.remove()">
+              <span class="avatar-text">高</span>
+            </div>
+            <div class="user-info">
+              <div class="user-greeting" id="greeting">下午好</div>
+              <div class="user-name">高晶</div>
+            </div>
+            <div class="header-actions">
+              <div class="header-btn" onclick="location.href='message.html'"><i class="ri-notification-3-line"></i><div class="notif-dot"></div></div>
+              <div class="header-btn" onclick="location.href='settings.html'"><i class="ri-settings-3-line"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="banner-section">
+          <div class="banner" onclick="showToast('知识挑战已开启')">
+            <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&h=300&fit=crop" alt="">
+            <div class="banner-overlay">
+              <div class="banner-tag">每日推荐</div>
+              <div class="banner-title">中职数学·基础模块</div>
+              <div class="banner-desc">掌握核心知识，夯实数学基础</div>
+            </div>
+          </div>
+        </div>
+        <div class="section-header">
+          <div class="section-title">学习进度</div>
+          <div class="section-more" onclick="location.href='progress.html'">详情 <i class="ri-arrow-right-s-line"></i></div>
+        </div>
+        <div class="progress-card">
+          <div class="progress-row">
+            <span class="progress-label">总体完成度</span>
+            <span class="progress-value">42%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:42%"></div></div>
+          <div class="progress-stats">
+            <div class="stat-item"><div class="stat-num" style="color:var(--primary)">28</div><div class="stat-label">已学课时</div></div>
+            <div class="stat-item"><div class="stat-num" style="color:var(--accent-green)">156</div><div class="stat-label">练习题数</div></div>
+            <div class="stat-item"><div class="stat-num" style="color:var(--accent-orange)">12</div><div class="stat-label">连续打卡</div></div>
+          </div>
+        </div>
+        <div class="section-header">
+          <div class="section-title">核心功能</div>
+        </div>
+        <div class="menu-grid">
+          <div class="menu-item" onclick="location.href='course_list.html'">
+            <div class="menu-icon mi-blue"><i class="ri-book-open-line"></i></div>
+            <div class="menu-label">课程学习</div>
+          </div>
+          <div class="menu-item" onclick="location.href='exam_list.html'">
+            <div class="menu-icon mi-red"><i class="ri-file-list-3-line"></i></div>
+            <div class="menu-label">模拟考试</div>
+          </div>
+          <div class="menu-item" onclick="location.href='formula.html'">
+            <div class="menu-icon mi-purple"><i class="ri-functions"></i></div>
+            <div class="menu-label">公式手册</div>
+          </div>
+          <div class="menu-item" onclick="location.href='wrong.html'">
+            <div class="menu-icon mi-teal"><i class="ri-error-warning-line"></i></div>
+            <div class="menu-label">错题本</div>
+          </div>
+        </div>
+        <div class="section-header">
+          <div class="section-title">快速开始</div>
+        </div>
+        <div class="quick-actions">
+          <div class="quick-card" onclick="location.href='exercise.html'">
+            <div class="quick-card-icon" style="background:#E8EDFF; color:var(--primary);"><i class="ri-lightbulb-flash-line"></i></div>
+            <div class="quick-card-title">每日一练</div>
+            <div class="quick-card-desc">今日 10 题待完成</div>
+          </div>
+          <div class="quick-card" onclick="location.href='wrong.html'">
+            <div class="quick-card-icon" style="background:#FFF0F0; color:var(--accent);"><i class="ri-refresh-line"></i></div>
+            <div class="quick-card-title">错题回顾</div>
+            <div class="quick-card-desc">5 道错题待巩固</div>
+          </div>
+          <div class="quick-card" onclick="location.href='collect.html'">
+            <div class="quick-card-icon" style="background:#ECFDF5; color:var(--accent-green);"><i class="ri-bookmark-line"></i></div>
+            <div class="quick-card-title">我的收藏</div>
+            <div class="quick-card-desc">收藏了 18 个知识点</div>
+          </div>
+        </div>
+        <div style="height:20px;"></div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="switchNav(this,'home')"><i class="ri-home-5-fill"></i><span>首页</span></div>
+      <div class="nav-item" onclick="location.href='study.html'"><i class="ri-book-read-line"></i><span>学习</span></div>
+      <div class="nav-item" onclick="location.href='discover.html'"><i class="ri-compass-3-line"></i><span>发现</span></div>
+      <div class="nav-item" onclick="location.href='profile.html'"><i class="ri-user-3-line"></i><span>我的</span></div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <div class="modal-header"><div class="modal-title" id="modalTitle">提示</div></div>
+        <div class="modal-body"><div class="modal-text" id="modalText"></div></div>
+        <div class="modal-btns">
+          <button class="modal-btn secondary" onclick="closeModal()">取消</button>
+          <button class="modal-btn" onclick="confirmModal()" id="confirmBtn">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // 页面初始化
+    document.addEventListener('DOMContentLoaded', function(){
+      updateGreeting();
+    });
+    
+    // 根据时间更新问候语
+    function updateGreeting(){
+      const hour = new Date().getHours();
+      const greetingEl = document.getElementById('greeting');
+      if(hour >= 5 && hour < 12){
+        greetingEl.textContent = '早上好';
+      }else if(hour >= 12 && hour < 14){
+        greetingEl.textContent = '中午好';
+      }else if(hour >= 14 && hour < 18){
+        greetingEl.textContent = '下午好';
+      }else{
+        greetingEl.textContent = '晚上好';
+      }
+    }
+    
+    // 底部导航切换
+    function switchNav(el,page){
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+      el.classList.add('active');
+      if(page !== 'home'){
+        location.href = page + '.html';
+      }
+    }
+    
+    // Toast 提示
+    function showToast(msg){
+      const t=document.getElementById('toast');
+      t.textContent=msg;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'),2000);
+    }
+    
+    // 模态弹窗
+    function showModal(title,text,callback){
+      document.getElementById('modalTitle').textContent=title;
+      document.getElementById('modalText').textContent=text;
+      document.getElementById('modalOverlay').classList.add('show');
+      window.modalCallback = callback;
+    }
+    
+    function closeModal(){
+      document.getElementById('modalOverlay').classList.remove('show');
+      window.modalCallback = null;
+    }
+    
+    function confirmModal(){
+      if(window.modalCallback){
+        window.modalCallback();
+      }
+      closeModal();
+    }
+  </script>
+</body>
+</html>

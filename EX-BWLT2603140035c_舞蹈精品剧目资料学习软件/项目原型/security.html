@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>账号安全</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --gold: #C9A84C; --gold-dark: #A07830; --red: #C0392B; --bg: #FDF8F0; --text: #2C1810; --text2: #6B4C3B; --text3: #9C7B6B; }
+  body { font-family: 'Noto Sans SC', sans-serif; background: #E8E0D0; display: flex; justify-content: center; }
+  .phone-frame { width: 100%; height: 100vh; background: var(--bg); overflow: hidden; overflow-y: auto; display: flex; flex-direction: column; }
+  .status-bar { background: linear-gradient(135deg,#8B1A1A,#C9A84C); color:white; padding:12px 24px 8px; display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+  .status-bar .time { font-weight:700; font-size:15px; }
+  .status-icons { display:flex; gap:6px; }
+
+  .page-header { background: linear-gradient(135deg,#8B1A1A 0%,#C0392B 50%,#C9A84C 100%); padding:14px 20px 20px; display:flex; align-items:center; gap:14px; }
+  .back-btn { width:36px; height:36px; background:rgba(255,255,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:16px; text-decoration:none; border:1px solid rgba(255,255,255,0.2); cursor:pointer; }
+  .page-title { color:white; font-size:18px; font-weight:700; font-family:'Noto Serif SC',serif; flex:1; }
+
+  .content { flex:1; overflow-y:auto; padding:16px 20px 90px; }
+  .content::-webkit-scrollbar { display:none; }
+
+  .section-title { font-family:'Noto Serif SC',serif; font-size:14px; font-weight:700; color:var(--text); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .section-title::before { content:''; width:3px; height:14px; background:linear-gradient(to bottom,var(--red),var(--gold)); border-radius:2px; }
+
+  .info-card { background:white; border-radius:16px; padding:16px; margin-bottom:12px; border:1px solid #F0E8D8; }
+  .info-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #F0E8D8; }
+  .info-row:last-child { border-bottom:none; padding-bottom:0; }
+  .info-row:first-child { padding-top:0; }
+  .info-label { font-size:13px; color:var(--text2); }
+  .info-value { font-size:13px; color:var(--text); font-weight:500; display:flex; align-items:center; gap:6px; }
+  .info-value .verified { color:#27AE60; }
+  .info-value .unbind { color:var(--red); font-size:12px; }
+
+  .safety-item { background:white; border-radius:16px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; border:1px solid #F0E8D8; cursor:pointer; transition:all 0.2s; }
+  .safety-item:active { transform:scale(0.98); }
+  .safety-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; color:white; flex-shrink:0; }
+  .safety-icon.green { background:#27AE60; }
+  .safety-icon.blue { background:#2980B9; }
+  .safety-icon.orange { background:#E67E22; }
+  .safety-info { flex:1; }
+  .safety-name { font-size:14px; font-weight:600; color:var(--text); margin-bottom:2px; }
+  .safety-desc { font-size:11px; color:var(--text3); }
+  .safety-status { font-size:12px; padding:4px 10px; border-radius:10px; }
+  .safety-status.on { background:#E8FFF0; color:#27AE60; }
+  .safety-status.off { background:#FFF0EE; color:var(--red); }
+  .safety-arrow { color:#C8B8A8; font-size:14px; }
+
+  .danger-zone { margin-top:20px; }
+  .logout-btn { width:100%; padding:14px; background:white; border:1px solid var(--red); border-radius:12px; color:var(--red); font-size:14px; font-weight:600; cursor:pointer; text-align:center; }
+  .logout-btn:active { background:#FFF0EE; }
+
+  .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width: 100%; background:white; border-top:1px solid #EDE0C8; display:flex; padding:8px 0 20px; box-shadow:0 -4px 20px rgba(44,24,16,0.08); z-index:100; }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; text-decoration:none; padding:4px 0; }
+  .nav-item i { font-size:20px; color:#BDB0A0; }
+  .nav-item span { font-size:10px; color:#BDB0A0; font-weight:500; }
+  .nav-item.active i { color:var(--red); }
+  .nav-item.active span { color:var(--red); font-weight:700; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  
+  <div class="page-header">
+    <a href="profile.html" class="back-btn"><i class="fa fa-arrow-left"></i></a>
+    <div class="page-title">账号安全</div>
+  </div>
+
+  <div class="content">
+    <div class="section-title">账户信息</div>
+    <div class="info-card">
+      <div class="info-row">
+        <span class="info-label">登录账号</span>
+        <span class="info-value">138****8888</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">绑定邮箱</span>
+        <span class="info-value"><i class="fa fa-check-circle verified"></i> feng***@163.com</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">实名认证</span>
+        <span class="info-value"><i class="fa fa-check-circle verified"></i> 已认证</span>
+      </div>
+    </div>
+
+    <div class="section-title">安全设置</div>
+    <div class="safety-item" onclick="showToast('修改手机号')">
+      <div class="safety-icon blue"><i class="fa-solid fa-mobile-screen"></i></div>
+      <div class="safety-info">
+        <div class="safety-name">绑定手机</div>
+        <div class="safety-desc">用于登录和找回密码</div>
+      </div>
+      <span class="safety-status on">已绑定</span>
+      <i class="fa fa-chevron-right safety-arrow"></i>
+    </div>
+
+    <div class="safety-item" onclick="showToast('修改密码')">
+      <div class="safety-icon orange"><i class="fa-solid fa-key"></i></div>
+      <div class="safety-info">
+        <div class="safety-name">登录密码</div>
+        <div class="safety-desc">定期更换密码更安全</div>
+      </div>
+      <span class="safety-status on">已设置</span>
+      <i class="fa fa-chevron-right safety-arrow"></i>
+    </div>
+
+    <div class="safety-item" onclick="togglePayment()">
+      <div class="safety-icon green"><i class="fa-solid fa-yen-sign"></i></div>
+      <div class="safety-info">
+        <div class="safety-name">支付密码</div>
+        <div class="safety-desc">设置支付密码保障账户资金安全</div>
+      </div>
+      <span class="safety-status off" id="payment-status">未设置</span>
+      <i class="fa fa-chevron-right safety-arrow"></i>
+    </div>
+
+    <div class="danger-zone">
+      <div class="section-title" style="color:var(--red);">危险操作</div>
+      <div class="logout-btn" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i> 退出登录
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>首页</span></a>
+    <a href="repertoire.html" class="nav-item"><i class="fa-solid fa-film"></i><span>剧目</span></a>
+    <a href="study.html" class="nav-item"><i class="fa-solid fa-graduation-cap"></i><span>学习</span></a>
+    <a href="exam.html" class="nav-item"><i class="fa-solid fa-pen-to-square"></i><span>练习</span></a>
+    <a href="profile.html" class="nav-item active"><i class="fa-regular fa-circle-user"></i><span>我的</span></a>
+  </div>
+</div>
+
+<script>
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeIn 0.3s';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.animation = 'fadeOut 0.3s'; setTimeout(() => toast.remove(), 300); }, 1500);
+}
+
+function togglePayment() {
+  const status = document.getElementById('payment-status');
+  if (status.textContent === '未设置') {
+    status.textContent = '已设置';
+    status.className = 'safety-status on';
+    showToast('支付密码已设置');
+  } else {
+    showToast('请前往设置中修改');
+  }
+}
+
+function logout() {
+  if (confirm('确定要退出登录吗？')) {
+    showToast('已退出登录');
+    setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+  }
+}
+</script>
+<style>
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.8); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+</style>
+</body>
+</html>

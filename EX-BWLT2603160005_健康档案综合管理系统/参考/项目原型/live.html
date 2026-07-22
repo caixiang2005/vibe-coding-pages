@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播课堂 - 智能普法多人联机互动学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#0EA5E9',
+                        accent: '#38BDF8',
+                        dark: '#020617',
+                        surface: '#020617',
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .macos-window {
+            width: 1440px;
+            min-height: 900px;
+            background: #020617;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        }
+        .traffic-lights { width: 12px; height: 12px; border-radius: 50%; }
+        .sidebar-item { transition: all 0.2s ease; }
+        .sidebar-item:hover { background: rgba(37, 99, 235, 0.16); transform: translateX(4px); }
+        .sidebar-item.active { background: linear-gradient(90deg, rgba(37, 99, 235, 0.32), transparent); }
+        .online-indicator { width: 8px; height: 8px; background: #10B981; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .live-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .live-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(37, 99, 235, 0.35); }
+        @keyframes live-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .live-dot { animation: live-dot 1.5s infinite; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+    <div class="macos-window rounded-xl overflow-hidden">
+        <!-- macOS 标题栏 -->
+        <div class="bg-surface/80 backdrop-blur-xl px-5 py-3 flex items-center border-b border-white/5">
+            <div class="flex gap-2">
+                <div class="traffic-lights bg-red-500"></div>
+                <div class="traffic-lights bg-yellow-500"></div>
+                <div class="traffic-lights bg-green-500"></div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="text-sm font-medium text-white/80">智能普法多人联机互动学习系统</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10">
+                    <div class="online-indicator"></div>
+                    <span class="text-xs text-green-400 font-medium">1,247 人在线</span>
+                </div>
+                
+            </div>
+        </div>
+
+        <div class="flex h-[856px]">
+            <!-- 侧边栏 -->
+            <div class="w-64 bg-surface/40 border-r border-white/5 p-4">
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-12 h-12 rounded-full border-2 border-primary/50" alt="用户头像">
+                        <div class="flex-1">
+                            <p class="text-white font-semibold text-sm">张明</p>
+                            <p class="text-xs text-white/50">中级学员 · Lv.8</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-white/5">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-white/60">学习进度</span>
+                            <span class="text-primary font-semibold">68%</span>
+                        </div>
+                        <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-primary to-secondary w-[68%] rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+                <nav class="space-y-1">
+                    <a href="main.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="home" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">学习大厅</span>
+                    </a>
+                    <a href="room.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="users" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">多人房间</span>
+                        <span class="ml-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">3</span>
+                    </a>
+                    <div class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="video" class="w-5 h-5 text-primary"></i>
+                        <span class="text-sm font-medium text-white">直播课堂</span>
+                    </div>
+                    <a href="law.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="book-open" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">法规库</span>
+                    </a>
+                    <a href="discuss.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="message-circle" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">案例讨论</span>
+                    </a>
+                    <a href="achievement.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="trophy" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">成就中心</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="flex-1 overflow-y-auto scrollbar-thin">
+                <div class="sticky top-0 bg-dark/95 backdrop-blur-xl border-b border-white/5 px-8 py-4 z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <h1 class="text-2xl font-bold text-white">直播课堂</h1>
+                        <div class="relative">
+                            <input type="text" placeholder="搜索直播..."
+                                   class="w-64 bg-white/5 border border-white/10 rounded-lg px-4 py-2 pl-10 text-sm text-white placeholder-white/40 focus:outline-none focus:border-primary/50 transition">
+                            <i data-lucide="search" class="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <!-- 精选直播 -->
+                    <section class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <span class="w-2 h-2 bg-red-500 rounded-full live-dot"></span>
+                                正在直播
+                            </h2>
+                        </div>
+                        <a href="live-watch.html" class="glass-card rounded-2xl overflow-hidden block">
+                            <div class="relative">
+                                <img src="./static/live_cover.png"
+                                     class="w-full h-72 object-cover" alt="直播封面">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                                <div class="absolute top-4 left-4 flex items-center gap-2">
+                                    <span class="px-3 py-1 bg-red-500 text-white text-xs rounded-full font-semibold flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 bg-white rounded-full live-dot"></span>
+                                        直播中
+                                    </span>
+                                    <span class="px-3 py-1 bg-black/50 backdrop-blur-sm text-white text-xs rounded-full">
+                                        <i data-lucide="eye" class="w-3 h-3 inline mr-1"></i>3,456人观看
+                                    </span>
+                                </div>
+                                <div class="absolute bottom-6 left-6 right-6">
+                                    <span class="inline-block px-3 py-1 bg-primary/30 text-primary text-xs rounded-full mb-3">民法典专题</span>
+                                    <h3 class="text-2xl font-bold text-white mb-2">《民法典》人格权编：个人信息保护的法律边界</h3>
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-2">
+                                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-8 h-8 rounded-full border border-white/30" alt="">
+                                            <span class="text-sm text-white/80">王教授 · 北京大学法学院</span>
+                                        </div>
+                                        <a href="live-watch.html" class="px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 rounded-lg text-white text-sm font-semibold hover:shadow-lg hover:shadow-red-500/50 transition inline-block">
+                                            进入直播
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </section>
+
+                    <!-- 更多直播 -->
+                    <section class="mb-8">
+                        <h2 class="text-lg font-bold text-white mb-4">更多直播</h2>
+                        <div class="grid grid-cols-2 gap-6">
+                            <a href="live-watch.html" class="live-card glass-card rounded-xl overflow-hidden cursor-pointer block">
+                                <div class="relative">
+                                    <img src="https://images.unsplash.com/photo-1505663912202-ac22d4cb3707?auto=format&fit=crop&w=600&q=80"
+                                         class="w-full h-40 object-cover" alt="">
+                                    <div class="absolute top-3 left-3">
+                                        <span class="px-2 py-1 bg-red-500 text-white text-xs rounded-full font-semibold flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 bg-white rounded-full live-dot"></span>直播中
+                                        </span>
+                                    </div>
+                                    <div class="absolute bottom-3 right-3 px-2 py-1 bg-black/60 text-white text-xs rounded">
+                                        1,234人观看
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <h3 class="text-white font-bold mb-2">刑事辩护实务技巧：从案卷阅读到庭审发言</h3>
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-6 h-6 rounded-full" alt="">
+                                        <span class="text-sm text-white/60">李检察官</span>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="live-watch.html" class="live-card glass-card rounded-xl overflow-hidden cursor-pointer block">
+                                <div class="relative">
+                                    <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=600&q=80"
+                                         class="w-full h-40 object-cover" alt="">
+                                    <div class="absolute top-3 left-3">
+                                        <span class="px-2 py-1 bg-red-500 text-white text-xs rounded-full font-semibold flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 bg-white rounded-full live-dot"></span>直播中
+                                        </span>
+                                    </div>
+                                    <div class="absolute bottom-3 right-3 px-2 py-1 bg-black/60 text-white text-xs rounded">
+                                        876人观看
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <h3 class="text-white font-bold mb-2">企业合规体系建设与风险防控实务指南</h3>
+                                    <div class="flex items-center gap-2">
+                                        <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-6 h-6 rounded-full" alt="">
+                                        <span class="text-sm text-white/60">陈律师</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- 预约直播 -->
+                    <section>
+                        <h2 class="text-lg font-bold text-white mb-4">即将开播</h2>
+                        <div class="space-y-4">
+                            <div class="glass-card rounded-xl p-5 flex items-center gap-5">
+                                <div class="w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-xl flex flex-col items-center justify-center">
+                                    <span class="text-white text-xs font-bold">03/24</span>
+                                    <span class="text-white/80 text-[10px]">周二</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-white font-bold">行政诉讼管辖与起诉条件最新司法解释解读</h3>
+                                    <p class="text-sm text-white/50 mt-1">郑法官 · 明天 20:00</p>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm text-white/50">
+                                    <i data-lucide="users" class="w-4 h-4"></i>
+                                    <span>892人预约</span>
+                                </div>
+                                <button class="px-5 py-2 bg-primary/20 text-primary text-sm rounded-lg font-medium hover:bg-primary/30 transition">预约</button>
+                            </div>
+
+                            <div class="glass-card rounded-xl p-5 flex items-center gap-5">
+                                <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex flex-col items-center justify-center">
+                                    <span class="text-white text-xs font-bold">03/25</span>
+                                    <span class="text-white/80 text-[10px]">周三</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-white font-bold">劳动合同解除与经济补偿金计算实务</h3>
+                                    <p class="text-sm text-white/50 mt-1">赵法官 · 后天 19:30</p>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm text-white/50">
+                                    <i data-lucide="users" class="w-4 h-4"></i>
+                                    <span>654人预约</span>
+                                </div>
+                                <button class="px-5 py-2 bg-primary/20 text-primary text-sm rounded-lg font-medium hover:bg-primary/30 transition">预约</button>
+                            </div>
+
+                            <div class="glass-card rounded-xl p-5 flex items-center gap-5">
+                                <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex flex-col items-center justify-center">
+                                    <span class="text-white text-xs font-bold">03/27</span>
+                                    <span class="text-white/80 text-[10px]">周五</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-white font-bold">网络安全法与数据安全法实务热点问题</h3>
+                                    <p class="text-sm text-white/50 mt-1">周律师 · 周五 20:00</p>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm text-white/50">
+                                    <i data-lucide="users" class="w-4 h-4"></i>
+                                    <span>1,102人预约</span>
+                                </div>
+                                <button class="px-5 py-2 bg-green-500/20 text-green-400 text-sm rounded-lg font-medium">已预约</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- 右侧信息栏 -->
+            <div class="w-80 bg-surface/40 border-l border-white/5 p-6 overflow-y-auto scrollbar-thin">
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-primary"></i>
+                        本周直播日历
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-2 rounded-lg bg-red-500/10 border-l-2 border-red-500">
+                            <div class="text-center min-w-[40px]">
+                                <p class="text-xs text-white/50">今天</p>
+                                <p class="text-sm text-white font-bold">23</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-white font-medium">个人信息保护法律边界</p>
+                                <p class="text-xs text-red-400">正在直播</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg bg-white/5">
+                            <div class="text-center min-w-[40px]">
+                                <p class="text-xs text-white/50">周二</p>
+                                <p class="text-sm text-white font-bold">24</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-white font-medium">行政诉讼司法解释</p>
+                                <p class="text-xs text-white/40">20:00</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg bg-white/5">
+                            <div class="text-center min-w-[40px]">
+                                <p class="text-xs text-white/50">周三</p>
+                                <p class="text-sm text-white font-bold">25</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-white font-medium">劳动合同解除实务</p>
+                                <p class="text-xs text-white/40">19:30</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg bg-white/5">
+                            <div class="text-center min-w-[40px]">
+                                <p class="text-xs text-white/50">周五</p>
+                                <p class="text-sm text-white font-bold">27</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-white font-medium">网络安全法热点</p>
+                                <p class="text-xs text-white/40">20:00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="star" class="w-5 h-5 text-primary"></i>
+                        热门讲师
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-10 h-10 rounded-full" alt="">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">王教授</p>
+                                <p class="text-xs text-white/40">北京大学法学院</p>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <i data-lucide="star" class="w-3 h-3 text-yellow-500 fill-yellow-500"></i>
+                                <span class="text-xs text-white/60">4.9</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-10 h-10 rounded-full" alt="">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">李检察官</p>
+                                <p class="text-xs text-white/40">最高人民检察院</p>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <i data-lucide="star" class="w-3 h-3 text-yellow-500 fill-yellow-500"></i>
+                                <span class="text-xs text-white/60">4.8</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-10 h-10 rounded-full" alt="">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">陈律师</p>
+                                <p class="text-xs text-white/40">金杜律师事务所</p>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <i data-lucide="star" class="w-3 h-3 text-yellow-500 fill-yellow-500"></i>
+                                <span class="text-xs text-white/60">4.9</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="clock" class="w-5 h-5 text-primary"></i>
+                        观看记录
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-white/5 rounded-lg">
+                            <p class="text-sm text-white font-medium">合同法典型案例解析</p>
+                            <p class="text-xs text-white/40 mt-1">已观看 45分钟 / 共 90分钟</p>
+                            <div class="h-1 bg-white/5 rounded-full overflow-hidden mt-2">
+                                <div class="h-full bg-primary w-[50%] rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-white/5 rounded-lg">
+                            <p class="text-sm text-white font-medium">侵权责任法实务解读</p>
+                            <p class="text-xs text-white/40 mt-1">已观看完毕</p>
+                            <div class="h-1 bg-white/5 rounded-full overflow-hidden mt-2">
+                                <div class="h-full bg-green-500 w-full rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

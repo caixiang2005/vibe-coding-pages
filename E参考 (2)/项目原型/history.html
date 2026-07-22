@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>历史监测 - 能源产业排污治理措施整合优化平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; background: #f0f0f0; background-image: url('./static/bg.jpeg'); background-size: cover; }
+        .dark body { background: #121212; }
+        .mac-window { width: 1200px; height: 800px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.3); display: flex; flex-direction: column; overflow: hidden; }
+        .dark .mac-window { background: rgba(45, 45, 48, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
+        .sidebar { width: 240px; background: rgba(246, 246, 246, 0.6); border-right: 1px solid rgba(0, 0, 0, 0.1); padding-top: 50px; }
+        .dark .sidebar { background: rgba(30, 30, 30, 0.6); border-right: 1px solid rgba(255, 255, 255, 0.05); }
+        .title-bar { height: 52px; display: flex; align-items: center; padding: 0 16px; -webkit-app-region: drag; border-bottom: 1px solid rgba(0,0,0,0.06); }
+        .dark .title-bar { border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .nav-item { transition: all 0.2s ease; }
+        .nav-item:hover { background: rgba(0, 0, 0, 0.05); border-radius: 6px; }
+        .dark .nav-item:hover { background: rgba(255, 255, 255, 0.1); }
+        .active-nav { background: rgba(0, 122, 255, 0.1); color: #007AFF; border-radius: 6px; }
+        .dark .active-nav { background: rgba(10, 132, 255, 0.25); color: #0A84FF; }
+        .mac-btn { transition: all 0.2s; cursor: pointer; }
+        .mac-btn:active { transform: scale(0.96); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+        .date-btn { transition: all 0.2s; }
+        .date-btn.active { background: #007AFF; color: white; }
+        .dark .date-btn.active { background: #0A84FF; }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+    <div class="mac-window relative">
+        <div class="title-bar absolute top-0 left-0 w-full z-50">
+            <div class="flex items-center w-full">
+                <div class="flex items-center space-x-2 mr-3">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57]" onclick="window.location.href='main.html'"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840]"></div>
+                </div>
+                <div class="flex-1 flex justify-center">
+                    <span class="text-[14px] font-medium tracking-tight text-gray-600 dark:text-gray-300 whitespace-nowrap">能源产业排污治理措施整合优化平台</span>
+                </div>
+                <div class="flex items-center gap-2 ml-3 no-drag" style="width: 56px;">
+                    <button class="text-gray-500 hover:text-blue-500 w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-white/10" onclick="toggleDarkMode()">
+                        <i class="fa-solid fa-sun" id="dark-mode-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-1 overflow-hidden">
+            <nav class="sidebar flex flex-col px-3">
+                <div class="space-y-1 mb-8 mt-4">
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="main.html">
+                        <i class="fa-solid fa-chart-simple mr-3 w-4"></i>治理看板
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="assignment.html">
+                        <i class="fa-solid fa-sliders mr-3 w-4"></i>措施配置
+                        <span class="ml-auto w-[20px] h-[20px] bg-red-500 text-white text-center text-[10px] px-1.5 rounded-full">8</span>
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="department.html">
+                        <i class="fa-solid fa-industry mr-3 w-4"></i>企业与工艺
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm active-nav" href="history.html">
+                        <i class="fa-solid fa-clock-rotate-left mr-3 w-4"></i>历史监测
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="settings.html">
+                        <i class="fa-solid fa-gear mr-3 w-4"></i>系统设置
+                    </a>
+                </div>
+                <div class="mt-auto p-4 mb-4">
+                    <div class="flex items-center gap-3 bg-white/60 dark:bg-white/10 p-3 rounded-lg border border-black/5 dark:border-white/10">
+                        <div class="w-8 h-8 rounded-full overflow-hidden border border-white/40">
+                            <img alt="User Avatar" class="w-full h-full object-cover" src="https://i.pravatar.cc/150?img=68"/>
+                        </div>
+                        <div class="text-xs">
+                            <div class="font-semibold text-gray-700 dark:text-gray-200">王敏</div>
+                            <div class="text-gray-500 dark:text-gray-400">登录用户</div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <main class="flex-1 overflow-y-auto pt-[52px] bg-white dark:bg-[#1C1C1E]">
+                <div class="p-6">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold tracking-tight">历史监测</h2>
+                            <p class="text-sm text-gray-500">查看历史排放数据和监测记录</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="mac-btn px-3 py-1.5 bg-gray-100 dark:bg-white/10 rounded-md text-xs font-medium hover:bg-gray-200" onclick="exportData()">
+                                <i class="fa-solid fa-download mr-1"></i>导出数据
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="text-xs text-gray-400">时间范围：</span>
+                        <button class="date-btn px-3 py-1 text-xs rounded-md bg-gray-100 dark:bg-white/10" onclick="selectDate(this, 7)">近7天</button>
+                        <button class="date-btn px-3 py-1 text-xs rounded-md bg-gray-100 dark:bg-white/10" onclick="selectDate(this, 30)">近30天</button>
+                        <button class="date-btn px-3 py-1 text-xs rounded-md bg-gray-100 dark:bg-white/10 active" onclick="selectDate(this, 90)">近90天</button>
+                        <button class="date-btn px-3 py-1 text-xs rounded-md bg-gray-100 dark:bg-white/10" onclick="selectDate(this, 365)">近1年</button>
+                    </div>
+                    <div class="grid grid-cols-4 gap-4 mb-6">
+                        <div class="p-4 bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-gray-400">平均排放达标率</span>
+                                <i class="fa-solid fa-chart-line text-green-500 text-xs"></i>
+                            </div>
+                            <div class="text-2xl font-bold" id="compliance-rate">94.2%</div>
+                            <div class="text-[10px] text-green-500 mt-1 flex items-center" id="compliance-change">
+                                <i class="fa-solid fa-arrow-up mr-1 text-[8px]"></i>较上期 +1.8%
+                            </div>
+                        </div>
+                        <div class="p-4 bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-gray-400">超标次数</span>
+                                <i class="fa-solid fa-triangle-exclamation text-red-500 text-xs"></i>
+                            </div>
+                            <div class="text-2xl font-bold" id="exceed-count">23</div>
+                            <div class="text-[10px] text-red-500 mt-1" id="exceed-change">较上期 -5</div>
+                        </div>
+                        <div class="p-4 bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-gray-400">累计减排量</span>
+                                <i class="fa-solid fa-leaf text-green-500 text-xs"></i>
+                            </div>
+                            <div class="text-2xl font-bold" id="reduction">286 吨</div>
+                            <div class="text-[10px] text-green-500 mt-1" id="reduction-change">较上期 +42</div>
+                        </div>
+                        <div class="p-4 bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-gray-400">设备运行率</span>
+                                <i class="fa-solid fa-gears text-blue-500 text-xs"></i>
+                            </div>
+                            <div class="text-2xl font-bold" id="equipment-rate">97.8%</div>
+                            <div class="text-[10px] text-blue-500 mt-1" id="equipment-change">较上期 +0.5%</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="p-4 bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm">
+                            <h3 class="text-sm font-semibold mb-4">排放趋势</h3>
+                            <div class="h-56" id="emission-trend-chart"></div>
+                        </div>
+                        <div class="p-4 bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm">
+                            <h3 class="text-sm font-semibold mb-4">达标率分布</h3>
+                            <div class="h-56" id="compliance-chart"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 dark:border-white/5">
+                            <h3 class="font-semibold text-sm">超标记录</h3>
+                        </div>
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 dark:bg-white/5 text-xs text-gray-500">
+                                <tr>
+                                    <th class="text-left px-4 py-3 font-medium">时间</th>
+                                    <th class="text-left px-4 py-3 font-medium">企业</th>
+                                    <th class="text-left px-4 py-3 font-medium">监测点</th>
+                                    <th class="text-left px-4 py-3 font-medium">污染物</th>
+                                    <th class="text-left px-4 py-3 font-medium">实测值</th>
+                                    <th class="text-left px-4 py-3 font-medium">超标倍数</th>
+                                    <th class="text-left px-4 py-3 font-medium">状态</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-white/5" id="exceed-records"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+            <div id="window-toast" class="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-green-500 text-white text-sm shadow-lg hidden" style="z-index: 1000;"></div>
+    </div>
+    <script>
+        const dataConfig = {
+            7: {
+                complianceRate: '98.5%',
+                complianceChange: '<i class="fa-solid fa-arrow-up mr-1 text-[8px]"></i>较上期 +0.5%',
+                exceedCount: '3',
+                exceedChange: '较上期 -2',
+                reduction: '42 吨',
+                reductionChange: '较上期 +8',
+                equipmentRate: '99.2%',
+                equipmentChange: '较上期 +0.3%',
+                trendLabels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                emissionData: [18, 22, 15, 19, 21, 16, 14],
+                reductionData: [12, 15, 18, 14, 16, 20, 22],
+                complianceData: [
+                    { value: 168, name: '达标', itemStyle: { color: '#34C759' } },
+                    { value: 3, name: '超标', itemStyle: { color: '#FF3B30' } }
+                ],
+                records: [
+                    { time: '2026-03-15 09:20', company: '华能电厂', point: 'FB003', pollutant: 'NOx', value: '115 mg/m³', times: '0.15倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-03-12 16:45', company: '中石化炼化', point: 'DA001', pollutant: 'SO₂', value: '82 mg/m³', times: '0.6倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-03-10 11:30', company: '华能电厂', point: 'WW008', pollutant: 'COD', value: '105 mg/L', times: '0.05倍', status: '处理中', statusClass: 'bg-yellow-100 text-yellow-600' }
+                ]
+            },
+            30: {
+                complianceRate: '96.8%',
+                complianceChange: '<i class="fa-solid fa-arrow-up mr-1 text-[8px]"></i>较上期 +1.2%',
+                exceedCount: '12',
+                exceedChange: '较上期 -4',
+                reduction: '156 吨',
+                reductionChange: '较上期 +28',
+                equipmentRate: '98.5%',
+                equipmentChange: '较上期 +0.8%',
+                trendLabels: ['第1周', '第2周', '第3周', '第4周'],
+                emissionData: [85, 92, 78, 88],
+                reductionData: [62, 70, 75, 68],
+                complianceData: [
+                    { value: 418, name: '达标', itemStyle: { color: '#34C759' } },
+                    { value: 12, name: '超标', itemStyle: { color: '#FF3B30' } }
+                ],
+                records: [
+                    { time: '2026-03-14 08:15', company: '中石化炼化', point: 'DA001', pollutant: 'SO₂', value: '95 mg/m³', times: '0.9倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-03-11 14:30', company: '华能电厂', point: 'FB003', pollutant: 'NOx', value: '130 mg/m³', times: '0.3倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-03-08 22:10', company: '中石化炼化', point: 'WW012', pollutant: 'COD', value: '580 mg/L', times: '0.9倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-03-05 10:25', company: '华能电厂', point: 'FB003', pollutant: 'NOx', value: '125 mg/m³', times: '0.25倍', status: '处理中', statusClass: 'bg-yellow-100 text-yellow-600' },
+                    { time: '2026-03-02 18:40', company: '中石化炼化', point: 'DA001', pollutant: 'SO₂', value: '88 mg/m³', times: '0.76倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' }
+                ]
+            },
+            90: {
+                complianceRate: '94.2%',
+                complianceChange: '<i class="fa-solid fa-arrow-up mr-1 text-[8px]"></i>较上期 +1.8%',
+                exceedCount: '23',
+                exceedChange: '较上期 -5',
+                reduction: '286 吨',
+                reductionChange: '较上期 +42',
+                equipmentRate: '97.8%',
+                equipmentChange: '较上期 +0.5%',
+                trendLabels: ['1月', '2月', '3月'],
+                emissionData: [120, 132, 101],
+                reductionData: [80, 92, 115],
+                complianceData: [
+                    { value: 335, name: '达标', itemStyle: { color: '#34C759' } },
+                    { value: 48, name: '超标', itemStyle: { color: '#FF3B30' } }
+                ],
+                records: [
+                    { time: '2026-03-04 14:30', company: '中石化炼化', point: 'DA001', pollutant: 'SO₂', value: '85 mg/m³', times: '0.7倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-03-03 08:15', company: '华能电厂', point: 'FB003', pollutant: 'NOx', value: '120 mg/m³', times: '0.2倍', status: '处理中', statusClass: 'bg-yellow-100 text-yellow-600' },
+                    { time: '2026-03-01 22:45', company: '中石化炼化', point: 'WW012', pollutant: 'COD', value: '520 mg/L', times: '1.1倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-02-25 16:20', company: '华能电厂', point: 'FB003', pollutant: 'NOx', value: '135 mg/m³', times: '0.35倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-02-20 09:50', company: '中石化炼化', point: 'DA001', pollutant: 'SO₂', value: '92 mg/m³', times: '0.84倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-02-15 11:15', company: '华能电厂', point: 'WW008', pollutant: 'COD', value: '550 mg/L', times: '0.83倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-02-10 20:30', company: '中石化炼化', point: 'DA001', pollutant: 'SO₂', value: '100 mg/m³', times: '1.0倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' }
+                ]
+            },
+            365: {
+                complianceRate: '89.5%',
+                complianceChange: '<i class="fa-solid fa-arrow-up mr-1 text-[8px]"></i>较上期 +3.5%',
+                exceedCount: '156',
+                exceedChange: '较上期 -28',
+                reduction: '1,280 吨',
+                reductionChange: '较上期 +320',
+                equipmentRate: '95.2%',
+                equipmentChange: '较上期 +1.8%',
+                trendLabels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                emissionData: [520, 480, 450, 420, 380, 350, 320, 290, 260, 230, 200, 180],
+                reductionData: [180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400],
+                complianceData: [
+                    { value: 1248, name: '达标', itemStyle: { color: '#34C759' } },
+                    { value: 156, name: '超标', itemStyle: { color: '#FF3B30' } }
+                ],
+                records: [
+                    { time: '2026-03-04 14:30', company: '中石化炼化', point: 'DA001', pollutant: 'SO₂', value: '85 mg/m³', times: '0.7倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-03-03 08:15', company: '华能电厂', point: 'FB003', pollutant: 'NOx', value: '120 mg/m³', times: '0.2倍', status: '处理中', statusClass: 'bg-yellow-100 text-yellow-600' },
+                    { time: '2026-03-01 22:45', company: '中石化炼化', point: 'WW012', pollutant: 'COD', value: '520 mg/L', times: '1.1倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-02-15 16:20', company: '华能电厂', point: 'FB003', pollutant: 'NOx', value: '145 mg/m³', times: '0.45倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2026-01-28 10:30', company: '中石化炼化', point: 'DA001', pollutant: 'SO₂', value: '110 mg/m³', times: '1.2倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2025-12-20 08:45', company: '华能电厂', point: 'WW008', pollutant: 'COD', value: '620 mg/L', times: '1.24倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2025-11-15 14:20', company: '中石化炼化', point: 'DA001', pollutant: 'SO₂', value: '125 mg/m³', times: '1.5倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2025-10-08 22:10', company: '华能电厂', point: 'FB003', pollutant: 'NOx', value: '160 mg/m³', times: '0.6倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2025-09-02 09:30', company: '中石化炼化', point: 'WW012', pollutant: 'COD', value: '680 mg/L', times: '1.7倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' },
+                    { time: '2025-08-18 18:50', company: '华能电厂', point: 'FB003', pollutant: 'NOx', value: '155 mg/m³', times: '0.55倍', status: '已处理', statusClass: 'bg-green-100 text-green-600' }
+                ]
+            }
+        };
+
+        let currentDays = 90;
+
+        function selectDate(btn, days) {
+            document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentDays = days;
+            updateData(days);
+            initCharts();
+        }
+
+        function updateData(days) {
+            const data = dataConfig[days];
+            document.getElementById('compliance-rate').textContent = data.complianceRate;
+            document.getElementById('compliance-change').innerHTML = data.complianceChange;
+            document.getElementById('exceed-count').textContent = data.exceedCount;
+            document.getElementById('exceed-change').textContent = data.exceedChange;
+            document.getElementById('reduction').textContent = data.reduction;
+            document.getElementById('reduction-change').textContent = data.reductionChange;
+            document.getElementById('equipment-rate').textContent = data.equipmentRate;
+            document.getElementById('equipment-change').textContent = data.equipmentChange;
+
+            const tbody = document.getElementById('exceed-records');
+            tbody.innerHTML = data.records.map(r => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-white/5">
+                    <td class="px-4 py-3">${r.time}</td>
+                    <td class="px-4 py-3">${r.company}</td>
+                    <td class="px-4 py-3">${r.point}</td>
+                    <td class="px-4 py-3">${r.pollutant}</td>
+                    <td class="px-4 py-3 text-red-500">${r.value}</td>
+                    <td class="px-4 py-3 text-red-500">${r.times}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-0.5 ${r.statusClass} text-xs rounded">${r.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function initCharts() {
+            const macWindow = document.querySelector('.mac-window');
+            const isDark = macWindow.classList.contains('dark');
+            const textColor = isDark ? '#ffffff' : '#333333';
+            const bgColor = isDark ? '#1C1C1E' : '#ffffff';
+            const data = dataConfig[currentDays];
+            
+            const trendChart = echarts.init(document.getElementById('emission-trend-chart'));
+            trendChart.setOption({
+                tooltip: { trigger: 'axis' },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                legend: { data: ['排放量', '减排量'], textStyle: { color: textColor } },
+                xAxis: { 
+                    type: 'category', 
+                    boundaryGap: false,
+                    data: data.trendLabels,
+                    axisLabel: { color: textColor }
+                },
+                yAxis: { axisLabel: { color: textColor }, splitLine: { lineStyle: { opacity: 0.1 } } },
+                series: [
+                    { name: '排放量', type: 'line', data: data.emissionData, smooth: true, itemStyle: { color: '#007AFF' } },
+                    { name: '减排量', type: 'line', data: data.reductionData, smooth: true, itemStyle: { color: '#34C759' } }
+                ]
+            });
+            
+            const pieChart = echarts.init(document.getElementById('compliance-chart'));
+            pieChart.setOption({
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    data: data.complianceData,
+                    label: { show: true, formatter: '{b}: {d}%' }
+                }]
+            });
+        }
+
+        function toggleDarkMode() {
+            var macWindow = document.querySelector('.mac-window');
+            macWindow.classList.toggle('dark');
+            var icon = document.getElementById('dark-mode-icon');
+            if (macWindow.classList.contains('dark')) {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('darkMode', 'false');
+            }
+            initCharts();
+        }
+
+        function initDarkMode() {
+            var macWindow = document.querySelector('.mac-window');
+            var icon = document.getElementById('dark-mode-icon');
+            var isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                macWindow.classList.add('dark');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        function exportData() {
+            const toast = document.getElementById('window-toast');
+            toast.textContent = '数据导出成功！';
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initDarkMode();
+            updateData(90);
+            initCharts();
+        });
+    </script>
+</body>
+</html>

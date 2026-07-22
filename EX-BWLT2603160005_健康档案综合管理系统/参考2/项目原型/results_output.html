@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>流域水资源供需结构分析计算软件</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpg') no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .mac-window {
+      width: 1120px;
+      max-width: 96vw;
+      background: #1e1e1e;
+      border-radius: 10px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .title-bar {
+      height: 38px;
+      background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      position: relative;
+    }
+
+    .traffic-lights { display: flex; gap: 8px; z-index: 2; }
+    .traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .title-bar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #999;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .toolbar {
+      height: 40px;
+      background: linear-gradient(180deg, #292929, #232323);
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 2px;
+    }
+
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      color: #aaa;
+      font-size: 11.5px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover { background: rgba(255, 255, 255, 0.06); color: #ddd; }
+    .tool-btn:active { transform: scale(0.97); }
+    .tool-sep { width: 1px; height: 20px; background: #3a3a3a; margin: 0 6px; }
+    .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px 3px 6px;
+      background: rgba(74, 144, 226, 0.12);
+      border: 1px solid rgba(74, 144, 226, 0.25);
+      border-radius: 12px;
+      color: #7ab8f5;
+      font-size: 11px;
+    }
+
+    .user-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .main-layout { display: flex; height: 620px; }
+
+    .sidebar {
+      width: 220px;
+      background: #252525;
+      border-right: 1px solid #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 12px 14px 8px;
+      color: #666;
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-item {
+      padding: 6px 8px;
+      color: #aaa;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .nav-item:hover { background: rgba(255, 255, 255, 0.04); color: #ccc; }
+    .nav-item:active { transform: scale(0.98); }
+    .nav-item.active { background: rgba(74, 144, 226, 0.15); color: #7ab8f5; }
+    .nav-item i { width: 13px; font-size: 13px; flex-shrink: 0; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 10px 14px;
+      border-top: 1px solid #1e1e1e;
+    }
+
+    .project-info {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .project-label { color: #555; font-size: 10px; margin-bottom: 4px; }
+    .project-name { color: #bbb; font-size: 11.5px; font-weight: 500; margin-bottom: 6px; }
+    .project-meta { display: flex; gap: 12px; }
+    .project-meta span { color: #666; font-size: 10px; }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #1e1e1e;
+    }
+
+    .tab-bar { display: flex; background: #222; border-bottom: 1px solid #1a1a1a; }
+
+    .tab {
+      padding: 9px 18px;
+      color: #777;
+      font-size: 12px;
+      cursor: pointer;
+      border-right: 1px solid #1a1a1a;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .tab:hover { color: #aaa; background: rgba(255, 255, 255, 0.02); }
+    .tab.active { color: #ddd; background: #1e1e1e; }
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #4a90e2;
+    }
+
+    .content-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .content-body::-webkit-scrollbar { width: 6px; }
+    .content-body::-webkit-scrollbar-track { background: transparent; }
+    .content-body::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
+
+    .card {
+      background: #262626;
+      border-radius: 8px;
+      border: 1px solid #333;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      color: #ccc;
+      font-size: 12.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .dot-blue { background: #4a90e2; }
+    .dot-green { background: #28c840; }
+    .dot-orange { background: #f5a623; }
+    .dot-purple { background: #9b59b6; }
+
+    .card-badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .badge-info { background: rgba(74, 144, 226, 0.12); color: #7ab8f5; border: 1px solid rgba(74, 144, 226, 0.2); }
+    .badge-success { background: rgba(40, 200, 64, 0.12); color: #28c840; border: 1px solid rgba(40, 200, 64, 0.2); }
+
+    .card-body { padding: 14px; }
+    .full-width { grid-column: 1 / -1; }
+
+    .file-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid #333;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .file-item:hover {
+      border-color: #4a90e2;
+      background: rgba(74, 144, 226, 0.05);
+    }
+
+    .file-item.selected {
+      border-color: #4a90e2;
+      background: rgba(74, 144, 226, 0.1);
+    }
+
+    .file-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+
+    .file-icon.pdf { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+    .file-icon.xlsx { background: rgba(40, 200, 64, 0.15); color: #28c840; }
+    .file-icon.docx { background: rgba(74, 144, 226, 0.15); color: #4a90e2; }
+    .file-icon.folder { background: rgba(245, 166, 35, 0.15); color: #f5a623; }
+
+    .file-info { flex: 1; }
+    .file-name { color: #ccc; font-size: 12px; margin-bottom: 3px; }
+    .file-meta { color: #666; font-size: 10px; }
+    .file-check {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #555;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .file-item.selected .file-check {
+      border-color: #4a90e2;
+      background: #4a90e2;
+      color: #fff;
+    }
+
+    .output-preview {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .preview-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 5px;
+    }
+
+    .preview-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .preview-icon.pdf { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+    .preview-icon.chart { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
+
+    .preview-info { flex: 1; }
+    .preview-name { color: #aaa; font-size: 11px; margin-bottom: 2px; }
+    .preview-size { color: #666; font-size: 10px; }
+
+    .status-bar {
+      height: 24px;
+      background: #222;
+      border-top: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+    }
+
+    .status-item { color: #555; font-size: 10.5px; display: flex; align-items: center; gap: 4px; }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; background: #28c840; }
+    .status-right { margin-left: auto; display: flex; gap: 14px; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card { animation: fadeIn 0.4s ease both; }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 2px; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+
+    .modal {
+      background: #2a2a2a;
+      border-radius: 10px;
+      border: 1px solid #3a3a3a;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      min-width: 380px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #3a3a3a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .modal-traffic-lights { position: absolute; left: 14px; display: flex; gap: 8px; }
+    .modal-traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .modal-traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .modal-traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .modal-traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+    .modal-title { color: #ddd; font-size: 14px; font-weight: 500; text-align: center; }
+    .modal-body { padding: 16px; }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #3a3a3a;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: #3a3a3a; color: #aaa; }
+    .btn-secondary:hover { background: #444; color: #fff; }
+    .btn-primary { background: #4a90e2; color: #fff; }
+    .btn-primary:hover { background: #5a9fe8; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; color: #888; font-size: 11px; margin-bottom: 5px; }
+
+    .form-input {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 12px;
+    }
+
+    .form-input:focus { outline: none; border-color: #4a90e2; }
+
+    .form-select {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .form-select:focus { outline: none; border-color: #4a90e2; }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+
+    .checkbox-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: #4a90e2;
+      cursor: pointer;
+    }
+
+    .checkbox-item span { color: #aaa; font-size: 12px; }
+
+    .export-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .export-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .export-item:hover {
+      border-color: #4a90e2;
+      background: rgba(74, 144, 226, 0.05);
+    }
+
+    .export-item i {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+    }
+
+    .export-item.pdf { color: #e74c3c; }
+    .export-item.xlsx { color: #28c840; }
+    .export-item.docx { color: #4a90e2; }
+    .export-item.zip { color: #f5a623; }
+
+    .export-text { flex: 1; color: #ccc; font-size: 12px; }
+    .export-check {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #555;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .export-item.selected .export-check {
+      border-color: #4a90e2;
+      background: #4a90e2;
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <span class="title-bar-text">流域水资源供需结构分析计算软件</span>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool-btn" onclick="location.href='main.html'">
+        <i class="fa-solid fa-arrow-left"></i>
+        返回
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnNewOutput">
+        <i class="fa-solid fa-plus"></i>
+        新建输出
+      </button>
+      <button class="tool-btn" id="btnBatchExport">
+        <i class="fa-solid fa-file-export"></i>
+        批量导出
+      </button>
+      <button class="tool-btn" id="btnPrint">
+        <i class="fa-solid fa-print"></i>
+        打印
+      </button>
+      <div class="toolbar-right">
+        <div class="user-badge">
+          <img class="user-avatar" src="https://i01piccdn.sogoucdn.com/4a7eff1521dc451e" alt="于露" />
+          于露
+        </div>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">功能导航</div>
+
+        <div class="nav-item" onclick="location.href='main.html'">
+          <i class="fa-solid fa-table-cells"></i>
+          供需总览
+        </div>
+        <div class="nav-item" onclick="location.href='need_water.html'">
+          <i class="fa-solid fa-users"></i>
+          需水预测
+        </div>
+        <div class="nav-item" onclick="location.href='supply_analysis.html'">
+          <i class="fa-solid fa-droplet"></i>
+          供水分析
+        </div>
+        <div class="nav-item" onclick="location.href='balance_analysis.html'">
+          <i class="fa-solid fa-chart-column"></i>
+          供需平衡分析
+        </div>
+        <div class="nav-item" onclick="location.href='water_balance_check.html'">
+          <i class="fa-solid fa-check-double"></i>
+          水量平衡校核
+        </div>
+        <div class="nav-item" onclick="location.href='scheme_comparison.html'">
+          <i class="fa-solid fa-code-compare"></i>
+          方案比选
+        </div>
+        <div class="nav-item active">
+          <i class="fa-solid fa-file-lines"></i>
+          成果输出
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="project-info">
+            <div class="project-label">当前项目</div>
+            <div class="project-name">海河流域水资源配置</div>
+            <div class="project-meta">
+              <span>规划水平年：2035</span>
+              <span>P=75%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <div class="content-body">
+          <div class="card full-width">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-blue"></span> 成果输出总览</div>
+              <span class="card-badge badge-success">可输出</span>
+            </div>
+            <div class="card-body">
+              <div class="stats-row">
+                <div class="stat-block">
+                  <div class="stat-value blue">12</div>
+                  <div class="stat-label">可用成果</div>
+                  <div class="stat-sub">报告/图表</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value green">4</div>
+                  <div class="stat-label">输出格式</div>
+                  <div class="stat-sub">PDF/Excel 等</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value orange">8</div>
+                  <div class="stat-label">已生成文件</div>
+                  <div class="stat-sub">本地存储</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value blue">2035</div>
+                  <div class="stat-label">规划水平年</div>
+                  <div class="stat-sub">P=75%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-green"></span> 成果文件列表</div>
+              <button class="tool-btn" id="btnRefresh" style="padding:2px 8px;font-size:10px;">
+                <i class="fa-solid fa-rotate-right"></i>
+                刷新
+              </button>
+            </div>
+            <div class="card-body" style="padding: 8px 14px;">
+              <div class="file-list">
+                <div class="file-item selected" onclick="selectFile(this)">
+                  <div class="file-icon pdf"><i class="fa-solid fa-file-pdf"></i></div>
+                  <div class="file-info">
+                    <div class="file-name">海河流域供需平衡分析报告.pdf</div>
+                    <div class="file-meta">2024-01-15 14:32 · 2.5 MB</div>
+                  </div>
+                  <div class="file-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+                </div>
+                <div class="file-item" onclick="selectFile(this)">
+                  <div class="file-icon xlsx"><i class="fa-solid fa-file-excel"></i></div>
+                  <div class="file-info">
+                    <div class="file-name">分区需水预测成果表.xlsx</div>
+                    <div class="file-meta">2024-01-15 14:30 · 156 KB</div>
+                  </div>
+                  <div class="file-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+                </div>
+                <div class="file-item" onclick="selectFile(this)">
+                  <div class="file-icon docx"><i class="fa-solid fa-file-word"></i></div>
+                  <div class="file-info">
+                    <div class="file-name">水资源配置方案说明.docx</div>
+                    <div class="file-meta">2024-01-15 14:28 · 1.8 MB</div>
+                  </div>
+                  <div class="file-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+                </div>
+                <div class="file-item" onclick="selectFile(this)">
+                  <div class="file-icon folder"><i class="fa-solid fa-folder"></i></div>
+                  <div class="file-info">
+                    <div class="file-name">图表输出</div>
+                    <div class="file-meta">2024-01-15 14:25 · 5 个文件</div>
+                  </div>
+                  <div class="file-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card full-width">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-purple"></span> 快速导出</div>
+            </div>
+            <div class="card-body" style="padding: 8px 14px;">
+              <div class="export-list">
+                <div class="export-item" onclick="toggleExport(this)">
+                  <i class="fa-solid fa-file-pdf pdf"></i>
+                  <span class="export-text">完整分析报告 (PDF)</span>
+                  <div class="export-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+                </div>
+                <div class="export-item selected" onclick="toggleExport(this)">
+                  <i class="fa-solid fa-file-excel xlsx"></i>
+                  <span class="export-text">全部计算成果表 (Excel)</span>
+                  <div class="export-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+                </div>
+                <div class="export-item" onclick="toggleExport(this)">
+                  <i class="fa-solid fa-file-word docx"></i>
+                  <span class="export-text">方案说明文档 (Word)</span>
+                  <div class="export-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+                </div>
+                <div class="export-item" onclick="toggleExport(this)">
+                  <i class="fa-solid fa-file-zipper zip"></i>
+                  <span class="export-text">全部成果打包 (ZIP)</span>
+                  <div class="export-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-dot"></span>
+            输出就绪
+          </div>
+          <div class="status-item">输出路径：D:\水资源项目\输出</div>
+          <div class="status-right">
+            <div class="status-item">已选：2 项</div>
+            <div class="status-item">总大小：3.2 MB</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    function selectFile(element) {
+      document.querySelectorAll('.file-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      element.classList.add('selected');
+    }
+
+    function toggleExport(element) {
+      element.classList.toggle('selected');
+    }
+
+    document.getElementById('btnRefresh').addEventListener('click', function() {
+      const icon = this.querySelector('i');
+      icon.style.animation = 'spin 1s linear';
+      setTimeout(() => {
+        icon.style.animation = '';
+      }, 1000);
+    });
+
+    document.getElementById('btnNewOutput').addEventListener('click', () => {
+      openModal(
+        '新建成果输出',
+        `<div class="form-group">
+          <label class="form-label">输出名称</label>
+          <input type="text" class="form-input" placeholder="请输入输出名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">输出类型</label>
+          <select class="form-select">
+            <option>分析报告</option>
+            <option>数据表格</option>
+            <option>图表集</option>
+            <option>综合成果</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">输出格式</label>
+          <select class="form-select">
+            <option>PDF</option>
+            <option>Excel</option>
+            <option>Word</option>
+            <option>图片</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">包含内容</label>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>供需总览</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>需水预测</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>供水分析</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" checked>
+              <span>平衡分析</span>
+            </label>
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary">生成输出</button>`
+      );
+    });
+
+    document.getElementById('btnBatchExport').addEventListener('click', () => {
+      openModal(
+        '批量导出设置',
+        `<div class="form-group">
+          <label class="form-label">导出格式</label>
+          <div class="export-list">
+            <div class="export-item selected" onclick="toggleExport(this)">
+              <i class="fa-solid fa-file-pdf pdf"></i>
+              <span class="export-text">PDF 报告</span>
+              <div class="export-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+            </div>
+            <div class="export-item selected" onclick="toggleExport(this)">
+              <i class="fa-solid fa-file-excel xlsx"></i>
+              <span class="export-text">Excel 数据</span>
+              <div class="export-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+            </div>
+            <div class="export-item" onclick="toggleExport(this)">
+              <i class="fa-solid fa-file-word docx"></i>
+              <span class="export-text">Word 文档</span>
+              <div class="export-check"><i class="fa-solid fa-check" style="font-size:12px;"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">导出路径</label>
+          <input type="text" class="form-input" value="D:\水资源项目\输出">
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="startBatchExport()">开始导出</button>`
+      );
+    });
+
+    function startBatchExport() {
+      openModal(
+        '批量导出',
+        `<div style="text-align:center;padding:10px;">
+          <i class="fa-solid fa-file-export" style="font-size:32px;color:#4a90e2;margin-bottom:12px;"></i>
+          <div style="color:#888;font-size:11px;margin-bottom:8px;">正在导出文件...</div>
+        </div>
+        <div style="padding:10px;background:#1e1e1e;border-radius:5px;">
+          <div style="display:flex;justify-content:space-between;color:#777;font-size:10px;margin-bottom:6px;">
+            <span>导出进度</span>
+            <span id="exportProgress">0%</span>
+          </div>
+          <div style="height:4px;background:#333;border-radius:2px;overflow:hidden;">
+            <div id="exportProgressBar" style="height:100%;background:#4a90e2;width:0%;transition:width 0.3s;"></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;text-align:left;padding:10px;background:#1e1e1e;border-radius:5px;">
+          <div style="color:#666;font-size:9px;margin-bottom:6px;">导出列表：</div>
+          <div style="color:#888;font-size:10px;line-height:1.8;">
+            <div><i class="fa-solid fa-file-excel" style="color:#28c840;margin-right:6px;"></i>全部计算成果表.xlsx</div>
+            <div><i class="fa-solid fa-file-pdf" style="color:#e74c3c;margin-right:6px;"></i>分析报告.pdf</div>
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" id="btnCancelExport">取消</button>`
+      );
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 20;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          document.getElementById('exportProgress').textContent = '100%';
+          document.getElementById('exportProgressBar').style.width = '100%';
+          document.getElementById('btnCancelExport').textContent = '完成';
+          document.getElementById('btnCancelExport').onclick = () => {
+            closeModal();
+            showExportSuccess();
+          };
+        } else {
+          document.getElementById('exportProgress').textContent = Math.round(progress) + '%';
+          document.getElementById('exportProgressBar').style.width = progress + '%';
+        }
+      }, 200);
+    }
+
+    function showExportSuccess() {
+      openModal(
+        '导出成功',
+        `<div style="text-align:center;padding:20px;">
+          <i class="fa-solid fa-circle-check" style="font-size:48px;color:#28c840;margin-bottom:12px;"></i>
+          <div style="color:#aaa;font-size:12px;margin-bottom:6px;">文件导出成功</div>
+          <div style="color:#888;font-size:10px;margin-top:8px;">导出路径：D:\水资源项目\输出</div>
+        </div>`,
+        `<button class="btn btn-primary" onclick="closeModal()">确定</button>`
+      );
+    }
+
+    document.getElementById('btnPrint').addEventListener('click', () => {
+      openModal(
+        '打印设置',
+        `<div class="form-group">
+          <label class="form-label">打印机</label>
+          <select class="form-select">
+            <option>Adobe PDF</option>
+            <option>Microsoft Print to PDF</option>
+            <option>HP LaserJet Pro</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">纸张大小</label>
+            <select class="form-select">
+              <option>A4</option>
+              <option>A3</option>
+              <option>Letter</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">方向</label>
+            <select class="form-select">
+              <option>纵向</option>
+              <option>横向</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">打印内容</label>
+          <select class="form-select">
+            <option>当前页面</option>
+            <option>全部成果</option>
+            <option>自定义范围</option>
+          </select>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary">打印</button>`
+      );
+    });
+  </script>
+
+</body>
+
+</html>

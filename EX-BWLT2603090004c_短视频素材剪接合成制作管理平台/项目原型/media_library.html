@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>素材库 - 短视频素材剪接合成制作管理平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0b0c0e;
+            --bg2: #0f1114;
+            --window-bg: rgba(20, 20, 22, 0.92);
+            --window-border: rgba(255, 255, 255, 0.10);
+            --sidebar-bg: rgba(26, 26, 28, 0.92);
+            --toolbar-bg: rgba(24, 24, 26, 0.92);
+            --surface: rgba(34, 34, 38, 0.72);
+            --surface-2: rgba(46, 46, 50, 0.76);
+            --surface-3: rgba(255, 255, 255, 0.12);
+            --border: rgba(255, 255, 255, 0.10);
+            --text: rgba(255, 255, 255, 0.92);
+            --text-2: rgba(255, 255, 255, 0.68);
+            --text-3: rgba(255, 255, 255, 0.42);
+            --accent: #3b82f6;
+            --accent-2: #60a5fa;
+            --danger: #ff5f57;
+            --warn: #febc2e;
+            --ok: #28c840;
+            --radius-xl: 18px;
+            --radius-lg: 14px;
+            --radius-md: 12px;
+            --shadow-window: 0 30px 110px rgba(0, 0, 0, 0.62), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+            --shadow-card: 0 18px 45px rgba(0, 0, 0, 0.40);
+            --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.34);
+            --ring: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 0 4px rgba(59, 130, 246, 0.18);
+        }
+
+        body {
+            background: url('./bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            letter-spacing: 0.2px;
+            min-height: 100vh;
+        }
+
+        .app-shell {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .app-window {
+            width: 100%;
+            min-height: 100vh;
+            background: var(--window-bg);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(22px) saturate(1.15);
+            -webkit-backdrop-filter: blur(22px) saturate(1.15);
+        }
+
+        .titlebar {
+            height: 46px;
+            background: rgba(12, 12, 12, 0.92);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 14px;
+            user-select: none;
+        }
+
+        .traffic-lights {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22) inset, 0 1px 2px rgba(0, 0, 0, 0.25);
+        }
+        .traffic-light.red { background: var(--danger); }
+        .traffic-light.yellow { background: var(--warn); }
+        .traffic-light.green { background: var(--ok); }
+
+        .titlebar-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 650;
+            font-size: 13px;
+            color: var(--text-2);
+        }
+
+        .titlebar-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .btn {
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+        }
+        .btn:hover { background: var(--surface-2); }
+        .btn:active { transform: translateY(1px); }
+
+        .btn-primary {
+            border-color: rgba(59, 130, 246, 0.55);
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.92), rgba(37, 99, 235, 0.92));
+            color: white;
+            box-shadow: 0 12px 26px rgba(59, 130, 246, 0.22);
+        }
+        .btn-primary:hover { background: linear-gradient(180deg, rgba(96, 165, 250, 0.94), rgba(59, 130, 246, 0.94)); }
+
+        .btn-icon {
+            width: 34px;
+            padding: 0;
+            justify-content: center;
+        }
+
+        .app-body {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            backdrop-filter: blur(20px) saturate(1.15);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(168, 85, 247, 0.75));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 18px 40px rgba(59, 130, 246, 0.22);
+        }
+
+        .brand-name {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .nav-group-title {
+            padding: 10px 10px 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            color: var(--text-3);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 10px;
+            border-radius: 12px;
+            color: var(--text-2);
+            text-decoration: none;
+            transition: background 120ms ease, color 120ms ease;
+            cursor: pointer;
+        }
+        .nav-item:hover { background: var(--surface); color: var(--text); }
+        .nav-item.active { background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); color: rgba(96, 165, 250, 0.95); }
+        .nav-item i { width: 18px; text-align: center; }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .content-toolbar {
+            padding: 16px 18px 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+        }
+
+        .content-title {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .content-title h2 {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            width: 280px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+            color: var(--text);
+        }
+        .search-box input::placeholder { color: var(--text-3); }
+
+        .scroll-area {
+            flex: 1;
+            overflow: auto;
+            padding: 18px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: transform 140ms ease, border-color 140ms ease;
+        }
+        .stat-card:hover { transform: translateY(-2px); border-color: rgba(59, 130, 246, 0.28); }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .stat-icon.blue { background: rgba(59, 130, 246, 0.18); color: rgba(96, 165, 250, 0.95); }
+        .stat-icon.purple { background: rgba(168, 85, 247, 0.18); color: rgba(217, 70, 239, 0.95); }
+        .stat-icon.green { background: rgba(34, 197, 94, 0.18); color: rgba(74, 222, 128, 0.95); }
+        .stat-icon.orange { background: rgba(249, 115, 22, 0.18); color: rgba(251, 146, 60, 0.95); }
+
+        .stat-info h4 { font-size: 22px; font-weight: 800; color: var(--text); }
+        .stat-info p { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .media-card {
+            position: relative;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            overflow: hidden;
+            transition: transform 140ms ease, border-color 140ms ease;
+            cursor: pointer;
+        }
+        .media-card:hover { transform: translateY(-2px); border-color: rgba(59, 130, 246, 0.28); }
+
+        .media-thumb {
+            aspect-ratio: 16 / 9;
+            position: relative;
+            overflow: hidden;
+        }
+        .media-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+        .media-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+
+        .media-info { padding: 10px 12px; }
+        .media-name { font-size: 12px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .media-meta { font-size: 11px; color: var(--text-3); margin-top: 4px; display: flex; justify-content: space-between; }
+
+        .actions-row {
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            border-top: 1px solid var(--border);
+        }
+        .actions-row .btn { flex: 1; height: 28px; font-size: 11px; justify-content: center; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--window-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            width: 520px;
+            max-width: 90vw;
+            box-shadow: var(--shadow-window);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            height: 52px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            cursor: move;
+        }
+
+        .modal-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 120ms ease;
+        }
+        .modal-close:hover { background: var(--surface); color: var(--text); }
+
+        .modal-body { padding: 18px; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+        .form-input {
+            width: 100%;
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 120ms ease, box-shadow 120ms ease;
+        }
+        .form-input:focus { border-color: rgba(59, 130, 246, 0.5); box-shadow: var(--ring); }
+        .form-select {
+            width: 100%;
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            padding: 14px 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow-card);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 300ms ease, opacity 300ms ease;
+            z-index: 1001;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: rgba(40, 200, 64, 0.4); }
+        .toast.success i { color: var(--ok); }
+
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 999px; }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <div class="app-window">
+            <div class="titlebar">
+                <div class="traffic-lights">
+                    <div class="traffic-light red"></div>
+                    <div class="traffic-light yellow"></div>
+                    <div class="traffic-light green"></div>
+                </div>
+                <div class="titlebar-center">
+                    <div class="app-title">
+                        <i class="fas fa-photo-video" style="color: var(--accent);"></i>
+                        素材库
+                    </div>
+                </div>
+                <div class="titlebar-right">
+                    <button class="btn btn-primary" onclick="openModal('importModal')">
+                        <i class="fas fa-plus"></i> 导入素材
+                    </button>
+                </div>
+            </div>
+
+            <div class="app-body">
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <div class="brand">
+                            <div class="brand-icon">
+                                <i class="fas fa-film"></i>
+                            </div>
+                            <div class="brand-name">短视频素材剪接合成<br>制作管理平台</div>
+                        </div>
+                    </div>
+
+                    <div class="nav-group-title">导航</div>
+                    <a href="dashboard.html" class="nav-item">
+                        <i class="fas fa-desktop"></i> <span>工作台</span>
+                    </a>
+                    <a href="media_library.html" class="nav-item active">
+                        <i class="fas fa-photo-video"></i> <span>素材库</span>
+                    </a>
+                    <a href="projects.html" class="nav-item">
+                        <i class="fas fa-folder-open"></i> <span>项目管理</span>
+                    </a>
+                    <a href="export.html" class="nav-item">
+                        <i class="fas fa-file-export"></i> <span>导出设置</span>
+                    </a>
+
+                    <div class="nav-group-title">系统</div>
+                    <a href="settings.html" class="nav-item">
+                        <i class="fas fa-cog"></i> <span>系统设置</span>
+                    </a>
+                    <a href="users.html" class="nav-item">
+                        <i class="fas fa-users"></i> <span>用户管理</span>
+                    </a>
+                </div>
+
+                <div class="content">
+                    <div class="content-toolbar">
+                        <div class="content-title">
+                            <h2>素材库管理</h2>
+                        </div>
+                        <div class="search-box">
+                            <i class="fas fa-search" style="color: var(--text-3);"></i>
+                            <input type="text" placeholder="搜索素材名称、标签..." />
+                        </div>
+                    </div>
+
+                    <div class="scroll-area">
+                        <div class="stats-row">
+                            <div class="stat-card">
+                                <div class="stat-icon blue"><i class="fas fa-video"></i></div>
+                                <div class="stat-info">
+                                    <h4>1,284</h4>
+                                    <p>视频素材</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon purple"><i class="fas fa-music"></i></div>
+                                <div class="stat-info">
+                                    <h4>856</h4>
+                                    <p>音频素材</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon green"><i class="fas fa-image"></i></div>
+                                <div class="stat-info">
+                                    <h4>3,421</h4>
+                                    <p>图片素材</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon orange"><i class="fas fa-folder"></i></div>
+                                <div class="stat-info">
+                                    <h4>48</h4>
+                                    <p>素材文件夹</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-header">
+                            <div class="section-title"><i class="fas fa-star" style="color: var(--warn);"></i> 最近使用</div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn" onclick="openModal('folderModal')"><i class="fas fa-folder-plus"></i> 新建文件夹</button>
+                                <button class="btn"><i class="fas fa-filter"></i> 筛选</button>
+                            </div>
+                        </div>
+
+                        <div class="media-grid" id="mediaGrid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="importModal">
+        <div class="modal">
+            <div class="modal-header" id="importModalHeader">
+                <div class="modal-title"><i class="fas fa-file-import" style="color: var(--accent);"></i> 导入素材</div>
+                <button class="modal-close" onclick="closeModal('importModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">素材名称</label>
+                    <input type="text" class="form-input" id="importName" placeholder="输入素材名称" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">素材类型</label>
+                    <select class="form-select" id="importType">
+                        <option value="video">视频</option>
+                        <option value="audio">音频</option>
+                        <option value="image">图片</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">所属文件夹</label>
+                    <select class="form-select" id="importFolder">
+                        <option value="default">默认素材库</option>
+                        <option value="project1">项目素材</option>
+                        <option value="temp">临时素材</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标签（用逗号分隔）</label>
+                    <input type="text" class="form-input" id="importTags" placeholder="如：风景,航拍,4K" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('importModal')">取消</button>
+                <button class="btn btn-primary" onclick="importMedia()">
+                    <i class="fas fa-check"></i> 确认导入
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="folderModal">
+        <div class="modal">
+            <div class="modal-header" id="folderModalHeader">
+                <div class="modal-title"><i class="fas fa-folder-plus" style="color: var(--warn);"></i> 新建文件夹</div>
+                <button class="modal-close" onclick="closeModal('folderModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">文件夹名称</label>
+                    <input type="text" class="form-input" id="folderName" placeholder="输入文件夹名称" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">父级文件夹</label>
+                    <select class="form-select" id="parentFolder">
+                        <option value="root">根目录</option>
+                        <option value="project1">项目素材</option>
+                        <option value="temp">临时素材</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('folderModal')">取消</button>
+                <button class="btn btn-primary" onclick="createFolder()">
+                    <i class="fas fa-check"></i> 创建
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">操作成功</span>
+    </div>
+
+    <script>
+        const mediaItems = [
+            { id: 1, name: '西湖日落航拍', type: 'video', size: '2.4GB', dur: '05:32', thumb: 'https://i02piccdn.sogoucdn.com/933d3e9927463dba', badge: '4K' },
+            { id: 2, name: '城市夜景延时', type: 'video', size: '1.8GB', dur: '03:15', thumb: 'https://i03piccdn.sogoucdn.com/a2e85ad6c7e3499b', badge: '6K' },
+            { id: 3, name: '产品展示视频', type: 'video', size: '856MB', dur: '01:20', thumb: 'https://i01piccdn.sogoucdn.com/6847c20417503230', badge: '4K' },
+            { id: 4, name: '自然风光素材', type: 'video', size: '3.2GB', dur: '08:45', thumb: 'https://i02piccdn.sogoucdn.com/55bf338c33b81208', badge: '8K' },
+            { id: 5, name: '背景音乐A', type: 'audio', size: '12MB', dur: '03:24', thumb: 'https://i02piccdn.sogoucdn.com/fe653c0e6b4b6a51', badge: 'WAV' },
+            { id: 6, name: '宣传片配乐', type: 'audio', size: '8MB', dur: '02:10', thumb: 'https://i02piccdn.sogoucdn.com/fe653c0e6b4b6a51', badge: 'MP3' },
+            { id: 7, name: 'logo动画', type: 'video', size: '45MB', dur: '00:15', thumb: 'https://i01piccdn.sogoucdn.com/141fb98754dbf970', badge: 'MOV' },
+            { id: 8, name: '开场特效', type: 'video', size: '120MB', dur: '00:08', thumb: 'https://i02piccdn.sogoucdn.com/261c84af700bc777', badge: 'AE' },
+            { id: 9, name: '转场素材包', type: 'video', size: '680MB', dur: '02:30', thumb: 'https://i01piccdn.sogoucdn.com/6847c20417503230', badge: '4K' },
+            { id: 10, name: '字幕模板', type: 'video', size: '25MB', dur: '00:20', thumb: 'https://i02piccdn.sogoucdn.com/55bf338c33b81208', badge: 'SRT' },
+        ];
+
+        function renderMedia() {
+            const grid = document.getElementById('mediaGrid');
+            grid.innerHTML = mediaItems.map(item => `
+                <div class="media-card" data-id="${item.id}">
+                    <div class="media-thumb">
+                        <img src="${item.thumb}" alt="${item.name}" />
+                        <div class="media-badge">${item.badge}</div>
+                    </div>
+                    <div class="media-info">
+                        <div class="media-name">${item.name}</div>
+                        <div class="media-meta">
+                            <span>${item.dur}</span>
+                            <span>${item.size}</span>
+                        </div>
+                    </div>
+                    <div class="actions-row">
+                        <button class="btn" onclick="previewMedia(${item.id})"><i class="fas fa-play"></i></button>
+                        <button class="btn" onclick="editMedia(${item.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn" onclick="deleteMedia(${item.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function importMedia() {
+            const name = document.getElementById('importName').value;
+            if (!name) {
+                showToast('请输入素材名称');
+                return;
+            }
+            closeModal('importModal');
+            showToast('素材导入成功: ' + name);
+            document.getElementById('importName').value = '';
+        }
+
+        function createFolder() {
+            const name = document.getElementById('folderName').value;
+            if (!name) {
+                showToast('请输入文件夹名称');
+                return;
+            }
+            closeModal('folderModal');
+            showToast('文件夹创建成功: ' + name);
+            document.getElementById('folderName').value = '';
+        }
+
+        function previewMedia(id) {
+            const item = mediaItems.find(m => m.id === id);
+            showToast('预览: ' + item.name);
+        }
+
+        function editMedia(id) {
+            const item = mediaItems.find(m => m.id === id);
+            document.getElementById('importName').value = item.name;
+            openModal('importModal');
+        }
+
+        function deleteMedia(id) {
+            const item = mediaItems.find(m => m.id === id);
+            if (confirm('确定要删除 "' + item.name + '" 吗？')) {
+                showToast('素材已删除: ' + item.name);
+            }
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        function initDragModal(modalId, headerId) {
+            const modal = document.getElementById(modalId);
+            const header = document.getElementById(headerId);
+            let isDragging = false, offsetX, offsetY;
+
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.modal-close')) return;
+                isDragging = true;
+                offsetX = e.clientX - modal.offsetLeft;
+                offsetY = e.clientY - modal.offsetTop;
+                modal.style.transition = 'none';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                modal.style.left = (e.clientX - offsetX) + 'px';
+                modal.style.top = (e.clientY - offsetY) + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                modal.style.transition = '';
+            });
+        }
+
+        initDragModal('importModal', 'importModalHeader');
+        initDragModal('folderModal', 'folderModalHeader');
+
+        renderMedia();
+    </script>
+</body>
+</html>

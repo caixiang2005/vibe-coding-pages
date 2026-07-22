@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>人员管理 - 建筑装饰工程进度智能调度系统</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --surface: #FFFFFF;
+      --bg: #F5F5F7;
+      --sidebar-bg: #F0F0F2;
+      --text-primary: #1D1D1F;
+      --text-secondary: #86868B;
+      --text-tertiary: #AEAEB2;
+      --accent: #0071E3;
+      --green: #34C759;
+      --orange: #FF9500;
+      --red: #FF3B30;
+      --purple: #5856D6;
+      --border: #E5E5EA;
+      --shadow-window: 0 22px 70px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: url('./static/bg.jpg') center/cover no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+      padding: 20px;
+    }
+
+    .mac-window {
+      width: 1120px;
+      height: 720px;
+      background: var(--bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-window);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .titlebar {
+      height: 52px;
+      min-height: 52px;
+      background: linear-gradient(180deg, #FAFAFA 0%, #ECECEC 100%);
+      border-bottom: 1px solid #D5D5D5;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tl {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .tl-close {
+      background: #FF5F57;
+    }
+
+    .tl-min {
+      background: #FFBD2E;
+    }
+
+    .tl-max {
+      background: #28C840;
+    }
+
+    .titlebar-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: #6E6E73;
+      white-space: nowrap;
+    }
+
+    .titlebar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6E6E73;
+    }
+
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: linear-gradient(135deg, var(--accent), #40A0FF);
+      display: block;
+    }
+
+    .main-layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+      margin-bottom: 16px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 8px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .sidebar-item.active {
+      background: rgba(0, 113, 227, 0.1);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .sidebar-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .project-selector {
+      font-size: 12px;
+      padding: 8px 10px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .project-selector .proj-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .project-selector .proj-id {
+      color: var(--text-tertiary);
+      font-size: 10px;
+    }
+
+    .project-switch {
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .project-switch svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .content-header {
+      padding: 20px 24px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      height: 32px;
+      padding: 0 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: #F5F5F7;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: #0077ED;
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-item {
+      padding: 10px 18px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-weight: 500;
+    }
+
+    .tab-item.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .team-card {
+      background: white;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .team-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .team-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .team-count {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .team-body {
+      padding: 12px 16px;
+    }
+
+    .member-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #F5F5F7;
+    }
+
+    .member-item:last-child {
+      border-bottom: none;
+    }
+
+    .member-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .member-info {
+      flex: 1;
+    }
+
+    .member-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .member-role {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .member-status {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .status-online {
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+
+    .status-offline {
+      background: #F5F5F7;
+      color: var(--text-tertiary);
+    }
+
+    .status-busy {
+      background: #FFF3E0;
+      color: #E65100;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      min-width: 400px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+      overflow: hidden;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: linear-gradient(180deg, #FAFAFA 0%, #F0F0F2 100%);
+    }
+
+    .modal-traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #FF5F57;
+      border: 0.5px solid #E14942;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #FFBD2E;
+      border: 0.5px solid #DEA123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28C840;
+      border: 0.5px solid #1DAD2B;
+    }
+
+    .modal-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #FAFAFA;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid var(--border);
+    }
+
+    .modal-btn-secondary {
+      background: white;
+      color: var(--text-primary);
+    }
+
+    .modal-btn-secondary:hover {
+      background: #F5F5F7;
+    }
+
+    .modal-btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .modal-btn-primary:hover {
+      background: #0077ED;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: white;
+      cursor: pointer;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .filter-chip {
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-family: inherit;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .filter-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .filter-chip.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .resource-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #F5F5F7;
+    }
+
+    .resource-row:last-child {
+      border: none;
+    }
+
+    .res-label {
+      width: 80px;
+      font-size: 12px;
+      color: var(--text-primary);
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .res-bar-wrap {
+      flex: 1;
+    }
+
+    .res-bar-bg {
+      height: 10px;
+      background: #F0F0F2;
+      border-radius: 5px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .res-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.4s ease;
+    }
+
+    .res-numbers {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3px;
+    }
+
+    .res-num {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    .res-rate {
+      width: 50px;
+      text-align: right;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .report-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #F5F5F7;
+    }
+
+    .report-stat-row:last-child {
+      border: none;
+    }
+
+    .report-stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .report-stat-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .report-stat-item {
+      text-align: center;
+      flex: 1;
+    }
+
+    .report-stat-num {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <div class="tl tl-close"></div>
+        <div class="tl tl-min"></div>
+        <div class="tl tl-max"></div>
+      </div>
+      <span class="titlebar-center">建筑装饰工程进度智能调度系统</span>
+      <div class="titlebar-right">
+        <img class="user-avatar" src="https://i02piccdn.sogoucdn.com/4ae40945067239b4" alt="许作舟" />许作舟
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">导航</div>
+          <div class="sidebar-item" onclick="window.location.href='dashboard.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zM13 4v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z" />
+              </svg></div>
+            工作台
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='gantt.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z" />
+              </svg></div>
+            进度总览
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='schedule.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
+              </svg></div>
+            施工计划
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='tasks.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg></div>
+            任务调度
+            <span class="sidebar-badge">5</span>
+          </div>
+          <div class="sidebar-item active">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+              </svg></div>
+            人员管理
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='ai_alerts.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+              </svg></div>
+            智能预警
+            <span class="sidebar-badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='resources.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z" />
+              </svg></div>
+            资源优化
+          </div>
+          <div class="sidebar-item" onclick="window.location.href='reports.html'">
+            <div class="sidebar-icon"><svg viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+              </svg></div>
+            报表中心
+          </div>
+        </div>
+
+        <div class="sidebar-bottom">
+          <div class="project-selector" id="projectSelector">
+            <div>
+              <div class="proj-name" id="projName">杭州绿城·翡翠湖项目</div>
+              <div class="proj-id" id="projId">项目编号 HZFC-2025-0318</div>
+            </div>
+            <div class="project-switch" id="projectSwitchInlineBtn" aria-label="切换项目">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7h5l-1.5-1.5L9 4l4 4-4 4-1.5-1.5L9 9H4V7zm16 10h-5l1.5 1.5L15 20l-4-4 4-4 1.5 1.5L15 13h5v2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="content-header">
+          <div class="page-title">人员管理</div>
+          <div class="header-actions">
+            <button class="btn" id="btnExportTeam">
+              <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg>
+              导出名单
+            </button>
+            <button class="btn btn-primary" id="btnAddMember">
+              <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="white" /></svg>
+              添加人员
+            </button>
+          </div>
+        </div>
+
+        <div class="content-body">
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-value" style="color:var(--accent)">54</div>
+              <div class="stat-label">在场人员</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" style="color:var(--green)">42</div>
+              <div class="stat-label">在岗</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" style="color:var(--orange)">8</div>
+              <div class="stat-label">请假</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" style="color:var(--red)">4</div>
+              <div class="stat-label">缺勤</div>
+            </div>
+          </div>
+
+          <div class="tab-bar">
+            <div class="tab-item active" data-tab="team">施工班组</div>
+            <div class="tab-item" data-tab="worktype">工种分布</div>
+            <div class="tab-item" data-tab="attendance">考勤记录</div>
+          </div>
+
+          <div id="tab-team" class="tab-content">
+          <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+            <span style="font-size:12px;color:var(--text-secondary);font-weight:500">状态筛选:</span>
+            <button class="filter-chip active status-filter-btn" data-filter="all">全部</button>
+            <button class="filter-chip status-filter-btn" data-filter="online">在岗</button>
+            <button class="filter-chip status-filter-btn" data-filter="busy">施工中</button>
+            <button class="filter-chip status-filter-btn" data-filter="leave">请假</button>
+            <button class="filter-chip status-filter-btn" data-filter="absent">缺勤</button>
+          </div>
+          <div class="team-grid">
+            <div class="team-card">
+              <div class="team-header">
+                <span class="team-name">石材铺贴班</span>
+                <span class="team-count">12人</span>
+              </div>
+              <div class="team-body">
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#FF6B6B">李</div>
+                  <div class="member-info">
+                    <div class="member-name">李明</div>
+                    <div class="member-role">班组长</div>
+                  </div>
+                  <span class="member-status status-online">在岗</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#FFB6C1">张</div>
+                  <div class="member-info">
+                    <div class="member-name">张强</div>
+                    <div class="member-role">石材工</div>
+                  </div>
+                  <span class="member-status status-online">在岗</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#DDA0DD">王</div>
+                  <div class="member-info">
+                    <div class="member-name">王磊</div>
+                    <div class="member-role">石材工</div>
+                  </div>
+                  <span class="member-status status-busy">施工中</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#E6E6FA">刘</div>
+                  <div class="member-info">
+                    <div class="member-name">刘洋</div>
+                    <div class="member-role">石材工</div>
+                  </div>
+                  <span class="member-status status-online">在岗</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="team-card">
+              <div class="team-header">
+                <span class="team-name">幕墙安装班</span>
+                <span class="team-count">10人</span>
+              </div>
+              <div class="team-body">
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#4ECDC4">王</div>
+                  <div class="member-info">
+                    <div class="member-name">王建华</div>
+                    <div class="member-role">班组长</div>
+                  </div>
+                  <span class="member-status status-online">在岗</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#87CEEB">陈</div>
+                  <div class="member-info">
+                    <div class="member-name">陈飞</div>
+                    <div class="member-role">焊工</div>
+                  </div>
+                  <span class="member-status status-busy">施工中</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#98D8C8">赵</div>
+                  <div class="member-info">
+                    <div class="member-name">赵志刚</div>
+                    <div class="member-role">焊工</div>
+                  </div>
+                  <span class="member-status status-online">在岗</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#F0E68C">孙</div>
+                  <div class="member-info">
+                    <div class="member-name">孙伟</div>
+                    <div class="member-role">安装工</div>
+                  </div>
+                  <span class="member-status status-offline">请假</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="team-card">
+              <div class="team-header">
+                <span class="team-name">涂装班</span>
+                <span class="team-count">8人</span>
+              </div>
+              <div class="team-body">
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#45B7D1">周</div>
+                  <div class="member-info">
+                    <div class="member-name">周磊</div>
+                    <div class="member-role">班组长</div>
+                  </div>
+                  <span class="member-status status-online">在岗</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#96CEB4">吴</div>
+                  <div class="member-info">
+                    <div class="member-name">吴涛</div>
+                    <div class="member-role">涂装工</div>
+                  </div>
+                  <span class="member-status status-busy">施工中</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#D8BFD8">郑</div>
+                  <div class="member-info">
+                    <div class="member-name">郑强</div>
+                    <div class="member-role">涂装工</div>
+                  </div>
+                  <span class="member-status status-online">在岗</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#B0E0E6">冯</div>
+                  <div class="member-info">
+                    <div class="member-name">冯勇</div>
+                    <div class="member-role">涂装工</div>
+                  </div>
+                  <span class="member-status status-offline">请假</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="team-card">
+              <div class="team-header">
+                <span class="team-name">景观绿化班</span>
+                <span class="team-count">6人</span>
+              </div>
+              <div class="team-body">
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#DDA0DD">陈</div>
+                  <div class="member-info">
+                    <div class="member-name">陈雪梅</div>
+                    <div class="member-role">技术员</div>
+                  </div>
+                  <span class="member-status status-online">在岗</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#F7DC6F">黄</div>
+                  <div class="member-info">
+                    <div class="member-name">黄山</div>
+                    <div class="member-role">园林工</div>
+                  </div>
+                  <span class="member-status status-online">在岗</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#D3D3D3">林</div>
+                  <div class="member-info">
+                    <div class="member-name">林杰</div>
+                    <div class="member-role">园林工</div>
+                  </div>
+                  <span class="member-status status-offline">缺勤</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#E8E8E8">潘</div>
+                  <div class="member-info">
+                    <div class="member-name">潘伟</div>
+                    <div class="member-role">园林工</div>
+                  </div>
+                  <span class="member-status status-online">在岗</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <div id="tab-worktype" class="tab-content" style="display:none">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">工种人员分布</span>
+                <span style="font-size:11px;color:var(--text-tertiary)">在场人数</span>
+              </div>
+              <div class="card-body">
+                <div class="resource-row">
+                  <span class="res-label">石材工</span>
+                  <div class="res-bar-wrap">
+                    <div class="res-bar-bg">
+                      <div class="res-bar-fill" style="width:85%;background:var(--green)"></div>
+                    </div>
+                    <div class="res-numbers"><span class="res-num">17人</span></div>
+                  </div>
+                  <span class="res-rate" style="color:var(--green)">17人</span>
+                </div>
+                <div class="resource-row">
+                  <span class="res-label">焊工</span>
+                  <div class="res-bar-wrap">
+                    <div class="res-bar-bg">
+                      <div class="res-bar-fill" style="width:67%;background:var(--red)"></div>
+                    </div>
+                    <div class="res-numbers"><span class="res-num">12人</span></div>
+                  </div>
+                  <span class="res-rate" style="color:var(--red)">12人</span>
+                </div>
+                <div class="resource-row">
+                  <span class="res-label">木工</span>
+                  <div class="res-bar-wrap">
+                    <div class="res-bar-bg">
+                      <div class="res-bar-fill" style="width:100%;background:var(--green)"></div>
+                    </div>
+                    <div class="res-numbers"><span class="res-num">10人</span></div>
+                  </div>
+                  <span class="res-rate" style="color:var(--green)">10人</span>
+                </div>
+                <div class="resource-row">
+                  <span class="res-label">涂装工</span>
+                  <div class="res-bar-wrap">
+                    <div class="res-bar-bg">
+                      <div class="res-bar-fill" style="width:75%;background:var(--orange)"></div>
+                    </div>
+                    <div class="res-numbers"><span class="res-num">6人</span></div>
+                  </div>
+                  <span class="res-rate" style="color:var(--orange)">6人</span>
+                </div>
+                <div class="resource-row">
+                  <span class="res-label">电工</span>
+                  <div class="res-bar-wrap">
+                    <div class="res-bar-bg">
+                      <div class="res-bar-fill" style="width:100%;background:var(--green)"></div>
+                    </div>
+                    <div class="res-numbers"><span class="res-num">5人</span></div>
+                  </div>
+                  <span class="res-rate" style="color:var(--green)">5人</span>
+                </div>
+                <div class="resource-row">
+                  <span class="res-label">园林工</span>
+                  <div class="res-bar-wrap">
+                    <div class="res-bar-bg">
+                      <div class="res-bar-fill" style="width:50%;background:var(--orange)"></div>
+                    </div>
+                    <div class="res-numbers"><span class="res-num">4人</span></div>
+                  </div>
+                  <span class="res-rate" style="color:var(--orange)">4人</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-attendance" class="tab-content" style="display:none">
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <span class="card-title">今日考勤概览</span>
+                <span style="font-size:11px;color:var(--text-tertiary)">2026-03-26</span>
+              </div>
+              <div class="card-body">
+                <div style="display:flex;gap:32px">
+                  <div class="report-stat-item">
+                    <div class="report-stat-num" style="color:var(--text-primary)">54</div>
+                    <div class="report-stat-label">应到人数</div>
+                  </div>
+                  <div class="report-stat-item">
+                    <div class="report-stat-num" style="color:var(--green)">42</div>
+                    <div class="report-stat-label">实际出勤</div>
+                  </div>
+                  <div class="report-stat-item">
+                    <div class="report-stat-num" style="color:var(--orange)">8</div>
+                    <div class="report-stat-label">请假</div>
+                  </div>
+                  <div class="report-stat-item">
+                    <div class="report-stat-num" style="color:var(--red)">4</div>
+                    <div class="report-stat-label">缺勤</div>
+                  </div>
+                  <div class="report-stat-item">
+                    <div class="report-stat-num" style="color:var(--accent)">77.8%</div>
+                    <div class="report-stat-label">出勤率</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <span class="card-title">本周出勤趋势</span>
+                <span style="font-size:11px;color:var(--text-tertiary)">人次</span>
+              </div>
+              <div class="card-body">
+                <div style="display:flex;align-items:flex-end;gap:12px;height:100px;margin-bottom:12px;padding:0 8px">
+                  <div style="flex:1;text-align:center">
+                    <div style="height:60%;background:var(--green);border-radius:4px 4px 0 0;opacity:0.7"></div>
+                    <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px">周一</div>
+                  </div>
+                  <div style="flex:1;text-align:center">
+                    <div style="height:75%;background:var(--green);border-radius:4px 4px 0 0;opacity:0.8"></div>
+                    <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px">周二</div>
+                  </div>
+                  <div style="flex:1;text-align:center">
+                    <div style="height:70%;background:var(--green);border-radius:4px 4px 0 0;opacity:0.8"></div>
+                    <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px">周三</div>
+                  </div>
+                  <div style="flex:1;text-align:center">
+                    <div style="height:65%;background:var(--orange);border-radius:4px 4px 0 0;opacity:0.85"></div>
+                    <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px">周四</div>
+                  </div>
+                  <div style="flex:1;text-align:center">
+                    <div style="height:80%;background:var(--green);border-radius:4px 4px 0 0;opacity:0.85"></div>
+                    <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px">周五</div>
+                  </div>
+                  <div style="flex:1;text-align:center">
+                    <div style="height:40%;background:var(--accent);border-radius:4px 4px 0 0;opacity:0.6"></div>
+                    <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px">周六</div>
+                  </div>
+                  <div style="flex:1;text-align:center">
+                    <div style="height:100%;background:var(--accent);border-radius:4px 4px 0 0"></div>
+                    <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;font-weight:600">今日</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:16px;justify-content:center;padding:0 8px">
+                  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary)">
+                    <div style="width:10px;height:10px;border-radius:2px;background:var(--green);opacity:0.8"></div>出勤
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary)">
+                    <div style="width:10px;height:10px;border-radius:2px;background:var(--orange);opacity:0.85"></div>请假
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary)">
+                    <div style="width:10px;height:10px;border-radius:2px;background:var(--accent)"></div>缺勤
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">缺勤人员清单</span>
+                <span style="font-size:11px;color:var(--accent);cursor:pointer">导出记录</span>
+              </div>
+              <div class="card-body">
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#D3D3D3">林</div>
+                  <div class="member-info">
+                    <div class="member-name">林杰</div>
+                    <div class="member-role">园林工 / 景观绿化班</div>
+                  </div>
+                  <span class="member-status status-offline" style="background:#FFEBEE;color:#C62828">缺勤</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#F0E68C">孙</div>
+                  <div class="member-info">
+                    <div class="member-name">孙伟</div>
+                    <div class="member-role">安装工 / 幕墙安装班</div>
+                  </div>
+                  <span class="member-status" style="background:#FFF3E0;color:#E65100">请假</span>
+                </div>
+                <div class="member-item">
+                  <div class="member-avatar" style="background:#B0E0E6">冯</div>
+                  <div class="member-info">
+                    <div class="member-name">冯勇</div>
+                    <div class="member-role">涂装工 / 涂装班</div>
+                  </div>
+                  <span class="member-status" style="background:#FFF3E0;color:#E65100">请假</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    window.closeModal = closeModal;
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.getElementById('btnAddMember').addEventListener('click', () => {
+      openModal(
+        '添加人员',
+        `<div class="form-group">
+          <label class="form-label">姓名</label>
+          <input type="text" class="form-input" placeholder="请输入人员姓名">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">工种</label>
+            <select class="form-select">
+              <option>石材工</option>
+              <option>焊工</option>
+              <option>木工</option>
+              <option>涂装工</option>
+              <option>电工</option>
+              <option>园林工</option>
+              <option>管理人员</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">班组</label>
+            <select class="form-select">
+              <option>石材铺贴班</option>
+              <option>幕墙安装班</option>
+              <option>涂装班</option>
+              <option>景观绿化班</option>
+              <option>水电班</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">联系电话</label>
+            <input type="text" class="form-input" placeholder="请输入手机号">
+          </div>
+          <div class="form-group">
+            <label class="form-label">身份</label>
+            <select class="form-select">
+              <option>班组长</option>
+              <option>普通工人</option>
+              <option>技术员</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">紧急联系人</label>
+          <input type="text" class="form-input" placeholder="请输入紧急联系人及电话">
+        </div>`,
+        `<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button>
+         <button class="modal-btn modal-btn-primary">添加</button>`
+      );
+    });
+
+    document.getElementById('btnExportTeam').addEventListener('click', () => {
+      openModal(
+        '导出人员名单',
+        `<div class="form-group">
+          <label class="form-label">导出格式</label>
+          <select class="form-select">
+            <option>Excel 表格</option>
+            <option>PDF 文档</option>
+            <option>CSV 文件</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">导出范围</label>
+          <select class="form-select">
+            <option>全部人员</option>
+            <option>石材铺贴班</option>
+            <option>幕墙安装班</option>
+            <option>涂装班</option>
+            <option>景观绿化班</option>
+          </select>
+        </div>`,
+        `<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button>
+         <button class="modal-btn modal-btn-primary">导出</button>`
+      );
+    });
+
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        var tabId = this.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(function(content) { content.style.display = 'none'; });
+        var targetContent = document.getElementById('tab-' + tabId);
+        if (targetContent) targetContent.style.display = 'block';
+      });
+    });
+
+    document.querySelectorAll('.member-item').forEach(function(member) {
+      member.style.cursor = 'pointer';
+      member.addEventListener('click', function() {
+        var name = this.querySelector('.member-name').textContent;
+        var role = this.querySelector('.member-role').textContent;
+        var status = this.querySelector('.member-status').textContent;
+        var avatar = this.querySelector('.member-avatar').textContent;
+        var team = this.closest('.team-card').querySelector('.team-name').textContent;
+        openModal(
+          '人员详情 - ' + name,
+          '<div style="text-align:center;margin-bottom:16px"><div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#40A0FF);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:24px;color:white;font-weight:600">'+avatar+'</div><div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-top:8px">'+name+'</div><div style="font-size:12px;color:var(--text-secondary)">'+team+' / '+role+'</div></div><div style="background:#F8F6FF;border-radius:8px;padding:12px;margin-bottom:16px"><div style="font-size:12px;color:var(--purple);margin-bottom:4px">当前状态</div><div style="font-size:14px;font-weight:600;color:var(--text-primary)">'+status+'</div></div><div class="form-group"><label class="form-label">联系电话</label><input type="text" class="form-input" value="138****5678"></div><div class="form-row"><div class="form-group" style="flex:1"><label class="form-label">班组</label><input type="text" class="form-input" value="'+team+'"></div><div class="form-group" style="flex:1"><label class="form-label">岗位</label><input type="text" class="form-input" value="'+role+'"></div></div><div class="form-group"><label class="form-label">紧急联系人</label><input type="text" class="form-input" value="张女士 139****1234"></div><div class="form-group"><label class="form-label">状态更新</label><select class="form-select"><option>在岗</option><option>施工中</option><option>请假</option><option>缺勤</option></select></div>',
+          '<button class="modal-btn modal-btn-secondary" onclick="closeModal()">取消</button><button class="modal-btn modal-btn-primary" onclick="closeModal()">保存修改</button>'
+        );
+      });
+    });
+
+    document.querySelectorAll('.team-card').forEach(function(card) {
+      var teamName = card.querySelector('.team-name').textContent;
+      card.querySelectorAll('.member-item').forEach(function(member) {
+        member.setAttribute('data-team', teamName);
+      });
+    });
+
+    var currentFilter = 'all';
+    document.querySelectorAll('.status-filter-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.status-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        currentFilter = this.getAttribute('data-filter');
+        document.querySelectorAll('.member-item').forEach(function(member) {
+          var status = member.querySelector('.member-status').textContent;
+          var filterMap = {
+            'all': true,
+            'online': status === '在岗',
+            'busy': status === '施工中',
+            'leave': status === '请假',
+            'absent': status === '缺勤'
+          };
+          if (filterMap[currentFilter]) {
+            member.style.display = 'flex';
+          } else {
+            member.style.display = 'none';
+          }
+        });
+      });
+    });
+  </script>
+
+</body>
+
+</html>

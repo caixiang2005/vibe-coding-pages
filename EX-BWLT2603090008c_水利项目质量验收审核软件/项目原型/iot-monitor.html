@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>物联监控 - 水利项目质量验收审核软件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: #f0f4f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .android-container {
+            width: 100%;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+        .android-container::-webkit-scrollbar { display: none; }
+        .btn-press:active { transform: scale(0.96); transition: transform 0.1s; }
+        .card-hover { transition: all 0.2s; cursor: pointer; }
+        .card-hover:active { transform: scale(0.98); }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); z-index: 1000; display: none;
+            justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            position: absolute; background: white; border-radius: 16px;
+            width: 90%; max-width: 340px; max-height: 80vh; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            background: #1e40af; color: white; padding: 16px;
+            cursor: move; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px; border-top: 1px solid #e5e7eb; display: flex; gap: 12px; }
+        .input-field {
+            width: 100%; padding: 10px 12px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .btn-primary {
+            background: #2563eb; color: white; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; border: none; cursor: pointer; flex: 1;
+            transition: background 0.2s;
+        }
+        .btn-primary:active { background: #1d4ed8; }
+        .btn-secondary {
+            background: #f3f4f6; color: #374151; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; border: none; cursor: pointer; flex: 1;
+            transition: background 0.2s;
+        }
+        .btn-secondary:active { background: #e5e7eb; }
+        .btn-danger {
+            background: #ef4444; color: white; padding: 10px 20px;
+            border-radius: 8px; font-size: 14px; border: none; cursor: pointer; flex: 1;
+            transition: background 0.2s;
+        }
+        .btn-danger:active { background: #dc2626; }
+        .active-tab { color: #1d4ed8; }
+        .status-normal { background: #dcfce7; color: #166534; }
+        .status-warning { background: #ffedd5; color: #c2410c; }
+        .status-error { background: #fee2e2; color: #dc2626; }
+        .status-offline { background: #f3f4f6; color: #6b7280; }
+        .gauge-ring {
+            stroke-dasharray: 251;
+            stroke-dashoffset: 251;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-900">
+    <div class="android-container bg-gray-50 flex flex-col relative">
+        <header class="bg-blue-700 text-white pt-12 pb-5 px-5 rounded-b-3xl shadow-lg">
+            <div class="flex items-center justify-between">
+                <a href="index.html" class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 active:bg-blue-500">
+                    <span class="iconify text-xl" data-icon="material-symbols:arrow-back"></span>
+                </a>
+                <h1 class="text-base font-bold text-center flex-1 mx-2">水利项目质量验收审核软件</h1>
+                <div class="w-10"></div>
+            </div>
+            <p class="text-center text-blue-200 text-xs mt-1">物联监控</p>
+        </header>
+
+        <main class="flex-1 px-4 py-4 pb-24 -mt-2">
+            <div class="bg-white rounded-2xl shadow-sm p-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold text-gray-800">设备状态概览</h3>
+                    <span class="text-[10px] text-green-600 flex items-center gap-1">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        在线更新中
+                    </span>
+                </div>
+                <div class="grid grid-cols-4 gap-2 text-center mb-4">
+                    <div class="bg-green-50 rounded-xl p-2">
+                        <p class="text-xl font-bold text-green-600">12</p>
+                        <p class="text-[10px] text-green-500">正常</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-xl p-2">
+                        <p class="text-xl font-bold text-orange-600">2</p>
+                        <p class="text-[10px] text-orange-500">预警</p>
+                    </div>
+                    <div class="bg-red-50 rounded-xl p-2">
+                        <p class="text-xl font-bold text-red-600">1</p>
+                        <p class="text-[10px] text-red-500">异常</p>
+                    </div>
+                    <div class="bg-gray-100 rounded-xl p-2">
+                        <p class="text-xl font-bold text-gray-500">2</p>
+                        <p class="text-[10px] text-gray-400">离线</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                    <div class="relative w-16 h-16">
+                        <svg class="w-16 h-16" viewBox="0 0 80 80">
+                            <circle cx="40" cy="40" r="35" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+                            <circle cx="40" cy="40" r="35" fill="none" stroke="#22c55e" stroke-width="8" class="gauge-ring" id="gaugeRing" style="stroke-dashoffset: 50;"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-sm font-bold text-gray-800" id="gaugePercent">80%</span>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs text-gray-500">综合健康度</p>
+                        <p class="text-sm font-semibold text-gray-800">设备运行正常</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">最近检测：10:35</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-gray-800 mb-3">监测指标</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white rounded-xl shadow-sm p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <span class="iconify text-base text-blue-600" data-icon="material-symbols:water-drop"></span>
+                            </div>
+                            <span class="text-xs text-gray-500">库水位</span>
+                        </div>
+                        <p class="text-xl font-bold text-gray-800">165.32<span class="text-xs font-normal text-gray-400 ml-1">m</span></p>
+                        <div class="flex items-center gap-1 mt-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                            <span class="text-[10px] text-green-600">正常</span>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center">
+                                <span class="iconify text-base text-cyan-600" data-icon="material-symbols:waves"></span>
+                            </div>
+                            <span class="text-xs text-gray-500">渗流量</span>
+                        </div>
+                        <p class="text-xl font-bold text-gray-800">2.15<span class="text-xs font-normal text-gray-400 ml-1">L/s</span></p>
+                        <div class="flex items-center gap-1 mt-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                            <span class="text-[10px] text-green-600">正常</span>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <span class="iconify text-base text-purple-600" data-icon="material-symbols:thermometer"></span>
+                            </div>
+                            <span class="text-xs text-gray-500">坝体温度</span>
+                        </div>
+                        <p class="text-xl font-bold text-gray-800">18.5<span class="text-xs font-normal text-gray-400 ml-1">℃</span></p>
+                        <div class="flex items-center gap-1 mt-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                            <span class="text-[10px] text-green-600">正常</span>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <span class="iconify text-base text-orange-600" data-icon="material-symbols:gauge"></span>
+                            </div>
+                            <span class="text-xs text-gray-500">库底压力</span>
+                        </div>
+                        <p class="text-xl font-bold text-gray-800">245<span class="text-xs font-normal text-gray-400 ml-1">kPa</span></p>
+                        <div class="flex items-center gap-1 mt-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                            <span class="text-[10px] text-orange-600">预警</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold text-gray-800">传感器设备</h3>
+                    <button class="text-xs text-blue-600 flex items-center gap-1" onclick="refreshDevices()">
+                        <span class="iconify text-sm" data-icon="material-symbols:refresh"></span>
+                        刷新
+                    </button>
+                </div>
+                <div class="space-y-3" id="deviceList">
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover" onclick="openDeviceModal('测压管A1', '浸润线监测', '正常', '2026-03-19 10:35')">
+                        <div class="p-4 flex items-center gap-3">
+                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                <span class="iconify text-xl text-green-600" data-icon="material-symbols:sensors"></span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">测压管A1</h4>
+                                    <span class="text-[10px] px-2 py-0.5 rounded status-normal">正常</span>
+                                </div>
+                                <p class="text-xs text-gray-500">浸润线监测 · 丹江口库区</p>
+                            </div>
+                            <span class="iconify text-gray-300" data-icon="material-symbols:chevron-right"></span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover" onclick="openDeviceModal('位移传感器D3', '表面位移监测', '预警', '2026-03-19 10:30')">
+                        <div class="p-4 flex items-center gap-3">
+                            <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                                <span class="iconify text-xl text-orange-600" data-icon="material-symbols:sensors"></span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">位移传感器D3</h4>
+                                    <span class="text-[10px] px-2 py-0.5 rounded status-warning">预警</span>
+                                </div>
+                                <p class="text-xs text-gray-500">表面位移监测 · 导流洞出口</p>
+                            </div>
+                            <span class="iconify text-gray-300" data-icon="material-symbols:chevron-right"></span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover" onclick="openDeviceModal('渗压计P2', '渗流压力监测', '异常', '2026-03-19 09:15')">
+                        <div class="p-4 flex items-center gap-3">
+                            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                                <span class="iconify text-xl text-red-600" data-icon="material-symbols:sensors"></span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">渗压计P2</h4>
+                                    <span class="text-[10px] px-2 py-0.5 rounded status-error">异常</span>
+                                </div>
+                                <p class="text-xs text-gray-500">渗流压力监测 · 2号支洞</p>
+                            </div>
+                            <span class="iconify text-gray-300" data-icon="material-symbols:chevron-right"></span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover" onclick="openDeviceModal('温度传感器T5', '混凝土温度监测', '离线', '2026-03-18 22:00')">
+                        <div class="p-4 flex items-center gap-3">
+                            <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                                <span class="iconify text-xl text-gray-400" data-icon="material-symbols:sensors-off"></span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">温度传感器T5</h4>
+                                    <span class="text-[10px] px-2 py-0.5 rounded status-offline">离线</span>
+                                </div>
+                                <p class="text-xs text-gray-500">混凝土温度监测 · 闸室A</p>
+                            </div>
+                            <span class="iconify text-gray-300" data-icon="material-symbols:chevron-right"></span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover" onclick="openDeviceModal('水位计W2', '库水位监测', '正常', '2026-03-19 10:35')">
+                        <div class="p-4 flex items-center gap-3">
+                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                <span class="iconify text-xl text-green-600" data-icon="material-symbols:sensors"></span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h4 class="text-sm font-semibold text-gray-800">水位计W2</h4>
+                                    <span class="text-[10px] px-2 py-0.5 rounded status-normal">正常</span>
+                                </div>
+                                <p class="text-xs text-gray-500">库水位监测 · 主坝段</p>
+                            </div>
+                            <span class="iconify text-gray-300" data-icon="material-symbols:chevron-right"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center py-2 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+            <a href="index.html" class="flex flex-col items-center space-y-1 text-gray-400">
+                <span class="iconify text-xl" data-icon="material-symbols:home-rounded"></span>
+                <span class="text-[10px] font-medium">工作台</span>
+            </a>
+            <a href="acceptance.html" class="flex flex-col items-center space-y-1 text-gray-400">
+                <span class="iconify text-xl" data-icon="material-symbols:approval-rounded"></span>
+                <span class="text-[10px] font-medium">验收</span>
+            </a>
+            <a href="charts.html" class="flex flex-col items-center space-y-1 text-gray-400">
+                <span class="iconify text-xl" data-icon="material-symbols:equalizer-rounded"></span>
+                <span class="text-[10px] font-medium">图表</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center space-y-1 active-tab">
+                <span class="iconify text-xl" data-icon="material-symbols:person-outline"></span>
+                <span class="text-[10px] font-medium">我的</span>
+            </a>
+        </nav>
+    </div>
+
+    <div id="deviceModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header" id="deviceDragHandle">
+                <span class="font-bold">设备详情</span>
+                <span class="iconify cursor-pointer" data-icon="material-symbols:close" onclick="closeDeviceModal()"></span>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2" id="deviceIcon">
+                        <span class="iconify text-3xl text-green-600" data-icon="material-symbols:sensors"></span>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-800" id="deviceName">测压管A1</h3>
+                    <p class="text-xs text-gray-500 mt-1" id="deviceType">浸润线监测</p>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-xs text-gray-500">设备状态</span>
+                        <span class="text-xs font-medium text-green-600" id="deviceStatus">正常</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-xs text-gray-500">最后更新</span>
+                        <span class="text-xs text-gray-600" id="deviceTime">2026-03-19 10:35</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-xs text-gray-500">设备编号</span>
+                        <span class="text-xs text-gray-600">IOT-2024-A1-015</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span class="text-xs text-gray-500">安装位置</span>
+                        <span class="text-xs text-gray-600">丹江口库区 桩号K2+150</span>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-gray-50 rounded-xl">
+                    <p class="text-[10px] text-gray-500 mb-1">当前监测数据</p>
+                    <p class="text-lg font-bold text-gray-800" id="deviceValue">165.32 <span class="text-xs font-normal text-gray-400">m</span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeDeviceModal()">关闭</button>
+                <button class="btn-danger" onclick="restartDevice()">
+                    <span class="flex items-center justify-center gap-1">
+                        <span class="iconify text-sm" data-icon="material-symbols:restart-alt"></span>
+                        重启设备
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="restartModal" class="modal-overlay">
+        <div class="modal-content" style="max-width:300px;">
+            <div class="modal-header" id="restartDragHandle">
+                <span class="font-bold">确认重启</span>
+                <span class="iconify cursor-pointer" data-icon="material-symbols:close" onclick="closeRestartModal()"></span>
+            </div>
+            <div class="modal-body text-center py-6">
+                <span class="iconify text-5xl text-orange-500" data-icon="material-symbols:restart-alt"></span>
+                <p class="text-sm text-gray-600 mt-3">确定要重启此设备吗？</p>
+                <p class="text-xs text-gray-400 mt-1">设备将暂时断开连接</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeRestartModal()">取消</button>
+                <button class="btn-danger" onclick="confirmRestart()">确认重启</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openDeviceModal(name, type, status, time) {
+            document.getElementById('deviceName').textContent = name;
+            document.getElementById('deviceType').textContent = type;
+            document.getElementById('deviceTime').textContent = time;
+
+            var statusEl = document.getElementById('deviceStatus');
+            statusEl.textContent = status;
+            if (status === '正常') {
+                statusEl.className = 'text-xs font-medium text-green-600';
+            } else if (status === '预警') {
+                statusEl.className = 'text-xs font-medium text-orange-600';
+            } else if (status === '异常') {
+                statusEl.className = 'text-xs font-medium text-red-600';
+            } else {
+                statusEl.className = 'text-xs font-medium text-gray-500';
+            }
+
+            var iconEl = document.getElementById('deviceIcon');
+            if (status === '正常') {
+                iconEl.className = 'w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2';
+                iconEl.innerHTML = '<span class="iconify text-3xl text-green-600" data-icon="material-symbols:sensors"></span>';
+            } else if (status === '预警') {
+                iconEl.className = 'w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2';
+                iconEl.innerHTML = '<span class="iconify text-3xl text-orange-600" data-icon="material-symbols:sensors"></span>';
+            } else if (status === '异常') {
+                iconEl.className = 'w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2';
+                iconEl.innerHTML = '<span class="iconify text-3xl text-red-600" data-icon="material-symbols:sensors"></span>';
+            } else {
+                iconEl.className = 'w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2';
+                iconEl.innerHTML = '<span class="iconify text-3xl text-gray-400" data-icon="material-symbols:sensors-off"></span>';
+            }
+
+            document.getElementById('deviceModal').classList.add('active');
+        }
+
+        function closeDeviceModal() {
+            document.getElementById('deviceModal').classList.remove('active');
+        }
+
+        function closeRestartModal() {
+            document.getElementById('restartModal').classList.remove('active');
+        }
+
+        function restartDevice() {
+            closeDeviceModal();
+            setTimeout(function() {
+                document.getElementById('restartModal').classList.add('active');
+            }, 200);
+        }
+
+        function confirmRestart() {
+            alert('设备重启指令已发送...');
+            closeRestartModal();
+        }
+
+        function refreshDevices() {
+            alert('正在刷新设备列表...');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        function initDrag(modalId, handleId) {
+            var modal = document.querySelector('#' + modalId + ' .modal-content');
+            var handle = document.getElementById(handleId);
+            var isDragging = false, startX, startY, initialX, initialY;
+
+            handle.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                startX = e.clientX; startY = e.clientY;
+                var rect = modal.getBoundingClientRect();
+                initialX = rect.left; initialY = rect.top;
+                handle.style.cursor = 'grabbing';
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                modal.style.left = (initialX + e.clientX - startX) + 'px';
+                modal.style.top = (initialY + e.clientY - startY) + 'px';
+                modal.style.right = 'auto'; modal.style.bottom = 'auto';
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging) { isDragging = false; handle.style.cursor = 'move'; }
+            });
+
+            handle.addEventListener('touchstart', function(e) {
+                isDragging = true;
+                startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+                var rect = modal.getBoundingClientRect();
+                initialX = rect.left; initialY = rect.top;
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+                modal.style.left = (initialX + e.touches[0].clientX - startX) + 'px';
+                modal.style.top = (initialY + e.touches[0].clientY - startY) + 'px';
+                modal.style.right = 'auto'; modal.style.bottom = 'auto';
+            });
+
+            document.addEventListener('touchend', function() { isDragging = false; });
+        }
+
+        initDrag('deviceModal', 'deviceDragHandle');
+        initDrag('restartModal', 'restartDragHandle');
+    </script>
+</body>
+</html>

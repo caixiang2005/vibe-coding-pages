@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>项目管理 - 短视频素材剪接合成制作管理平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0b0c0e;
+            --bg2: #0f1114;
+            --window-bg: rgba(20, 20, 22, 0.92);
+            --window-border: rgba(255, 255, 255, 0.10);
+            --sidebar-bg: rgba(26, 26, 28, 0.92);
+            --toolbar-bg: rgba(24, 24, 26, 0.92);
+            --surface: rgba(34, 34, 38, 0.72);
+            --surface-2: rgba(46, 46, 50, 0.76);
+            --surface-3: rgba(255, 255, 255, 0.12);
+            --border: rgba(255, 255, 255, 0.10);
+            --text: rgba(255, 255, 255, 0.92);
+            --text-2: rgba(255, 255, 255, 0.68);
+            --text-3: rgba(255, 255, 255, 0.42);
+            --accent: #3b82f6;
+            --accent-2: #60a5fa;
+            --danger: #ff5f57;
+            --warn: #febc2e;
+            --ok: #28c840;
+            --radius-xl: 18px;
+            --radius-lg: 14px;
+            --radius-md: 12px;
+            --shadow-window: 0 30px 110px rgba(0, 0, 0, 0.62), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+            --shadow-card: 0 18px 45px rgba(0, 0, 0, 0.40);
+            --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.34);
+            --ring: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 0 4px rgba(59, 130, 246, 0.18);
+        }
+
+        body {
+            background: url('./bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            letter-spacing: 0.2px;
+            min-height: 100vh;
+        }
+
+        .app-shell { min-height: 100vh; display: flex; }
+        .app-window {
+            width: 100%;
+            min-height: 100vh;
+            background: var(--window-bg);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(22px) saturate(1.15);
+        }
+
+        .titlebar {
+            height: 46px;
+            background: rgba(12, 12, 12, 0.92);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 14px;
+            user-select: none;
+        }
+
+        .traffic-lights { display: flex; align-items: center; gap: 8px; }
+        .traffic-light { width: 12px; height: 12px; border-radius: 999px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22) inset, 0 1px 2px rgba(0, 0, 0, 0.25); }
+        .traffic-light.red { background: var(--danger); }
+        .traffic-light.yellow { background: var(--warn); }
+        .traffic-light.green { background: var(--ok); }
+
+        .titlebar-center { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; }
+        .app-title { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 13px; color: var(--text-2); }
+
+        .titlebar-right { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-left: auto; }
+
+        .btn {
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 120ms ease, background 120ms ease;
+        }
+        .btn:hover { background: var(--surface-2); }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary {
+            border-color: rgba(59, 130, 246, 0.55);
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.92), rgba(37, 99, 235, 0.92));
+            color: white;
+            box-shadow: 0 12px 26px rgba(59, 130, 246, 0.22);
+        }
+        .btn-primary:hover { background: linear-gradient(180deg, rgba(96, 165, 250, 0.94), rgba(59, 130, 246, 0.94)); }
+
+        .app-body { flex: 1; display: flex; min-height: 0; }
+
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            backdrop-filter: blur(20px) saturate(1.15);
+        }
+
+        .sidebar-header { display: flex; align-items: center; padding: 8px; }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(168, 85, 247, 0.75));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .brand-name { font-weight: 700; font-size: 13px; color: var(--text); line-height: 1.3; }
+
+        .nav-group-title { padding: 10px 10px 6px 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: var(--text-3); }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 10px;
+            border-radius: 12px;
+            color: var(--text-2);
+            text-decoration: none;
+            transition: background 120ms ease, color 120ms ease;
+            cursor: pointer;
+        }
+        .nav-item:hover { background: var(--surface); color: var(--text); }
+        .nav-item.active { background: rgba(59, 130, 246, 0.16); border: 1px solid rgba(59, 130, 246, 0.35); color: rgba(96, 165, 250, 0.95); }
+        .nav-item i { width: 18px; text-align: center; }
+
+        .content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .content-toolbar {
+            padding: 16px 18px 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+        }
+        .content-title h2 { font-size: 18px; font-weight: 800; color: var(--text); }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            width: 280px;
+        }
+        .search-box input { background: transparent; border: none; outline: none; width: 100%; font-size: 13px; color: var(--text); }
+        .search-box input::placeholder { color: var(--text-3); }
+
+        .scroll-area { flex: 1; overflow: auto; padding: 18px; }
+
+        .tabs { display: flex; gap: 4px; background: var(--surface); padding: 4px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 18px; }
+        .tab { padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--text-2); cursor: pointer; transition: all 120ms ease; }
+        .tab:hover { color: var(--text); }
+        .tab.active { background: var(--surface-2); color: var(--text); }
+
+        .project-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+        .project-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: transform 140ms ease, border-color 140ms ease;
+            cursor: pointer;
+        }
+        .project-card:hover { transform: translateY(-3px); border-color: rgba(59, 130, 246, 0.35); box-shadow: var(--shadow-card); }
+
+        .project-cover { height: 140px; position: relative; overflow: hidden; }
+        .project-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .project-cover .overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.7) 100%);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 12px;
+        }
+        .play-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            transition: transform 120ms ease, background 120ms ease;
+        }
+        .play-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.3); }
+
+        .project-info { padding: 14px; }
+        .project-name { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .project-name .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(59, 130, 246, 0.2); color: rgba(96, 165, 250, 0.95); }
+        .project-meta { font-size: 11px; color: var(--text-3); display: flex; justify-content: space-between; }
+        .project-actions {
+            display: flex;
+            gap: 6px;
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+        }
+        .project-actions .btn { flex: 1; height: 28px; font-size: 11px; justify-content: center; }
+
+        .quick-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .stat-icon.blue { background: rgba(59, 130, 246, 0.18); color: rgba(96, 165, 250, 0.95); }
+        .stat-icon.green { background: rgba(34, 197, 94, 0.18); color: rgba(74, 222, 128, 0.95); }
+        .stat-icon.orange { background: rgba(249, 115, 22, 0.18); color: rgba(251, 146, 60, 0.95); }
+        .stat-icon.purple { background: rgba(168, 85, 247, 0.18); color: rgba(217, 70, 239, 0.95); }
+        .stat-info h4 { font-size: 22px; font-weight: 800; color: var(--text); }
+        .stat-info p { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--window-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            width: 480px;
+            max-width: 90vw;
+            box-shadow: var(--shadow-window);
+        }
+
+        .modal-header {
+            height: 52px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            cursor: move;
+        }
+        .modal-title { font-size: 14px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .modal-close { width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; color: var(--text-2); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: var(--surface); color: var(--text); }
+
+        .modal-body { padding: 18px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+        .form-input {
+            width: 100%;
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+        .form-input:focus { border-color: rgba(59, 130, 246, 0.5); box-shadow: var(--ring); }
+        .form-select {
+            width: 100%;
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .modal-footer {
+            padding: 14px 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow-card);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 300ms ease, opacity 300ms ease;
+            z-index: 1001;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: rgba(40, 200, 64, 0.4); }
+        .toast.success i { color: var(--ok); }
+
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 999px; }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <div class="app-window">
+            <div class="titlebar">
+                <div class="traffic-lights">
+                    <div class="traffic-light red"></div>
+                    <div class="traffic-light yellow"></div>
+                    <div class="traffic-light green"></div>
+                </div>
+                <div class="titlebar-center">
+                    <div class="app-title">
+                        <i class="fas fa-folder-open" style="color: var(--accent);"></i>
+                        项目管理
+                    </div>
+                </div>
+                <div class="titlebar-right">
+                    <button class="btn btn-primary" onclick="openModal('newProjectModal')">
+                        <i class="fas fa-plus"></i> 新建项目
+                    </button>
+                </div>
+            </div>
+
+            <div class="app-body">
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <div class="brand">
+                            <div class="brand-icon"><i class="fas fa-film"></i></div>
+                            <div class="brand-name">短视频素材剪接合成<br>制作管理平台</div>
+                        </div>
+                    </div>
+
+                    <div class="nav-group-title">导航</div>
+                    <a href="dashboard.html" class="nav-item"><i class="fas fa-desktop"></i> <span>工作台</span></a>
+                    <a href="media_library.html" class="nav-item"><i class="fas fa-photo-video"></i> <span>素材库</span></a>
+                    <a href="projects.html" class="nav-item active"><i class="fas fa-folder-open"></i> <span>项目管理</span></a>
+                    <a href="export.html" class="nav-item"><i class="fas fa-file-export"></i> <span>导出设置</span></a>
+
+                    <div class="nav-group-title">系统</div>
+                    <a href="settings.html" class="nav-item"><i class="fas fa-cog"></i> <span>系统设置</span></a>
+                    <a href="users.html" class="nav-item"><i class="fas fa-users"></i> <span>用户管理</span></a>
+                </div>
+
+                <div class="content">
+                    <div class="content-toolbar">
+                        <div class="content-title"><h2>项目管理</h2></div>
+                        <div class="search-box">
+                            <i class="fas fa-search" style="color: var(--text-3);"></i>
+                            <input type="text" placeholder="搜索项目名称..." />
+                        </div>
+                    </div>
+
+                    <div class="scroll-area">
+                        <div class="quick-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon blue"><i class="fas fa-folder"></i></div>
+                                <div class="stat-info"><h4>28</h4><p>项目总数</p></div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                                <div class="stat-info"><h4>15</h4><p>已完成</p></div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon orange"><i class="fas fa-spinner"></i></div>
+                                <div class="stat-info"><h4>8</h4><p>进行中</p></div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon purple"><i class="fas fa-archive"></i></div>
+                                <div class="stat-info"><h4>5</h4><p>已归档</p></div>
+                            </div>
+                        </div>
+
+                        <div class="tabs">
+                            <div class="tab active" onclick="filterProjects('all')">全部</div>
+                            <div class="tab" onclick="filterProjects('active')">进行中</div>
+                            <div class="tab" onclick="filterProjects('completed')">已完成</div>
+                            <div class="tab" onclick="filterProjects('archived')">已归档</div>
+                        </div>
+
+                        <div class="project-grid" id="projectGrid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="newProjectModal">
+        <div class="modal">
+            <div class="modal-header" id="newProjectModalHeader">
+                <div class="modal-title"><i class="fas fa-folder-plus" style="color: var(--accent);"></i> 新建项目</div>
+                <button class="modal-close" onclick="closeModal('newProjectModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">项目名称</label>
+                    <input type="text" class="form-input" id="projectName" placeholder="输入项目名称" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">项目类型</label>
+                    <select class="form-select" id="projectType">
+                        <option value="commercial">商业广告</option>
+                        <option value="promo">品牌宣传</option>
+                        <option value="social">社交媒体</option>
+                        <option value="event">活动记录</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">画幅比例</label>
+                    <select class="form-select" id="projectRatio">
+                        <option value="16:9">16:9 (横版)</option>
+                        <option value="9:16">9:16 (竖版)</option>
+                        <option value="1:1">1:1 (方形)</option>
+                        <option value="4:3">4:3 (传统)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">分辨率</label>
+                    <select class="form-select" id="projectResolution">
+                        <option value="4k">3840×2160 (4K)</option>
+                        <option value="1080p">1920×1080 (1080p)</option>
+                        <option value="720p">1280×720 (720p)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('newProjectModal')">取消</button>
+                <button class="btn btn-primary" onclick="createProject()">
+                    <i class="fas fa-check"></i> 创建项目
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="projectDetailModal">
+        <div class="modal" style="width: 600px;">
+            <div class="modal-header" id="projectDetailModalHeader">
+                <div class="modal-title"><i class="fas fa-info-circle" style="color: var(--accent);"></i> 项目详情</div>
+                <button class="modal-close" onclick="closeModal('projectDetailModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="projectDetailBody"></div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('projectDetailModal')">关闭</button>
+                <button class="btn btn-primary" onclick="openProject()">
+                    <i class="fas fa-folder-open"></i> 打开项目
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">操作成功</span>
+    </div>
+
+    <script>
+        const projects = [
+            { id: 1, name: '三月品牌短片', type: 'commercial', status: 'active', thumb: 'https://i02piccdn.sogoucdn.com/933d3e9927463dba', dur: '03:20', date: '2026-03-15', clips: 24 },
+            { id: 2, name: '春季上新宣传', type: 'promo', status: 'active', thumb: 'https://i03piccdn.sogoucdn.com/a2e85ad6c7e3499b', dur: '02:45', date: '2026-03-12', clips: 18 },
+            { id: 3, name: '产品种草视频', type: 'social', status: 'completed', thumb: 'https://i01piccdn.sogoucdn.com/6847c20417503230', dur: '01:00', date: '2026-03-10', clips: 12 },
+            { id: 4, name: '年会活动记录', type: 'event', status: 'active', thumb: 'https://i02piccdn.sogoucdn.com/55bf338c33b81208', dur: '15:30', date: '2026-03-08', clips: 56 },
+            { id: 5, name: '品牌形象片', type: 'promo', status: 'completed', thumb: 'https://i02piccdn.sogoucdn.com/261c84af700bc777', dur: '05:00', date: '2026-03-05', clips: 32 },
+            { id: 6, name: '618促销视频', type: 'commercial', status: 'archived', thumb: 'https://i01piccdn.sogoucdn.com/141fb98754dbf970', dur: '00:30', date: '2026-02-20', clips: 8 },
+        ];
+
+        const typeNames = { commercial: '商业广告', promo: '品牌宣传', social: '社交媒体', event: '活动记录' };
+        const statusColors = { active: '#28c840', completed: '#3b82f6', archived: '#6b7280' };
+
+        function renderProjects(filter = 'all') {
+            const grid = document.getElementById('projectGrid');
+            const filtered = filter === 'all' ? projects : projects.filter(p => p.status === filter);
+            grid.innerHTML = filtered.map(p => `
+                <div class="project-card" onclick="showProjectDetail(${p.id})">
+                    <div class="project-cover">
+                        <img src="${p.thumb}" alt="${p.name}" />
+                        <div class="overlay">
+                            <div class="play-btn"><i class="fas fa-play"></i></div>
+                        </div>
+                    </div>
+                    <div class="project-info">
+                        <div class="project-name">
+                            ${p.name}
+                            <span class="badge">${typeNames[p.type]}</span>
+                        </div>
+                        <div class="project-meta">
+                            <span><i class="fas fa-clock"></i> ${p.dur}</span>
+                            <span><i class="fas fa-film"></i> ${p.clips} 片段</span>
+                        </div>
+                    </div>
+                    <div class="project-actions">
+                        <button class="btn" onclick="event.stopPropagation(); duplicateProject(${p.id})"><i class="fas fa-copy"></i> 复制</button>
+                        <button class="btn" onclick="event.stopPropagation(); exportProject(${p.id})"><i class="fas fa-export"></i> 导出</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterProjects(filter) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderProjects(filter);
+        }
+
+        function showProjectDetail(id) {
+            const p = projects.find(x => x.id === id);
+            document.getElementById('projectDetailBody').innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background: var(--surface); padding: 12px; border-radius: 10px;">
+                        <div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px;">项目名称</div>
+                        <div style="font-weight: 700;">${p.name}</div>
+                    </div>
+                    <div style="background: var(--surface); padding: 12px; border-radius: 10px;">
+                        <div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px;">项目类型</div>
+                        <div style="font-weight: 700;">${typeNames[p.type]}</div>
+                    </div>
+                    <div style="background: var(--surface); padding: 12px; border-radius: 10px;">
+                        <div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px;">时长</div>
+                        <div style="font-weight: 700;">${p.dur}</div>
+                    </div>
+                    <div style="background: var(--surface); padding: 12px; border-radius: 10px;">
+                        <div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px;">片段数</div>
+                        <div style="font-weight: 700;">${p.clips}</div>
+                    </div>
+                    <div style="background: var(--surface); padding: 12px; border-radius: 10px;">
+                        <div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px;">创建日期</div>
+                        <div style="font-weight: 700;">${p.date}</div>
+                    </div>
+                    <div style="background: var(--surface); padding: 12px; border-radius: 10px;">
+                        <div style="font-size: 11px; color: var(--text-3); margin-bottom: 4px;">状态</div>
+                        <div style="font-weight: 700; color: ${statusColors[p.status]};">${p.status === 'active' ? '进行中' : p.status === 'completed' ? '已完成' : '已归档'}</div>
+                    </div>
+                </div>
+            `;
+            openModal('projectDetailModal');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow = ''; }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function createProject() {
+            const name = document.getElementById('projectName').value;
+            if (!name) { showToast('请输入项目名称'); return; }
+            closeModal('newProjectModal');
+            showToast('项目创建成功: ' + name);
+            document.getElementById('projectName').value = '';
+        }
+
+        function duplicateProject(id) { showToast('项目复制成功'); }
+        function exportProject(id) { showToast('开始导出项目'); }
+        function openProject() { showToast('正在打开项目...'); closeModal('projectDetailModal'); }
+
+        document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }));
+
+        function initDragModal(modalId, headerId) {
+            const modal = document.getElementById(modalId), header = document.getElementById(headerId);
+            let isDragging = false, offsetX, offsetY;
+            header.addEventListener('mousedown', e => {
+                if (e.target.closest('.modal-close')) return;
+                isDragging = true;
+                offsetX = e.clientX - modal.offsetLeft;
+                offsetY = e.clientY - modal.offsetTop;
+                modal.style.transition = 'none';
+            });
+            document.addEventListener('mousemove', e => { if (isDragging) { modal.style.left = (e.clientX - offsetX) + 'px'; modal.style.top = (e.clientY - offsetY) + 'px'; }});
+            document.addEventListener('mouseup', () => { isDragging = false; modal.style.transition = ''; });
+        }
+
+        initDragModal('newProjectModal', 'newProjectModalHeader');
+        initDragModal('projectDetailModal', 'projectDetailModalHeader');
+
+        renderProjects();
+    </script>
+</body>
+</html>

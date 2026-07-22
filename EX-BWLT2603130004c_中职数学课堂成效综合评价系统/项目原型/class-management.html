@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a56a0">
+  <title>班级管理</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #e8edf2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .phone-shell {
+      width: 100%;
+      height: 100vh;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: #1a56a0;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .topbar-title {
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      flex: 1;
+      text-align: center;
+    }
+
+    .add-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 16px;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .class-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(26, 86, 160, 0.07);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .class-card:active {
+      transform: scale(0.98);
+    }
+
+    .class-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .class-info {
+      flex: 1;
+    }
+
+    .class-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a2a44;
+      margin-bottom: 4px;
+    }
+
+    .class-meta {
+      font-size: 11px;
+      color: #90a0b5;
+    }
+
+    .class-status {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .class-status.active {
+      background: #e6f9f0;
+      color: #1a9c5a;
+    }
+
+    .class-status.inactive {
+      background: #f0f4fb;
+      color: #90a0b5;
+    }
+
+    .stat-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-box {
+      flex: 1;
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 10px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(26, 86, 160, 0.06);
+    }
+
+    .stat-num {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: #90a0b5;
+      margin-top: 3px;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      width: 100%;
+      max-height: 70vh;
+      border-radius: 20px 20px 0 0;
+      padding: 0 0 20px;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f4fb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2a44;
+      text-align: center;
+      flex: 1;
+    }
+
+    .modal-close {
+      color: #b0bec5;
+      font-size: 18px;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      max-height: calc(70vh - 60px);
+    }
+
+    .class-detail-card {
+      background: #f8f9fb;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .class-detail-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .class-detail-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .class-detail-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2a44;
+    }
+
+    .class-detail-meta {
+      font-size: 12px;
+      color: #7090b0;
+      margin-top: 3px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e8eef7;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      font-size: 12px;
+      color: #90a0b5;
+    }
+
+    .info-value {
+      font-size: 13px;
+      color: #1a2a44;
+      font-weight: 500;
+    }
+
+    .btn-confirm {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #1a56a0, #3a8ee8);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .add-class-form {
+      margin-bottom: 14px;
+    }
+
+    .form-item {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      color: #90a0b5;
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid #e0e8f4;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Noto Sans SC', sans-serif;
+      color: #1a2a44;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #1a56a0;
+    }
+
+    .form-input::placeholder {
+      color: #b0c4e0;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+    }
+
+    .modal-btn-cancel {
+      background: #f4f6fb;
+      color: #7090b0;
+    }
+
+    .modal-btn-confirm {
+      background: #1a56a0;
+      color: #fff;
+    }
+
+    .modal-btn:active, .class-card:active, .btn-confirm:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="phone-shell">
+    <div class="topbar">
+      <a href="profile.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <span class="topbar-title">班级管理</span>
+      <span class="add-btn" onclick="showAddClassModal()"><i class="fas fa-plus"></i> 新增</span>
+    </div>
+
+    <div class="scroll-area">
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-num" style="color:#1a56a0;">6</div>
+          <div class="stat-label">教学班级</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" style="color:#1a9c5a;">248</div>
+          <div class="stat-label">在册学生</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" style="color:#e07020;">4</div>
+          <div class="stat-label">进行中</div>
+        </div>
+      </div>
+
+      <div class="class-card" onclick="showClassDetail('22计算机1班', '42人', '数学基础', '第8周', '进行中', '周三第3节', '于露')">
+        <div class="class-icon" style="background:#e8f1ff;color:#1a56a0;"><i class="fas fa-laptop"></i></div>
+        <div class="class-info">
+          <div class="class-name">22计算机1班</div>
+          <div class="class-meta">42人 · 数学基础 · 第8周</div>
+        </div>
+        <div class="class-status active">进行中</div>
+      </div>
+
+      <div class="class-card" onclick="showClassDetail('22电子商务2班', '45人', '数学基础', '第8周', '进行中', '周三第1节', '于露')">
+        <div class="class-icon" style="background:#e6f9f0;color:#1a9c5a;"><i class="fas fa-shopping-cart"></i></div>
+        <div class="class-info">
+          <div class="class-name">22电子商务2班</div>
+          <div class="class-meta">45人 · 数学基础 · 第8周</div>
+        </div>
+        <div class="class-status active">进行中</div>
+      </div>
+
+      <div class="class-card" onclick="showClassDetail('22汽修1班', '38人', '数学基础', '第8周', '进行中', '周四第2节', '于露')">
+        <div class="class-icon" style="background:#fff3e6;color:#e07020;"><i class="fas fa-car"></i></div>
+        <div class="class-info">
+          <div class="class-name">22汽修1班</div>
+          <div class="class-meta">38人 · 数学基础 · 第8周</div>
+        </div>
+        <div class="class-status active">进行中</div>
+      </div>
+
+      <div class="class-card" onclick="showClassDetail('22护理3班', '40人', '数学基础', '第8周', '进行中', '周五第4节', '于露')">
+        <div class="class-icon" style="background:#ffeef5;color:#c42882;"><i class="fas fa-heartbeat"></i></div>
+        <div class="class-info">
+          <div class="class-name">22护理3班</div>
+          <div class="class-meta">40人 · 数学基础 · 第8周</div>
+        </div>
+        <div class="class-status active">进行中</div>
+      </div>
+
+      <div class="class-card" onclick="showClassDetail('21会计1班', '36人', '数学基础', '已结束', '已完成', '周二第3节', '于露')">
+        <div class="class-icon" style="background:#f2eeff;color:#6c35d4;"><i class="fas fa-calculator"></i></div>
+        <div class="class-info">
+          <div class="class-name">21会计1班</div>
+          <div class="class-meta">36人 · 数学基础 · 已结束</div>
+        </div>
+        <div class="class-status inactive">已结束</div>
+      </div>
+
+      <div class="class-card" onclick="showClassDetail('21幼师2班', '32人', '数学基础', '已结束', '已完成', '周一第1节', '于露')">
+        <div class="class-icon" style="background:#e5f7f7;color:#1a8a8a;"><i class="fas fa-child"></i></div>
+        <div class="class-info">
+          <div class="class-name">21幼师2班</div>
+          <div class="class-meta">32人 · 数学基础 · 已结束</div>
+        </div>
+        <div class="class-status inactive">已结束</div>
+      </div>
+
+      <div style="height:10px;"></div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">班级详情</span>
+          <span class="modal-close" onclick="closeDetailModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body" id="classDetailContent">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="addModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">新增班级</span>
+          <span class="modal-close" onclick="closeAddModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body">
+          <div class="add-class-form">
+            <div class="form-item">
+              <div class="form-label">班级名称</div>
+              <input type="text" class="form-input" placeholder="请输入班级名称，如：23计算机1班">
+            </div>
+            <div class="form-item">
+              <div class="form-label">班级人数</div>
+              <input type="number" class="form-input" placeholder="请输入班级人数">
+            </div>
+            <div class="form-item">
+              <div class="form-label">课程类型</div>
+              <input type="text" class="form-input" value="数学基础">
+            </div>
+            <div class="form-item">
+              <div class="form-label">上课时间</div>
+              <input type="text" class="form-input" placeholder="如：周三第3节">
+            </div>
+          </div>
+          <div class="modal-btn-row">
+            <div class="modal-btn modal-btn-cancel" onclick="closeAddModal()">取消</div>
+            <div class="modal-btn modal-btn-confirm" onclick="addClass()">确认添加</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showClassDetail(name, num, course, week, status, time, teacher) {
+      var content = document.getElementById('classDetailContent');
+      var statusClass = status === '进行中' ? 'active' : 'inactive';
+      var iconClass = name.includes('计算机') ? 'laptop' :
+                      name.includes('电子商务') ? 'shopping-cart' :
+                      name.includes('汽修') ? 'car' :
+                      name.includes('护理') ? 'heartbeat' :
+                      name.includes('会计') ? 'calculator' : 'child';
+      var iconBg = name.includes('计算机') ? '#e8f1ff' :
+                   name.includes('电子商务') ? '#e6f9f0' :
+                   name.includes('汽修') ? '#fff3e6' :
+                   name.includes('护理') ? '#ffeef5' :
+                   name.includes('会计') ? '#f2eeff' : '#e5f7f7';
+      var iconColor = name.includes('计算机') ? '#1a56a0' :
+                      name.includes('电子商务') ? '#1a9c5a' :
+                      name.includes('汽修') ? '#e07020' :
+                      name.includes('护理') ? '#c42882' :
+                      name.includes('会计') ? '#6c35d4' : '#1a8a8a';
+      content.innerHTML = `
+        <div class="class-detail-card">
+          <div class="class-detail-header">
+            <div class="class-detail-icon" style="background:${iconBg};color:${iconColor};">
+              <i class="fas fa-${iconClass}"></i>
+            </div>
+            <div>
+              <div class="class-detail-name">${name}</div>
+              <div class="class-detail-meta">${course} · 第${week}</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <span class="info-label">班级人数</span>
+            <span class="info-value">${num}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">上课时间</span>
+            <span class="info-value">${time}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">授课教师</span>
+            <span class="info-value">${teacher}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">当前状态</span>
+            <span class="class-status ${statusClass}" style="padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;">${status}</span>
+          </div>
+        </div>
+        <button class="btn-confirm" onclick="closeDetailModal()">确定</button>
+      `;
+      document.getElementById('detailModal').classList.add('active');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.remove('active');
+    }
+
+    function showAddClassModal() {
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('active');
+    }
+
+    function addClass() {
+      closeAddModal();
+      alert('班级已添加');
+    }
+
+    document.getElementById('detailModal').addEventListener('click', function(e) {
+      if (e.target === this) closeDetailModal();
+    });
+
+    document.getElementById('addModal').addEventListener('click', function(e) {
+      if (e.target === this) closeAddModal();
+    });
+  </script>
+</body>
+
+</html>

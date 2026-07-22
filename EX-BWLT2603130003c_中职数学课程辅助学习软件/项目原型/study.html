@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4A6CF7">
+  <title>学习中心 - 中职数学课程辅助学习软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    :root{--primary:#4A6CF7;--primary-light:#6B8AFF;--primary-dark:#3451D1;--accent:#FF6B6B;--accent-orange:#FF9F43;--accent-green:#2ED573;--accent-purple:#A66CFF;--bg:#F5F7FB;--card:#FFFFFF;--text:#1E293B;--text-sec:#64748B;--text-light:#94A3B8;--border:#E2E8F0;--shadow:0 2px 12px rgba(74,108,247,0.08);--shadow-lg:0 8px 32px rgba(74,108,247,0.12);--radius:16px;--bottom-nav:64px}
+    html,body{font-family:'Noto Sans SC',sans-serif;background:#1a1a2e;height:100%;overflow:hidden}
+    .phone-frame{width:100%;height:100vh;background:var(--bg);overflow:hidden;position:relative}
+    .pages-container{height:calc(100% - var(--bottom-nav));overflow:hidden;position:relative}
+    .page{position:absolute;top:0;left:0;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;background:var(--bg);opacity:0;transform:translateX(30px);transition:all 0.35s cubic-bezier(0.4,0,0.2,1);pointer-events:none;-webkit-overflow-scrolling:touch}
+    .page.active{opacity:1;transform:translateX(0);pointer-events:auto}
+    .page::-webkit-scrollbar{display:none}
+    .bottom-nav{height:var(--bottom-nav);background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;position:fixed;bottom:0;left:0;width:100%;z-index:100}
+    .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:all 0.3s;padding:4px 12px}
+    .nav-item i{font-size:22px;color:var(--text-light);transition:all 0.3s}
+    .nav-item span{font-size:10px;color:var(--text-light);transition:all 0.3s;font-weight:500}
+    .nav-item.active i{color:var(--primary)}
+    .nav-item.active span{color:var(--primary)}
+    .sub-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+    .sub-back{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+    .sub-back:active{transform:scale(0.9)}
+    .sub-title{color:#fff;font-size:17px;font-weight:700;flex:1}
+    .sub-body{padding:16px}
+    .section-header{display:flex;justify-content:space-between;align-items:center;padding:16px 16px 12px}
+    .section-title{font-size:16px;font-weight:700;color:var(--text)}
+    .section-more{font-size:13px;color:var(--primary);cursor:pointer;font-weight:500}
+    .course-card{background:var(--card);border-radius:var(--radius);overflow:hidden;margin:0 16px 12px;box-shadow:var(--shadow);cursor:pointer;transition:all 0.25s}
+    .course-card:active{transform:scale(0.98)}
+    .course-cover{height:100px;position:relative;overflow:hidden}
+    .course-cover img{width:100%;height:100%;object-fit:cover}
+    .course-cover-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.6))}
+    .course-badge{position:absolute;top:8px;right:8px;background:var(--accent-orange);color:#fff;font-size:10px;font-weight:600;padding:3px 8px;border-radius:8px}
+    .course-progress{position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(255,255,255,0.3)}
+    .course-progress-fill{height:100%;background:var(--accent-green)}
+    .course-info{padding:12px 14px}
+    .course-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+    .course-meta{display:flex;gap:12px}
+    .course-meta span{font-size:11px;color:var(--text-light);display:flex;align-items:center;gap:3px}
+    .chapter-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.2s}
+    .chapter-item:active{background:#F8FAFF}
+    .chapter-item:last-child{border:none}
+    .chapter-num{width:32px;height:32px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--primary)}
+    .chapter-num.done{background:var(--accent-green);color:#fff}
+    .chapter-num.current{background:var(--primary);color:#fff}
+    .chapter-info{flex:1}
+    .chapter-title{font-size:14px;color:var(--text);font-weight:500}
+    .chapter-duration{font-size:11px;color:var(--text-light);margin-top:2px}
+    .chapter-arrow{color:var(--text-light);font-size:16px}
+    .tabs{display:flex;gap:0;background:var(--card);padding:4px;border-radius:12px;margin:0 16px 16px;box-shadow:var(--shadow)}
+    .tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;color:var(--text-light);border-radius:10px;cursor:pointer;transition:all 0.3s}
+    .tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(74,108,247,0.3)}
+    .task-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;transition:all 0.25s}
+    .task-card:active{transform:scale(0.98)}
+    .task-header{display:flex;justify-content:space-between;align-items-center;margin-bottom:8px}
+    .task-title{font-size:14px;font-weight:600;color:var(--text)}
+    .task-status{font-size:11px;color:var(--primary);font-weight:600}
+    .task-status.completed{color:var(--accent-green)}
+    .task-desc{font-size:12px;color:var(--text-light);margin-bottom:8px}
+    .task-meta{display:flex;gap:12px;font-size:11px;color:var(--text-light)}
+    .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#1E293B;color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;font-weight:500;z-index:1000;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="pages-container">
+      <!-- 学习中心主页面 -->
+      <div class="page active" id="page-study">
+        <div class="sub-header">
+          <div class="sub-back" onclick="location.href='home.html'"><i class="ri-arrow-left-s-line"></i></div>
+          <div class="sub-title">学习中心</div>
+        </div>
+        <div class="sub-body">
+          <div class="tabs" id="studyTabs">
+            <div class="tab active" onclick="switchStudyTab(this,'current')">当前学习</div>
+            <div class="tab" onclick="switchStudyTab(this,'tasks')">学习任务</div>
+            <div class="tab" onclick="switchStudyTab(this,'history')">学习历史</div>
+          </div>
+          
+          <!-- 当前学习内容 -->
+          <div id="currentContent">
+            <div class="course-card" onclick="location.href='course_detail.html'">
+              <div class="course-cover">
+                <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=200&fit=crop" alt="">
+                <div class="course-cover-overlay"></div>
+                <div class="course-badge">进行中</div>
+                <div class="course-progress"><div class="course-progress-fill" style="width:65%"></div></div>
+              </div>
+              <div class="course-info">
+                <div class="course-title">基础模块·集合与函数</div>
+                <div class="course-meta">
+                  <span><i class="ri-play-circle-line"></i> 12/18课时</span>
+                  <span><i class="ri-time-line"></i> 6小时</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="section-header">
+              <div class="section-title">课程章节</div>
+            </div>
+            <div class="chapter-item" onclick="location.href='course_detail.html'">
+              <div class="chapter-num current">1</div>
+              <div class="chapter-info">
+                <div class="chapter-title">集合的概念与表示</div>
+                <div class="chapter-duration"><i class="ri-play-circle-fill" style="color:var(--primary)"></i> 正在学习 · 25分钟</div>
+              </div>
+              <div class="chapter-arrow"><i class="ri-arrow-right-s-line"></i></div>
+            </div>
+            <div class="chapter-item" onclick="showToast('第二章 开始学习')">
+              <div class="chapter-num done"><i class="ri-check-line"></i></div>
+              <div class="chapter-info">
+                <div class="chapter-title">集合的基本运算</div>
+                <div class="chapter-duration">已完成 · 30分钟</div>
+              </div>
+              <div class="chapter-arrow"><i class="ri-arrow-right-s-line"></i></div>
+            </div>
+            <div class="chapter-item" onclick="showToast('第三章 即将开始')">
+              <div class="chapter-num">3</div>
+              <div class="chapter-info">
+                <div class="chapter-title">函数的概念与表示</div>
+                <div class="chapter-duration">未开始 · 35分钟</div>
+              </div>
+              <div class="chapter-arrow"><i class="ri-arrow-right-s-line"></i></div>
+            </div>
+            <div class="chapter-item" onclick="showToast('第四章 即将开始')">
+              <div class="chapter-num">4</div>
+              <div class="chapter-info">
+                <div class="chapter-title">函数的性质</div>
+                <div class="chapter-duration">未开始 · 40分钟</div>
+              </div>
+              <div class="chapter-arrow"><i class="ri-arrow-right-s-line"></i></div>
+            </div>
+            <div class="chapter-item" onclick="showToast('第五章 即将开始')">
+              <div class="chapter-num">5</div>
+              <div class="chapter-info">
+                <div class="chapter-title">指数函数与对数函数</div>
+                <div class="chapter-duration">未开始 · 45分钟</div>
+              </div>
+              <div class="chapter-arrow"><i class="ri-arrow-right-s-line"></i></div>
+            </div>
+          </div>
+          
+          <!-- 学习任务内容 -->
+          <div id="tasksContent" style="display:none;">
+            <div class="task-card" onclick="showToast('开始完成每日任务')">
+              <div class="task-header">
+                <div class="task-title">每日学习任务</div>
+                <div class="task-status">进行中</div>
+              </div>
+              <div class="task-desc">完成至少 1 小时的学习时间</div>
+              <div class="task-meta">
+                <span><i class="ri-time-line"></i> 剩余 5小时32分钟</span>
+                <span><i class="ri-gift-2-line"></i> +10积分</span>
+              </div>
+            </div>
+            <div class="task-card" onclick="location.href='exercise.html'">
+              <div class="task-header">
+                <div class="task-title">每日一练</div>
+                <div class="task-status">未完成</div>
+              </div>
+              <div class="task-desc">完成 10 道练习题</div>
+              <div class="task-meta">
+                <span><i class="ri-file-list-3-line"></i> 0/10 已完成</span>
+                <span><i class="ri-gift-2-line"></i> +20积分</span>
+              </div>
+            </div>
+            <div class="task-card" onclick="location.href='wrong.html'">
+              <div class="task-header">
+                <div class="task-title">错题复习</div>
+                <div class="task-status">待复习</div>
+              </div>
+              <div class="task-desc">复习 5 道错题</div>
+              <div class="task-meta">
+                <span><i class="ri-error-warning-line"></i> 0/5 已复习</span>
+                <span><i class="ri-gift-2-line"></i> +15积分</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 学习历史内容 -->
+          <div id="historyContent" style="display:none;">
+            <div class="task-card">
+              <div class="task-header">
+                <div class="task-title">集合的概念与表示</div>
+                <div class="task-status completed">已完成</div>
+              </div>
+              <div class="task-desc">2024-03-22 15:30 - 16:00</div>
+              <div class="task-meta">
+                <span><i class="ri-time-line"></i> 30分钟</span>
+                <span><i class="ri-check-line"></i> 学习完成</span>
+              </div>
+            </div>
+            <div class="task-card">
+              <div class="task-header">
+                <div class="task-title">每日一练</div>
+                <div class="task-status completed">已完成</div>
+              </div>
+              <div class="task-desc">2024-03-22 14:00 - 14:25</div>
+              <div class="task-meta">
+                <span><i class="ri-time-line"></i> 25分钟</span>
+                <span><i class="ri-check-line"></i> 10/10 正确</span>
+              </div>
+            </div>
+            <div class="task-card">
+              <div class="task-header">
+                <div class="task-title">集合的基本运算</div>
+              <div class="task-status completed">已完成</div>
+              </div>
+              <div class="task-desc">2024-03-21 10:15 - 11:00</div>
+              <div class="task-meta">
+                <span><i class="ri-time-line"></i> 45分钟</span>
+                <span><i class="ri-check-line"></i> 学习完成</span>
+              </div>
+            </div>
+            <div class="task-card">
+              <div class="task-header">
+                <div class="task-title">错题本复习</div>
+                <div class="task-status completed">已完成</div>
+              </div>
+              <div class="task-desc">2024-03-21 09:30 - 10:00</div>
+              <div class="task-meta">
+                <span><i class="ri-time-line"></i> 30分钟</span>
+                <span><i class="ri-check-line"></i> 5/5 巩固</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 继续学习页面 -->
+      <div class="page" id="page-continue">
+        <div class="sub-header">
+          <div class="sub-back" onclick="switchPage('page-study')"><i class="ri-arrow-left-s-line"></i></div>
+          <div class="sub-title">继续学习</div>
+        </div>
+        <div class="sub-body">
+          <div class="course-card" style="margin:0;" onclick="location.href='course_detail.html'">
+            <div class="course-cover">
+              <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=200&fit=crop" alt="">
+              <div class="course-cover-overlay"></div>
+              <div class="course-badge">继续</div>
+            </div>
+            <div class="course-info">
+              <div class="course-title">基础模块·集合与函数</div>
+              <div class="course-meta">
+                <span><i class="ri-play-circle-line"></i> 第1章</span>
+                <span><i class="ri-time-line"></i> 25分钟</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="location.href='home.html'"><i class="ri-home-5-line"></i><span>首页</span></div>
+      <div class="nav-item active"><i class="ri-book-read-fill"></i><span>学习</span></div>
+      <div class="nav-item" onclick="location.href='discover.html'"><i class="ri-compass-3-line"></i><span>发现</span></div>
+      <div class="nav-item" onclick="location.href='profile.html'"><i class="ri-user-3-line"></i><span>我的</span></div>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+  <script>
+    function switchPage(id){
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+    
+    function switchStudyTab(el,tabName){
+      // 更新标签激活状态
+      document.querySelectorAll('#studyTabs .tab').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+      
+      // 显示对应内容
+      document.getElementById('currentContent').style.display = tabName === 'current' ? 'block' : 'none';
+      document.getElementById('tasksContent').style.display = tabName === 'tasks' ? 'block' : 'none';
+      document.getElementById('historyContent').style.display = tabName === 'history' ? 'block' : 'none';
+    }
+    
+    function showToast(msg){
+      const t=document.getElementById('toast');
+      t.textContent=msg;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'),2000);
+    }
+  </script>
+</body>
+</html>

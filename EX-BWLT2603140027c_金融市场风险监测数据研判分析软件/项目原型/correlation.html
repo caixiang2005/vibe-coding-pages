@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关联分析 - 金融市场风险监测数据研判分析软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--mac-title:#e8e6e3;--mac-title-inactive:#f6f6f6;--sidebar-bg:#1e1e2e;--sidebar-text:#a6adc8;--sidebar-active:rgba(137,180,250,.12);--sidebar-active-text:#89b4fa;--content-bg:#11111b;--content-bg-2:#181825;--card-bg:#1e1e2e;--card-border:rgba(255,255,255,.04);--text-primary:#cdd6f4;--text-secondary:#6c7086;--text-dim:#45475a;--accent-blue:#89b4fa;--accent-green:#a6e3a1;--accent-red:#f38ba8;--accent-yellow:#f9e2af;--accent-mauve:#cba6f7;--accent-peach:#fab387;--accent-teal:#94e2d5;--shadow-heavy:0 30px 80px rgba(0,0,0,.6),0 0 1px rgba(255,255,255,.05);--radius:10px}
+    body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a12;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;color:var(--text-primary)}
+    .desktop-bg{position:fixed;inset:0;background:linear-gradient(135deg,#0c0c1d 0%,#1a1a2e 40%,#16213e 70%,#0f3460 100%);z-index:0}
+    .desktop-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 20%,rgba(137,180,250,.04) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(203,166,247,.03) 0%,transparent 50%)}
+    .mac-window{position:relative;z-index:1;width:1280px;max-width:96vw;height:820px;max-height:90vh;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-heavy);display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.06)}
+    .title-bar{height:52px;min-height:52px;background:linear-gradient(180deg,#2a2a3c 0%,#232336 100%);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid rgba(0,0,0,.4);-webkit-app-region:drag;position:relative}
+    .traffic-lights{display:flex;gap:8px;z-index:2}
+    .traffic-light{width:12px;height:12px;border-radius:50%;position:relative}
+    .traffic-light.close{background:#ec6a5e;border:1px solid #d14f44}
+    .traffic-light.minimize{background:#f4be4f;border:1px solid #d69e2e}
+    .traffic-light.maximize{background:#61c554;border:1px solid #4da83f}
+    .title-bar-text{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;font-weight:500;color:#a0a0b8;letter-spacing:.3px;white-space:nowrap}
+    .title-bar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);padding:4px 12px 4px 8px;border-radius:6px;font-size:12px;color:var(--text-secondary)}
+    .user-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent-blue),var(--accent-mauve));display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:10px;color:#fff;font-weight:600}
+    .main-body{flex:1;display:flex;overflow:hidden;background:var(--content-bg)}
+    .sidebar{width:220px;min-width:220px;background:var(--sidebar-bg);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;padding:12px 0;overflow-y:auto}
+    .sidebar-section{padding:0 12px;margin-bottom:4px}
+    .sidebar-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);padding:12px 12px 6px}
+    .sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--sidebar-text);transition:all .15s;position:relative;margin-bottom:1px}
+    .sidebar-item:hover{background:rgba(255,255,255,.04);color:var(--text-primary)}
+    .sidebar-item.active{background:var(--sidebar-active);color:var(--sidebar-active-text)}
+    .sidebar-item .icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:13px;opacity:.7}
+    .sidebar-item.active .icon{opacity:1}
+    .sidebar-item .badge{margin-left:auto;background:var(--accent-red);color:#11111b;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+    .sidebar-status{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.04)}
+    .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px}
+    .status-dot.online{background:var(--accent-green);box-shadow:0 0 6px rgba(166,227,161,.4)}
+    .status-text{font-size:11px;color:var(--text-secondary)}
+    .content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .content-header{display:flex;flex-direction:column;gap:12px;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.03);background:var(--content-bg-2)}
+    .content-title{font-size:18px;font-weight:600;color:var(--text-primary);letter-spacing:-.2px}
+    .content-subtitle{font-size:12px;color:var(--text-secondary);margin-top:2px}
+    .header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;width:100%}
+    .btn{padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+    .btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary)}
+    .btn.primary{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.2);color:var(--accent-blue)}
+    .btn.primary:hover{background:rgba(137,180,250,.25)}
+    .btn.warning{background:rgba(243,139,168,.15);border-color:rgba(243,139,168,.2);color:var(--accent-red)}
+    .btn.warning:hover{background:rgba(243,139,168,.25)}
+    .btn.info{background:rgba(137,180,250,.12);border-color:rgba(137,180,250,.18);color:var(--accent-blue)}
+    .btn.info:hover{background:rgba(137,180,250,.22)}
+    .time-display{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim)}
+    .tab-bar{display:flex;gap:2px;margin-bottom:14px}
+    .tab-item{padding:5px 12px;font-size:11px;color:var(--text-dim);border-radius:4px;cursor:pointer;transition:all .15s}
+    .tab-item:hover{color:var(--text-secondary)}
+    .tab-item.active{background:rgba(137,180,250,.1);color:var(--accent-blue)}
+    .market-filter{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    .filter-chip{padding:4px 12px;font-size:11px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-secondary);cursor:pointer;transition:all .15s}
+    .filter-chip:hover{background:rgba(255,255,255,.08)}
+    .filter-chip.active{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.3);color:var(--accent-blue)}
+    .content-scroll{flex:1;overflow-y:auto;padding:20px 24px}
+    .content-scroll::-webkit-scrollbar{width:6px}
+    .content-scroll::-webkit-scrollbar-track{background:transparent}
+    .content-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+    .kpi-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:16px 18px}
+    .kpi-label{font-size:11px;color:var(--text-secondary);margin-bottom:8px;letter-spacing:.3px}
+    .kpi-value{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;letter-spacing:-1px}
+    .kpi-sub{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px}
+    .kpi-change{font-family:'JetBrains Mono',monospace;font-weight:500}
+    .kpi-change.up{color:var(--accent-red)}
+    .kpi-change.down{color:var(--accent-green)}
+    .kpi-change.neutral{color:var(--accent-yellow)}
+    .kpi-desc{color:var(--text-dim)}
+    .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:18px;overflow:hidden}
+    .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .card-title{font-size:13px;font-weight:600;color:var(--text-primary)}
+    .card-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500}
+    .tag-warn{background:rgba(243,139,168,.12);color:var(--accent-red)}
+    .tag-safe{background:rgba(166,227,161,.12);color:var(--accent-green)}
+    .tag-info{background:rgba(137,180,250,.12);color:var(--accent-blue)}
+    .data-table{width:100%;border-collapse:collapse;font-size:12px}
+    .data-table th{text-align:left;padding:8px 10px;color:var(--text-dim);font-weight:500;font-size:11px;letter-spacing:.3px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .data-table td{padding:10px 10px;color:var(--text-secondary);border-bottom:1px solid rgba(255,255,255,.02);font-family:'JetBrains Mono',monospace;font-size:11px}
+    .data-table tr:hover td{background:rgba(255,255,255,.015)}
+    .data-table .name-col{font-family:'Noto Sans SC',sans-serif;color:var(--text-primary);font-weight:500}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .kpi-card,.card{animation:fadeIn .4s ease both}
+    .kpi-card:nth-child(2){animation-delay:.05s}
+    .kpi-card:nth-child(3){animation-delay:.1s}
+    .kpi-card:nth-child(4){animation-delay:.15s}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s ease}
+    .modal-content{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;width:400px;max-width:90vw;overflow:hidden}
+    .modal-header{display:flex;align-items:center;justify-content:center;padding:16px 20px;background:var(--content-bg-2);border-bottom:1px solid rgba(255,255,255,.05);position:relative}
+    .modal-header .traffic-lights{display:flex;gap:8px;position:absolute;left:20px;top:50%;transform:translateY(-50%)}
+    .modal-header .traffic-light{width:12px;height:12px;border-radius:50%;cursor:pointer}
+    .modal-header .traffic-light.close{background:#ff5f57}
+    .modal-header .traffic-light.minimize{background:#febc2e}
+    .modal-header .traffic-light.maximize{background:#28c840}
+    .modal-title{font-size:14px;font-weight:600;color:var(--text-primary)}
+    .modal-body{padding:24px 20px}
+    .modal-body p{font-size:13px;color:var(--text-secondary);margin-bottom:16px}
+    .report-progress{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:12px}
+    .progress-fill{height:100%;background:var(--accent-blue);border-radius:3px;width:0;transition:width .4s ease}
+    .report-status{font-size:11px;color:var(--text-dim)}
+    .report-success{text-align:center;padding:20px 0}
+    .success-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:rgba(166,227,161,.15);color:var(--accent-green);border-radius:50%;font-size:24px;margin-bottom:16px}
+    .report-filename{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);margin:8px 0 20px}
+    .toast-notification{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 20px;font-size:13px;color:var(--text-primary);z-index:1001;transition:transform .3s ease;display:flex;align-items:center;gap:10px}
+    .toast-notification.show{transform:translateX(-50%) translateY(0)}
+    .toast-notification.success{border-left:3px solid var(--accent-green)}
+    .toast-notification.warning{border-left:3px solid var(--accent-yellow)}
+    .toast-notification.error{border-left:3px solid var(--accent-red)}
+    .covar-card{background:linear-gradient(135deg,rgba(243,139,168,.08) 0%,rgba(137,180,250,.08) 100%);border:1px solid rgba(243,139,168,.1);border-radius:10px;padding:16px;margin-top:16px}
+    .covar-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+    .covar-row:last-child{border-bottom:none}
+    .covar-name{flex:1;font-size:12px;color:var(--text-primary)}
+    .covar-var{flex:1;text-align:center}
+    .covar-covar{flex:1;text-align:center}
+    .covar-delta{flex:1;text-align:right}
+    .covar-val{font-family:'JetBrains Mono';font-size:13px;color:var(--text-primary)}
+    .covar-sub{font-size:10px;color:var(--text-dim)}
+    .delta-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+    .delta-high{background:rgba(243,139,168,.15);color:var(--accent-red)}
+    .delta-mid{background:rgba(249,226,175,.15);color:var(--accent-yellow)}
+    .delta-low{background:rgba(166,227,161,.12);color:var(--accent-green)}
+    .corr-cell{cursor:pointer;transition:all .15s}
+    .corr-cell:hover{transform:scale(1.05);z-index:5}
+    .corr-action-btn{padding:4px 10px;font-size:10px;border-radius:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-secondary);cursor:pointer}
+    .corr-action-btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary)}
+  </style>
+</head>
+<body>
+  <div class="desktop-bg"></div>
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <div class="title-bar-text">金融市场风险监测数据研判分析软件</div>
+      <div class="title-bar-right">
+        <div class="time-display" id="clock"></div>
+        <div class="user-badge">
+          <div class="user-avatar">鲍</div>
+          <span>鲍姝帆</span>
+        </div>
+      </div>
+    </div>
+    <div class="main-body">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">软件功能</div>
+          <div class="sidebar-item" onclick="location.href='dashboard.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            风险总览
+          </div>
+          <div class="sidebar-item" onclick="location.href='market.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+            市场监测
+          </div>
+          <div class="sidebar-item" onclick="location.href='credit.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            信用风险
+            <span class="badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="location.href='liquidity.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
+            流动性分析
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="location.href='stress.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            压力测试
+          </div>
+          <div class="sidebar-item" onclick="location.href='var.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span>
+            VaR模型
+          </div>
+          <div class="sidebar-item active">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+            关联分析
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="location.href='system.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+            系统设置
+          </div>
+        </div>
+        <div class="sidebar-status">
+          <span class="status-dot online"></span>
+          <span class="status-text">数据源连接正常 · 延迟 12ms</span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="content-header">
+          <div>
+            <div class="content-title">关联分析</div>
+            <div class="content-subtitle">跨市场关联性与系统性风险度量 · 数据更新于 <span id="updateTime"></span></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn" onclick="showCorrConfig()">关联配置</button>
+            <button class="btn" onclick="showCorrHeatmap()">热力图</button>
+            <button class="btn" onclick="showCoVaRDetail()">CoVaR 详情</button>
+            <button class="btn" onclick="showTailCorrelation()">尾部相关性</button>
+            <button class="btn" onclick="showNetworkAnalysis()">网络分析</button>
+            <button class="btn" onclick="showContagionPath()">传染路径</button>
+            <button class="btn" onclick="showCrisis预警()">危机预警</button>
+            <button class="btn warning" onclick="pushCorrAlert()"><i class="fas fa-bell"></i> 一键预警推送</button>
+            <button class="btn" onclick="showCorrHistory()"><i class="fas fa-history"></i> 历史关联回溯</button>
+            <button class="btn" onclick="showCorrForecast()"><i class="fas fa-chart-line"></i> 关联性预测</button>
+            <button class="btn" onclick="exportCorrMatrix()">导出矩阵</button>
+            <button class="btn primary" onclick="generateReport()">生成报告</button>
+          </div>
+        </div>
+        <div class="content-scroll">
+          <div class="tab-bar">
+            <div class="tab-item active" onclick="switchCorrelationMarket(this,'hs300')">沪深300</div>
+            <div class="tab-item" onclick="switchCorrelationMarket(this,'bond')">中债指数</div>
+            <div class="tab-item" onclick="switchCorrelationMarket(this,'fx')">USD/CNY</div>
+            <div class="tab-item" onclick="switchCorrelationMarket(this,'gold')">黄金</div>
+            <div class="tab-item" onclick="switchCorrelationMarket(this,'oil')">原油</div>
+            <div class="tab-item" onclick="switchCorrelationMarket(this,'hsi')">恒生指数</div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-card" onclick="showKpiDetail('平均相关系数','0.47','平均相关系数衡量不同市场或资产之间的线性相关程度。数值范围-1到1，0.47表示中等正相关，说明市场间存在一定联动性。滚动60日计算，反映近期相关性变化趋势。')">
+              <div class="kpi-label">平均相关系数 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-blue)">0.47</div>
+              <div class="kpi-sub"><span class="kpi-change up">+0.08</span><span class="kpi-desc">关联性上升</span></div>
+            </div>
+            <div class="kpi-card" onclick="showKpiDetail('尾部相关系数','0.72','尾部相关系数衡量市场在极端情景下的相关程度。使用Copula模型计算，0.72的高值表明当某个市场发生极端损失时，其他市场也倾向于同时下跌，风险传染效应显著。')">
+              <div class="kpi-label">尾部相关系数 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-red)">0.72</div>
+              <div class="kpi-sub"><span class="kpi-change up">+0.11</span><span class="kpi-desc">极端情景下增强</span></div>
+            </div>
+            <div class="kpi-card" onclick="showKpiDetail('Copula拟合度','0.94','Copula拟合度衡量所选Copula模型对实际数据分布的拟合优劣。0.94表示拟合良好，t-Copula(自由度v=5)能够较好地捕捉市场间的对称相关性和尾部依赖结构。')">
+              <div class="kpi-label">Copula拟合度 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-green)">0.94</div>
+              <div class="kpi-sub"><span class="kpi-change down">t-Copula</span><span class="kpi-desc">自由度 v=5</span></div>
+            </div>
+            <div class="kpi-card" onclick="showKpiDetail('系统性风险指数','0.68','系统性风险指数(ΔCoVaR)衡量单个机构或市场对整体金融系统风险的贡献程度。数值越高表示该主体对系统风险的边际影响越大，0.68属于较高水平，需重点关注。')">
+              <div class="kpi-label">系统性风险指数 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-mauve)">0.68</div>
+              <div class="kpi-sub"><span class="kpi-change up">+0.05</span><span class="kpi-desc">CoVaR贡献升高</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">跨市场相关性矩阵 (滚动60日)</span><span class="card-tag tag-warn">联动增强</span></div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <button class="corr-action-btn" onclick="showCorrAnalysis()">相关性分析</button>
+              <button class="corr-action-btn" onclick="exportCorrMatrix()">导出矩阵</button>
+            </div>
+            <table class="data-table">
+              <thead><tr><th></th><th>沪深300</th><th>中债指数</th><th>USD/CNY</th><th>黄金</th><th>原油</th><th>恒生</th></tr></thead>
+              <tbody id="corrMatrixBody">
+                <tr><td class="name-col">沪深300</td><td class="corr-cell" onclick="showCorrDetail('沪深300','沪深300','1.00','自身')" style="color:var(--accent-blue)">1.00</td><td class="corr-cell" onclick="showCorrDetail('沪深300','中债指数','-0.34','股市与债市负相关')">-0.34</td><td class="corr-cell" onclick="showCorrDetail('沪深300','USD/CNY','-0.48','汇率与股市负相关')">-0.48</td><td class="corr-cell" onclick="showCorrDetail('沪深300','黄金','0.12','避险资金流向')">0.12</td><td class="corr-cell" onclick="showCorrDetail('沪深300','原油','0.28','需求关联')">0.28</td><td class="corr-cell" onclick="showCorrDetail('沪深300','恒生','0.82','跨境资金联动')" style="color:var(--accent-red)">0.82</td></tr>
+                <tr><td class="name-col">中债指数</td><td class="corr-cell" onclick="showCorrDetail('中债指数','沪深300','-0.34','股债跷跷板')">-0.34</td><td class="corr-cell" onclick="showCorrDetail('中债指数','中债指数','1.00','自身')" style="color:var(--accent-blue)">1.00</td><td class="corr-cell" onclick="showCorrDetail('中债指数','USD/CNY','0.21','汇率影响')">0.21</td><td class="corr-cell" onclick="showCorrDetail('中债指数','黄金','0.38','避险需求')">0.38</td><td class="corr-cell" onclick="showCorrDetail('中债指数','原油','-0.15','通胀预期')">-0.15</td><td class="corr-cell" onclick="showCorrDetail('中债指数','恒生','-0.28','跨境传导')">-0.28</td></tr>
+                <tr><td class="name-col">USD/CNY</td><td class="corr-cell" onclick="showCorrDetail('USD/CNY','沪深300','-0.48','资本流动')">-0.48</td><td class="corr-cell" onclick="showCorrDetail('USD/CNY','中债指数','0.21','中美利差')">0.21</td><td class="corr-cell" onclick="showCorrDetail('USD/CNY','USD/CNY','1.00','自身')" style="color:var(--accent-blue)">1.00</td><td class="corr-cell" onclick="showCorrDetail('USD/CNY','黄金','-0.52','美元黄金负相关')">-0.52</td><td class="corr-cell" onclick="showCorrDetail('USD/CNY','原油','-0.31','商品货币')">-0.31</td><td class="corr-cell" onclick="showCorrDetail('USD/CNY','恒生','-0.56','联系汇率制')">-0.56</td></tr>
+                <tr><td class="name-col">黄金</td><td class="corr-cell" onclick="showCorrDetail('黄金','沪深300','0.12','避险需求')">0.12</td><td class="corr-cell" onclick="showCorrDetail('黄金','中债指数','0.38','避险资金')">0.38</td><td class="corr-cell" onclick="showCorrDetail('黄金','USD/CNY','-0.52','美元计价')">-0.52</td><td class="corr-cell" onclick="showCorrDetail('黄金','黄金','1.00','自身')" style="color:var(--accent-blue)">1.00</td><td class="corr-cell" onclick="showCorrDetail('黄金','原油','0.24','商品属性')">0.24</td><td class="corr-cell" onclick="showCorrDetail('黄金','恒生','0.18','避险情绪')">0.18</td></tr>
+                <tr><td class="name-col">原油</td><td class="corr-cell" onclick="showCorrDetail('原油','沪深300','0.28','需求联动')">0.28</td><td class="corr-cell" onclick="showCorrDetail('原油','中债指数','-0.15','通胀预期')">-0.15</td><td class="corr-cell" onclick="showCorrDetail('原油','USD/CNY','-0.31','商品货币')">-0.31</td><td class="corr-cell" onclick="showCorrDetail('原油','黄金','0.24','商品联动')">0.24</td><td class="corr-cell" onclick="showCorrDetail('原油','原油','1.00','自身')" style="color:var(--accent-blue)">1.00</td><td class="corr-cell" onclick="showCorrDetail('原油','恒生','0.35','能源股')">0.35</td></tr>
+                <tr><td class="name-col">恒生</td><td class="corr-cell" onclick="showCorrDetail('恒生','沪深300','0.82','沪深港通')" style="color:var(--accent-red)">0.82</td><td class="corr-cell" onclick="showCorrDetail('恒生','中债指数','-0.28','跨境资金')">-0.28</td><td class="corr-cell" onclick="showCorrDetail('恒生','USD/CNY','-0.56','联系汇率')">-0.56</td><td class="corr-cell" onclick="showCorrDetail('恒生','黄金','0.18','避险情绪')">0.18</td><td class="corr-cell" onclick="showCorrDetail('恒生','原油','0.35','能源板块')">0.35</td><td class="corr-cell" onclick="showCorrDetail('恒生','恒生','1.00','自身')" style="color:var(--accent-blue)">1.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">系统性风险CoVaR分析</span>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button class="corr-action-btn" onclick="sortCoVaR('delta')">按ΔCoVaR</button>
+                <button class="corr-action-btn" onclick="sortCoVaR('var')">按VaR</button>
+                <button class="corr-action-btn" onclick="exportCoVaR()">导出</button>
+              </div>
+            </div>
+            <div class="covar-card">
+              <div style="display:flex;font-size:10px;color:var(--text-dim);padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:4px;">
+                <div class="covar-name">机构/市场</div>
+                <div class="covar-var">VaR(99%)</div>
+                <div class="covar-covar">CoVaR(99%)</div>
+                <div class="covar-delta">ΔCoVaR</div>
+              </div>
+              <div id="covarTableBody"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function updateClock(){
+      const now=new Date();
+      const h=String(now.getHours()).padStart(2,'0');
+      const m=String(now.getMinutes()).padStart(2,'0');
+      const s=String(now.getSeconds()).padStart(2,'0');
+      document.getElementById('clock').textContent=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${h}:${m}:${s}`;
+      document.getElementById('updateTime').textContent=`${h}:${m}`;
+    }
+    updateClock();
+    setInterval(updateClock,1000);
+
+    function switchCorrelationMarket(el,market){
+      el.closest('.tab-bar').querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+      const tbody=document.getElementById('corrMatrixBody');
+      const covarBody=document.getElementById('covarTableBody');
+      const marketData={
+        'hs300':{values:['0.47','0.72','0.94','0.68'],changes:['+0.08','+0.11','t-Copula','+0.05'],descs:['关联性上升','极端情景下增强','自由度 v=5','CoVaR贡献升高'],highlightRow:0,covar:[{name:'沪深300',var:'2.34',covar:'3.87',delta:'+1.53',level:'high'},{name:'中债指数',var:'1.12',covar:'2.01',delta:'+0.89',level:'mid'},{name:'USD/CNY',var:'1.85',covar:'3.12',delta:'+1.27',level:'high'},{name:'黄金',var:'0.92',covar:'1.45',delta:'+0.53',level:'low'},{name:'原油',var:'2.15',covar:'3.54',delta:'+1.39',level:'high'}]},
+        'bond':{values:['0.38','0.54','0.91','0.52'],changes:['+0.05','+0.08','t-Copula','+0.03'],descs:['关联性略升','尾部相关性稳定','自由度 v=7','保险业贡献'],highlightRow:1,covar:[{name:'中债指数',var:'1.12',covar:'1.78',delta:'+0.66',level:'mid'},{name:'沪深300',var:'2.34',covar:'2.89',delta:'+0.55',level:'low'},{name:'USD/CNY',var:'1.85',covar:'2.45',delta:'+0.60',level:'mid'},{name:'黄金',var:'0.92',covar:'1.34',delta:'+0.42',level:'low'},{name:'原油',var:'2.15',covar:'2.78',delta:'+0.63',level:'mid'}]},
+        'fx':{values:['0.52','0.68','0.89','0.74'],changes:['+0.12','+0.15','Clayton','+0.08'],descs:['汇率波动加剧','极端下相关','下尾相关','外资流向敏感'],highlightRow:2,covar:[{name:'USD/CNY',var:'1.85',covar:'3.45',delta:'+1.60',level:'high'},{name:'沪深300',var:'2.34',covar:'3.89',delta:'+1.55',level:'high'},{name:'恒生指数',var:'2.68',covar:'4.12',delta:'+1.44',level:'high'},{name:'黄金',var:'0.92',covar:'1.56',delta:'+0.64',level:'mid'},{name:'原油',var:'2.15',covar:'3.02',delta:'+0.87',level:'mid'}]},
+        'gold':{values:['0.31','0.45','0.86','0.42'],changes:['-0.02','+0.03','t-Copula','-0.02'],descs:['避险需求下降','尾部相关低','自由度 v=8','避险属性弱化'],highlightRow:3,covar:[{name:'黄金',var:'0.92',covar:'1.23',delta:'+0.31',level:'low'},{name:'中债指数',var:'1.12',covar:'1.45',delta:'+0.33',level:'low'},{name:'沪深300',var:'2.34',covar:'2.68',delta:'+0.34',level:'low'},{name:'USD/CNY',var:'1.85',covar:'2.12',delta:'+0.27',level:'low'},{name:'原油',var:'2.15',covar:'2.45',delta:'+0.30',level:'low'}]},
+        'oil':{values:['0.44','0.61','0.88','0.58'],changes:['+0.06','+0.09','t-Copula','+0.04'],descs:['商品联动增强','能源市场敏感','自由度 v=6','石化行业影响'],highlightRow:4,covar:[{name:'原油',var:'2.15',covar:'3.67',delta:'+1.52',level:'high'},{name:'沪深300',var:'2.34',covar:'3.45',delta:'+1.11',level:'high'},{name:'USD/CNY',var:'1.85',covar:'2.78',delta:'+0.93',level:'mid'},{name:'黄金',var:'0.92',covar:'1.45',delta:'+0.53',level:'low'},{name:'恒生指数',var:'2.68',covar:'3.56',delta:'+0.88',level:'mid'}]},
+        'hsi':{values:['0.58','0.78','0.92','0.76'],changes:['+0.10','+0.14','t-Copula','+0.09'],descs:['港股联动增强','跨境传染加剧','自由度 v=4','外资机构持股'],highlightRow:5,covar:[{name:'恒生指数',var:'2.68',covar:'4.23',delta:'+1.55',level:'high'},{name:'沪深300',var:'2.34',covar:'3.67',delta:'+1.33',level:'high'},{name:'USD/CNY',var:'1.85',covar:'2.89',delta:'+1.04',level:'high'},{name:'原油',var:'2.15',covar:'3.12',delta:'+0.97',level:'mid'},{name:'黄金',var:'0.92',covar:'1.52',delta:'+0.60',level:'mid'}]}
+      };
+      const d=marketData[market];
+      if(d){
+        const kpiValues=document.querySelectorAll('.kpi-value');
+        const kpiChanges=document.querySelectorAll('.kpi-change');
+        const kpiDescs=document.querySelectorAll('.kpi-desc');
+        kpiValues.forEach((v,i)=>v.textContent=d.values[i]);
+        kpiChanges.forEach((v,i)=>v.textContent=d.changes[i]);
+        kpiDescs.forEach((v,i)=>v.textContent=d.descs[i]);
+        if(tbody){
+          const rows=tbody.querySelectorAll('tr');
+          rows.forEach((row,i)=>{
+            row.style.background=i===d.highlightRow?'rgba(137,180,250,.08)':'';
+          });
+        }
+        if(covarBody){
+          covarBody.innerHTML=d.covar.map(item=>`
+            <div class="covar-row" onclick="showCovarDetail('${item.name}','${market}')">
+              <div class="covar-name">${item.name}</div>
+              <div class="covar-var"><div class="covar-val">${item.var}%</div><div class="covar-sub">自身VaR</div></div>
+              <div class="covar-covar"><div class="covar-val">${item.covar}%</div><div class="covar-sub">条件VaR</div></div>
+              <div class="covar-delta"><span class="delta-badge delta-${item.level}">${item.delta}%</span></div>
+            </div>
+          `).join('');
+        }
+        showToast('已切换至'+el.textContent+'关联分析','success');
+      }
+    }
+
+    function showCovarDetail(name,market){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">${name} CoVaR详情</span></div><div class="modal-body"><p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">CoVaR衡量的是当某一机构或市场发生极端损失时，整个系统所处的风险水平。</p><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;"><div style="padding:12px;background:rgba(137,180,250,.08);border-radius:8px;"><div style="font-size:11px;color:var(--text-secondary)">VaR(99%)</div><div style="font-family:'JetBrains Mono';font-size:20px;color:var(--accent-blue)">计算中...</div></div><div style="padding:12px;background:rgba(243,139,168,.08);border-radius:8px;"><div style="font-size:11px;color:var(--text-secondary)">ΔCoVaR</div><div style="font-family:'JetBrains Mono';font-size:20px;color:var(--accent-red)">计算中...</div></div></div><table class="data-table"><thead><tr><th>指标</th><th>数值</th><th>说明</th></tr></thead><tbody><tr><td class="name-col">尾部相关性</td><td style="font-family:'JetBrains Mono'">0.68</td><td>与系统整体</td></tr><tr><td class="name-col">系统性贡献</td><td style="font-family:'JetBrains Mono'">12.4%</td><td>对系统风险贡献度</td></tr><tr><td class="name-col">边际CoES</td><td style="font-family:'JetBrains Mono'">3.21%</td><td>条件期望 shortfall</td></tr></tbody></table><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:16px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showCorrDetail(market1,market2,value,reason){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      const corrVal=parseFloat(value);
+      const corrColor=corrVal>0.5?'var(--accent-red)':corrVal>0.2?'var(--accent-yellow)':corrVal>-0.2?'var(--text-secondary)':corrVal>-0.5?'var(--accent-blue)':'var(--accent-teal)';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">${market1} / ${market2}</span></div><div class="modal-body" style="padding:20px"><div style="text-align:center;margin-bottom:16px;"><div style="font-size:11px;color:var(--text-secondary)">相关系数</div><div style="font-size:36px;font-family:'JetBrains Mono';color:${corrColor};font-weight:600">${value}</div></div><div style="background:rgba(255,255,255,.03);padding:12px;border-radius:6px;margin-bottom:12px;"><div class="detail-row"><span class="detail-label">市场一</span><span class="detail-value">${market1}</span></div><div class="detail-row"><span class="detail-label">市场二</span><span class="detail-value">${market2}</span></div><div class="detail-row"><span class="detail-label">相关性质</span><span class="detail-value" style="color:${corrVal>0?'var(--accent-red)':'var(--accent-green)'}">${corrVal>0?'正相关':'负相关'}</span></div><div class="detail-row"><span class="detail-label">关联解释</span><span class="detail-value">${reason}</span></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showCorrAnalysis(){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:480px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">相关性分析报告</span></div><div class="modal-body" style="padding:20px"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--accent-red);margin-bottom:8px;font-weight:500;">高相关性风险对 (|r| > 0.5)</div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:11px;color:var(--text-secondary)">沪深300 / 恒生</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-red)">0.82</span></div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:11px;color:var(--text-secondary)">USD/CNY / 黄金</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-red)">-0.52</span></div><div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-secondary)">USD/CNY / 恒生</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-red)">-0.56</span></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">风险提示</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">A股与港股高度相关，跨境资金流动是主要传导路径。美元走强时，港币联系汇率制度会放大汇率波动对港股的影响。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function exportCorrMatrix(){
+      let csv='\uFEFF,沪深300,中债指数,USD/CNY,黄金,原油,恒生\n';
+      const rows=[
+        ['沪深300','1.00','-0.34','-0.48','0.12','0.28','0.82'],
+        ['中债指数','-0.34','1.00','0.21','0.38','-0.15','-0.28'],
+        ['USD/CNY','-0.48','0.21','1.00','-0.52','-0.31','-0.56'],
+        ['黄金','0.12','0.38','-0.52','1.00','0.24','0.18'],
+        ['原油','0.28','-0.15','-0.31','0.24','1.00','0.35'],
+        ['恒生','0.82','-0.28','-0.56','0.18','0.35','1.00']
+      ];
+      rows.forEach(row=>{csv+=row.join(',')+'\n';});
+      const now=new Date();
+      const filename='correlation_matrix_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.csv';
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename;link.click();
+      URL.revokeObjectURL(link.href);
+      showToast('相关性矩阵已导出: '+filename,'success');
+    }
+
+    switchCorrelationMarket(document.querySelector('.tab-item.active'),'hs300');
+
+    function exportData(){
+      const tables=document.querySelectorAll('.data-table');
+      if(tables.length===0){showToast('当前页面暂无数据可导出','warning');return;}
+      let csv='\uFEFF';
+      tables.forEach((table,idx)=>{if(idx>0)csv+='\n\n';table.querySelectorAll('tr').forEach(row=>{const cells=row.querySelectorAll('th,td');const rowData=[];cells.forEach(cell=>{rowData.push('"'+cell.textContent.trim().replace(/"/g,'""')+'"');});csv+=rowData.join(',')+'\n';});});
+      const now=new Date();const filename='correlation_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.csv';
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename;link.click();URL.revokeObjectURL(link.href);
+      showToast('数据已导出: '+filename,'success');
+    }
+    function generateReport(){showReportModal('关联分析');}
+    function showReportModal(panelName){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML='<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest(\'.modal-overlay\').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">生成报告</span></div><div class="modal-body"><p>正在为 "<strong>'+panelName+'</strong>" 生成分析报告...</p><div class="report-progress"><div class="progress-bar"><div class="progress-fill"></div></div></div><p class="report-status">正在提取数据...</p></div></div>';
+      document.body.appendChild(modal);
+      setTimeout(()=>{const progressFill=modal.querySelector('.progress-fill');const reportStatus=modal.querySelector('.report-status');let progress=0;const stages=['正在提取数据...','正在生成图表...','正在计算指标...','正在生成报告...','报告生成完成'];const interval=setInterval(()=>{progress+=20;progressFill.style.width=progress+'%';if(progress<=100)reportStatus.textContent=stages[Math.floor(progress/25)];if(progress>=100){clearInterval(interval);setTimeout(()=>{modal.querySelector('.modal-body').innerHTML='<div class="report-success"><span class="success-icon">✓</span><p>报告生成成功！</p><p class="report-filename">'+panelName+'_报告_'+new Date().toLocaleDateString()+'.pdf</p><button class="btn primary" onclick="this.closest(\'.modal-overlay\').remove()">确定</button></div>';},300);}},400);},100);
+    }
+    function showKpiDetail(name,value,description){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">指标说明</span></div><div class="modal-body" style="padding:20px"><div style="text-align:center;margin-bottom:16px;"><div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${name}</div><div style="font-size:28px;font-family:'JetBrains Mono';color:var(--accent-blue);font-weight:600">${value}</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:16px;"><p style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${description}</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:16px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+    function showToast(message,type){const existing=document.querySelector('.toast-notification');if(existing)existing.remove();const toast=document.createElement('div');toast.className='toast-notification '+type;toast.innerHTML='<span>'+message+'</span>';document.body.appendChild(toast);setTimeout(()=>toast.classList.add('show'),10);setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),300);},3000);}
+
+    function sortCoVaR(criteria){
+      const covarBody = document.getElementById('covarTableBody');
+      const items = Array.from(covarBody.children);
+      items.sort((a, b) => {
+        const aVal = parseFloat(a.querySelector('.delta-badge') ? a.querySelector('.delta-badge').textContent : '0');
+        const bVal = parseFloat(b.querySelector('.delta-badge') ? b.querySelector('.delta-badge').textContent : '0');
+        return bVal - aVal;
+      });
+      items.forEach(item => covarBody.appendChild(item));
+      showToast('已按ΔCoVaR排序','success');
+    }
+
+    function exportCoVaR(){
+      let csv = '\uFEFF机构/市场,VaR(99%),CoVaR(99%),ΔCoVaR\n';
+      document.querySelectorAll('#covarTableBody .covar-row').forEach(row => {
+        const name = row.querySelector('.covar-name').textContent;
+        const var_ = row.querySelector('.covar-var .covar-val').textContent;
+        const covar = row.querySelector('.covar-covar .covar-val').textContent;
+        const delta = row.querySelector('.delta-badge').textContent;
+        csv += name + ',' + var_ + ',' + covar + ',' + delta + '\n';
+      });
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'covar_analysis.csv';
+      link.click();
+      showToast('CoVaR分析已导出','success');
+    }
+
+    function showCorrHeatmap(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:520px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">相关性热力图</span></div><div class="modal-body" style="padding:20px;"><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">跨市场相关性热力图 (滚动60日)</p><div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr 1fr 1fr;gap:4px;font-size:10px;text-align:center;margin-bottom:8px;"><div></div><div style="color:var(--text-dim);">沪深</div><div style="color:var(--text-dim);">中债</div><div style="color:var(--text-dim);">USD</div><div style="color:var(--text-dim);">黄金</div><div style="color:var(--text-dim);">原油</div><div style="color:var(--text-dim);">恒生</div></div><div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr 1fr 1fr;gap:4px;margin-bottom:12px;font-size:10px;text-align:center;"><div style="color:var(--text-dim);text-align:right;padding-right:8px;">沪深300</div><div style="background:rgba(137,180,250,.8);padding:8px;border-radius:4px;color:#111;">1.00</div><div style="background:rgba(137,180,250,.3);padding:8px;border-radius:4px;color:var(--text-primary);">-0.34</div><div style="background:rgba(137,180,250,.4);padding:8px;border-radius:4px;color:var(--text-primary);">-0.48</div><div style="background:rgba(137,180,250,.15);padding:8px;border-radius:4px;color:var(--text-primary);">0.12</div><div style="background:rgba(137,180,250,.25);padding:8px;border-radius:4px;color:var(--text-primary);">0.28</div><div style="background:rgba(243,139,168,.7);padding:8px;border-radius:4px;color:#111;">0.82</div></div><div style="display:grid;grid-template-columns:80px 1fr 1fr 1fr 1fr 1fr 1fr;gap:4px;margin-bottom:12px;font-size:10px;text-align:center;"><div style="color:var(--text-dim);text-align:right;padding-right:8px;">中债指数</div><div style="background:rgba(137,180,250,.3);padding:8px;border-radius:4px;color:var(--text-primary);">-0.34</div><div style="background:rgba(137,180,250,.8);padding:8px;border-radius:4px;color:#111;">1.00</div><div style="background:rgba(137,180,250,.2);padding:8px;border-radius:4px;color:var(--text-primary);">0.21</div><div style="background:rgba(137,180,250,.35);padding:8px;border-radius:4px;color:var(--text-primary);">0.38</div><div style="background:rgba(137,180,250,.15);padding:8px;border-radius:4px;color:var(--text-primary);">-0.15</div><div style="background:rgba(137,180,250,.25);padding:8px;border-radius:4px;color:var(--text-primary);">-0.28</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><span style="font-size:10px;color:var(--text-dim);">正相关强度:</span> <span style="display:inline-block;width:12px;height:12px;background:rgba(243,139,168,.8);border-radius:2px;margin:0 2px;"></span> <span style="display:inline-block;width:12px;height:12px;background:rgba(243,139,168,.4);border-radius:2px;margin:0 2px;"></span> <span style="display:inline-block;width:12px;height:12px;background:rgba(243,139,168,.2);border-radius:2px;margin:0 2px;"></span> <span style="font-size:10px;color:var(--text-dim);margin-left:8px;">负相关:</span> <span style="display:inline-block;width:12px;height:12px;background:rgba(137,180,250,.4);border-radius:2px;margin:0 2px;"></span></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showCoVaRDetail(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">CoVaR 系统性风险详情</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:14px;margin-bottom:12px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">系统性风险指数 (ΔCoVaR)</div><div style="font-size:32px;font-family:'JetBrains Mono';color:var(--accent-red);font-weight:600;">0.68</div><div style="font-size:10px;color:var(--accent-red);margin-top:4px;">处于高风险区间</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><table class="data-table"><thead><tr><th>机构/市场</th><th>VaR(99%)</th><th>CoVaR</th><th>ΔCoVaR</th></tr></thead><tbody><tr><td class="name-col">沪深 300</td><td>2.34%</td><td>3.87%</td><td style="color:var(--accent-red)">+1.53%</td></tr><tr><td class="name-col">恒生指数</td><td>2.68%</td><td>4.12%</td><td style="color:var(--accent-red)">+1.44%</td></tr><tr><td class="name-col">原油</td><td>2.15%</td><td>3.54%</td><td style="color:var(--accent-yellow)">+1.39%</td></tr><tr><td class="name-col">USD/CNY</td><td>1.85%</td><td>3.12%</td><td style="color:var(--accent-yellow)">+1.27%</td></tr></tbody></table></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:6px;font-weight:500;">风险提示</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">A 股与港股相关性最高 (0.82)，在极端情景下容易产生共振下跌效应，建议重点关注跨境资金流动风险。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showCorrConfig(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">关联分析配置</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">监测市场配置</div><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">沪深 300</label><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">中债指数</label><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">USD/CNY</label><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">黄金</label><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">原油</label><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">恒生指数</label></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">滚动窗口设置</div><select style="width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"><option>滚动 60 日</option><option>滚动 30 日</option><option>滚动 90 日</option><option>滚动 120 日</option></select></div><div style="display:flex;gap:8px;"><button class="btn" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">取消</button><button class="btn primary" onclick="saveCorrConfig()" style="flex:1;">保存配置</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function saveCorrConfig(){
+      showToast('关联分析配置已保存','success');
+    }
+
+    function showTailCorrelation(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">尾部相关性分析</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">上尾相关性 (极端上涨期间)</div><table class="data-table"><thead><tr><th>市场</th><th>相关系数</th><th>显著性</th></tr></thead><tbody><tr><td class="name-col">沪深 300-恒生</td><td style="color:var(--accent-red)">0.89</td><td>***</td></tr><tr><td class="name-col">沪深 300-原油</td><td style="color:var(--accent-yellow)">0.52</td><td>**</td></tr><tr><td class="name-col">中债 - 黄金</td><td style="color:var(--accent-blue)">0.28</td><td>*</td></tr></tbody></table></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">下尾相关性 (极端下跌期间)</div><table class="data-table"><thead><tr><th>市场</th><th>相关系数</th><th>显著性</th></tr></thead><tbody><tr><td class="name-col">沪深 300-恒生</td><td style="color:var(--accent-red)">0.94</td><td>***</td></tr><tr><td class="name-col">沪深 300-原油</td><td style="color:var(--accent-red)">0.71</td><td>***</td></tr><tr><td class="name-col">中债 - 黄金</td><td style="color:var(--accent-mauve)">0.45</td><td>**</td></tr></tbody></table></div><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">分析结论</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">下尾相关性普遍高于上尾，表明市场在极端下跌期间更容易产生联动效应，需重点关注系统性风险传染。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showNetworkAnalysis(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:600px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">风险传染网络分析</span></div><div class="modal-body" style="padding:16px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">中心性指标</div><div style="font-size:24px;font-family:'JetBrains Mono';color:var(--accent-yellow);font-weight:600;">沪深 300</div><div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">网络中心度最高</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">传染强度</div><div style="font-size:24px;font-family:'JetBrains Mono';color:var(--accent-red);font-weight:600;">0.78</div><div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">高传染风险</div></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">风险传染路径</div><div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">沪深 300 → 恒生指数 (强度：0.82)<br>沪深 300 → 原油 (强度：0.65)<br>恒生指数 → USD/CNY(强度：0.48)</div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showContagionPath(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:600px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">风险传染路径分析</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">主要传染路径</div><table class="data-table"><thead><tr><th>传染路径</th><th>传染强度</th><th>延迟天数</th><th>风险等级</th></tr></thead><tbody><tr><td class="name-col">美股 → A股</td><td style="color:var(--accent-red)">0.85</td><td>1-2 天</td><td style="color:var(--accent-red)">极高</td></tr><tr><td class="name-col">港股 → A股</td><td style="color:var(--accent-red)">0.78</td><td>0-1 天</td><td style="color:var(--accent-red)">高</td></tr><tr><td class="name-col">原油 → 商品</td><td style="color:var(--accent-yellow)">0.62</td><td>2-3 天</td><td style="color:var(--accent-yellow)">中</td></tr><tr><td class="name-col">债市 → 股市</td><td style="color:var(--accent-blue)">0.45</td><td>3-5 天</td><td style="color:var(--accent-blue)">低</td></tr></tbody></table></div><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">传染分析</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">境外市场对A股传染效应显著，尤其是美股和港股的联动性较强。建议关注国际市场波动时的风险传染。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showCrisis预警(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">危机预警指标</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">系统性风险预警等级</div><div style="font-size:36px;font-family:'JetBrains Mono';color:var(--accent-yellow);font-weight:600;">橙色预警</div><div style="font-size:10px;color:var(--accent-yellow);margin-top:4px;">建议密切关注市场动态</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">预警指标明细</div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">VIX 指数</span><span style="font-family:'JetBrains Mono';color:var(--accent-red)">28.5 (偏高)</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">信用利差</span><span style="font-family:'JetBrains Mono';color:var(--accent-yellow)">185bp (关注)</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">流动性指标</span><span style="font-family:'JetBrains Mono';color:var(--accent-green)">正常</span></div><div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-secondary);">相关性异常</span><span style="font-family:'JetBrains Mono';color:var(--accent-yellow)">是</span></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    document.querySelectorAll('.toggle-switch').forEach(function(sw){sw.addEventListener('click',function(){this.classList.toggle('active');});});
+
+    function pushCorrAlert(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-bell" style="color:var(--accent-red);margin-right:8px;"></i>关联风险预警推送</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;"><i class="fas fa-check-circle" style="color:var(--accent-green);margin-right:8px;"></i>预警推送已发送</div><div style="font-size:11px;color:var(--text-secondary);">检测到 3 组异常关联主体</div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showCorrHistory(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-history" style="color:var(--accent-blue);margin-right:8px;"></i>历史关联回溯</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><table class="data-table"><thead><tr><th>时间</th><th>异常关联</th><th>相关性变化</th></tr></thead><tbody><tr><td class="name-col">2025-03-20</td><td>沪深 300-港股</td><td style="color:var(--accent-red)">+0.12</td></tr><tr><td class="name-col">2025-03-15</td><td>原油-商品</td><td style="color:var(--accent-yellow)">+0.08</td></tr></tbody></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showCorrForecast(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-chart-line" style="color:var(--accent-green);margin-right:8px;"></i>关联性预测</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">预测未来 30 天关联性变化</div><table class="data-table"><thead><tr><th>关联对</th><th>当前相关性</th><th>预测相关性</th></tr></thead><tbody><tr><td class="name-col">沪深 300-港股</td><td>0.82</td><td style="color:var(--accent-yellow)">0.85</td></tr><tr><td class="name-col">沪深 300-原油</td><td>0.58</td><td style="color:var(--accent-yellow)">0.62</td></tr></tbody></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+  </script>
+</body>
+</html>

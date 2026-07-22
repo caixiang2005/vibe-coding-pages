@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中华人民共和国民法典 - 智能普法多人联机互动学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#0EA5E9',
+                        accent: '#38BDF8',
+                        dark: '#020617',
+                        surface: '#020617',
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .macos-window { width: 1440px; min-height: 900px; background: #020617; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5); }
+        .traffic-lights { width: 12px; height: 12px; border-radius: 50%; }
+        .online-indicator { width: 8px; height: 8px; background: #10B981; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+        .toc-item { transition: all 0.2s ease; }
+        .toc-item:hover { background: rgba(37, 99, 235, 0.12); }
+        .toc-item.active { background: rgba(37, 99, 235, 0.2); color: #60A5FA; }
+        .toc-section.current > .toc-section-header { color: #60A5FA; border-left: 2px solid #2563EB; }
+        .article-block { transition: all 0.2s ease; }
+        .article-block:hover { background: rgba(255, 255, 255, 0.03); }
+        .article-block.highlighted { background: rgba(37, 99, 235, 0.08); border-left: 3px solid #2563EB; }
+        .search-highlight { background: rgba(234, 179, 8, 0.3); border-radius: 2px; padding: 0 2px; }
+        .ai-typing::after { content: '|'; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .chapter-children { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .chapter-children.open { max-height: 600px; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+    <div class="macos-window rounded-xl overflow-hidden">
+        <!-- macOS 标题栏 -->
+        <div class="bg-surface/80 backdrop-blur-xl px-5 py-3 flex items-center border-b border-white/5">
+            <div class="flex gap-2">
+                <div class="traffic-lights bg-red-500"></div>
+                <div class="traffic-lights bg-yellow-500"></div>
+                <div class="traffic-lights bg-green-500"></div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="text-sm font-medium text-white/80">智能普法多人联机互动学习系统</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10">
+                    <div class="online-indicator"></div>
+                    <span class="text-xs text-green-400 font-medium">1,247 人在线</span>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- 副标题栏: 返回 + 搜索 -->
+        <div class="bg-dark/95 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between">
+            <a href="law.html" class="flex items-center gap-2 text-white/60 hover:text-primary transition text-sm cursor-pointer">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>返回法规库</span>
+            </a>
+            <div class="relative" id="searchContainer">
+                <input type="text" id="searchInput" placeholder="在法条中搜索 (Ctrl+F)"
+                       class="w-72 bg-white/5 border border-white/10 rounded-lg px-4 py-1.5 pl-9 text-sm text-white placeholder-white/40 focus:outline-none focus:border-primary/50 transition">
+                <i data-lucide="search" class="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <div id="searchResults" class="hidden absolute right-0 top-full mt-1 text-xs text-white/50 bg-dark/90 px-3 py-1 rounded">
+                    <span id="searchCount">0</span> 条匹配
+                </div>
+            </div>
+        </div>
+
+        <!-- 三栏主内容 -->
+        <div class="flex" style="height: 808px;">
+            <!-- 左侧目录导航 -->
+            <div class="w-64 bg-surface/40 border-r border-white/5 overflow-y-auto scrollbar-thin">
+                <div class="p-4">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i data-lucide="scale" class="w-5 h-5 text-primary"></i>
+                        <h2 class="text-sm font-bold text-white">中华人民共和国民法典</h2>
+                    </div>
+                    <p class="text-xs text-white/40 mb-4 px-1">2021年1月1日施行 · 共1260条</p>
+
+                    <!-- 目录树 -->
+                    <div class="space-y-0.5" id="tocTree">
+                        <!-- 第一编 总则 -->
+                        <div class="toc-section" data-section="1">
+                            <div class="toc-section-header flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-white/70 hover:text-white/90 transition text-sm" onclick="toggleSection(this)">
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 toc-chevron transition-transform"></i>
+                                <span class="font-medium">第一编 总则</span>
+                            </div>
+                            <div class="chapter-children pl-5 space-y-0.5">
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('1-1')">第一章 基本规定 <span class="text-white/30">(第1-12条)</span></div>
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('1-2')">第二章 自然人 <span class="text-white/30">(第13-56条)</span></div>
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('1-3')">第三章 法人 <span class="text-white/30">(第57-101条)</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 第二编 物权 -->
+                        <div class="toc-section" data-section="2">
+                            <div class="toc-section-header flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-white/70 hover:text-white/90 transition text-sm" onclick="toggleSection(this)">
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 toc-chevron transition-transform"></i>
+                                <span class="font-medium">第二编 物权</span>
+                            </div>
+                            <div class="chapter-children pl-5 space-y-0.5">
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('2-1')">第一分编 通则</div>
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('2-2')">第二分编 所有权</div>
+                            </div>
+                        </div>
+
+                        <!-- 第三编 合同 -->
+                        <div class="toc-section" data-section="3">
+                            <div class="toc-section-header flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-white/70 hover:text-white/90 transition text-sm" onclick="toggleSection(this)">
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 toc-chevron transition-transform"></i>
+                                <span class="font-medium">第三编 合同</span>
+                            </div>
+                            <div class="chapter-children pl-5 space-y-0.5">
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('3-1')">第一分编 通则</div>
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('3-2')">第二分编 典型合同</div>
+                            </div>
+                        </div>
+
+                        <!-- 第四编 人格权 -->
+                        <div class="toc-section" data-section="4">
+                            <div class="toc-section-header flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-white/70 hover:text-white/90 transition text-sm" onclick="toggleSection(this)">
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 toc-chevron transition-transform"></i>
+                                <span class="font-medium">第四编 人格权</span>
+                            </div>
+                            <div class="chapter-children pl-5 space-y-0.5">
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('4-1')">第一章 一般规定</div>
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('4-2')">第二章 生命权等</div>
+                            </div>
+                        </div>
+
+                        <!-- 第五编 婚姻家庭 (当前) -->
+                        <div class="toc-section current" data-section="5">
+                            <div class="toc-section-header flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-semibold" onclick="toggleSection(this)">
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 toc-chevron transition-transform rotate-0"></i>
+                                <span>第五编 婚姻家庭</span>
+                            </div>
+                            <div class="chapter-children open pl-5 space-y-0.5">
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('5-1')">第一章 一般规定 <span class="text-white/30">(第1040-1045条)</span></div>
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('5-2')">第二章 结婚 <span class="text-white/30">(第1046-1054条)</span></div>
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('5-3')">第三章 家庭关系 <span class="text-white/30">(第1055-1075条)</span></div>
+                                <div class="toc-item active px-3 py-1.5 rounded text-xs cursor-pointer font-medium" onclick="navigateToChapter('5-4')">第四章 离婚 <span class="text-white/30">(第1076-1092条)</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 第六编 继承 -->
+                        <div class="toc-section" data-section="6">
+                            <div class="toc-section-header flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-white/70 hover:text-white/90 transition text-sm" onclick="toggleSection(this)">
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 toc-chevron transition-transform"></i>
+                                <span class="font-medium">第六编 继承</span>
+                            </div>
+                            <div class="chapter-children pl-5 space-y-0.5">
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('6-1')">第一章 一般规定</div>
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('6-2')">第二章 法定继承</div>
+                            </div>
+                        </div>
+
+                        <!-- 第七编 侵权责任 -->
+                        <div class="toc-section" data-section="7">
+                            <div class="toc-section-header flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-white/70 hover:text-white/90 transition text-sm" onclick="toggleSection(this)">
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 toc-chevron transition-transform"></i>
+                                <span class="font-medium">第七编 侵权责任</span>
+                            </div>
+                            <div class="chapter-children pl-5 space-y-0.5">
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('7-1')">第一章 一般规定</div>
+                                <div class="toc-item px-3 py-1.5 rounded text-xs text-white/50 cursor-pointer" onclick="navigateToChapter('7-2')">第二章 损害赔偿</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中间阅读区 -->
+            <div class="flex-1 overflow-y-auto scrollbar-thin" id="contentArea">
+                <!-- 章节标题 + 字体控制 -->
+                <div class="sticky top-0 bg-dark/95 backdrop-blur-xl border-b border-white/5 px-8 py-3 z-10 flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-white/50">第五编 婚姻家庭</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-white/30"></i>
+                        <span class="text-white font-semibold">第四章 离婚</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="changeFontSize(-1)" class="px-2.5 py-1 rounded text-xs text-white/50 hover:bg-white/10 hover:text-white transition font-medium">A-</button>
+                        <button onclick="changeFontSize(0)" class="px-2.5 py-1 rounded text-xs text-white/70 hover:bg-white/10 hover:text-white transition font-semibold bg-white/5">A</button>
+                        <button onclick="changeFontSize(1)" class="px-2.5 py-1 rounded text-xs text-white/50 hover:bg-white/10 hover:text-white transition font-medium text-base">A+</button>
+                    </div>
+                </div>
+
+                <!-- 法条内容 -->
+                <div class="p-8 space-y-6" id="articlesContainer">
+                    <!-- 第1076条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1076" data-article="1076">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零七十六条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1076')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">夫妻双方自愿离婚的，应当签订书面离婚协议，并亲自到婚姻登记机关申请离婚登记。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">离婚协议应当载明双方自愿离婚的意思表示和对子女抚养、财产以及债务处理等事项协商一致的意见。</p>
+                    </div>
+
+                    <!-- 第1077条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1077" data-article="1077">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零七十七条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1077')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">自婚姻登记机关收到离婚登记申请之日起三十日内，任何一方不愿意离婚的，可以向婚姻登记机关撤回离婚登记申请。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">前款规定期限届满后三十日内，双方应当亲自到婚姻登记机关申请发给离婚证；未申请的，视为撤回离婚登记申请。</p>
+                    </div>
+
+                    <!-- 第1078条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1078" data-article="1078">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零七十八条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1078')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">婚姻登记机关查明双方确实是自愿离婚，并已经对子女抚养、财产以及债务处理等事项协商一致的，予以登记，发给离婚证。</p>
+                    </div>
+
+                    <!-- 第1079条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1079" data-article="1079">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零七十九条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1079')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">夫妻一方要求离婚的，可以由有关组织进行调解或者直接向人民法院提起离婚诉讼。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">人民法院审理离婚案件，应当进行调解；如果感情确已破裂，调解无效的，应当准予离婚。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">有下列情形之一，调解无效的，应当准予离婚：</p>
+                        <ul class="article-text text-white/80 leading-relaxed mt-2 ml-5 space-y-1 list-none">
+                            <li class="flex gap-2"><span class="text-white/40">（一）</span><span>重婚或者与他人同居；</span></li>
+                            <li class="flex gap-2"><span class="text-white/40">（二）</span><span>实施家庭暴力或者虐待、遗弃家庭成员；</span></li>
+                            <li class="flex gap-2"><span class="text-white/40">（三）</span><span>有赌博、吸毒等恶习屡教不改；</span></li>
+                            <li class="flex gap-2"><span class="text-white/40">（四）</span><span>因感情不和分居满二年；</span></li>
+                            <li class="flex gap-2"><span class="text-white/40">（五）</span><span>其他导致夫妻感情破裂的情形。</span></li>
+                        </ul>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">一方被宣告失踪，另一方提起离婚诉讼的，应当准予离婚。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">经人民法院判决不准离婚后，双方又分居满一年，一方再次提起离婚诉讼的，应当准予离婚。</p>
+                    </div>
+
+                    <!-- 第1080条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1080" data-article="1080">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零八十条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1080')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">完成离婚登记，或者离婚判决书、调解书生效，即解除婚姻关系。</p>
+                    </div>
+
+                    <!-- 第1081条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1081" data-article="1081">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零八十一条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1081')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">现役军人的配偶要求离婚，应当征得军人同意，但是军人一方有重大过错的除外。</p>
+                    </div>
+
+                    <!-- 第1082条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1082" data-article="1082">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零八十二条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1082')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">女方在怀孕期间、分娩后一年内或者终止妊娠后六个月内，男方不得提出离婚；但是，女方提出离婚或者人民法院认为确有必要受理男方离婚请求的除外。</p>
+                    </div>
+
+                    <!-- 第1083条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1083" data-article="1083">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零八十三条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1083')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">离婚后，男女双方自愿恢复婚姻关系的，应当到婚姻登记机关重新进行结婚登记。</p>
+                    </div>
+
+                    <!-- 第1084条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1084" data-article="1084">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零八十四条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1084')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">父母与子女间的关系，不因父母离婚而消除。离婚后，子女无论由父或者母直接抚养，仍是父母双方的子女。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">离婚后，父母对于子女仍有抚养、教育、保护的权利和义务。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">离婚后，不满两周岁的子女，以由母亲直接抚养为原则。已满两周岁的子女，父母双方对抚养问题协议不成的，由人民法院根据双方的具体情况，按照最有利于未成年子女的原则判决。子女已满八周岁的，应当尊重其真实意愿。</p>
+                    </div>
+
+                    <!-- 第1085条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1085" data-article="1085">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零八十五条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1085')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">离婚后，子女由一方直接抚养的，另一方应当负担部分或者全部抚养费。负担费用的多少和期限的长短，由双方协议；协议不成的，由人民法院判决。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">前款规定的协议或者判决，不妨碍子女在必要时向父母任何一方提出超过协议或者判决原定数额的合理要求。</p>
+                    </div>
+
+                    <!-- 第1086条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1086" data-article="1086">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零八十六条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1086')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">离婚后，不直接抚养子女的父或者母，有探望子女的权利，另一方有协助的义务。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">行使探望权利的方式、时间由当事人协议；协议不成的，由人民法院判决。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">父或者母探望子女，不利于子女身心健康的，由人民法院依法中止探望；中止的事由消失后，应当恢复探望。</p>
+                    </div>
+
+                    <!-- 第1087条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1087" data-article="1087">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零八十七条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1087')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">离婚时，夫妻的共同财产由双方协议处理；协议不成的，由人民法院根据财产的具体情况，按照照顾子女、女方和无过错方权益的原则判决。</p>
+                        <p class="article-text text-white/80 leading-relaxed mt-2">对夫或者妻在家庭土地承包经营中享有的权益等，应当依法予以保护。</p>
+                    </div>
+
+                    <!-- 第1088条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1088" data-article="1088">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零八十八条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1088')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">夫妻一方因抚育子女、照料老年人、协助另一方工作等负担较多义务的，离婚时有权向另一方请求补偿，另一方应当给予补偿。具体办法由双方协议；协议不成的，由人民法院判决。</p>
+                    </div>
+
+                    <!-- 第1089条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1089" data-article="1089">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零八十九条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1089')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">离婚时，夫妻共同债务应当共同偿还。共同财产不足清偿或者财产归各自所有的，由双方协议清偿；协议不成的，由人民法院判决。</p>
+                    </div>
+
+                    <!-- 第1090条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1090" data-article="1090">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零九十条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1090')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">离婚时，如果一方生活困难，有负担能力的另一方应当给予适当帮助。具体办法由双方协议；协议不成的，由人民法院判决。</p>
+                    </div>
+
+                    <!-- 第1091条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1091" data-article="1091">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零九十一条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1091')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">有下列情形之一，导致离婚的，无过错方有权请求损害赔偿：</p>
+                        <ul class="article-text text-white/80 leading-relaxed mt-2 ml-5 space-y-1 list-none">
+                            <li class="flex gap-2"><span class="text-white/40">（一）</span><span>重婚；</span></li>
+                            <li class="flex gap-2"><span class="text-white/40">（二）</span><span>与他人同居；</span></li>
+                            <li class="flex gap-2"><span class="text-white/40">（三）</span><span>实施家庭暴力；</span></li>
+                            <li class="flex gap-2"><span class="text-white/40">（四）</span><span>虐待、遗弃家庭成员；</span></li>
+                            <li class="flex gap-2"><span class="text-white/40">（五）</span><span>有其他重大过错。</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- 第1092条 -->
+                    <div class="article-block rounded-xl p-5 group" id="art-1092" data-article="1092">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-primary font-bold text-sm">第一千零九十二条</h3>
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="toggleBookmark(this)" title="收藏" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="toggleHighlight(this)" title="高亮" class="p-1.5 rounded-lg hover:bg-white/10 transition">
+                                    <i data-lucide="highlighter" class="w-4 h-4 text-white/40"></i>
+                                </button>
+                                <button onclick="showAIAnalysis('1092')" title="AI解读" class="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-xs font-medium transition flex items-center gap-1">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i> AI解读
+                                </button>
+                            </div>
+                        </div>
+                        <p class="article-text text-white/80 leading-relaxed">夫妻一方隐藏、转移、变卖、毁损、挥霍夫妻共同财产，或者伪造夫妻共同债务企图侵占另一方财产的，在离婚分割夫妻共同财产时，对该方可以少分或者不分。离婚后，另一方发现有上述行为的，可以向人民法院提起诉讼，请求再次分割夫妻共同财产。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧AI工具与注解 -->
+            <div class="w-80 bg-surface/40 border-l border-white/5 overflow-y-auto scrollbar-thin">
+                <div class="p-5 space-y-5">
+                    <!-- AI智能解读 -->
+                    <div class="glass-card rounded-xl p-5" id="aiPanel">
+                        <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-5 h-5 text-primary"></i>
+                            AI智能解读
+                        </h3>
+                        <div id="aiContent">
+                            <div class="mb-3">
+                                <span class="text-xs text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded">第1077条 · 离婚冷静期</span>
+                            </div>
+                            <div class="space-y-3 text-sm">
+                                <div>
+                                    <h4 class="text-white/90 font-semibold mb-1.5 flex items-center gap-1.5">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5 text-secondary"></i>
+                                        条文释义
+                                    </h4>
+                                    <p class="text-white/60 leading-relaxed text-xs">本条规定了"离婚冷静期"制度。自婚姻登记机关收到离婚登记申请之日起30日内为冷静期，任何一方可以撤回申请。冷静期届满后30日内，双方须亲自到场申请发给离婚证，否则视为撤回。</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-white/90 font-semibold mb-1.5 flex items-center gap-1.5">
+                                        <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-yellow-400"></i>
+                                        立法目的
+                                    </h4>
+                                    <p class="text-white/60 leading-relaxed text-xs">防止冲动离婚，给予双方理性思考的时间。通过设置冷静期，减少因一时冲动或外界压力导致的草率离婚，保护婚姻家庭稳定。</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-white/90 font-semibold mb-1.5 flex items-center gap-1.5">
+                                        <i data-lucide="briefcase" class="w-3.5 h-3.5 text-green-400"></i>
+                                        实务要点
+                                    </h4>
+                                    <p class="text-white/60 leading-relaxed text-xs">冷静期仅适用于协议离婚（登记离婚），不适用于诉讼离婚。存在家庭暴力等情形时，当事人可以直接提起离婚诉讼，不受冷静期限制。</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-white/90 font-semibold mb-1.5 flex items-center gap-1.5">
+                                        <i data-lucide="book-open" class="w-3.5 h-3.5 text-purple-400"></i>
+                                        相关司法解释
+                                    </h4>
+                                    <p class="text-white/60 leading-relaxed text-xs">《最高人民法院关于适用〈中华人民共和国民法典〉婚姻家庭编的解释(一)》对离婚冷静期的具体适用作出了进一步细化规定。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 我的笔记 -->
+                    <div class="glass-card rounded-xl p-5">
+                        <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="pencil" class="w-5 h-5 text-primary"></i>
+                            我的笔记
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-white/5 rounded-lg border-l-2 border-yellow-500/50">
+                                <p class="text-xs text-white/70 leading-relaxed">第1077条：离婚冷静期是民法典新增制度，注意只适用于协议离婚，家暴案件可直接诉讼离婚。</p>
+                                <p class="text-xs text-white/30 mt-2">2026-03-20 添加</p>
+                            </div>
+                            <div class="p-3 bg-white/5 rounded-lg border-l-2 border-blue-500/50">
+                                <p class="text-xs text-white/70 leading-relaxed">第1084条：子女抚养问题要掌握"两周岁""八周岁"两个关键年龄节点。</p>
+                                <p class="text-xs text-white/30 mt-2">2026-03-19 添加</p>
+                            </div>
+                        </div>
+                        <button class="w-full mt-3 py-2 border border-dashed border-white/10 rounded-lg text-xs text-white/40 hover:text-white/60 hover:border-white/20 transition flex items-center justify-center gap-1">
+                            <i data-lucide="plus" class="w-3 h-3"></i> 添加笔记
+                        </button>
+                    </div>
+
+                    <!-- 相关案例 -->
+                    <div class="glass-card rounded-xl p-5">
+                        <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="gavel" class="w-5 h-5 text-primary"></i>
+                            相关案例
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="text-xs text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded">指导案例</span>
+                                </div>
+                                <p class="text-xs text-white/80 font-medium mb-1">王某与李某离婚纠纷案</p>
+                                <p class="text-xs text-white/50 leading-relaxed">涉及离婚冷静期内一方撤回申请的效力认定，法院认定冷静期内单方撤回有效。</p>
+                                <p class="text-xs text-white/30 mt-1.5">(2023)最高法民申1234号</p>
+                            </div>
+                            <div class="p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="text-xs text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">典型案例</span>
+                                </div>
+                                <p class="text-xs text-white/80 font-medium mb-1">张某诉赵某离婚后财产纠纷案</p>
+                                <p class="text-xs text-white/50 leading-relaxed">一方隐藏转移夫妻共同财产，法院判决对该方少分财产并支持另一方损害赔偿请求。</p>
+                                <p class="text-xs text-white/30 mt-1.5">(2022)京03民终5678号</p>
+                            </div>
+                            <div class="p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="text-xs text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded">参考案例</span>
+                                </div>
+                                <p class="text-xs text-white/80 font-medium mb-1">刘某与陈某抚养权变更纠纷案</p>
+                                <p class="text-xs text-white/50 leading-relaxed">离婚后子女已满八周岁，法院尊重子女真实意愿变更抚养权归属。</p>
+                                <p class="text-xs text-white/30 mt-1.5">(2023)沪01民终9012号</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 学习进度 -->
+                    <div class="glass-card rounded-xl p-5">
+                        <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 text-primary"></i>
+                            学习进度
+                        </h3>
+                        <div class="mb-3">
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="text-white/60">《民法典》整体进度</span>
+                                <span class="text-primary font-semibold">71%</span>
+                            </div>
+                            <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 71%"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center justify-between">
+                                <span class="text-white/50">已学习到</span>
+                                <span class="text-white/80 font-medium">第五编 婚姻家庭</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-white/50">已读条文</span>
+                                <span class="text-white/80 font-medium">892 / 1260 条</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-white/50">学习时长</span>
+                                <span class="text-white/80 font-medium">36.5 小时</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-white/50">笔记数量</span>
+                                <span class="text-white/80 font-medium">24 条</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-white/5 flex gap-2">
+                            <div class="flex-1 text-center p-2 bg-green-500/10 rounded-lg">
+                                <p class="text-green-400 font-bold text-sm">5</p>
+                                <p class="text-white/40 text-xs">已完成编</p>
+                            </div>
+                            <div class="flex-1 text-center p-2 bg-primary/10 rounded-lg">
+                                <p class="text-primary font-bold text-sm">1</p>
+                                <p class="text-white/40 text-xs">进行中</p>
+                            </div>
+                            <div class="flex-1 text-center p-2 bg-white/5 rounded-lg">
+                                <p class="text-white/60 font-bold text-sm">1</p>
+                                <p class="text-white/40 text-xs">未开始</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        lucide.createIcons();
+        initSearch();
+    });
+
+    // --- 目录折叠/展开 ---
+    function toggleSection(header) {
+        const section = header.closest('.toc-section');
+        const children = section.querySelector('.chapter-children');
+        const chevron = header.querySelector('.toc-chevron');
+        if (children.classList.contains('open')) {
+            children.classList.remove('open');
+            chevron.style.transform = 'rotate(0deg)';
+        } else {
+            children.classList.add('open');
+            chevron.style.transform = 'rotate(90deg)';
+        }
+        // Re-render icons after toggling
+        lucide.createIcons();
+    }
+
+    // --- 章节导航 ---
+    function navigateToChapter(chapterId) {
+        // 更新目录高亮
+        document.querySelectorAll('.toc-item').forEach(el => el.classList.remove('active'));
+        event.target.closest('.toc-item')?.classList.add('active');
+        // 滚动到内容区顶部 (模拟)
+        document.getElementById('contentArea').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- 字体大小 ---
+    let currentFontSize = 14;
+    const fontSizes = [12, 13, 14, 15, 16, 17, 18];
+    let fontIndex = 2;
+
+    function changeFontSize(dir) {
+        if (dir === 0) { fontIndex = 2; }
+        else if (dir === 1 && fontIndex < fontSizes.length - 1) { fontIndex++; }
+        else if (dir === -1 && fontIndex > 0) { fontIndex--; }
+        currentFontSize = fontSizes[fontIndex];
+        document.querySelectorAll('.article-text').forEach(el => {
+            el.style.fontSize = currentFontSize + 'px';
+        });
+    }
+
+    // --- 收藏切换 ---
+    function toggleBookmark(btn) {
+        const icon = btn.querySelector('i');
+        const isBookmarked = btn.classList.toggle('bookmarked');
+        if (isBookmarked) {
+            icon.setAttribute('data-lucide', 'bookmark-check');
+            icon.classList.remove('text-white/40');
+            icon.classList.add('text-yellow-400');
+        } else {
+            icon.setAttribute('data-lucide', 'bookmark');
+            icon.classList.remove('text-yellow-400');
+            icon.classList.add('text-white/40');
+        }
+        lucide.createIcons();
+    }
+
+    // --- 高亮切换 ---
+    function toggleHighlight(btn) {
+        const block = btn.closest('.article-block');
+        block.classList.toggle('highlighted');
+        const icon = btn.querySelector('i');
+        if (block.classList.contains('highlighted')) {
+            icon.classList.remove('text-white/40');
+            icon.classList.add('text-yellow-400');
+        } else {
+            icon.classList.remove('text-yellow-400');
+            icon.classList.add('text-white/40');
+        }
+    }
+
+    // --- AI解读 ---
+    const aiData = {
+        '1076': {
+            tag: '第1076条 · 协议离婚',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '本条规定了协议离婚的基本要求：一是双方自愿；二是签订书面离婚协议；三是亲自到婚姻登记机关申请。离婚协议必须包含自愿离婚的意思表示及子女抚养、财产和债务处理的一致意见。' },
+                { icon: 'lightbulb', color: 'text-yellow-400', title: '立法目的', text: '确保离婚行为的严肃性和真实性，通过书面协议和亲自到场的要求，防止一方被胁迫或欺骗离婚，保障双方的合法权益。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '离婚协议中关于财产分割和子女抚养的约定，在双方取得离婚证后具有法律效力。但若存在欺诈、胁迫等情形，受损害方可在离婚后一年内请求撤销。' }
+            ]
+        },
+        '1077': {
+            tag: '第1077条 · 离婚冷静期',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '本条规定了"离婚冷静期"制度。自婚姻登记机关收到离婚登记申请之日起30日内为冷静期，任何一方可以撤回申请。冷静期届满后30日内，双方须亲自到场申请发给离婚证，否则视为撤回。' },
+                { icon: 'lightbulb', color: 'text-yellow-400', title: '立法目的', text: '防止冲动离婚，给予双方理性思考的时间。通过设置冷静期，减少因一时冲动或外界压力导致的草率离婚，保护婚姻家庭稳定。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '冷静期仅适用于协议离婚（登记离婚），不适用于诉讼离婚。存在家庭暴力等情形时，当事人可以直接提起离婚诉讼，不受冷静期限制。' },
+                { icon: 'book-open', color: 'text-purple-400', title: '相关司法解释', text: '《最高人民法院关于适用〈中华人民共和国民法典〉婚姻家庭编的解释(一)》对离婚冷静期的具体适用作出了进一步细化规定。' }
+            ]
+        },
+        '1078': {
+            tag: '第1078条 · 离婚登记',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '本条规定了婚姻登记机关办理离婚登记的实质审查要件：确认双方自愿离婚，且已就子女抚养、财产及债务处理达成一致。符合条件的，予以登记并发给离婚证。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '婚姻登记机关应当进行实质审查而非形式审查，确保双方的离婚意愿是真实的，相关协议内容不违反法律强制性规定。' }
+            ]
+        },
+        '1079': {
+            tag: '第1079条 · 诉讼离婚',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '本条规定了诉讼离婚的条件和程序。法院审理离婚案件应先调解，感情破裂且调解无效的准予离婚。列举了五种应准予离婚的法定情形，并规定了失踪情形和二次诉讼的特殊规则。' },
+                { icon: 'lightbulb', color: 'text-yellow-400', title: '立法目的', text: '明确"感情破裂"的判断标准，列举典型情形为司法实践提供指引，同时保留兜底条款以适应社会发展需要。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '第一次起诉离婚被判不准后，双方又分居满一年，再次起诉的应当准予离婚。这是民法典新增的规定，有效解决了久调不判的问题。' }
+            ]
+        },
+        '1080': {
+            tag: '第1080条 · 婚姻关系解除',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '本条明确了婚姻关系解除的时间节点：登记离婚以完成离婚登记为准；诉讼离婚以判决书或调解书生效为准。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '判决书需经过上诉期（15日）后生效，调解书经双方签收后即生效。当事人在判决书上诉期内提起上诉的，婚姻关系不解除。' }
+            ]
+        },
+        '1081': {
+            tag: '第1081条 · 军婚保护',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '本条规定了军婚特殊保护制度。现役军人配偶提出离婚须征得军人同意，但军人一方有重大过错的除外，体现了对国防利益的保护。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '"重大过错"包括重婚、同居、家暴、虐待遗弃等情形。这一但书条款平衡了军婚保护与配偶合法权益之间的关系。' }
+            ]
+        },
+        '1082': {
+            tag: '第1082条 · 限制离婚期间',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '本条限制男方在特定期间提出离婚：女方怀孕期间、分娩后一年内或终止妊娠后六个月内。但女方提出离婚或法院认为有必要受理的除外。' },
+                { icon: 'lightbulb', color: 'text-yellow-400', title: '立法目的', text: '保护处于特殊生理时期的女方权益，避免在身体和心理脆弱期承受离婚压力。' }
+            ]
+        },
+        '1083': {
+            tag: '第1083条 · 复婚',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '本条规定离婚后双方自愿恢复婚姻关系的，须重新办理结婚登记。复婚不是恢复原婚姻关系，而是建立新的婚姻关系。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '复婚后，离婚时分割的财产属于婚前个人财产，除非双方另有约定。复婚后取得的财产为新的夫妻共同财产。' }
+            ]
+        },
+        '1084': {
+            tag: '第1084条 · 子女抚养',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '本条确立了离婚后子女抚养的基本原则：不满两周岁以母亲抚养为原则；已满两周岁的由法院按最有利于未成年子女原则判决；已满八周岁的应尊重其真实意愿。' },
+                { icon: 'lightbulb', color: 'text-yellow-400', title: '立法目的', text: '以儿童利益最大化为核心，根据不同年龄段特点设置差异化规则，充分保障未成年子女的合法权益。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '两周岁和八周岁是两个关键节点。实务中法院会综合考虑父母的经济条件、生活环境、与子女的感情亲密程度等因素。' }
+            ]
+        },
+        '1085': {
+            tag: '第1085条 · 抚养费',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '不直接抚养子女的一方应负担部分或全部抚养费。数额和期限先由双方协议，协议不成由法院判决。子女在必要时可要求增加抚养费。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '抚养费一般按月收入的20%-30%确定，抚养两个以上子女的不超过50%。"必要时"包括患病、上学等导致实际需要增加的情形。' }
+            ]
+        },
+        '1086': {
+            tag: '第1086条 · 探望权',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '不直接抚养子女的一方享有探望权，另一方有协助义务。探望方式和时间由双方协议或法院判决。不利于子女身心健康的可中止探望。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '探望权是法定权利，直接抚养方不得无故阻挠。中止探望须经法院裁定，常见情形包括探望方有吸毒、暴力等行为。' }
+            ]
+        },
+        '1087': {
+            tag: '第1087条 · 财产分割',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '离婚时共同财产先协议处理，协议不成由法院判决。法院应照顾子女、女方和无过错方权益。对土地承包经营权益应依法保护。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '民法典新增"照顾无过错方"原则，加强了对婚姻中无过错方的保护。实务中过错方可能被判少分财产。' }
+            ]
+        },
+        '1088': {
+            tag: '第1088条 · 家务劳动补偿',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '因抚育子女、照料老人、协助工作等承担较多义务的一方，离婚时有权请求补偿。取消了原婚姻法中"约定财产制"的前提限制。' },
+                { icon: 'lightbulb', color: 'text-yellow-400', title: '立法目的', text: '承认家务劳动的价值，保护在家庭中付出较多的一方（通常是女性）的权益，实现实质公平。' }
+            ]
+        },
+        '1089': {
+            tag: '第1089条 · 共同债务清偿',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '夫妻共同债务应共同偿还。共同财产不足以清偿或财产各自所有时，由双方协议或法院判决清偿方案。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '认定共同债务需结合民法典第1064条，须证明债务用于共同生活、共同经营或基于双方合意。一方超出日常生活需要所负债务原则上为个人债务。' }
+            ]
+        },
+        '1090': {
+            tag: '第1090条 · 经济帮助',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '离婚时一方生活困难的，有负担能力的另一方应给予适当帮助。这是基于婚姻关系存续期间形成的特殊义务。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '"生活困难"一般指依靠个人财产和离婚分得的财产无法维持当地基本生活水平。帮助形式可以是一次性经济帮助、房屋居住权等。' }
+            ]
+        },
+        '1091': {
+            tag: '第1091条 · 离婚损害赔偿',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '列举了五种可请求损害赔偿的法定情形：重婚、同居、家暴、虐待遗弃及其他重大过错。民法典新增"其他重大过错"兜底条款。' },
+                { icon: 'lightbulb', color: 'text-yellow-400', title: '立法目的', text: '通过损害赔偿制度制裁过错方，保护无过错方的合法权益。兜底条款的增加使保护范围更加周全。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '损害赔偿包括物质损害赔偿和精神损害赔偿。无过错方须在离婚诉讼中提出或在离婚后一年内单独提起。' }
+            ]
+        },
+        '1092': {
+            tag: '第1092条 · 转移财产制裁',
+            sections: [
+                { icon: 'file-text', color: 'text-secondary', title: '条文释义', text: '一方隐藏、转移、变卖、毁损、挥霍共同财产或伪造共同债务的，分割时可少分或不分。离婚后发现的，可另行起诉请求再次分割。' },
+                { icon: 'lightbulb', color: 'text-yellow-400', title: '立法目的', text: '民法典新增"挥霍"情形，加大了对恶意减少夫妻共同财产行为的制裁力度，维护诚实信用原则。' },
+                { icon: 'briefcase', color: 'text-green-400', title: '实务要点', text: '举证责任在主张一方，可通过银行流水、财产转移记录等证据证明。再次分割不受诉讼时效限制，但应在发现后及时主张。' }
+            ]
+        }
+    };
+
+    function showAIAnalysis(articleNum) {
+        const data = aiData[articleNum];
+        if (!data) return;
+
+        // 高亮选中的法条
+        document.querySelectorAll('.article-block').forEach(b => b.classList.remove('highlighted'));
+        const block = document.getElementById('art-' + articleNum);
+        if (block) {
+            block.classList.add('highlighted');
+            block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        const aiContent = document.getElementById('aiContent');
+        let html = `<div class="mb-3"><span class="text-xs text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded">${data.tag}</span></div><div class="space-y-3 text-sm">`;
+        data.sections.forEach(s => {
+            html += `<div>
+                <h4 class="text-white/90 font-semibold mb-1.5 flex items-center gap-1.5">
+                    <i data-lucide="${s.icon}" class="w-3.5 h-3.5 ${s.color}"></i>
+                    ${s.title}
+                </h4>
+                <p class="text-white/60 leading-relaxed text-xs">${s.text}</p>
+            </div>`;
+        });
+        html += '</div>';
+        aiContent.innerHTML = html;
+        lucide.createIcons();
+
+        // 滚动AI面板到可见
+        document.getElementById('aiPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // --- 搜索功能 ---
+    function initSearch() {
+        const input = document.getElementById('searchInput');
+        const resultsDiv = document.getElementById('searchResults');
+        const countSpan = document.getElementById('searchCount');
+
+        input.addEventListener('input', function() {
+            const query = this.value.trim();
+            // 清除旧高亮
+            document.querySelectorAll('.search-highlight').forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+
+            if (!query) {
+                resultsDiv.classList.add('hidden');
+                return;
+            }
+
+            let count = 0;
+            const articles = document.querySelectorAll('.article-text');
+            articles.forEach(el => {
+                const text = el.textContent;
+                const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                if (regex.test(text)) {
+                    // Highlight matches
+                    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+                    const textNodes = [];
+                    while (walker.nextNode()) textNodes.push(walker.currentNode);
+                    textNodes.forEach(node => {
+                        const r = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                        if (r.test(node.textContent)) {
+                            const span = document.createElement('span');
+                            span.innerHTML = node.textContent.replace(new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), match => {
+                                count++;
+                                return `<span class="search-highlight">${match}</span>`;
+                            });
+                            node.parentNode.replaceChild(span, node);
+                        }
+                    });
+                }
+            });
+
+            countSpan.textContent = count;
+            resultsDiv.classList.remove('hidden');
+        });
+
+        // Ctrl+F shortcut
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                input.focus();
+                input.select();
+            }
+        });
+    }
+    </script>
+</body>
+</html>

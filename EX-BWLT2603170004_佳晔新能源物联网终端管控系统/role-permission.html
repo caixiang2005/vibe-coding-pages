@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佳晔新能源物联网终端管控系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: #0a1628; color: #fff; overflow: hidden; height: 100vh; }
+        .title-bar { height: 32px; background: linear-gradient(180deg, #1a2a4a 0%, #0d1a30 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #1e3a5f; }
+        .title-bar-left { display: flex; align-items: center; gap: 8px; }
+        .title-bar-icon { width: 16px; height: 16px; background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); border-radius: 2px; }
+        .title-bar-text { font-size: 12px; color: #a0c4e8; }
+        .title-bar-controls { display: flex; height: 100%; }
+        .title-bar-btn { width: 46px; height: 100%; border: none; background: transparent; color: #a0c4e8; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .title-bar-btn:hover { background: rgba(255,255,255,0.1); }
+        .title-bar-btn.close:hover { background: #e81123; color: #fff; }
+        .title-bar-btn svg { width: 10px; height: 10px; }
+        .maximize-icon { width: 10px; height: 10px; border: 1px solid #a0c4e8; background: transparent; }
+        .main-container { height: calc(100vh - 32px); display: flex; flex-direction: column; }
+        .nav-bar { height: 50px; background: linear-gradient(180deg, #0d2040 0%, #081830 100%); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #1e4a7a; position: relative; }
+        .nav-tabs { display: flex; gap: 4px; }
+        .nav-tab { padding: 8px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px 4px 0 0; color: #7ab8e0; cursor: pointer; font-size: 14px; transition: all 0.2s; text-decoration: none; }
+        .nav-tab:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); color: #9ad8ff; }
+        .nav-tab.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 15px; }
+        .nav-btn { padding: 6px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .nav-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; color: #9ad8ff; }
+        .content-area { flex: 1; display: flex; overflow: hidden; }
+        .left-panel { width: 200px; padding: 15px 10px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #1e4a7a; }
+        .menu-btn { padding: 12px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .menu-btn i { width: 16px; text-align: center; }
+        .menu-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; }
+        .menu-btn.active { background: linear-gradient(180deg, #006699 0%, #004466 100%); border-color: #00aadd; color: #fff; }
+        .main-content { flex: 1; padding: 15px; overflow: auto; background: linear-gradient(90deg, rgba(0,170,220,0.03) 1px, transparent 1px), linear-gradient(rgba(0,170,220,0.03) 1px, transparent 1px); background-size: 30px 30px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #2a5a8a; border-radius: 8px; width: 700px; max-height: 80vh; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-header { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-bottom: 1px solid #2a5a8a; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 16px; color: #00d4ff; font-weight: bold; text-align: center; flex: 1; }
+        .modal-close { width: 28px; height: 28px; background: transparent; border: 1px solid #3a5a7a; border-radius: 4px; color: #7ab8e0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .modal-close:hover { background: #e81123; border-color: #e81123; color: #fff; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; color: #7ab8e0; margin-bottom: 6px; }
+        .form-label .required { color: #ff4444; }
+        .form-input { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: #00aadd; }
+        .form-select { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; cursor: pointer; }
+        .form-select:focus { outline: none; border-color: #00aadd; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .modal-footer { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-top: 1px solid #2a5a8a; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { padding: 10px 25px; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all 0.2s; border: 1px solid; }
+        .btn-primary { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .btn-primary:hover { background: linear-gradient(180deg, #00b8f6 0%, #0098d6 100%); }
+        .btn-secondary { background: linear-gradient(180deg, #3a5a7a 0%, #2a4a6a 100%); border-color: #4a7a9a; color: #a0c4e8; }
+        .btn-secondary:hover { background: linear-gradient(180deg, #4a6a8a 0%, #3a5a7a 100%); color: #fff; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 15px; }
+        .search-input { flex: 1; max-width: 250px; padding: 8px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; }
+        .search-input:focus { outline: none; border-color: #00aadd; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th { background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); padding: 12px 10px; text-align: left; color: #00d4ff; border-bottom: 1px solid #2a5a8a; font-weight: normal; }
+        .data-table td { padding: 10px; border-bottom: 1px solid #1e3a5a; color: #a0c4e8; }
+        .data-table tr:hover td { background: rgba(0,170,220,0.05); }
+        .table-btn { padding: 4px 10px; background: linear-gradient(180deg, #1a4a6a 0%, #0d3555 100%); border: 1px solid #2a6a9a; border-radius: 3px; color: #7ab8e0; cursor: pointer; font-size: 11px; margin-right: 5px; }
+        .table-btn:hover { background: linear-gradient(180deg, #2a5a7a 0%, #1a4565 100%); color: #fff; }
+        .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 15px; }
+        .page-btn { padding: 6px 12px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 12px; }
+        .page-btn:hover, .page-btn.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .status-tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; }
+        .status-tag.active { background: rgba(0,255,136,0.2); color: #00ff88; border: 1px solid #00aa66; }
+        .status-tag.inactive { background: rgba(102,102,102,0.2); color: #999; border: 1px solid #666; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a1628; }
+        ::-webkit-scrollbar-thumb { background: #2a5a8a; border-radius: 4px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 18px; color: #00d4ff; }
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #1e4a7a; border-radius: 6px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #00d4ff; margin-bottom: 5px; }
+        .stat-label { font-size: 13px; color: #7a9ab8; }
+        .permission-tree { margin: 15px 0; padding: 15px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; max-height: 300px; overflow-y: auto; }
+        .tree-node { padding: 8px 0; }
+        .tree-node-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .tree-node-label:hover { color: #00d4ff; }
+        .tree-node-children { margin-left: 25px; }
+        .checkbox-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .checkbox-item input { width: 16px; height: 16px; accent-color: #00aadd; }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <div class="title-bar-icon"></div>
+            <span class="title-bar-text">佳晔新能源物联网终端管控系统</span>
+        </div>
+        <div class="title-bar-controls">
+            <button class="title-bar-btn minimize" onclick="showMessage('窗口最小化')"><svg viewBox="0 0 10 10" fill="currentColor"><rect x="0" y="4.5" width="10" height="1"/></svg></button>
+            <button class="title-bar-btn maximize" onclick="showMessage('窗口最大化')"><div class="maximize-icon"></div></button>
+            <button class="title-bar-btn close" onclick="showMessage('系统关闭中...')"><svg viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2"><line x1="0" y1="0" x2="10" y2="10"/><line x1="10" y1="0" x2="0" y2="10"/></svg></button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="nav-bar">
+            <div class="nav-tabs">
+                <a href="index.html" class="nav-tab">主界面</a>
+                <a href="device-registry.html" class="nav-tab">设备台账</a>
+                <a href="alarm-center.html" class="nav-tab">告警中心</a>
+                <a href="data-report.html" class="nav-tab">数据报表</a>
+                <a href="user-management.html" class="nav-tab">用户管理</a>
+                <a href="role-permission.html" class="nav-tab active">角色权限</a>
+                <a href="system-log.html" class="nav-tab">系统日志</a>
+                <a href="system-setting.html" class="nav-tab">系统设置</a>
+            </div>
+            <div class="nav-right">
+                <button class="nav-btn" onclick="showMessage('跳转到告警管理')"><i class="fas fa-bell"></i> 告警管理</button>
+                <button class="nav-btn" onclick="showMessage('跳转到数据查询')"><i class="fas fa-search"></i> 数据查询</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="left-panel">
+                <button class="menu-btn active" onclick="switchTab('role-list', this)"><i class="fas fa-user-shield"></i> 角色列表</button>
+                <button class="menu-btn" onclick="switchTab('add-role', this)"><i class="fas fa-plus-circle"></i> 新增角色</button>
+                <button class="menu-btn" onclick="switchTab('permission-config', this)"><i class="fas fa-key"></i> 权限配置</button>
+                <button class="menu-btn" onclick="switchTab('role-inherit', this)"><i class="fas fa-sitemap"></i> 角色继承</button>
+            </div>
+
+            <div class="main-content">
+                <div id="role-list">
+                <div class="page-header">
+                    <h2 class="page-title"><i class="fas fa-user-shield"></i> 角色权限管理</h2>
+                    <button class="btn btn-primary" onclick="switchTab('add-role', document.querySelectorAll('.menu-btn')[1])"><i class="fas fa-plus"></i> 新增角色</button>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card"><div class="stat-value">5</div><div class="stat-label">角色总数</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color:#00ff88;">28</div><div class="stat-label">关联用户</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color:#ffaa00;">12</div><div class="stat-label">权限项</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color:#00d4ff;">4</div><div class="stat-label">权限组</div></div>
+                </div>
+
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="搜索角色名称...">
+                    <select class="form-select" style="width:150px;">
+                        <option value="">全部状态</option>
+                        <option value="active">启用</option>
+                        <option value="inactive">禁用</option>
+                    </select>
+                    <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">序号</th>
+                            <th>角色名称</th>
+                            <th>角色编码</th>
+                            <th>描述</th>
+                            <th>关联用户</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>系统管理员</td>
+                            <td>ROLE_ADMIN</td>
+                            <td>拥有系统全部权限</td>
+                            <td>3</td>
+                            <td><span class="status-tag active">启用</span></td>
+                            <td>2023-01-01</td>
+                            <td><button class="table-btn" onclick="showEditRoleModal('系统管理员')">编辑</button><button class="table-btn" onclick="showPermissionModal('系统管理员')">权限配置</button></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>运维人员</td>
+                            <td>ROLE_OPERATOR</td>
+                            <td>负责设备运维管理</td>
+                            <td>15</td>
+                            <td><span class="status-tag active">启用</span></td>
+                            <td>2023-01-15</td>
+                            <td><button class="table-btn" onclick="showEditRoleModal('运维人员')">编辑</button><button class="table-btn" onclick="showPermissionModal('运维人员')">权限配置</button></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>普通用户</td>
+                            <td>ROLE_USER</td>
+                            <td>基础查看权限</td>
+                            <td>10</td>
+                            <td><span class="status-tag active">启用</span></td>
+                            <td>2023-02-01</td>
+                            <td><button class="table-btn" onclick="showEditRoleModal('普通用户')">编辑</button><button class="table-btn" onclick="showPermissionModal('普通用户')">权限配置</button></td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>访客</td>
+                            <td>ROLE_GUEST</td>
+                            <td>临时访问权限</td>
+                            <td>0</td>
+                            <td><span class="status-tag inactive">禁用</span></td>
+                            <td>2023-03-01</td>
+                            <td><button class="table-btn" onclick="showEditRoleModal('访客')">编辑</button><button class="table-btn" onclick="showPermissionModal('访客')">权限配置</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pagination">
+                    <button class="page-btn">上一页</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">下一页</button>
+                </div>
+                </div>
+
+                <div id="add-role" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-plus-circle"></i> 新增角色</h2>
+                    </div>
+                    <div class="settings-card" style="max-width:600px;">
+                        <div class="form-group">
+                            <label class="form-label">角色名称 <span class="required">*</span></label>
+                            <input type="text" class="form-input" placeholder="请输入角色名称">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">角色编码 <span class="required">*</span></label>
+                            <input type="text" class="form-input" placeholder="请输入角色编码">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">角色描述</label>
+                            <textarea class="form-input" rows="3" placeholder="请输入角色描述"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">状态</label>
+                            <select class="form-select">
+                                <option value="active">启用</option>
+                                <option value="inactive">禁用</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;gap:10px;margin-top:20px;">
+                            <button class="btn btn-primary" onclick="showMessage('角色创建成功')"><i class="fas fa-save"></i> 保存</button>
+                            <button class="btn btn-secondary" onclick="switchTab('role-list', document.querySelectorAll('.menu-btn')[0])"><i class="fas fa-arrow-left"></i> 返回</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="permission-config" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-key"></i> 权限配置</h2>
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <i class="fas fa-shield-alt settings-card-icon"></i>
+                            <span class="settings-card-title">角色权限管理</span>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px;">序号</th>
+                                    <th>角色名称</th>
+                                    <th>权限组</th>
+                                    <th>权限数量</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>系统管理员</td>
+                                    <td>全部权限</td>
+                                    <td>156</td>
+                                    <td>2024-01-01</td>
+                                    <td><button class="table-btn" onclick="showMessage('查看详情')">详情</button></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>运维人员</td>
+                                    <td>设备管理、告警处理</td>
+                                    <td>48</td>
+                                    <td>2024-01-15</td>
+                                    <td><button class="table-btn" onclick="showMessage('修改权限')">修改</button></td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>普通用户</td>
+                                    <td>数据查看</td>
+                                    <td>12</td>
+                                    <td>2024-02-01</td>
+                                    <td><button class="table-btn" onclick="showMessage('修改权限')">修改</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="role-inherit" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-sitemap"></i> 角色继承</h2>
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <i class="fas fa-level-up-alt settings-card-icon"></i>
+                            <span class="settings-card-title">继承关系配置</span>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px;">序号</th>
+                                    <th>子角色</th>
+                                    <th>父角色</th>
+                                    <th>继承权限数</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>运维组长</td>
+                                    <td>运维人员</td>
+                                    <td>35</td>
+                                    <td><span class="status-tag active">启用</span></td>
+                                    <td><button class="table-btn" onclick="showMessage('配置继承')">配置</button></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>普通用户</td>
+                                    <td>访客</td>
+                                    <td>8</td>
+                                    <td><span class="status-tag active">启用</span></td>
+                                    <td><button class="table-btn" onclick="showMessage('配置继承')">配置</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addRoleModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">新增角色</span>
+                <button class="modal-close" onclick="closeModal('addRoleModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">角色名称 <span class="required">*</span></label>
+                        <input type="text" class="form-input" placeholder="请输入角色名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">角色编码 <span class="required">*</span></label>
+                        <input type="text" class="form-input" placeholder="请输入角色编码">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">角色描述</label>
+                    <textarea class="form-input" style="min-height:80px;resize:vertical;" placeholder="请输入角色描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">权限配置</label>
+                    <div class="permission-tree">
+                        <div class="tree-node">
+                            <label class="tree-node-label checkbox-item"><input type="checkbox" checked> 系统管理</label>
+                            <div class="tree-node-children">
+                                <label class="checkbox-item"><input type="checkbox" checked> 用户管理</label>
+                                <label class="checkbox-item"><input type="checkbox" checked> 角色管理</label>
+                                <label class="checkbox-item"><input type="checkbox"> 日志管理</label>
+                            </div>
+                        </div>
+                        <div class="tree-node">
+                            <label class="tree-node-label checkbox-item"><input type="checkbox" checked> 设备管理</label>
+                            <div class="tree-node-children">
+                                <label class="checkbox-item"><input type="checkbox" checked> 设备查看</label>
+                                <label class="checkbox-item"><input type="checkbox" checked> 设备编辑</label>
+                                <label class="checkbox-item"><input type="checkbox"> 设备删除</label>
+                            </div>
+                        </div>
+                        <div class="tree-node">
+                            <label class="tree-node-label checkbox-item"><input type="checkbox"> 告警管理</label>
+                            <div class="tree-node-children">
+                                <label class="checkbox-item"><input type="checkbox"> 告警查看</label>
+                                <label class="checkbox-item"><input type="checkbox"> 告警处理</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select class="form-select">
+                        <option value="active" selected>启用</option>
+                        <option value="inactive">禁用</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addRoleModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveRole()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editRoleModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">编辑角色</span>
+                <button class="modal-close" onclick="closeModal('editRoleModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">角色名称 <span class="required">*</span></label>
+                        <input type="text" class="form-input" value="运维人员">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">角色编码</label>
+                        <input type="text" class="form-input" value="ROLE_OPERATOR" readonly>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">角色描述</label>
+                    <textarea class="form-input" style="min-height:80px;resize:vertical;">负责设备运维管理，具有设备操作和告警处理权限</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select class="form-select">
+                        <option value="active" selected>启用</option>
+                        <option value="inactive">禁用</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('editRoleModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveRole()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="permissionModal">
+        <div class="modal" style="width:600px;">
+            <div class="modal-header">
+                <span class="modal-title">权限配置 - <span id="permissionRoleName"></span></span>
+                <button class="modal-close" onclick="closeModal('permissionModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="permission-tree">
+                    <div class="tree-node">
+                        <label class="tree-node-label checkbox-item"><input type="checkbox" id="perm-all" onchange="toggleAllPermissions(this)"> 全选/全不选</label>
+                    </div>
+                    <div class="tree-node">
+                        <label class="tree-node-label checkbox-item"><input type="checkbox" checked> 系统管理</label>
+                        <div class="tree-node-children">
+                            <label class="checkbox-item"><input type="checkbox" checked> 用户管理</label>
+                            <label class="checkbox-item"><input type="checkbox" checked> 角色管理</label>
+                            <label class="checkbox-item"><input type="checkbox"> 日志管理</label>
+                            <label class="checkbox-item"><input type="checkbox"> 系统设置</label>
+                        </div>
+                    </div>
+                    <div class="tree-node">
+                        <label class="tree-node-label checkbox-item"><input type="checkbox" checked> 设备管理</label>
+                        <div class="tree-node-children">
+                            <label class="checkbox-item"><input type="checkbox" checked> 设备查看</label>
+                            <label class="checkbox-item"><input type="checkbox" checked> 设备新增</label>
+                            <label class="checkbox-item"><input type="checkbox" checked> 设备编辑</label>
+                            <label class="checkbox-item"><input type="checkbox"> 设备删除</label>
+                            <label class="checkbox-item"><input type="checkbox" checked> 设备控制</label>
+                        </div>
+                    </div>
+                    <div class="tree-node">
+                        <label class="tree-node-label checkbox-item"><input type="checkbox" checked> 告警管理</label>
+                        <div class="tree-node-children">
+                            <label class="checkbox-item"><input type="checkbox" checked> 告警查看</label>
+                            <label class="checkbox-item"><input type="checkbox" checked> 告警处理</label>
+                            <label class="checkbox-item"><input type="checkbox"> 告警配置</label>
+                        </div>
+                    </div>
+                    <div class="tree-node">
+                        <label class="tree-node-label checkbox-item"><input type="checkbox" checked> 数据报表</label>
+                        <div class="tree-node-children">
+                            <label class="checkbox-item"><input type="checkbox" checked> 报表查看</label>
+                            <label class="checkbox-item"><input type="checkbox" checked> 报表导出</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('permissionModal')">取消</button>
+                <button class="btn btn-primary" onclick="savePermission()">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.main-content > div').forEach(div => { div.style.display = 'none'; });
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function showAddRoleModal() { openModal('addRoleModal'); }
+        function showEditRoleModal(roleName) { openModal('editRoleModal'); }
+        function showPermissionModal(roleName) { document.getElementById('permissionRoleName').textContent = roleName; openModal('permissionModal'); }
+        function saveRole() { showMessage('角色保存成功'); closeModal('addRoleModal'); closeModal('editRoleModal'); }
+        function savePermission() { showMessage('权限配置保存成功'); closeModal('permissionModal'); }
+        function toggleAllPermissions(checkbox) { document.querySelectorAll('.permission-tree input[type="checkbox"]').forEach(cb => { if(cb !== checkbox) cb.checked = checkbox.checked; }); }
+        function showMessage(text) { var msg = document.createElement('div'); msg.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#00a8e6 0%,#0088c6 100%);color:#fff;padding:12px 30px;border-radius:4px;z-index:2000;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);'; msg.textContent = text; document.body.appendChild(msg); setTimeout(() => { msg.style.opacity = '0'; msg.style.transition = 'opacity 0.3s'; setTimeout(() => msg.remove(), 300); }, 2000); }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => { overlay.addEventListener('click', function(e) { if (e.target === this) { this.classList.remove('show'); } }); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.show').forEach(modal => { modal.classList.remove('show'); }); } });
+    </script>
+</body>
+</html>

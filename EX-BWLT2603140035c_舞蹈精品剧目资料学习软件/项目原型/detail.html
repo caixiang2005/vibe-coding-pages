@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>剧目详情</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --gold: #C9A84C; --gold-light: #E8CC7A; --gold-dark: #A07830;
+    --red: #C0392B; --bg: #FDF8F0; --text: #2C1810; --text2: #6B4C3B; --text3: #9C7B6B;
+  }
+  body { font-family: 'Noto Sans SC', sans-serif; background: #E8E0D0; display: flex; justify-content: center; }
+  .phone-frame {
+    width: 100%; height: 100vh; background: var(--bg);
+    overflow: hidden; overflow-y: auto; display: flex; flex-direction: column;
+  }
+  .status-bar { background: transparent; color: white; padding: 12px 24px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 100%; z-index: 10; }
+  .status-bar .time { font-weight: 700; font-size: 15px; }
+  .status-icons { display: flex; gap: 6px; }
+
+  .hero-section { position: relative; height: 280px; flex-shrink: 0; }
+  .hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 40%, rgba(44,24,16,0.85) 100%); }
+  .hero-controls {
+    position: absolute; top: 44px; left: 0; right: 0;
+    padding: 0 20px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .ctrl-btn { width: 38px; height: 38px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; text-decoration: none; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); cursor: pointer; transition: all 0.2s; }
+  .ctrl-btn:active { transform: scale(0.9); }
+  .ctrl-right { display: flex; gap: 10px; }
+  .hero-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; }
+  .hero-tags { display: flex; gap: 6px; margin-bottom: 8px; }
+  .hero-tag { background: var(--red); color: white; font-size: 10px; padding: 3px 10px; border-radius: 12px; font-weight: 600; }
+  .hero-tag.gold-tag { background: var(--gold); }
+  .hero-title { color: white; font-size: 24px; font-weight: 700; font-family: 'Noto Serif SC', serif; line-height: 1.3; }
+  .hero-artist { color: rgba(255,255,255,0.85); font-size: 13px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+  .hero-rating { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
+  .stars { color: var(--gold); font-size: 13px; letter-spacing: 1px; }
+  .rating-text { color: rgba(255,255,255,0.9); font-size: 12px; }
+  .play-btn {
+    position: absolute; bottom: 80px; right: 20px;
+    width: 54px; height: 54px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--red), #A02020);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 20px; box-shadow: 0 4px 20px rgba(192,57,43,0.5);
+    text-decoration: none;
+    padding-left: 4px;
+    transition: all 0.2s;
+  }
+  .play-btn:active { transform: scale(0.9); }
+
+  .content { flex: 1; overflow-y: auto; }
+  .content::-webkit-scrollbar { display: none; }
+
+  /* Tab nav */
+  .tab-nav { display: flex; background: white; border-bottom: 1px solid #EDE0C8; }
+  .tab { flex: 1; text-align: center; padding: 12px 4px; font-size: 13px; color: var(--text3); cursor: pointer; border-bottom: 2.5px solid transparent; font-weight: 500; transition: all 0.2s; }
+  .tab.active { color: var(--red); border-bottom-color: var(--red); font-weight: 700; }
+
+  /* Tab content */
+  .tab-content { padding: 20px; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+  .info-section { margin-bottom: 20px; }
+  .info-title {
+    font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700;
+    color: var(--text); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .info-title::before { content: ''; width: 3px; height: 16px; background: linear-gradient(to bottom, var(--red), var(--gold)); border-radius: 2px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .info-cell { background: #FEF9EE; border-radius: 12px; padding: 12px; border: 1px solid #EDD8A0; }
+  .info-cell .lbl { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .info-cell .val { font-size: 13px; font-weight: 600; color: var(--text); }
+  .desc-text { font-size: 13px; line-height: 1.8; color: var(--text2); }
+
+  /* Related list */
+  .related-card {
+    display: flex; gap: 10px; align-items: center;
+    padding: 12px; background: white; border-radius: 14px;
+    border: 1px solid #F0E8D8; margin-bottom: 10px;
+    text-decoration: none; cursor: pointer;
+    box-shadow: 0 2px 10px rgba(44,24,16,0.06);
+    transition: all 0.2s;
+  }
+  .related-card:active { transform: scale(0.98); }
+  .related-card img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+  .related-info .name { font-size: 14px; font-weight: 600; color: var(--text); font-family: 'Noto Serif SC', serif; }
+  .related-info .sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .related-info .tag { display: inline-block; margin-top: 5px; font-size: 10px; background: #FEF0E0; color: var(--gold-dark); padding: 2px 8px; border-radius: 8px; }
+
+  /* Bottom study btn */
+  .bottom-action {
+    padding: 14px 20px 34px; background: white; border-top: 1px solid #EDE0C8;
+    display: flex; gap: 10px;
+  }
+  .primary-btn {
+    flex: 1; height: 48px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--red), #A02020);
+    color: white; font-size: 15px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .primary-btn:active { transform: scale(0.98); opacity: 0.9; }
+</style>
+</head>
+<body>
+<div class="phone-frame" style="position:relative;">
+  
+
+  <!-- Hero -->
+  <div class="hero-section">
+    <img class="hero-img" src="https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=800&q=85" alt="雀之灵">
+    <div class="hero-overlay"></div>
+    <div class="hero-controls">
+      <a href="repertoire.html" class="ctrl-btn"><i class="fa fa-arrow-left"></i></a>
+      <div class="ctrl-right">
+        <div class="ctrl-btn" onclick="toggleShare(this)"><i class="fa fa-share-alt"></i></div>
+        <div class="ctrl-btn" onclick="toggleFav(this)"><i class="fa-regular fa-heart"></i></div>
+      </div>
+    </div>
+    <a href="player.html" class="play-btn"><i class="fa-solid fa-play"></i></a>
+    <div class="hero-info">
+      <div class="hero-tags">
+        <span class="hero-tag">民族民间舞</span>
+        <span class="hero-tag gold-tag">精品推荐</span>
+      </div>
+      <div class="hero-title">雀之灵</div>
+      <div class="hero-artist"><i class="fa fa-user-circle"></i> 杨丽萍 &nbsp;·&nbsp; 云南省歌舞剧院</div>
+      <div class="hero-rating">
+        <span class="stars">★★★★★</span>
+        <span class="rating-text">4.9 分 · 3,247 人学习</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Tabs -->
+    <div class="tab-nav">
+      <div class="tab active" onclick="showTab(this,'intro')">剧目简介</div>
+      <div class="tab" onclick="showTab(this,'knowledge')">知识要点</div>
+      <div class="tab" onclick="showTab(this,'related')">相关剧目</div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- 剧目简介 -->
+      <div id="tab-intro" class="tab-pane active">
+        <div class="info-section">
+          <div class="info-title">基本信息</div>
+          <div class="info-grid">
+            <div class="info-cell"><div class="lbl">舞种类型</div><div class="val">民族民间舞</div></div>
+            <div class="info-cell"><div class="lbl">首演年份</div><div class="val">1986年</div></div>
+            <div class="info-cell"><div class="lbl">主要演员</div><div class="val">杨丽萍</div></div>
+            <div class="info-cell"><div class="lbl">时长</div><div class="val">约8分钟</div></div>
+            <div class="info-cell"><div class="lbl">流派</div><div class="val">傣族孔雀舞</div></div>
+            <div class="info-cell"><div class="lbl">奖项</div><div class="val">全国舞蹈比赛一等奖</div></div>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-title">作品简介</div>
+          <div class="desc-text">
+            《雀之灵》是中国著名舞蹈家杨丽萍的代表作，创作于1986年。作品以傣族孔雀舞为基础，融合了现代舞蹈语言，以孔雀为意象，表达了对大自然的热爱与对生命的礼赞。
+            <br><br>
+            舞蹈中杨丽萍用纤细柔韧的双臂模拟孔雀羽翼的舒展，身体语言细腻而丰富，将孔雀的神韵演绎得淋漓尽致。该作品在全国舞蹈比赛中荣获一等奖，被誉为中国民族舞蹈的经典之作，影响了数代舞蹈学子。
+            <br><br>
+            此后该作品多次在国际舞台演出，成为中国文化对外交流的重要代表性节目，在世界舞台上展现了中国傣族民间舞蹈的独特魅力。
+          </div>
+        </div>
+      </div>
+
+      <!-- 知识要点 -->
+      <div id="tab-knowledge" class="tab-pane">
+        <div class="info-section">
+          <div class="info-title">考试重点</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="background:#FEF9EE; border-radius:12px; padding:12px; border-left:3px solid var(--gold); border-right:1px solid #EDD8A0; border-top:1px solid #EDD8A0; border-bottom:1px solid #EDD8A0;">
+              <div style="font-size:12px; color:var(--gold-dark); font-weight:600; margin-bottom:4px;"><i class="fa fa-lightbulb"></i> 知识要点</div>
+              <div style="font-size:12px; color:var(--text2); line-height:1.7;">傣族孔雀舞的"三道弯"身体造型是其核心特征，指头、腰、胯三个部位向相反方向的弯曲。</div>
+            </div>
+            <div style="background:#FFF0EE; border-radius:12px; padding:12px; border-left:3px solid var(--red); border-right:1px solid #F8D8D0; border-top:1px solid #F8D8D0; border-bottom:1px solid #F8D8D0;">
+              <div style="font-size:12px; color:var(--red); font-weight:600; margin-bottom:4px;"><i class="fa fa-star"></i> 重要考点</div>
+              <div style="font-size:12px; color:var(--text2); line-height:1.7;">《雀之灵》首演于1986年，荣获全国舞蹈比赛一等奖，是杨丽萍最具代表性的独舞作品。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 相关剧目 -->
+      <div id="tab-related" class="tab-pane">
+        <div class="info-section">
+          <div class="info-title">相关剧目</div>
+          <a href="detail.html?id=2" class="related-card">
+            <img src="https://images.unsplash.com/photo-1593510987459-9a1489817a3b?w=200&q=80" alt="">
+            <div class="related-info">
+              <div class="name">傣族孔雀舞组曲</div>
+              <div class="sub">云南艺术剧院 · 民间舞</div>
+              <span class="tag">民族民间舞</span>
+            </div>
+          </a>
+          <a href="detail.html?id=3" class="related-card">
+            <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&q=80" alt="">
+            <div class="related-info">
+              <div class="name">月光下的凤尾竹</div>
+              <div class="sub">西双版纳州歌舞团 · 民间舞</div>
+              <span class="tag">民族民间舞</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Action -->
+  <div class="bottom-action">
+    <a href="player.html" class="primary-btn"><i class="fa fa-play"></i> 播放学习</a>
+  </div>
+</div>
+
+<script>
+function showTab(el, id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeIn 0.3s';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 1500);
+}
+</script>
+<style>
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.8); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+</style>
+</body>
+</html>

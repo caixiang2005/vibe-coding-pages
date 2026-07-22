@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>库存管理 - 在线食品仓储库存动态调配管理系统</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #F4F1EC; --bg-warm: #EDE9E1; --bg-card: #FFFFFF; --bg-sidebar: #FDFCFA; --border: #E8E2D9; --border-light: #F0EBE3; --text-primary: #1A1612; --text-secondary: #6B6259; --text-muted: #9C9488; --accent: #409EFF; --accent-light: #40916C; --accent-bg: rgba(45, 106, 79, 0.07); --blue: #1B6B93; --blue-bg: rgba(27, 107, 147, 0.08); --amber: #B5651D; --amber-bg: rgba(181, 101, 29, 0.08); --red: #B33A3A; --red-bg: rgba(179, 58, 58, 0.07); --cyan: #1A7A6D; --cyan-bg: rgba(26, 122, 109, 0.07); --shadow-sm: 0 1px 3px rgba(26, 22, 18, 0.04); --shadow-md: 0 4px 16px rgba(26, 22, 18, 0.06); --radius: 12px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .mac-window { display: flex; flex-direction: column; min-height: 100vh; }
+    .mac-titlebar { height: 38px; background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%); border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; padding: 0 14px; position: relative; flex-shrink: 0; }
+    .mac-dots { display: flex; gap: 8px; z-index: 2; }
+    .mac-dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .mac-dot.red { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .mac-dot.yellow { background: #febc2e; border: 0.5px solid #dea123; }
+    .mac-dot.green { background: #28c840; border: 0.5px solid #1aab29; }
+    .mac-title { position: absolute; left: 50%; transform: translateX(-50%); color: #999; font-size: 13px; font-weight: 500; white-space: nowrap; }
+    .layout { display: flex; flex: 1; overflow: hidden; }
+    .sidebar { width: 240px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+    .logo-area { padding: 24px 26px; border-bottom: 1px solid var(--border-light); }
+    .logo-mark { width: 40px; height: 40px; background: var(--accent); border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(45, 106, 79, 0.25); }
+    .logo-mark svg { width: 22px; height: 22px; color: #fff; }
+    .logo-area h1 { font-size: 14px; font-weight: 600; color: var(--text-primary); line-height: 1.5; }
+    .logo-area .version { font-size: 11px; color: var(--text-muted); letter-spacing: 1.5px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; margin-top: 4px; }
+    .nav { flex: 1; padding: 18px 14px; overflow-y: auto; }
+    .nav a { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 9px; color: var(--text-secondary); text-decoration: none; font-size: 13.5px; font-weight: 400; transition: all .2s ease; margin-bottom: 2px; position: relative; }
+    .nav a:hover { color: var(--text-primary); background: rgba(0, 0, 0, 0.03); }
+    .nav a.active { color: var(--accent); background: var(--accent-bg); font-weight: 500; }
+    .nav a.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 18px; background: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav a .icon { width: 20px; height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .nav a .icon svg { width: 18px; height: 18px; stroke-width: 1.7; }
+    .sidebar-footer { padding: 18px 22px; border-top: 1px solid var(--border-light); display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; }
+    .avatar img { width: 100%; height: 100%; display: block; object-fit: cover; border-radius: 50%; }
+    .sidebar-footer .info { line-height: 1.5; }
+    .sidebar-footer .name { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+    .sidebar-footer .role { font-size: 11px; color: var(--text-muted); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 64px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; background: rgba(244, 241, 236, 0.75); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-light); flex-shrink: 0; }
+    .topbar-left h2 { font-size: 17px; font-weight: 600; }
+    .topbar-left p { font-size: 12px; color: var(--text-muted); margin-top: 2px; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .btn-primary { padding: 8px 18px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 6px; font-family: 'Noto Sans SC', sans-serif; }
+    .btn-primary:hover { background: var(--accent-light); box-shadow: 0 4px 12px rgba(45, 106, 79, 0.25); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary svg { width: 15px; height: 15px; }
+    .content { flex: 1; padding: 24px 32px 40px; overflow-y: auto; }
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-mini { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm); cursor: pointer; transition: all .2s; }
+    .stat-mini:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .stat-mini-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .stat-mini-icon svg { width: 17px; height: 17px; }
+    .stat-mini-icon.green { background: var(--accent-bg); color: var(--accent); }
+    .stat-mini-icon.blue { background: var(--blue-bg); color: var(--blue); }
+    .stat-mini-icon.amber { background: var(--amber-bg); color: var(--amber); }
+    .stat-mini-icon.red { background: var(--red-bg); color: var(--red); }
+    .stat-mini-info { flex: 1; }
+    .stat-mini-value { font-size: 18px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .stat-mini-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .filter-bar { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm); }
+    .filter-group { display: flex; align-items: center; gap: 6px; }
+    .filter-label { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+    .filter-select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 11.5px; color: var(--text-primary); background: var(--bg-card); cursor: pointer; font-family: 'Noto Sans SC', sans-serif; min-width: 100px; }
+    .filter-select:focus { outline: none; border-color: var(--accent); }
+    .search-box { flex: 1; display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg); border: 1px solid var(--border-light); border-radius: 7px; cursor: pointer; }
+    .search-box svg { width: 15px; height: 15px; color: var(--text-muted); }
+    .search-box input { flex: 1; border: none; background: transparent; font-size: 12px; color: var(--text-primary); font-family: 'Noto Sans SC', sans-serif; }
+    .search-box input:focus { outline: none; }
+    .search-box input::placeholder { color: var(--text-muted); }
+    .table-panel { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: 11px 18px; font-size: 10.5px; font-weight: 600; color: var(--text-muted); text-align: left; border-bottom: 1px solid var(--border-light); background: rgba(0, 0, 0, 0.012); text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Plus Jakarta Sans', sans-serif; }
+    tbody tr { transition: background .15s; cursor: pointer; }
+    tbody tr:hover { background: rgba(0, 0, 0, 0.015); }
+    tbody td { padding: 12px 18px; font-size: 12px; border-bottom: 1px solid var(--border-light); color: var(--text-secondary); }
+    tbody tr:last-child td { border-bottom: none; }
+    .td-name { color: var(--text-primary); font-weight: 500; }
+    .td-code { font-family: 'Plus Jakarta Sans', monospace; font-size: 11px; color: var(--text-muted); }
+    .status { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 5px; font-size: 10.5px; font-weight: 600; }
+    .status .dot { width: 5px; height: 5px; border-radius: 50%; }
+    .status.normal { color: var(--accent); background: var(--accent-bg); }
+    .status.normal .dot { background: var(--accent); }
+    .status.low { color: var(--amber); background: var(--amber-bg); }
+    .status.low .dot { background: var(--amber); }
+    .status.urgent { color: var(--red); background: var(--red-bg); }
+    .status.urgent .dot { background: var(--red); }
+    .pbar { width: 55px; height: 5px; background: var(--border-light); border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 5px; }
+    .pbar .fill { height: 100%; border-radius: 3px; }
+    .pbar .fill.high { background: var(--accent); }
+    .pbar .fill.mid { background: var(--amber); }
+    .pbar .fill.lo { background: var(--red); }
+    .pct { font-family: 'Plus Jakarta Sans'; font-weight: 600; font-size: 11px; color: var(--text-secondary); vertical-align: middle; }
+    .action-btns { display: flex; gap: 4px; }
+    .btn-action { padding: 4px 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-card); font-size: 10.5px; color: var(--text-secondary); cursor: pointer; transition: all .15s; font-family: 'Noto Sans SC', sans-serif; }
+    .btn-action:hover { background: var(--bg-warm); color: var(--text-primary); }
+    .btn-action.danger { color: var(--red); border-color: rgba(179, 58, 58, 0.2); }
+    .btn-action.danger:hover { background: var(--red-bg); }
+    .warehouse-tag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; background: var(--accent-bg); color: var(--accent); border-radius: 4px; font-size: 10px; font-weight: 500; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .ani { animation: fadeUp .4s cubic-bezier(.23, 1, .32, 1) both; }
+    .d1 { animation-delay: .03s; } .d2 { animation-delay: .06s; } .d3 { animation-delay: .09s; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(26, 22, 18, 0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all .25s ease; }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal { background: var(--bg-card); border-radius: 12px; box-shadow: 0 20px 60px rgba(26, 22, 18, 0.2); min-width: 380px; max-width: 480px; transform: scale(0.92) translateY(-20px); transition: transform .25s ease; overflow: hidden; max-height: 85vh; display: flex; flex-direction: column; }
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-header { padding: 12px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; background: var(--bg-warm); position: relative; flex-shrink: 0; }
+    .modal-header::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; box-shadow: 16px 0 0 #febc2e, 32px 0 0 #28c840; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
+    .modal-title { color: var(--text-primary); font-size: 13px; font-weight: 600; text-align: center; width: 100%; }
+    .modal-body { padding: 16px; overflow-y: auto; flex: 1; }
+    .modal-footer { padding: 12px 16px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+    .btn { padding: 7px 14px; border-radius: 7px; font-size: 12px; cursor: pointer; transition: all .15s; border: none; font-family: 'Noto Sans SC', sans-serif; }
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: var(--bg-warm); color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--bg); color: var(--text-primary); }
+    .btn-modal-primary { background: var(--accent); color: #fff; }
+    .btn-modal-primary:hover { background: var(--accent-light); }
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; color: var(--text-secondary); font-size: 11px; margin-bottom: 5px; font-weight: 500; }
+    .form-input { width: 100%; padding: 7px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; color: var(--text-primary); font-size: 12px; font-family: 'Noto Sans SC', sans-serif; transition: border-color .15s; }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+    .info-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+    .info-row:last-child { border-bottom: none; }
+    .info-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .info-icon svg { width: 15px; height: 15px; }
+    .info-icon.green { background: var(--accent-bg); color: var(--accent); }
+    .info-icon.blue { background: var(--blue-bg); color: var(--blue); }
+    .info-icon.amber { background: var(--amber-bg); color: var(--amber); }
+    .info-icon.red { background: var(--red-bg); color: var(--red); }
+    .info-content { flex: 1; }
+    .info-content .label { font-size: 10px; color: var(--text-muted); }
+    .info-content .value { font-size: 12px; color: var(--text-primary); font-weight: 500; margin-top: 2px; }
+    .search-list { max-height: 280px; overflow-y: auto; }
+    .search-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-light); cursor: pointer; }
+    .search-item:hover { background: rgba(0,0,0,0.02); padding-left: 4px; }
+    .search-item:last-child { border-bottom: none; }
+    .search-item-icon { width: 30px; height: 30px; border-radius: 6px; background: var(--accent-bg); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .search-item-icon svg { width: 14px; height: 14px; }
+    .search-item-content { flex: 1; }
+    .search-item-title { font-size: 11.5px; color: var(--text-primary); font-weight: 500; }
+    .search-item-meta { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  </style>
+</head>
+<body>
+  <div class="mac-window">
+    <div class="mac-titlebar">
+      <div class="mac-dots"><div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div></div>
+      <span class="mac-title">在线食品仓储库存动态调配管理系统</span>
+    </div>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="logo-area">
+           <h1>在线食品仓储库存动态调配<br>管理系统</h1>
+        </div>
+        <nav class="nav">
+          <a href="dashboard.html"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg></span>数据总览</a>
+          <a href="inventory.html" class="active"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg></span>库存管理</a>
+          <a href="inbound.html"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7" /><rect x="3" y="3" width="18" height="18" rx="2" /></svg></span>入库管理</a>
+          <a href="outbound.html"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg></span>出库管理</a>
+          <a href="dispatch.html"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg></span>调配中心</a>
+          <a href="report.html"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg></span>报表中心</a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="avatar"><img src="https://i02piccdn.sogoucdn.com/25b40a599294a6aa" alt="赵明远头像" /></div>
+          <div class="info"><div class="name">赵明远</div><div class="role">仓储主管</div></div>
+        </div>
+      </aside>
+      <div class="main">
+        <div class="topbar">
+          <div class="topbar-left"><h2>库存管理</h2><p>Monday, Mar 23, 2026</p></div>
+          <div class="topbar-right">
+            <button class="btn-primary" id="btnAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg>新增商品</button>
+            <button class="btn-primary" id="btnImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>批量导入</button>
+          </div>
+        </div>
+        <div class="content">
+          <div class="stats-row ani d1">
+            <div class="stat-mini" onclick="showStockOverview()">
+              <div class="stat-mini-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg></div>
+              <div class="stat-mini-info"><div class="stat-mini-value">12,847</div><div class="stat-mini-label">SKU 总数</div></div>
+            </div>
+            <div class="stat-mini" onclick="showStockNormal()">
+              <div class="stat-mini-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg></div>
+              <div class="stat-mini-info"><div class="stat-mini-value">3,420</div><div class="stat-mini-label">库存充足</div></div>
+            </div>
+            <div class="stat-mini" onclick="showStockWarning()">
+              <div class="stat-mini-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg></div>
+              <div class="stat-mini-info"><div class="stat-mini-value">186</div><div class="stat-mini-label">库存预警</div></div>
+            </div>
+            <div class="stat-mini" onclick="showStockUrgent()">
+              <div class="stat-mini-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg></div>
+              <div class="stat-mini-info"><div class="stat-mini-value">23</div><div class="stat-mini-label">紧急缺货</div></div>
+            </div>
+          </div>
+          <div class="filter-bar ani d2">
+            <div class="filter-group"><span class="filter-label">仓库</span><select class="filter-select"><option>全部仓库</option><option>常温仓 A区</option><option>常温仓 B区</option><option>冷藏仓</option><option>冷冻仓</option></select></div>
+            <div class="filter-group"><span class="filter-label">状态</span><select class="filter-select"><option>全部状态</option><option>正常</option><option>偏低</option><option>紧急</option></select></div>
+            <div class="filter-group"><span class="filter-label">分类</span><select class="filter-select"><option>全部分类</option><option>粮油调味</option><option>乳制品</option><option>冷鲜肉类</option><option>速冻食品</option></select></div>
+            <div class="search-box" onclick="showSearch()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg><input type="text" placeholder="搜索商品名称、SKU编码..." readonly /></div>
+          </div>
+          <div class="table-panel ani d3">
+            <table>
+              <thead><tr><th>商品名称</th><th>SKU 编码</th><th>仓库</th><th>当前库存</th><th>安全库存</th><th>库容占比</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr onclick="showDetail('蒙牛特仑苏 250ml×12','SKU-20231087','常温仓 B1','4,620','1,500','78%','normal')"><td class="td-name">蒙牛特仑苏 250ml×12</td><td class="td-code">SKU-20231087</td><td><span class="warehouse-tag">常温仓 B1</span></td><td>4,620 箱</td><td>1,500</td><td><span class="pbar"><span class="fill high" style="width:78%"></span></span><span class="pct">78%</span></td><td><span class="status normal"><span class="dot"></span>正常</span></td><td class="action-btns"><button class="btn-action" onclick="event.stopPropagation();editItem('蒙牛特仑苏 250ml×12')">编辑</button><button class="btn-action danger" onclick="event.stopPropagation();deleteItem('蒙牛特仑苏 250ml×12')">删除</button></td></tr>
+                <tr onclick="showDetail('思念灌汤水饺 720g','SKU-20230542','冷冻仓 A2','1,350','2,000','45%','low')"><td class="td-name">思念灌汤水饺 720g</td><td class="td-code">SKU-20230542</td><td><span class="warehouse-tag">冷冻仓 A2</span></td><td>1,350 袋</td><td>2,000</td><td><span class="pbar"><span class="fill mid" style="width:45%"></span></span><span class="pct">45%</span></td><td><span class="status low"><span class="dot"></span>偏低</span></td><td class="action-btns"><button class="btn-action" onclick="event.stopPropagation();editItem('思念灌汤水饺 720g')">编辑</button><button class="btn-action danger" onclick="event.stopPropagation();deleteItem('思念灌汤水饺 720g')">删除</button></td></tr>
+                <tr onclick="showDetail('农夫山泉 550ml×24','SKU-20230198','常温仓 D1','8,900','3,000','92%','normal')"><td class="td-name">农夫山泉 550ml×24</td><td class="td-code">SKU-20230198</td><td><span class="warehouse-tag">常温仓 D1</span></td><td>8,900 箱</td><td>3,000</td><td><span class="pbar"><span class="fill high" style="width:92%"></span></span><span class="pct">92%</span></td><td><span class="status normal"><span class="dot"></span>正常</span></td><td class="action-btns"><button class="btn-action" onclick="event.stopPropagation();editItem('农夫山泉 550ml×24')">编辑</button><button class="btn-action danger" onclick="event.stopPropagation();deleteItem('农夫山泉 550ml×24')">删除</button></td></tr>
+                <tr onclick="showDetail('双汇王中王火腿肠 40g×10','SKU-20231204','冷藏仓 E1','280','800','18%','urgent')"><td class="td-name">双汇王中王火腿肠 40g×10</td><td class="td-code">SKU-20231204</td><td><span class="warehouse-tag">冷藏仓 E1</span></td><td>280 包</td><td>800</td><td><span class="pbar"><span class="fill lo" style="width:18%"></span></span><span class="pct">18%</span></td><td><span class="status urgent"><span class="dot"></span>紧急</span></td><td class="action-btns"><button class="btn-action" onclick="event.stopPropagation();editItem('双汇王中王火腿肠 40g×10')">编辑</button><button class="btn-action danger" onclick="event.stopPropagation();deleteItem('双汇王中王火腿肠 40g×10')">删除</button></td></tr>
+                <tr onclick="showDetail('康师傅红烧牛肉面 5连包','SKU-20230876','常温仓 C3','3,150','2,000','66%','normal')"><td class="td-name">康师傅红烧牛肉面 5连包</td><td class="td-code">SKU-20230876</td><td><span class="warehouse-tag">常温仓 C3</span></td><td>3,150 组</td><td>2,000</td><td><span class="pbar"><span class="fill high" style="width:66%"></span></span><span class="pct">66%</span></td><td><span class="status normal"><span class="dot"></span>正常</span></td><td class="action-btns"><button class="btn-action" onclick="event.stopPropagation();editItem('康师傅红烧牛肉面 5连包')">编辑</button><button class="btn-action danger" onclick="event.stopPropagation();deleteItem('康师傅红烧牛肉面 5连包')">删除</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modalOverlay"><div class="modal"><div class="modal-header"><span class="modal-title" id="modalTitle">标题</span></div><div class="modal-body" id="modalBody"></div><div class="modal-footer" id="modalFooter"></div></div></div>
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay'), modalTitle = document.getElementById('modalTitle'), modalBody = document.getElementById('modalBody'), modalFooter = document.getElementById('modalFooter');
+    function openModal(t, b, f) { modalTitle.textContent = t; modalBody.innerHTML = b; modalFooter.innerHTML = f; modalOverlay.classList.add('active'); }
+    function closeModal() { modalOverlay.classList.remove('active'); }
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+    document.getElementById('btnAdd').addEventListener('click', () => { openModal('新增商品',`<div class="form-group"><label class="form-label">商品名称</label><input type="text" class="form-input" placeholder="请输入商品名称"></div><div class="form-row"><div class="form-group"><label class="form-label">SKU 编码</label><input type="text" class="form-input" placeholder="系统自动生成"></div><div class="form-group"><label class="form-label">商品分类</label><select class="form-input"><option>粮油调味</option><option>乳制品</option><option>冷鲜肉类</option><option>速冻食品</option><option>饮料水</option></select></div></div><div class="form-row"><div class="form-group"><label class="form-label">所在仓库</label><select class="form-input"><option>常温仓 A区</option><option>常温仓 B区</option><option>冷藏仓</option><option>冷冻仓</option></select></div><div class="form-group"><label class="form-label">安全库存</label><input type="text" class="form-input" placeholder="最低库存预警值"></div></div><div class="form-group"><label class="form-label">初始库存</label><input type="text" class="form-input" placeholder="请输入初始库存数量"></div>`,`<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-modal-primary" onclick="closeModal()">保存</button>`); });
+    document.getElementById('btnImport').addEventListener('click', () => { openModal('批量导入',`<div class="form-group"><label class="form-label">导入方式</label><select class="form-input"><option>Excel 文件导入</option><option>CSV 文件导入</option><option>手动复制粘贴</option></select></div><div class="form-group"><label class="form-label">选择文件</label><input type="text" class="form-input" placeholder="点击选择文件或拖拽文件至此" style="cursor:pointer;background:var(--bg-warm)"></div><div class="form-group"><label class="form-label">数据预览</label><div style="padding:10px;background:var(--bg);border-radius:7px;border:1px dashed var(--border);text-align:center;color:var(--text-muted);font-size:11px;">请先选择文件</div></div><div style="display:flex;align-items:center;gap:8px;margin-top:8px;"><input type="checkbox" checked style="accent-color:var(--accent)"><span style="font-size:11px;color:var(--text-secondary)">覆盖已有数据</span></div>`,`<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-modal-primary" onclick="closeModal()">开始导入</button>`); });
+    function showSearch() { openModal('搜索商品',`<input type="text" class="form-input" placeholder="输入商品名称或SKU编码..." style="margin-bottom:12px;"><div class="search-list"><div class="search-item" onclick="showDetail('蒙牛特仑苏 250ml×12','SKU-20231087','常温仓 B1','4,620','1,500','78%','normal')"><div class="search-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div class="search-item-content"><div class="search-item-title">蒙牛特仑苏 250ml×12</div><div class="search-item-meta">SKU-20231087 · 常温仓 B1</div></div></div><div class="search-item" onclick="showDetail('农夫山泉 550ml×24','SKU-20230198','常温仓 D1','8,900','3,000','92%','normal')"><div class="search-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div class="search-item-content"><div class="search-item-title">农夫山泉 550ml×24</div><div class="search-item-meta">SKU-20230198 · 常温仓 D1</div></div></div></div>`,`<button class="btn btn-secondary" onclick="closeModal()">关闭</button>`); }
+    function showDetail(name,code,wh,stock,safe,pct,status) { const sm={normal:['正常','var(--accent)'],low:['偏低','var(--amber)'],urgent:['紧急','var(--red)']};const [st,sc]=sm[status]; openModal('商品详情',`<div class="info-row"><div class="info-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div class="info-content"><div class="label">商品名称</div><div class="value">${name}</div></div></div><div class="info-row"><div class="info-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/></svg></div><div class="info-content"><div class="label">SKU 编码</div><div class="value">${code}</div></div></div><div class="info-row"><div class="info-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg></div><div class="info-content"><div class="label">所在仓库</div><div class="value">${wh}</div></div></div><div class="info-row"><div class="info-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div class="info-content"><div class="label">当前库存</div><div class="value" style="color:${sc}">${stock}</div></div></div><div class="info-row"><div class="info-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div><div class="info-content"><div class="label">安全库存</div><div class="value">${safe}</div></div></div><div class="info-row"><div class="info-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/></svg></div><div class="info-content"><div class="label">状态</div><div class="value" style="color:${sc};font-weight:600">${st}</div></div></div>`,`<button class="btn btn-secondary" onclick="closeModal()">关闭</button><button class="btn btn-modal-primary" onclick="closeModal();editItem('${name}')">编辑</button>`); }
+    function editItem(name) { document.getElementById('btnAdd').click(); }
+    function deleteItem(name) { openModal('确认删除',`<div style="text-align:center;padding:16px 0;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" style="width:44px;height:44px;margin-bottom:12px;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><p style="color:var(--text-primary);font-size:13px;font-weight:500;margin-bottom:6px;">确定要删除该商品吗？</p><p style="color:var(--text-muted);font-size:11px;">商品名称：${name}</p></div>`,`<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn" style="background:var(--red);color:#fff;" onclick="closeModal()">确认删除</button>`); }
+    function showStockOverview() { openModal('库存概况',`<div class="info-row"><div class="info-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div><div class="info-content"><div class="label">SKU总数</div><div class="value">12,847</div></div></div><div class="info-row"><div class="info-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/></svg></div><div class="info-content"><div class="label">商品种类</div><div class="value">3,420 种</div></div></div><div class="info-row"><div class="info-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div><div class="info-content"><div class="label">库存预警</div><div class="value">186 件</div></div></div><div class="info-row"><div class="info-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div><div class="info-content"><div class="label">紧急缺货</div><div class="value">23 件</div></div></div>`,`<button class="btn btn-secondary" onclick="closeModal()">关闭</button>`); }
+    function showStockNormal() { openModal('库存充足商品',`<div class="info-row"><div class="info-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="info-content"><div class="label">蒙牛特仑苏 250ml×12</div><div class="value">4,620 箱 · 常温仓 B1</div></div></div><div class="info-row"><div class="info-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="info-content"><div class="label">农夫山泉 550ml×24</div><div class="value">8,900 箱 · 常温仓 D1</div></div></div><div class="info-row"><div class="info-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="info-content"><div class="label">康师傅红烧牛肉面 5连包</div><div class="value">3,150 组 · 常温仓 C3</div></div></div>`,`<button class="btn btn-secondary" onclick="closeModal()">关闭</button>`); }
+    function showStockWarning() { openModal('库存预警商品',`<div class="info-row"><div class="info-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div><div class="info-content"><div class="label">思念灌汤水饺 720g</div><div class="value">1,350 袋 · 冷冻仓 A2</div></div></div><div class="info-row"><div class="info-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div><div class="info-content"><div class="label">金龙鱼菜籽油 5L</div><div class="value">89 桶 · 常温仓 C2</div></div></div>`,`<button class="btn btn-secondary" onclick="closeModal()">关闭</button><button class="btn btn-modal-primary" onclick="closeModal()">处理预警</button>`); }
+    function showStockUrgent() { openModal('紧急缺货商品',`<div class="info-row"><div class="info-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div><div class="info-content"><div class="label">双汇王中王火腿肠 40g×10</div><div class="value">280 包 · 冷藏仓 E1</div></div></div><div class="info-row"><div class="info-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div><div class="info-content"><div class="label">三全水饺（猪肉白菜）500g</div><div class="value">52 件 · 冷冻仓 A3</div></div></div>`,`<button class="btn btn-secondary" onclick="closeModal()">关闭</button><button class="btn btn-modal-primary" onclick="closeModal()">立即补货</button>`); }
+  </script>
+</body>
+</html>

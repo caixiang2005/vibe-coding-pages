@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学生心理档案 — 学生心理档案综合管理系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --primary: #2C6BAC;--primary-light: #4A8FD4;--primary-dark: #1A4F85;
+    --accent: #5BB8A0;--accent2: #F0A500;--danger: #E05555;--warn: #E08A30;
+    --bg: #F4F7FB;--sidebar-bg: #1C2D4A;--sidebar-text: #B8CCDF;
+    --card-bg: #FFFFFF;--text-main: #1A2A3C;--text-sub: #5C7A96;
+    --border: #DDE6F0;--shadow: 0 2px 16px rgba(44,107,172,0.10);
+    --shadow-lg: 0 8px 32px rgba(44,107,172,0.16);--radius: 14px;--radius-sm: 8px;
+    --font-serif: 'Noto Serif SC', serif;--font-sans: 'Noto Sans SC', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font-sans); background: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; overflow-x: hidden; }
+  .sidebar { width: 240px; min-height: calc(100vh - 64px); background: var(--sidebar-bg); display: flex; flex-direction: column; position: fixed; left: 0; top: 64px; bottom: 0; z-index: 100; box-shadow: 4px 0 24px rgba(0,0,0,0.15); }
+  .sidebar-logo { padding: 28px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .logo-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #4A8FD4, #5BB8A0); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 22px; color: #fff; box-shadow: 0 4px 12px rgba(44,107,172,0.4); }
+  .sidebar-logo h1 { font-family: var(--font-serif); font-size: 14px; color: #fff; font-weight: 600; line-height: 1.5; letter-spacing: 0.5px; }
+  .sidebar-logo p { font-size: 11px; color: var(--sidebar-text); margin-top: 3px; opacity: 0.7; }
+  .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--sidebar-text); text-decoration: none; font-size: 13.5px; border-left: 3px solid transparent; transition: all 0.2s; cursor: pointer; }
+  .nav-item i { width: 20px; text-align: center; font-size: 15px; opacity: 0.8; }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; border-left-color: rgba(255,255,255,0.3); }
+  .nav-item.active { background: rgba(44,107,172,0.25); color: #fff; border-left-color: var(--primary-light); font-weight: 500; }
+  .nav-item.active i { opacity: 1; color: var(--primary-light); }
+  .nav-badge { margin-left: auto; background: var(--danger); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #4A8FD4, #5BB8A0); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600; overflow: hidden; }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .user-name { font-size: 13px; color: #fff; font-weight: 500; }
+  .user-role { font-size: 11px; color: var(--sidebar-text); opacity: 0.7; }
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; padding-top: 64px; }
+  .topbar { height: 64px; background: #fff; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px 0 10px; gap: 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 110; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .topbar-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-serif); font-size: 18px; font-weight: 700; color: var(--primary-dark); white-space: nowrap; }
+  .topbar-divider { width: 1px; height: 20px; background: var(--border); }
+  .topbar-title { font-size: 17px; font-weight: 600; color: var(--text-main); font-family: var(--font-serif); }
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-sub); }
+  .breadcrumb a { color: var(--primary); text-decoration: none; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .search-box { display: flex; align-items: center; background: var(--bg); border: 1.5px solid var(--border); border-radius: 24px; padding: 7px 16px; gap: 8px; }
+  .search-box input { border: none; background: none; font-size: 13px; color: var(--text-main); width: 200px; outline: none; font-family: var(--font-sans); }
+  .search-box i { color: var(--text-sub); font-size: 13px; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; font-family: var(--font-sans); text-decoration: none; }
+  .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(44,107,172,0.3); }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .btn-outline { background: #fff; color: var(--primary); border: 1.5px solid var(--border); }
+  .btn-outline:hover { border-color: var(--primary); background: #F0F6FF; }
+  .page-content { padding: 28px; flex: 1; }
+
+  /* FILTER BAR */
+  .filter-bar { background: #fff; border-radius: var(--radius); padding: 18px 22px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  .filter-label { font-size: 12.5px; color: var(--text-sub); font-weight: 500; white-space: nowrap; }
+  select { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; font-size: 13px; color: var(--text-main); font-family: var(--font-sans); background: #fff; cursor: pointer; outline: none; }
+  select:focus { border-color: var(--primary); }
+  .filter-divider { width: 1px; height: 28px; background: var(--border); }
+  .filter-actions { margin-left: auto; display: flex; gap: 10px; }
+
+  /* STUDENT GRID */
+  .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+
+  /* QUICK STATS */
+  .quick-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .quick-stat-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 20px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow); }
+  .quick-stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .quick-stat-icon.blue { background: #E8F1FA; color: #2C6BAC; }
+  .quick-stat-icon.green { background: #E6F7F3; color: #2D9C84; }
+  .quick-stat-icon.orange { background: #FEF3E2; color: #C07B20; }
+  .quick-stat-icon.red { background: #FDEAEA; color: #C04040; }
+  .quick-stat-info .val { font-size: 22px; font-weight: 700; color: var(--text-main); }
+  .quick-stat-info .lbl { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+
+  .recent-activity { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 20px; box-shadow: var(--shadow); margin-top: 20px; }
+  .activity-title { font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .activity-list { display: flex; flex-direction: column; gap: 10px; }
+  .activity-item { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-sub); }
+  .activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .activity-time { margin-left: auto; font-size: 11px; color: #999; white-space: nowrap; }
+
+  .student-card {
+    background: #fff;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .student-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+  .student-card-cover {
+    height: 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .student-card-cover img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .cover-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(28,45,74,0.2), rgba(28,45,74,0.7));
+  }
+
+  .risk-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    backdrop-filter: blur(6px);
+  }
+  .risk-normal { background: rgba(91,184,160,0.9); color: #fff; }
+  .risk-watch { background: rgba(240,165,0,0.9); color: #fff; }
+  .risk-alert { background: rgba(224,85,85,0.9); color: #fff; }
+
+  .student-card-body { padding: 16px; }
+
+  .student-main { display: flex; align-items: center; gap: 12px; margin-top: -36px; position: relative; margin-bottom: 12px; }
+
+  .student-photo {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background: linear-gradient(135deg, #4A8FD4, #5BB8A0);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 20px; font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+
+  .student-info-head { padding-top: 20px; }
+  .student-name { font-size: 15px; font-weight: 700; color: var(--text-main); }
+  .student-meta { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+
+  .student-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 500; }
+  .tag-green { background: #E6F7F3; color: #2D9C84; }
+  .tag-orange { background: #FEF3E2; color: #C07B20; }
+  .tag-red { background: #FDEAEA; color: #C04040; }
+  .tag-blue { background: #E8F1FA; color: #2C6BAC; }
+  .tag-purple { background: #F0E8FE; color: #7040C0; }
+
+  .student-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .stu-stat { text-align: center; }
+  .stu-stat-val { font-size: 16px; font-weight: 700; color: var(--text-main); }
+  .stu-stat-lbl { font-size: 11px; color: var(--text-sub); margin-top: 1px; }
+
+  .student-card-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .btn-sm { padding: 6px 14px; font-size: 12.5px; border-radius: 6px; }
+
+  /* PAGINATION */
+  .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; }
+  .page-info { font-size: 13px; color: var(--text-sub); }
+  .page-btns { display: flex; gap: 6px; }
+  .page-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: #fff; color: var(--text-sub); font-size: 13px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+  .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .page-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  /* LIST VIEW TOGGLE */
+  .view-toggle { display: flex; gap: 4px; }
+  .view-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: #fff; color: var(--text-sub); font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+  .view-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  /* STATS BAR */
+  .stats-bar { display: flex; gap: 16px; margin-bottom: 20px; }
+  .stat-pill { background: #fff; border: 1px solid var(--border); border-radius: 24px; padding: 8px 18px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-sub); box-shadow: var(--shadow); }
+  .stat-pill strong { color: var(--text-main); font-size: 15px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .topbar-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--bg); color: var(--text-sub); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all 0.2s; position: relative; }
+  .topbar-btn:hover { background: var(--border); color: var(--primary); }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-nav">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>系统总览</span></a>
+    <a href="student-files.html" class="nav-item active"><i class="fa-solid fa-folder-open"></i><span>学生心理档案</span></a>
+    <a href="assessment.html" class="nav-item"><i class="fa-solid fa-clipboard-check"></i><span>心理测评管理</span></a>
+    <a href="counseling.html" class="nav-item"><i class="fa-solid fa-comments"></i><span>咨询预约管理</span><span class="nav-badge">5</span></a>
+    <a href="crisis.html" class="nav-item"><i class="fa-solid fa-triangle-exclamation"></i><span>危机预警干预</span><span class="nav-badge">3</span></a>
+    <a href="group-activities.html" class="nav-item"><i class="fa-solid fa-people-group"></i><span>团体活动管理</span></a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar"><img src="https://i04piccdn.sogoucdn.com/e19a983de5cef917" alt="孙家祺"></div>
+      <div><div class="user-name">孙家祺</div><div class="user-role">管理员</div></div>
+      <i class="fa-solid fa-ellipsis-vertical" style="color:var(--sidebar-text);margin-left:auto;opacity:0.5;cursor:pointer;"></i>
+    </div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-brand"><span>学生心理档案综合管理系统</span></div>
+    <div class="topbar-divider"></div>
+    <div>
+      <div class="topbar-title">学生心理档案</div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="搜索学生姓名、学号...">
+      </div>
+      <div class="topbar-actions" style="margin-left:8px">
+        <div style="position:relative">
+          <div class="icon-btn" onclick="toggleNotificationDropdown()"><i class="fa-regular fa-bell"></i><span class="dot"></span></div>
+          <div id="notificationDropdown" style="display:none;position:absolute;top:48px;right:0;width:360px;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(44,107,172,0.2);border:1px solid var(--border);z-index:1000;overflow:hidden">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between"><div style="font-size:14px;font-weight:600;color:var(--text-dark)">通知中心</div><span style="font-size:11px;color:var(--accent);cursor:pointer">全部已读</span></div>
+            <div style="max-height:320px;overflow-y:auto">
+              <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start;background:#FFF9F0" onclick="markAsRead(1)"><div style="width:36px;height:36px;border-radius:50%;background:#FDEAEA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-triangle-exclamation" style="color:#C04040;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">一级危机预警</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">林雨桐测评显示重度抑郁倾向，请立即处理</div><div style="font-size:11px;color:#999;margin-top:4px">10分钟前</div></div></div>
+              <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start;background:#F8FAFD" onclick="markAsRead(2)"><div style="width:36px;height:36px;border-radius:50%;background:#E8F1FA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-clipboard-check" style="color:#2C6BAC;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">测评任务完成</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">高一新生适应性测评已完成，523人已提交</div><div style="font-size:11px;color:#999;margin-top:4px">30分钟前</div></div></div>
+              <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start" onclick="markAsRead(3)"><div style="width:36px;height:36px;border-radius:50%;background:#E6F7F3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-calendar-check" style="color:#2D9C84;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">咨询预约提醒</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">张明轩的咨询预约将于明天10:00开始</div><div style="font-size:11px;color:#999;margin-top:4px">1小时前</div></div></div>
+              <div style="padding:12px 16px;display:flex;gap:12px;align-items:flex-start" onclick="markAsRead(4)"><div style="width:36px;height:36px;border-radius:50%;background:#FEF3E2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-clock" style="color:#C07B20;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">待处理预警</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">您有3条危机预警待处理，请及时跟进</div><div style="font-size:11px;color:#999;margin-top:4px">2小时前</div></div></div>
+            </div>
+            <div style="padding:10px 16px;border-top:1px solid var(--border);text-align:center"><span style="font-size:12px;color:var(--primary);cursor:pointer">查看全部通知</span></div>
+          </div>
+        </div>
+        <button class="topbar-btn" id="loginBtn" onclick="goToLogin()">
+          <i class="fa-solid fa-right-to-bracket"></i>
+        </button>
+        <button class="topbar-btn" id="logoutBtn" onclick="logout()" style="display:none;">
+          <i class="fa-solid fa-sign-out-alt"></i>
+        </button>
+      </div>
+      <div class="view-toggle">
+        <div class="view-btn active"><i class="fa-solid fa-grip"></i></div>
+        <div class="view-btn"><i class="fa-solid fa-list"></i></div>
+      </div>
+      <a href="#" class="btn btn-primary" onclick="openNewStudentModal();return false;"><i class="fa-solid fa-plus"></i> 新建档案</a>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <!-- QUICK STATS -->
+    <div class="quick-stats">
+      <div class="quick-stat-card">
+        <div class="quick-stat-icon blue"><i class="fa-solid fa-users"></i></div>
+        <div class="quick-stat-info"><div class="val">3,842</div><div class="lbl">在册学生总数</div></div>
+      </div>
+      <div class="quick-stat-card">
+        <div class="quick-stat-icon green"><i class="fa-solid fa-folder-open"></i></div>
+        <div class="quick-stat-info"><div class="val">2,916</div><div class="lbl">已建档人数</div></div>
+      </div>
+      <div class="quick-stat-card">
+        <div class="quick-stat-icon orange"><i class="fa-solid fa-eye"></i></div>
+        <div class="quick-stat-info"><div class="val">350</div><div class="lbl">重点关注人数</div></div>
+      </div>
+      <div class="quick-stat-card">
+        <div class="quick-stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="quick-stat-info"><div class="val">23</div><div class="lbl">危机预警人数</div></div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label"><i class="fa-solid fa-school"></i> 年级</span>
+        <select>
+          <option>全部年级</option>
+          <option>初一</option><option>初二</option><option>初三</option>
+          <option>高一</option><option>高二</option><option selected>高三</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label"><i class="fa-solid fa-users"></i> 班级</span>
+        <select><option>全部班级</option><option>(1)班</option><option>(2)班</option><option>(3)班</option><option>(4)班</option><option>(5)班</option></select>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group">
+        <span class="filter-label"><i class="fa-solid fa-heart-pulse"></i> 心理状态</span>
+        <select><option>全部状态</option><option>健康</option><option>良好</option><option>重点关注</option><option>危机干预</option></select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label"><i class="fa-solid fa-calendar"></i> 建档时间</span>
+        <select><option>全部时间</option><option>本学期</option><option>上学期</option><option>近一年</option></select>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-actions">
+        <button class="btn btn-outline btn-sm" onclick="openFilterModal()"><i class="fa-solid fa-filter"></i> 高级筛选</button>
+        <button class="btn btn-outline btn-sm" onclick="exportData()"><i class="fa-solid fa-arrow-down-to-line"></i> 导出</button>
+      </div>
+    </div>
+
+    <!-- STUDENT GRID -->
+    <div class="student-grid">
+
+      <!-- Card 1 -->
+      <div class="student-card">
+        <div class="student-card-cover">
+          <img src="https://img95.699pic.com/photo/60070/9246.jpg_wh860.jpg" alt="">
+          <div class="cover-overlay"></div>
+          <span class="risk-badge risk-alert"><i class="fa-solid fa-triangle-exclamation"></i> 危机关注</span>
+        </div>
+        <div class="student-card-body">
+          <div class="student-main">
+            <img src="https://img95.699pic.com/photo/60070/9246.jpg_wh860.jpg" class="student-photo" style="border-radius:50%;object-fit:cover">
+            <div class="student-info-head">
+              <div class="student-name">林雨桐</div>
+              <div class="student-meta">高二(5)班 · 女 · 学号 20240205</div>
+            </div>
+          </div>
+          <div class="student-tags">
+            <span class="tag tag-red">情绪问题</span>
+            <span class="tag tag-orange">学业焦虑</span>
+            <span class="tag tag-purple">家庭支持不足</span>
+          </div>
+          <div class="student-stats">
+            <div class="stu-stat"><div class="stu-stat-val">8</div><div class="stu-stat-lbl">咨询次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">3</div><div class="stu-stat-lbl">测评次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">2</div><div class="stu-stat-lbl">预警次数</div></div>
+          </div>
+        </div>
+        <div class="student-card-footer">
+          <a href="student-detail.html?id=1" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> 查看档案</a>
+          <button class="btn btn-outline btn-sm" onclick="openCounselingModal(1)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</button>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="student-card">
+        <div class="student-card-cover">
+          <img src="https://tse1.mm.bing.net/th/id/OIP.4MnXVEX8r83UhILnBAGYnAHaE7?rs=1&pid=ImgDetMain&o=7&rm=3" alt="">
+          <div class="cover-overlay"></div>
+          <span class="risk-badge risk-watch"><i class="fa-solid fa-eye"></i> 重点关注</span>
+        </div>
+        <div class="student-card-body">
+          <div class="student-main">
+            <img src="https://tse1.mm.bing.net/th/id/OIP.4MnXVEX8r83UhILnBAGYnAHaE7?rs=1&pid=ImgDetMain&o=7&rm=3" class="student-photo" style="border-radius:50%;object-fit:cover">
+            <div class="student-info-head">
+              <div class="student-name">张明轩</div>
+              <div class="student-meta">高三(2)班 · 男 · 学号 20230302</div>
+            </div>
+          </div>
+          <div class="student-tags">
+            <span class="tag tag-orange">高考压力</span>
+            <span class="tag tag-blue">睡眠障碍</span>
+          </div>
+          <div class="student-stats">
+            <div class="stu-stat"><div class="stu-stat-val">5</div><div class="stu-stat-lbl">咨询次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">4</div><div class="stu-stat-lbl">测评次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">1</div><div class="stu-stat-lbl">预警次数</div></div>
+          </div>
+        </div>
+        <div class="student-card-footer">
+          <a href="student-detail.html?id=2" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> 查看档案</a>
+          <button class="btn btn-outline btn-sm" onclick="openCounselingModal(2)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</button>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="student-card">
+        <div class="student-card-cover">
+          <img src="https://imgs.699pic.com/images/601/064/841.jpg!detail.v1" alt="">
+          <div class="cover-overlay"></div>
+          <span class="risk-badge risk-normal"><i class="fa-solid fa-check-circle"></i> 状态良好</span>
+        </div>
+        <div class="student-card-body">
+          <div class="student-main">
+            <img src="https://imgs.699pic.com/images/601/064/841.jpg!detail.v1" class="student-photo" style="border-radius:50%;object-fit:cover">
+            <div class="student-info-head">
+              <div class="student-name">陈思远</div>
+              <div class="student-meta">初三(1)班 · 男 · 学号 20250301</div>
+            </div>
+          </div>
+          <div class="student-tags">
+            <span class="tag tag-blue">人际关系</span>
+            <span class="tag tag-green">恢复跟踪</span>
+          </div>
+          <div class="student-stats">
+            <div class="stu-stat"><div class="stu-stat-val">3</div><div class="stu-stat-lbl">咨询次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">2</div><div class="stu-stat-lbl">测评次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">0</div><div class="stu-stat-lbl">预警次数</div></div>
+          </div>
+        </div>
+        <div class="student-card-footer">
+          <a href="student-detail.html?id=3" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> 查看档案</a>
+          <button class="btn btn-outline btn-sm" onclick="openCounselingModal(3)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</button>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="student-card">
+        <div class="student-card-cover">
+          <img src="https://img95.699pic.com/photo/50053/8365.jpg_wh860.jpg" alt="">
+          <div class="cover-overlay"></div>
+          <span class="risk-badge risk-watch"><i class="fa-solid fa-eye"></i> 重点关注</span>
+        </div>
+        <div class="student-card-body">
+          <div class="student-main">
+            <img src="https://img95.699pic.com/photo/50053/8365.jpg_wh860.jpg" class="student-photo" style="border-radius:50%;object-fit:cover">
+            <div class="student-info-head">
+              <div class="student-name">王晓雯</div>
+              <div class="student-meta">高一(8)班 · 女 · 学号 20260108</div>
+            </div>
+          </div>
+          <div class="student-tags">
+            <span class="tag tag-orange">学业压力</span>
+            <span class="tag tag-purple">自我认同</span>
+          </div>
+          <div class="student-stats">
+            <div class="stu-stat"><div class="stu-stat-val">4</div><div class="stu-stat-lbl">咨询次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">3</div><div class="stu-stat-lbl">测评次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">1</div><div class="stu-stat-lbl">预警次数</div></div>
+          </div>
+        </div>
+        <div class="student-card-footer">
+          <a href="student-detail.html?id=4" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> 查看档案</a>
+          <button class="btn btn-outline btn-sm" onclick="openCounselingModal(4)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</button>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="student-card">
+        <div class="student-card-cover">
+          <img src="https://img95.699pic.com/photo/60040/8074.jpg_wh860.jpg" alt="">
+          <div class="cover-overlay"></div>
+          <span class="risk-badge risk-normal"><i class="fa-solid fa-check-circle"></i> 状态良好</span>
+        </div>
+        <div class="student-card-body">
+          <div class="student-main">
+            <img src="https://img95.699pic.com/photo/60040/8074.jpg_wh860.jpg" class="student-photo" style="border-radius:50%;object-fit:cover">
+            <div class="student-info-head">
+              <div class="student-name">刘浩然</div>
+              <div class="student-meta">高三(6)班 · 男 · 学号 20230606</div>
+            </div>
+          </div>
+          <div class="student-tags">
+            <span class="tag tag-blue">适应问题</span>
+            <span class="tag tag-green">定期随访</span>
+          </div>
+          <div class="student-stats">
+            <div class="stu-stat"><div class="stu-stat-val">2</div><div class="stu-stat-lbl">咨询次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">2</div><div class="stu-stat-lbl">测评次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">0</div><div class="stu-stat-lbl">预警次数</div></div>
+          </div>
+        </div>
+        <div class="student-card-footer">
+          <a href="student-detail.html?id=5" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> 查看档案</a>
+          <button class="btn btn-outline btn-sm" onclick="openCounselingModal(5)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</button>
+        </div>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="student-card">
+        <div class="student-card-cover">
+          <img src="https://img95.699pic.com/photo/60077/5399.jpg_wh860.jpg" alt="">
+          <div class="cover-overlay"></div>
+          <span class="risk-badge risk-alert"><i class="fa-solid fa-triangle-exclamation"></i> 危机关注</span>
+        </div>
+        <div class="student-card-body">
+          <div class="student-main">
+            <img src="https://img95.699pic.com/photo/60077/5399.jpg_wh860.jpg" class="student-photo" style="border-radius:50%;object-fit:cover">
+            <div class="student-info-head">
+              <div class="student-name">王浩东</div>
+              <div class="student-meta">高三(4)班 · 男 · 学号 20230404</div>
+            </div>
+          </div>
+          <div class="student-tags">
+            <span class="tag tag-red">急性应激</span>
+            <span class="tag tag-orange">SCL-90异常</span>
+          </div>
+          <div class="student-stats">
+            <div class="stu-stat"><div class="stu-stat-val">6</div><div class="stu-stat-lbl">咨询次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">5</div><div class="stu-stat-lbl">测评次数</div></div>
+            <div class="stu-stat"><div class="stu-stat-val">2</div><div class="stu-stat-lbl">预警次数</div></div>
+          </div>
+        </div>
+        <div class="student-card-footer">
+          <a href="student-detail.html?id=6" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> 查看档案</a>
+          <button class="btn btn-outline btn-sm" onclick="openCounselingModal(6)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</button>
+        </div>
+      </div>
+
+    <!-- More Student Cards -->
+    <!-- Card 7 -->
+    <div class="student-card">
+      <div class="student-card-cover">
+        <img src="https://img95.699pic.com/photo/60040/8074.jpg_wh860.jpg" alt="">
+        <div class="cover-overlay"></div>
+        <span class="risk-badge risk-normal"><i class="fa-solid fa-check-circle"></i> 状态良好</span>
+      </div>
+      <div class="student-card-body">
+        <div class="student-main">
+          <img src="https://img95.699pic.com/photo/60040/8074.jpg_wh860.jpg" class="student-photo" style="border-radius:50%;object-fit:cover">
+          <div class="student-info-head">
+            <div class="student-name">赵子涵</div>
+            <div class="student-meta">高二(3)班 · 女 · 学号 20240203</div>
+          </div>
+        </div>
+        <div class="student-tags">
+          <span class="tag tag-green">定期随访</span>
+          <span class="tag tag-blue">人际关系</span>
+        </div>
+        <div class="student-stats">
+          <div class="stu-stat"><div class="stu-stat-val">2</div><div class="stu-stat-lbl">咨询次数</div></div>
+          <div class="stu-stat"><div class="stu-stat-val">2</div><div class="stu-stat-lbl">测评次数</div></div>
+          <div class="stu-stat"><div class="stu-stat-val">0</div><div class="stu-stat-lbl">预警次数</div></div>
+        </div>
+      </div>
+      <div class="student-card-footer">
+        <a href="student-detail.html?id=7" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> 查看档案</a>
+        <button class="btn btn-outline btn-sm" onclick="openCounselingModal(7)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</button>
+      </div>
+    </div>
+
+    <!-- Card 8 -->
+    <div class="student-card">
+      <div class="student-card-cover">
+        <img src="https://img95.699pic.com/photo/60077/5399.jpg_wh860.jpg" alt="">
+        <div class="cover-overlay"></div>
+        <span class="risk-badge risk-watch"><i class="fa-solid fa-eye"></i> 重点关注</span>
+      </div>
+      <div class="student-card-body">
+        <div class="student-main">
+          <img src="https://img95.699pic.com/photo/60077/5399.jpg_wh860.jpg" class="student-photo" style="border-radius:50%;object-fit:cover">
+          <div class="student-info-head">
+            <div class="student-name">孙浩然</div>
+            <div class="student-meta">高一(2)班 · 男 · 学号 20260102</div>
+          </div>
+        </div>
+        <div class="student-tags">
+          <span class="tag tag-orange">学业压力</span>
+          <span class="tag tag-purple">自我认同</span>
+        </div>
+        <div class="student-stats">
+          <div class="stu-stat"><div class="stu-stat-val">3</div><div class="stu-stat-lbl">咨询次数</div></div>
+          <div class="stu-stat"><div class="stu-stat-val">2</div><div class="stu-stat-lbl">测评次数</div></div>
+          <div class="stu-stat"><div class="stu-stat-val">1</div><div class="stu-stat-lbl">预警次数</div></div>
+        </div>
+      </div>
+      <div class="student-card-footer">
+        <a href="student-detail.html?id=8" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> 查看档案</a>
+        <button class="btn btn-outline btn-sm" onclick="openCounselingModal(8)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</button>
+      </div>
+    </div>
+
+    <!-- Card 9 -->
+    <div class="student-card">
+      <div class="student-card-cover">
+        <img src="https://img95.699pic.com/photo/50053/8365.jpg_wh860.jpg" alt="">
+        <div class="cover-overlay"></div>
+        <span class="risk-badge risk-alert"><i class="fa-solid fa-triangle-exclamation"></i> 危机关注</span>
+      </div>
+      <div class="student-card-body">
+        <div class="student-main">
+          <img src="https://img95.699pic.com/photo/50053/8365.jpg_wh860.jpg" class="student-photo" style="border-radius:50%;object-fit:cover">
+          <div class="student-info-head">
+            <div class="student-name">周雨萱</div>
+            <div class="student-meta">高三(1)班 · 女 · 学号 20230101</div>
+          </div>
+        </div>
+        <div class="student-tags">
+          <span class="tag tag-red">情绪问题</span>
+          <span class="tag tag-orange">SCL-90异常</span>
+        </div>
+        <div class="student-stats">
+          <div class="stu-stat"><div class="stu-stat-val">7</div><div class="stu-stat-lbl">咨询次数</div></div>
+          <div class="stu-stat"><div class="stu-stat-val">6</div><div class="stu-stat-lbl">测评次数</div></div>
+          <div class="stu-stat"><div class="stu-stat-val">3</div><div class="stu-stat-lbl">预警次数</div></div>
+        </div>
+      </div>
+      <div class="student-card-footer">
+        <a href="student-detail.html?id=9" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> 查看档案</a>
+        <button class="btn btn-outline btn-sm" onclick="openCounselingModal(9)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</button>
+      </div>
+    </div>
+
+    <!-- Card 10 -->
+    <div class="student-card">
+      <div class="student-card-cover">
+        <img src="https://img95.699pic.com/photo/60070/9246.jpg_wh860.jpg" alt="">
+        <div class="cover-overlay"></div>
+        <span class="risk-badge risk-normal"><i class="fa-solid fa-check-circle"></i> 状态良好</span>
+      </div>
+      <div class="student-card-body">
+        <div class="student-main">
+          <img src="https://img95.699pic.com/photo/60070/9246.jpg_wh860.jpg" class="student-photo" style="border-radius:50%;object-fit:cover">
+          <div class="student-info-head">
+            <div class="student-name">吴思琪</div>
+            <div class="student-meta">初二(4)班 · 女 · 学号 20250404</div>
+          </div>
+        </div>
+        <div class="student-tags">
+          <span class="tag tag-blue">适应问题</span>
+          <span class="tag tag-green">恢复跟踪</span>
+        </div>
+        <div class="student-stats">
+          <div class="stu-stat"><div class="stu-stat-val">1</div><div class="stu-stat-lbl">咨询次数</div></div>
+          <div class="stu-stat"><div class="stu-stat-val">1</div><div class="stu-stat-lbl">测评次数</div></div>
+          <div class="stu-stat"><div class="stu-stat-val">0</div><div class="stu-stat-lbl">预警次数</div></div>
+        </div>
+      </div>
+      <div class="student-card-footer">
+        <a href="student-detail.html?id=10" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i> 查看档案</a>
+        <button class="btn btn-outline btn-sm" onclick="openCounselingModal(10)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</button>
+      </div>
+    </div>
+
+    </div>
+
+    <!-- RECENT ACTIVITY -->
+    <div class="recent-activity">
+      <div class="activity-title"><i class="fa-solid fa-clock-rotate-left"></i> 近期活动</div>
+      <div class="activity-list">
+        <div class="activity-item">
+          <div class="activity-dot" style="background: #E05555;"></div>
+          <span>林雨桐 - 更新危机等级为"危机关注"</span>
+          <span class="activity-time">10分钟前</span>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background: #F0A500;"></div>
+          <span>张明轩 - 完成心理咨询预约</span>
+          <span class="activity-time">30分钟前</span>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background: #5BB8A0;"></div>
+          <span>陈思远 - 测评报告已生成</span>
+          <span class="activity-time">1小时前</span>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background: #2C6BAC;"></div>
+          <span>王晓雯 - 完成心理测评问卷</span>
+          <span class="activity-time">2小时前</span>
+        </div>
+        <div class="activity-item">
+          <div class="activity-dot" style="background: #A060C8;"></div>
+          <span>刘浩然 - 更新个人档案信息</span>
+          <span class="activity-time">3小时前</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination">
+      <div class="page-info">共 2,916 条记录，显示第 1-10 条</div>
+      <div class="page-btns">
+        <div class="page-btn"><i class="fa-solid fa-chevron-left"></i></div>
+        <div class="page-btn active">1</div>
+        <div class="page-btn">2</div>
+        <div class="page-btn">3</div>
+        <div class="page-btn">...</div>
+        <div class="page-btn">292</div>
+        <div class="page-btn"><i class="fa-solid fa-chevron-right"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="notificationModal">
+  <div class="modal" style="max-width:400px;position:fixed;top:80px;right:20px;left:auto;transform:none;border-radius:12px">
+    <div class="modal-header" style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:14px;font-weight:600;color:var(--text-main)"><i class="fa-regular fa-bell"></i> 通知消息 (3)</div>
+      <button onclick="closeNotificationModal()" style="width:26px;height:26px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer"><i class="fa-solid fa-xmark" style="font-size:11px"></i></button>
+    </div>
+    <div class="modal-body" style="padding:0;max-height:400px;overflow-y:auto">
+      <div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='transparent'">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="width:36px;height:36px;border-radius:50%;background:#FDEAEA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-triangle-exclamation" style="color:#E05555;font-size:14px"></i></div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500;color:var(--text-main)">新危机预警触发</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:4px;line-height:1.4">林雨桐同学PHQ-9测评显示重度抑郁，已自动升级为危机关注</div>
+            <div style="font-size:11px;color:#999;margin-top:6px">10分钟前</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 18px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='transparent'">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="width:36px;height:36px;border-radius:50%;background:#E8F1FA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-comments" style="color:#2C6BAC;font-size:14px"></i></div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500;color:var(--text-main)">新咨询预约</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:4px;line-height:1.4">张明轩同学预约了明天下午3点的个体咨询</div>
+            <div style="font-size:11px;color:#999;margin-top:6px">30分钟前</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 18px;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='transparent'">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="width:36px;height:36px;border-radius:50%;background:#E6F7F3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-check-circle" style="color:#2D9C84;font-size:14px"></i></div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500;color:var(--text-main)">测评任务完成</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:4px;line-height:1.4">2024秋季入学心理普查已完成，回收率83.7%</div>
+            <div style="font-size:11px;color:#999;margin-top:6px">2小时前</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function checkLoginStatus() {
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (isLoggedIn === 'true') {
+      loginBtn.style.display = 'none';
+      logoutBtn.style.display = 'flex';
+    } else {
+      loginBtn.style.display = 'flex';
+      logoutBtn.style.display = 'none';
+    }
+  }
+  function goToLogin() { window.location.href = 'login.html'; }
+  function logout() {
+    sessionStorage.removeItem('isLoggedIn');
+    sessionStorage.removeItem('userName');
+    sessionStorage.removeItem('userRole');
+    checkLoginStatus();
+  }
+  checkLoginStatus();
+</script>
+
+<div class="modal-overlay" id="newStudentModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header" id="newStudentModalHeader" style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)"><i class="fa-solid fa-user-plus"></i> 新建学生档案</div>
+      <button class="modal-close" onclick="closeNewStudentModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:20px;max-height:70vh;overflow-y:auto">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">
+        <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">姓名</label><input type="text" class="form-input" placeholder="请输入姓名" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">学号</label><input type="text" class="form-input" placeholder="请输入学号" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">年级</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>初一</option><option>初二</option><option>初三</option><option>高一</option><option>高二</option><option>高三</option></select></div>
+        <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">班级</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>(1)班</option><option>(2)班</option><option>(3)班</option><option>(4)班</option><option>(5)班</option></select></div>
+        <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">性别</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>男</option><option>女</option></select></div>
+        <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">联系电话</label><input type="text" class="form-input" placeholder="请输入联系电话" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div style="grid-column:span 2;margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">家庭住址</label><input type="text" class="form-input" placeholder="请输入家庭住址" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div style="grid-column:span 2;margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">紧急联系人</label><input type="text" class="form-input" placeholder="请输入紧急联系人姓名和电话" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      </div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:8px">初始标签</label><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="tag tag-blue" style="cursor:pointer">+ 情绪问题</span><span class="tag tag-blue" style="cursor:pointer">+ 学业压力</span><span class="tag tag-blue" style="cursor:pointer">+ 人际关系</span><span class="tag tag-blue" style="cursor:pointer">+ 家庭因素</span></div></div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
+      <button onclick="closeNewStudentModal()" class="btn btn-outline btn-sm" style="height:34px">取消</button>
+      <button onclick="saveNewStudent()" class="btn btn-primary btn-sm" style="height:34px"><i class="fa-solid fa-check"></i> 创建档案</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.3);display:none;align-items:center;justify-content:center;z-index:1000}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(44,107,172,0.16);position:fixed;top:50%;left:50%;transform:translate(-50%,-50%)}
+</style>
+
+<div class="modal-overlay" id="filterModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header" style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)"><i class="fa-solid fa-filter"></i> 高级筛选</div>
+      <button onclick="closeFilterModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">风险等级</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" checked> 正常</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" checked> 重点关注</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" checked> 危机预警</label>
+        </div>
+      </div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">问题类型</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox"> 情绪问题</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox"> 学业焦虑</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox"> 人际关系</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox"> 家庭因素</label>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">年级</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>全部年级</option><option>高一</option><option>高二</option><option>高三</option></select></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">班级</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>全部班级</option><option>(1)班</option><option>(2)班</option><option>(3)班</option></select></div>
+      </div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
+      <button onclick="closeFilterModal()" class="btn btn-outline btn-sm" style="height:34px">重置</button>
+      <button onclick="closeFilterModal()" class="btn btn-primary btn-sm" style="height:34px">应用筛选</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="counselingModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header" style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)"><i class="fa-solid fa-calendar-plus"></i> 安排咨询</div>
+      <button onclick="closeCounselingModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">学生姓名</label><input id="counselingStudentName" type="text" class="form-input" placeholder="学生姓名" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">预约日期</label><input type="date" class="form-input" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">预约时间</label><input type="time" class="form-input" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      </div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">咨询类型</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>个体咨询</option><option>家庭咨询</option><option>危机干预</option></select></div>
+      <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">备注</label><textarea placeholder="添加备注..." style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;font-size:13px;font-family:var(--font-sans)"></textarea></div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
+      <button onclick="closeCounselingModal()" class="btn btn-outline btn-sm" style="height:34px">取消</button>
+      <button onclick="saveCounseling()" class="btn btn-primary btn-sm" style="height:34px"><i class="fa-solid fa-check"></i> 确认预约</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openNewStudentModal(){document.getElementById('newStudentModal').classList.add('show')}
+function closeNewStudentModal(){document.getElementById('newStudentModal').classList.remove('show')}
+function saveNewStudent(){closeNewStudentModal();alert('档案创建成功')}
+
+function openFilterModal(){document.getElementById('filterModal').classList.add('show')}
+function closeFilterModal(){document.getElementById('filterModal').classList.remove('show')}
+function exportData(){alert('导出功能：将导出学生档案数据到Excel')}
+
+function openCounselingModal(studentId){
+  const names = {1:'林雨桐',2:'张明轩',3:'陈思远',4:'刘浩然',5:'王晓雯',6:'王子涵'};
+  document.getElementById('counselingStudentName').value = names[studentId] || '';
+  document.getElementById('counselingModal').classList.add('show');
+}
+function closeCounselingModal(){document.getElementById('counselingModal').classList.remove('show')}
+function saveCounseling(){closeCounselingModal();alert('咨询预约已创建')}
+function openNotificationModal(){document.getElementById('notificationModal').classList.add('show')}
+function closeNotificationModal(){document.getElementById('notificationModal').classList.remove('show')}
+function toggleNotificationDropdown(){const d=document.getElementById('notificationDropdown');d.style.display=d.style.display==='none'?'block':'none'}
+function markAsRead(id){alert('标记通知'+id+'为已读')}
+document.addEventListener('click',function(e){const d=document.getElementById('notificationDropdown');if(d&&!e.target.closest('.icon-btn')&&!e.target.closest('#notificationDropdown')){d.style.display='none'}});
+</script>
+</body>
+</html>

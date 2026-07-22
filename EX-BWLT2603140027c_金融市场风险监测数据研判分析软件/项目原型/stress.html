@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>压力测试 - 金融市场风险监测数据研判分析软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--mac-title:#e8e6e3;--mac-title-inactive:#f6f6f6;--sidebar-bg:#1e1e2e;--sidebar-text:#a6adc8;--sidebar-active:rgba(137,180,250,.12);--sidebar-active-text:#89b4fa;--content-bg:#11111b;--content-bg-2:#181825;--card-bg:#1e1e2e;--card-border:rgba(255,255,255,.04);--text-primary:#cdd6f4;--text-secondary:#6c7086;--text-dim:#45475a;--accent-blue:#89b4fa;--accent-green:#a6e3a1;--accent-red:#f38ba8;--accent-yellow:#f9e2af;--accent-mauve:#cba6f7;--accent-peach:#fab387;--accent-teal:#94e2d5;--shadow-heavy:0 30px 80px rgba(0,0,0,.6),0 0 1px rgba(255,255,255,.05);--radius:10px}
+    body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a12;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;color:var(--text-primary)}
+    .desktop-bg{position:fixed;inset:0;background:linear-gradient(135deg,#0c0c1d 0%,#1a1a2e 40%,#16213e 70%,#0f3460 100%);z-index:0}
+    .desktop-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 20%,rgba(137,180,250,.04) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(203,166,247,.03) 0%,transparent 50%)}
+    .mac-window{position:relative;z-index:1;width:1280px;max-width:96vw;height:820px;max-height:90vh;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-heavy);display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.06)}
+    .title-bar{height:52px;min-height:52px;background:linear-gradient(180deg,#2a2a3c 0%,#232336 100%);display:flex;align-items:center;padding:0 16px;border-bottom:1px solid rgba(0,0,0,.4);-webkit-app-region:drag;position:relative}
+    .traffic-lights{display:flex;gap:8px;z-index:2}
+    .traffic-light{width:12px;height:12px;border-radius:50%;position:relative}
+    .traffic-light.close{background:#ec6a5e;border:1px solid #d14f44}
+    .traffic-light.minimize{background:#f4be4f;border:1px solid #d69e2e}
+    .traffic-light.maximize{background:#61c554;border:1px solid #4da83f}
+    .title-bar-text{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;font-weight:500;color:#a0a0b8;letter-spacing:.3px;white-space:nowrap}
+    .title-bar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);padding:4px 12px 4px 8px;border-radius:6px;font-size:12px;color:var(--text-secondary)}
+    .user-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent-blue),var(--accent-mauve));display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:10px;color:#fff;font-weight:600}
+    .main-body{flex:1;display:flex;overflow:hidden;background:var(--content-bg)}
+    .sidebar{width:220px;min-width:220px;background:var(--sidebar-bg);border-right:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;padding:12px 0;overflow-y:auto}
+    .sidebar-section{padding:0 12px;margin-bottom:4px}
+    .sidebar-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);padding:12px 12px 6px}
+    .sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--sidebar-text);transition:all .15s;position:relative;margin-bottom:1px}
+    .sidebar-item:hover{background:rgba(255,255,255,.04);color:var(--text-primary)}
+    .sidebar-item.active{background:var(--sidebar-active);color:var(--sidebar-active-text)}
+    .sidebar-item .icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:13px;opacity:.7}
+    .sidebar-item.active .icon{opacity:1}
+    .sidebar-item .badge{margin-left:auto;background:var(--accent-red);color:#11111b;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+    .sidebar-status{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.04)}
+    .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px}
+    .status-dot.online{background:var(--accent-green);box-shadow:0 0 6px rgba(166,227,161,.4)}
+    .status-text{font-size:11px;color:var(--text-secondary)}
+    .content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .content-header{display:flex;flex-direction:column;gap:12px;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.03);background:var(--content-bg-2)}
+    .content-title{font-size:18px;font-weight:600;color:var(--text-primary);letter-spacing:-.2px}
+    .content-subtitle{font-size:12px;color:var(--text-secondary);margin-top:2px}
+    .header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;width:100%}
+    .btn{padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+    .btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary)}
+    .btn.primary{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.2);color:var(--accent-blue)}
+    .btn.primary:hover{background:rgba(137,180,250,.25)}
+    .btn.warning{background:rgba(243,139,168,.15);border-color:rgba(243,139,168,.2);color:var(--accent-red)}
+    .btn.warning:hover{background:rgba(243,139,168,.25)}
+    .btn.info{background:rgba(137,180,250,.12);border-color:rgba(137,180,250,.18);color:var(--accent-blue)}
+    .btn.info:hover{background:rgba(137,180,250,.22)}
+    .time-display{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim)}
+    .tab-bar{display:flex;gap:2px;margin-bottom:14px}
+    .tab-item{padding:5px 12px;font-size:11px;color:var(--text-dim);border-radius:4px;cursor:pointer;transition:all .15s}
+    .tab-item:hover{color:var(--text-secondary)}
+    .tab-item.active{background:rgba(137,180,250,.1);color:var(--accent-blue)}
+    .market-filter{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    .filter-chip{padding:4px 12px;font-size:11px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-secondary);cursor:pointer;transition:all .15s}
+    .filter-chip:hover{background:rgba(255,255,255,.08)}
+    .filter-chip.active{background:rgba(137,180,250,.15);border-color:rgba(137,180,250,.3);color:var(--accent-blue)}
+    .content-scroll{flex:1;overflow-y:auto;padding:20px 24px}
+    .content-scroll::-webkit-scrollbar{width:6px}
+    .content-scroll::-webkit-scrollbar-track{background:transparent}
+    .content-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+    .tab-bar{display:flex;gap:2px;margin-bottom:14px}
+    .tab-item{padding:5px 12px;font-size:11px;color:var(--text-dim);border-radius:4px;cursor:pointer;transition:all .15s}
+    .tab-item:hover{color:var(--text-secondary)}
+    .tab-item.active{background:rgba(137,180,250,.1);color:var(--accent-blue)}
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+    .kpi-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:16px 18px}
+    .kpi-label{font-size:11px;color:var(--text-secondary);margin-bottom:8px;letter-spacing:.3px}
+    .kpi-value{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;letter-spacing:-1px}
+    .kpi-sub{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px}
+    .kpi-change{font-family:'JetBrains Mono',monospace;font-weight:500}
+    .kpi-change.up{color:var(--accent-red)}
+    .kpi-change.down{color:var(--accent-green)}
+    .kpi-change.neutral{color:var(--accent-yellow)}
+    .kpi-desc{color:var(--text-dim)}
+    .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:18px;overflow:hidden}
+    .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .card-title{font-size:13px;font-weight:600;color:var(--text-primary)}
+    .card-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500}
+    .tag-warn{background:rgba(243,139,168,.12);color:var(--accent-red)}
+    .tag-safe{background:rgba(166,227,161,.12);color:var(--accent-green)}
+    .tag-info{background:rgba(137,180,250,.12);color:var(--accent-blue)}
+    .data-table{width:100%;border-collapse:collapse;font-size:12px}
+    .data-table th{text-align:left;padding:8px 10px;color:var(--text-dim);font-weight:500;font-size:11px;letter-spacing:.3px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .data-table td{padding:10px 10px;color:var(--text-secondary);border-bottom:1px solid rgba(255,255,255,.02);font-family:'JetBrains Mono',monospace;font-size:11px}
+    .data-table tr:hover td{background:rgba(255,255,255,.015)}
+    .data-table .name-col{font-family:'Noto Sans SC',sans-serif;color:var(--text-primary);font-weight:500}
+    .risk-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+    .risk-high{background:rgba(243,139,168,.15);color:var(--accent-red)}
+    .risk-mid{background:rgba(249,226,175,.15);color:var(--accent-yellow)}
+    .risk-low{background:rgba(166,227,161,.12);color:var(--accent-green)}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .kpi-card,.card{animation:fadeIn .4s ease both}
+    .kpi-card:nth-child(2){animation-delay:.05s}
+    .kpi-card:nth-child(3){animation-delay:.1s}
+    .kpi-card:nth-child(4){animation-delay:.15s}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s ease}
+    .modal-content{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;width:400px;max-width:90vw;overflow:hidden}
+    .modal-header{display:flex;align-items:center;justify-content:center;padding:16px 20px;background:var(--content-bg-2);border-bottom:1px solid rgba(255,255,255,.05);position:relative}
+    .modal-header .traffic-lights{display:flex;gap:8px;position:absolute;left:20px;top:50%;transform:translateY(-50%)}
+    .modal-header .traffic-light{width:12px;height:12px;border-radius:50%;cursor:pointer}
+    .modal-header .traffic-light.close{background:#ff5f57}
+    .modal-header .traffic-light.minimize{background:#febc2e}
+    .modal-header .traffic-light.maximize{background:#28c840}
+    .modal-title{font-size:14px;font-weight:600;color:var(--text-primary)}
+    .modal-body{padding:24px 20px}
+    .modal-body p{font-size:13px;color:var(--text-secondary);margin-bottom:16px}
+    .report-progress{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:12px}
+    .progress-fill{height:100%;background:var(--accent-blue);border-radius:3px;width:0;transition:width .4s ease}
+    .report-status{font-size:11px;color:var(--text-dim)}
+    .report-success{text-align:center;padding:20px 0}
+    .success-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:rgba(166,227,161,.15);color:var(--accent-green);border-radius:50%;font-size:24px;margin-bottom:16px}
+    .report-filename{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);margin:8px 0 20px}
+    .toast-notification{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 20px;font-size:13px;color:var(--text-primary);z-index:1001;transition:transform .3s ease;display:flex;align-items:center;gap:10px}
+    .toast-notification.show{transform:translateX(-50%) translateY(0)}
+    .toast-notification.success{border-left:3px solid var(--accent-green)}
+    .toast-notification.warning{border-left:3px solid var(--accent-yellow)}
+    .toast-notification.error{border-left:3px solid var(--accent-red)}
+    .param-form{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .param-group{margin-bottom:12px}
+    .param-label{font-size:11px;color:var(--text-secondary);margin-bottom:6px;display:block}
+    .param-input{width:100%;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px}
+    .param-input:focus{outline:none;border-color:var(--accent-blue);background:rgba(137,180,250,.05)}
+    .param-slider{display:flex;align-items:center;gap:10px}
+    .slider{-webkit-appearance:none;width:100%;height:6px;background:rgba(255,255,255,.08);border-radius:3px;outline:none}
+    .slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--accent-blue);border-radius:50%;cursor:pointer}
+    .slider-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-blue);min-width:45px;text-align:right}
+    .apply-btn{margin-top:16px;display:flex;gap:10px}
+    .custom-result{margin-top:20px;padding:16px;background:rgba(137,180,250,.05);border:1px solid rgba(137,180,250,.1);border-radius:8px}
+    .custom-result-title{font-size:12px;color:var(--accent-blue);margin-bottom:12px;font-weight:500}
+    .factor-row{cursor:pointer;padding:10px;border-radius:6px;transition:background .15s}
+    .factor-row:hover{background:rgba(255,255,255,.04)}
+    .run-sim-btn{padding:6px 14px;border-radius:6px;background:rgba(137,180,250,.15);border:1px solid rgba(137,180,250,.2);color:var(--accent-blue);font-size:12px;cursor:pointer;transition:all .15s}
+    .run-sim-btn:hover{background:rgba(137,180,250,.25)}
+  </style>
+</head>
+<body>
+  <div class="desktop-bg"></div>
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <div class="title-bar-text">金融市场风险监测数据研判分析软件</div>
+      <div class="title-bar-right">
+        <div class="time-display" id="clock"></div>
+        <div class="user-badge">
+          <div class="user-avatar">鲍</div>
+          <span>鲍姝帆</span>
+        </div>
+      </div>
+    </div>
+    <div class="main-body">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label">软件功能</div>
+          <div class="sidebar-item" onclick="location.href='dashboard.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            风险总览
+          </div>
+          <div class="sidebar-item" onclick="location.href='market.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+            市场监测
+          </div>
+          <div class="sidebar-item" onclick="location.href='credit.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            信用风险
+            <span class="badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="location.href='liquidity.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span>
+            流动性分析
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-item active">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            压力测试
+          </div>
+          <div class="sidebar-item" onclick="location.href='var.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span>
+            VaR模型
+          </div>
+          <div class="sidebar-item" onclick="location.href='correlation.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+            关联分析
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-item" onclick="location.href='system.html'">
+            <span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+            系统设置
+          </div>
+        </div>
+        <div class="sidebar-status">
+          <span class="status-dot online"></span>
+          <span class="status-text">数据源连接正常 · 延迟 12ms</span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="content-header">
+          <div>
+            <div class="content-title">压力测试</div>
+            <div class="content-subtitle">多情景压力测试与敏感性分析 · 数据更新于 <span id="updateTime"></span></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn" onclick="showStressConfig()">情景配置</button>
+            <button class="btn" onclick="showScenarioManager()">情景管理</button>
+            <button class="btn" onclick="exportScenario()">导出情景</button>
+            <button class="btn" onclick="showScenarioCompare()">对比分析</button>
+            <button class="btn" onclick="showSensitivityAnalysis()">敏感性分析</button>
+            <button class="btn" onclick="showCapitalImpact()">资本影响</button>
+            <button class="btn" onclick="showReverseStress()">反向压力测试</button>
+            <button class="btn warning" onclick="pushStressAlert()"><i class="fas fa-bell"></i> 一键预警推送</button>
+            <button class="btn" onclick="showStressHistory()"><i class="fas fa-history"></i> 历史情景回溯</button>
+            <button class="btn" onclick="showStressScenarioGen()"><i class="fas fa-chart-line"></i> 智能情景生成</button>
+            <button class="btn" onclick="exportData()">导出数据</button>
+            <button class="btn primary" onclick="generateReport()">生成报告</button>
+          </div>
+        </div>
+        <div class="content-scroll">
+          <div class="tab-bar">
+            <div class="tab-item active" onclick="switchStressTab(this,'base')">基准情景</div>
+            <div class="tab-item" onclick="switchStressTab(this,'light')">轻度压力</div>
+            <div class="tab-item" onclick="switchStressTab(this,'medium')">中度压力</div>
+            <div class="tab-item" onclick="switchStressTab(this,'extreme')">极端压力</div>
+            <div class="tab-item" onclick="switchStressTab(this,'custom')">自定义参数</div>
+          </div>
+          <div id="customParamsPanel" style="display:none;margin-bottom:20px;">
+            <div class="card">
+              <div class="card-head"><span class="card-title">自定义压力参数</span><span class="card-tag tag-info">设置各风险因子冲击幅度</span></div>
+              <div class="param-form" style="margin-top:14px;">
+                <div class="param-group">
+                  <label class="param-label">利率上行 (bp)</label>
+                  <div class="param-slider">
+                    <input type="range" class="slider" id="shockRate" min="0" max="300" value="100" oninput="updateSliderVal('shockRate')">
+                    <span class="slider-val" id="shockRateVal">+100bp</span>
+                  </div>
+                </div>
+                <div class="param-group">
+                  <label class="param-label">信用违约率增加 (%)</label>
+                  <div class="param-slider">
+                    <input type="range" class="slider" id="shockDefault" min="0" max="8" value="2" step="0.5" oninput="updateSliderVal('shockDefault')">
+                    <span class="slider-val" id="shockDefaultVal">+2%</span>
+                  </div>
+                </div>
+                <div class="param-group">
+                  <label class="param-label">股市下跌 (%)</label>
+                  <div class="param-slider">
+                    <input type="range" class="slider" id="shockStock" min="0" max="60" value="20" oninput="updateSliderVal('shockStock')">
+                    <span class="slider-val" id="shockStockVal">-20%</span>
+                  </div>
+                </div>
+                <div class="param-group">
+                  <label class="param-label">汇率贬值 (%)</label>
+                  <div class="param-slider">
+                    <input type="range" class="slider" id="shockFX" min="0" max="20" value="5" oninput="updateSliderVal('shockFX')">
+                    <span class="slider-val" id="shockFXVal">-5%</span>
+                  </div>
+                </div>
+                <div class="param-group">
+                  <label class="param-label">原油价格下跌 (%)</label>
+                  <div class="param-slider">
+                    <input type="range" class="slider" id="shockOil" min="0" max="70" value="30" oninput="updateSliderVal('shockOil')">
+                    <span class="slider-val" id="shockOilVal">-30%</span>
+                  </div>
+                </div>
+                <div class="param-group">
+                  <label class="param-label">置信水平</label>
+                  <div class="param-slider">
+                    <input type="range" class="slider" id="confidenceLevel" min="90" max="99" value="95" oninput="updateSliderVal('confidenceLevel')">
+                    <span class="slider-val" id="confidenceLevelVal">95%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="apply-btn">
+                <button class="btn primary" onclick="applyCustomParams()">应用参数</button>
+                <button class="btn" onclick="resetCustomParams()">重置</button>
+              </div>
+              <div class="custom-result" id="customResult" style="display:none;">
+                <div class="custom-result-title">计算结果预览</div>
+                <div id="customResultContent"></div>
+              </div>
+            </div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-card" onclick="showStressKpiDetail('资本充足率(压力后)','11.2%','资本充足率是银行资本与风险加权资产的比率，反映银行吸收损失的能力。监管要求不低于10.5%。压力测试后资本充足率11.2%，仍高于监管要求，但安全边际在收窄。')">
+              <div class="kpi-label">资本充足率(压力后) <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-yellow)">11.2%</div>
+              <div class="kpi-sub"><span class="kpi-change up">-1.8%</span><span class="kpi-desc">监管要求 10.5%</span></div>
+            </div>
+            <div class="kpi-card" onclick="showStressKpiDetail('预计损失','487亿','压力情景下各风险因子对银行组合造成的预期损失总额。包括利率风险、信用风险、市场风险等各类风险因子的损失汇总。')">
+              <div class="kpi-label">预计损失 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-red)">487亿</div>
+              <div class="kpi-sub"><span class="kpi-change up">+124亿</span><span class="kpi-desc">较上期</span></div>
+            </div>
+            <div class="kpi-card" onclick="showStressKpiDetail('流动性覆盖率(LCR)','128%','LCR衡量银行30天内高流动性资产覆盖净现金流出压力的能力。监管要求不低于100%。128%表示高流动性资产可覆盖未来30天净现金流出1.28倍。')">
+              <div class="kpi-label">流动性覆盖率 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-green)">128%</div>
+              <div class="kpi-sub"><span class="kpi-change down">监管要求 100%</span><span class="kpi-desc"></span></div>
+            </div>
+            <div class="kpi-card" onclick="showStressKpiDetail('风险敞口集中度','23.4%','单一行业或资产类别占总投资组合的比例。房地产占比最高(23.4%)，表明组合在地产行业存在集中度风险，需关注房地产调控政策的影響。')">
+              <div class="kpi-label">风险敞口集中度 <span style="color:var(--accent-blue);cursor:help;">ⓘ</span></div>
+              <div class="kpi-value" style="color:var(--accent-mauve)">23.4%</div>
+              <div class="kpi-sub"><span class="kpi-change neutral">房地产占比最高</span><span class="kpi-desc"></span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">情景分析 - 各风险因子冲击影响</span><span class="card-tag tag-warn" id="stressScenarioTag">基准情景</span></div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <button class="run-sim-btn" onclick="runSensitivityAnalysis()">敏感性分析</button>
+              <button class="run-sim-btn" onclick="runMonteCarloSim()">蒙特卡洛模拟</button>
+            </div>
+            <table class="data-table">
+              <thead><tr><th onclick="sortStressTable('factor')">风险因子 ↕</th><th onclick="sortStressTable('shock')">冲击幅度 ↕</th><th onclick="sortStressTable('loss')">影响损失(亿) ↕</th><th onclick="sortStressTable('pct')">占比 ↕</th><th>敏感度</th><th>操作</th></tr></thead>
+              <tbody id="stressTableBody">
+                <tr class="factor-row" onclick="showFactorDetail('利率上行','+100bp','178','36.6%','国债收益率曲线平坦化','利率风险')"><td class="name-col">利率上行</td><td>+100bp</td><td>178</td><td>36.6%</td><td><span class="risk-badge risk-high">高</span></td><td><button class="trend-btn" onclick="event.stopPropagation();adjustFactor('利率上行')" style="padding:2px 6px;font-size:9px;">调整</button></td></tr>
+                <tr class="factor-row" onclick="showFactorDetail('信用违约','违约率+2%','134','27.5%','融资环境收紧','信用风险')"><td class="name-col">信用违约</td><td>违约率+2%</td><td>134</td><td>27.5%</td><td><span class="risk-badge risk-high">高</span></td><td><button class="trend-btn" onclick="event.stopPropagation();adjustFactor('信用违约')" style="padding:2px 6px;font-size:9px;">调整</button></td></tr>
+                <tr class="factor-row" onclick="showFactorDetail('股市下跌','-20%','89','18.3%','风险偏好下降','市场风险')"><td class="name-col">股市下跌</td><td>-20%</td><td>89</td><td>18.3%</td><td><span class="risk-badge risk-mid">中</span></td><td><button class="trend-btn" onclick="event.stopPropagation();adjustFactor('股市下跌')" style="padding:2px 6px;font-size:9px;">调整</button></td></tr>
+                <tr class="factor-row" onclick="showFactorDetail('汇率贬值','CNY -5%','52','10.7%','资本外流压力','汇率风险')"><td class="name-col">汇率贬值</td><td>CNY -5%</td><td>52</td><td>10.7%</td><td><span class="risk-badge risk-mid">中</span></td><td><button class="trend-btn" onclick="event.stopPropagation();adjustFactor('汇率贬值')" style="padding:2px 6px;font-size:9px;">调整</button></td></tr>
+                <tr class="factor-row" onclick="showFactorDetail('商品价格','原油 -30%','34','7.0%','全球需求疲软','大宗商品风险')"><td class="name-col">商品价格</td><td>原油 -30%</td><td>34</td><td>7.0%</td><td><span class="risk-badge risk-low">低</span></td><td><button class="trend-btn" onclick="event.stopPropagation();adjustFactor('商品价格')" style="padding:2px 6px;font-size:9px;">调整</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function updateClock(){
+      const now=new Date();
+      const h=String(now.getHours()).padStart(2,'0');
+      const m=String(now.getMinutes()).padStart(2,'0');
+      const s=String(now.getSeconds()).padStart(2,'0');
+      document.getElementById('clock').textContent=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${h}:${m}:${s}`;
+      document.getElementById('updateTime').textContent=`${h}:${m}`;
+    }
+    updateClock();
+    setInterval(updateClock,1000);
+
+    function updateSliderVal(id){
+      const val=document.getElementById(id).value;
+      const suffixes={shockRate:'bp',shockDefault:'%',shockStock:'%',shockFX:'%',shockOil:'%',confidenceLevel:'%'};
+      const prefixes={shockRate:'+',shockStock:'-',shockFX:'-',shockOil:'-'};
+      const prefix=prefixes[id]||'';
+      document.getElementById(id+'Val').textContent=prefix+val+suffixes[id];
+    }
+
+    function applyCustomParams(){
+      const rate=parseInt(document.getElementById('shockRate').value);
+      const def=parseFloat(document.getElementById('shockDefault').value);
+      const stock=parseInt(document.getElementById('shockStock').value);
+      const fx=parseInt(document.getElementById('shockFX').value);
+      const oil=parseInt(document.getElementById('shockOil').value);
+      const conf=parseInt(document.getElementById('confidenceLevel').value);
+      const rateLoss=Math.round(rate*1.78);
+      const defLoss=Math.round(def*67);
+      const stockLoss=Math.round(stock*4.45);
+      const fxLoss=Math.round(fx*10.4);
+      const oilLoss=Math.round(oil*1.13);
+      const totalLoss=rateLoss+defLoss+stockLoss+fxLoss+oilLoss;
+      const ratePct=(rateLoss/totalLoss*100).toFixed(1);
+      const defPct=(defLoss/totalLoss*100).toFixed(1);
+      const stockPct=(stockLoss/totalLoss*100).toFixed(1);
+      const fxPct=(fxLoss/totalLoss*100).toFixed(1);
+      const oilPct=(oilLoss/totalLoss*100).toFixed(1);
+      const capitalRatio=(12.5-rate*0.015-def*0.08-stock*0.02).toFixed(1);
+      const liquidityCov=(140-rate*0.1-def*2-stock*0.3).toFixed(0);
+      const resultHTML=`
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;">
+          <div><div style="font-size:11px;color:var(--text-secondary)">预计总损失</div><div style="font-family:'JetBrains Mono';font-size:20px;color:var(--accent-red)">${totalLoss}亿</div></div>
+          <div><div style="font-size:11px;color:var(--text-secondary)">资本充足率(压力后)</div><div style="font-family:'JetBrains Mono';font-size:20px;color:${capitalRatio<10.5?'var(--accent-red)':'var(--accent-yellow)'}">${capitalRatio}%</div></div>
+          <div><div style="font-size:11px;color:var(--text-secondary)">流动性覆盖率</div><div style="font-family:'JetBrains Mono';font-size:20px;color:${liquidityCov<100?'var(--accent-red)':'var(--accent-green)'}">${liquidityCov}%</div></div>
+          <div><div style="font-size:11px;color:var(--text-secondary)">置信水平</div><div style="font-family:'JetBrains Mono';font-size:20px;color:var(--accent-blue)">${conf}%</div></div>
+        </div>
+        <table class="data-table"><thead><tr><th>风险因子</th><th>冲击幅度</th><th>影响损失(亿)</th><th>占比</th></tr></thead><tbody>
+          <tr><td class="name-col">利率上行</td><td>+${rate}bp</td><td>${rateLoss}</td><td>${ratePct}%</td></tr>
+          <tr><td class="name-col">信用违约</td><td>违约率+${def}%</td><td>${defLoss}</td><td>${defPct}%</td></tr>
+          <tr><td class="name-col">股市下跌</td><td>-${stock}%</td><td>${stockLoss}</td><td>${stockPct}%</td></tr>
+          <tr><td class="name-col">汇率贬值</td><td>CNY -${fx}%</td><td>${fxLoss}</td><td>${fxPct}%</td></tr>
+          <tr><td class="name-col">商品价格</td><td>原油 -${oil}%</td><td>${oilLoss}</td><td>${oilPct}%</td></tr>
+        </tbody></table>`;
+      document.getElementById('customResult').style.display='block';
+      document.getElementById('customResultContent').innerHTML=resultHTML;
+      showToast('自定义参数已应用','success');
+    }
+
+    function resetCustomParams(){
+      document.getElementById('shockRate').value=100;updateSliderVal('shockRate');
+      document.getElementById('shockDefault').value=2;updateSliderVal('shockDefault');
+      document.getElementById('shockStock').value=20;updateSliderVal('shockStock');
+      document.getElementById('shockFX').value=5;updateSliderVal('shockFX');
+      document.getElementById('shockOil').value=30;updateSliderVal('shockOil');
+      document.getElementById('confidenceLevel').value=95;updateSliderVal('confidenceLevel');
+      document.getElementById('customResult').style.display='none';
+      showToast('参数已重置','success');
+    }
+
+    function showFactorDetail(name,shock,loss,pct,driver,riskType){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">${name} - 因子详情</span></div><div class="modal-body" style="padding:20px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;"><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">冲击幅度</div><div style="font-size:18px;font-family:'JetBrains Mono';color:var(--text-primary)">${shock}</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">影响损失</div><div style="font-size:18px;font-family:'JetBrains Mono';color:var(--accent-red)">${loss}亿</div></div></div><div style="background:rgba(255,255,255,.03);padding:12px;border-radius:6px;margin-bottom:12px;"><div class="detail-row"><span class="detail-label">风险类型</span><span class="detail-value">${riskType}</span></div><div class="detail-row"><span class="detail-label">占比</span><span class="detail-value">${pct}</span></div><div class="detail-row"><span class="detail-label">主要驱动因素</span><span class="detail-value">${driver}</span></div></div><div style="display:flex;gap:8px;margin-top:12px;"><button class="btn" onclick="showFactorHistory('${name}')" style="flex:1">历史分析</button><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="flex:1">确定</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showFactorHistory(name){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">${name} - 历史压力测试</span></div><div class="modal-body" style="padding:20px"><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">近5次压力测试中该因子表现</p><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><table style="width:100%;font-size:11px;"><tr style="border-bottom:1px solid rgba(255,255,255,.05)"><td style="padding:6px;color:var(--text-dim)">2024/09</td><td style="padding:6px;color:var(--text-primary)">+80bp</td><td style="padding:6px;color:var(--accent-yellow)">142亿</td></tr><tr style="border-bottom:1px solid rgba(255,255,255,.05)"><td style="padding:6px;color:var(--text-dim)">2024/10</td><td style="padding:6px;color:var(--text-primary)">+95bp</td><td style="padding:6px;color:var(--accent-yellow)">168亿</td></tr><tr style="border-bottom:1px solid rgba(255,255,255,.05)"><td style="padding:6px;color:var(--text-dim)">2024/11</td><td style="padding:6px;color:var(--accent-red)">+120bp</td><td style="padding:6px;color:var(--accent-red)">198亿</td></tr><tr style="border-bottom:1px solid rgba(255,255,255,.05)"><td style="padding:6px;color:var(--text-dim)">2024/12</td><td style="padding:6px;color:var(--text-primary)">+100bp</td><td style="padding:6px;color:var(--accent-yellow)">178亿</td></tr><tr><td style="padding:6px;color:var(--text-primary)">2025/01</td><td style="padding:6px;color:var(--accent-red)">+100bp</td><td style="padding:6px;color:var(--accent-red)">178亿</td></tr></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function runSensitivityAnalysis(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:480px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">敏感性分析</span></div><div class="modal-body" style="padding:20px"><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">各风险因子变动对资本充足率的敏感度</p><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:11px;color:var(--text-secondary)">利率上行 25bp</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-red)">-0.08%</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:11px;color:var(--text-secondary)">信用违约率 +0.5%</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-red)">-0.15%</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:11px;color:var(--text-secondary)">股市下跌 5%</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-red)">-0.05%</span></div><div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-secondary)">汇率贬值 1%</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-yellow)">-0.02%</span></div></div><p style="font-size:11px;color:var(--text-dim);">敏感度系数表示单位冲击对资本充足率的影响</p><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function runMonteCarloSim(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:480px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">蒙特卡洛模拟结果</span></div><div class="modal-body" style="padding:20px"><p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">基于10,000次模拟的损失分布</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;"><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">VaR(95%)</div><div style="font-size:20px;font-family:'JetBrains Mono';color:var(--accent-blue)">486亿</div></div><div style="background:rgba(255,255,255,.03);padding:10px;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--text-secondary)">VaR(99%)</div><div style="font-size:20px;font-family:'JetBrains Mono';color:var(--accent-mauve)">612亿</div></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:11px;color:var(--text-secondary)">预期损失(均值)</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--text-primary)">387亿</span></div><div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-secondary)">最大损失(极端)</span><span style="font-size:11px;font-family:'JetBrains Mono';color:var(--accent-red)">892亿</span></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showStressKpiDetail(name,value,description){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">指标说明</span></div><div class="modal-body" style="padding:20px"><div style="text-align:center;margin-bottom:16px;"><div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">${name}</div><div style="font-size:28px;font-family:'JetBrains Mono';color:var(--accent-blue);font-weight:600">${value}</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:16px;"><p style="font-size:13px;color:var(--text-secondary);line-height:1.7;">${description}</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:16px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function switchStressTab(el, scenario){
+      el.closest('.tab-bar').querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+      const scenarioTag=document.getElementById('stressScenarioTag');
+      const tbody=document.getElementById('stressTableBody');
+      const customPanel=document.getElementById('customParamsPanel');
+      if(scenario==='custom'){
+        customPanel.style.display='block';
+        return;
+      }
+      customPanel.style.display='none';
+      const scenarios={
+        base:{name:'基准情景',tag:'tag-warn',kpi:['11.2%','487亿','128%','23.4%'],kpiChange:['-1.8%','+124亿','监管要求 100%','房地产占比最高'],data:[
+          ['利率上行','+100bp','178','36.6%','risk-high'],
+          ['信用违约','违约率+2%','134','27.5%','risk-high'],
+          ['股市下跌','-20%','89','18.3%','risk-mid'],
+          ['汇率贬值','CNY -5%','52','10.7%','risk-mid'],
+          ['商品价格','原油 -30%','34','7.0%','risk-low']
+        ]},
+        light:{name:'轻度压力',tag:'tag-info',kpi:['12.1%','256亿','135%','18.7%'],kpiChange:['-0.9%','+62亿','监管要求 100%','城投占比最高'],data:[
+          ['利率上行','+50bp','89','35.2%','risk-mid'],
+          ['信用违约','违约率+1%','67','26.5%','risk-mid'],
+          ['股市下跌','-10%','45','17.8%','risk-mid'],
+          ['汇率贬值','CNY -3%','26','10.3%','risk-low'],
+          ['商品价格','原油 -15%','17','6.7%','risk-low']
+        ]},
+        medium:{name:'中度压力',tag:'tag-warn',kpi:['10.6%','698亿','112%','31.2%'],kpiChange:['-2.4%','+186亿','略高于监管','地产+城投'],data:[
+          ['利率上行','+150bp','267','37.8%','risk-high'],
+          ['信用违约','违约率+3%','201','28.4%','risk-high'],
+          ['股市下跌','-30%','134','19.0%','risk-high'],
+          ['汇率贬值','CNY -8%','78','11.0%','risk-mid'],
+          ['商品价格','原油 -45%','51','7.2%','risk-low']
+        ]},
+        extreme:{name:'极端压力',tag:'tag-warn',kpi:['9.3%','912亿','98%','42.8%'],kpiChange:['-3.7%','+289亿','低于监管要求!','集中度风险'],data:[
+          ['利率上行','+200bp','356','39.1%','risk-high'],
+          ['信用违约','违约率+5%','289','31.7%','risk-high'],
+          ['股市下跌','-50%','223','24.5%','risk-high'],
+          ['汇率贬值','CNY -15%','112','12.3%','risk-high'],
+          ['商品价格','原油 -60%','85','9.3%','risk-mid']
+        ]}
+      };
+      const s=scenarios[scenario];
+      if(s&&scenarioTag&&tbody){
+        scenarioTag.textContent=s.name;
+        scenarioTag.className='card-tag '+s.tag;
+        const kpiValues=document.querySelectorAll('.kpi-value');
+        const kpiSubs=document.querySelectorAll('.kpi-sub');
+        s.kpi.forEach((v,i)=>{if(kpiValues[i])kpiValues[i].textContent=v;});
+        s.kpiChange.forEach((v,i)=>{if(kpiSubs[i]){const change=kpiSubs[i].querySelector('.kpi-change');if(change)change.textContent=v;}});
+        tbody.innerHTML=s.data.map(row=>
+          '<tr>'+row.map((cell,i)=>{
+            if(i===4)return'<td><span class="risk-badge '+cell+'">'+(cell==='risk-high'?'高':cell==='risk-mid'?'中':'低')+'</span></td>';
+            return'<td'+(i===0?' class="name-col"':'')+'>'+cell+'</td>';
+          }).join('')+'</tr>'
+        ).join('');
+        showToast('已切换至'+s.name,'success');
+      }
+    }
+
+    function exportData(){
+      const tables=document.querySelectorAll('.data-table');
+      if(tables.length===0){showToast('当前页面暂无数据可导出','warning');return;}
+      let csv='\uFEFF';
+      tables.forEach((table,idx)=>{if(idx>0)csv+='\n\n';table.querySelectorAll('tr').forEach(row=>{const cells=row.querySelectorAll('th,td');const rowData=[];cells.forEach(cell=>{rowData.push('"'+cell.textContent.trim().replace(/"/g,'""')+'"');});csv+=rowData.join(',')+'\n';});});
+      const now=new Date();const filename='stress_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.csv';
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename;link.click();URL.revokeObjectURL(link.href);
+      showToast('数据已导出: '+filename,'success');
+    }
+    function generateReport(){showReportModal('压力测试');}
+    function showReportModal(panelName){
+      const modal=document.createElement('div');modal.className='modal-overlay';
+      modal.innerHTML='<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">生成报告</span></div><div class="modal-body"><p>正在为 "<strong>'+panelName+'</strong>" 生成分析报告...</p><div class="report-progress"><div class="progress-bar"><div class="progress-fill"></div></div></div><p class="report-status">正在提取数据...</p></div></div>';
+      document.body.appendChild(modal);
+      setTimeout(()=>{const progressFill=modal.querySelector('.progress-fill');const reportStatus=modal.querySelector('.report-status');let progress=0;const stages=['正在提取数据...','正在生成图表...','正在计算指标...','正在生成报告...','报告生成完成'];const interval=setInterval(()=>{progress+=20;progressFill.style.width=progress+'%';if(progress<=100)reportStatus.textContent=stages[Math.floor(progress/25)];if(progress>=100){clearInterval(interval);setTimeout(()=>{modal.querySelector('.modal-body').innerHTML='<div class="report-success"><span class="success-icon">✓</span><p>报告生成成功！</p><p class="report-filename">'+panelName+'_报告_'+new Date().toLocaleDateString()+'.pdf</p><button class="btn primary" onclick="this.closest(\'.modal-overlay\').remove()">确定</button></div>';},300);}},400);},100);
+    }
+    function showToast(message,type){const existing=document.querySelector('.toast-notification');if(existing)existing.remove();const toast=document.createElement('div');toast.className='toast-notification '+type;toast.innerHTML='<span>'+message+'</span>';document.body.appendChild(toast);setTimeout(()=>toast.classList.add('show'),10);setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),300);},3000);}
+
+    function sortStressTable(criteria){
+      const tbody = document.getElementById('stressTableBody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a, b) => {
+        const getVal = (row, crit) => {
+          if(crit === 'factor') return row.cells[0].textContent;
+          if(crit === 'shock') return parseFloat(row.cells[1].textContent);
+          if(crit === 'loss') return parseFloat(row.cells[2].textContent);
+          if(crit === 'pct') return parseFloat(row.cells[3].textContent);
+          return row.cells[0].textContent;
+        };
+        if(criteria === 'factor') return getVal(a, criteria).localeCompare(getVal(b, criteria));
+        return getVal(b, criteria) - getVal(a, criteria);
+      });
+      rows.forEach(row => tbody.appendChild(row));
+      showToast('已按'+{factor:'风险因子',shock:'冲击幅度',loss:'影响损失',pct:'占比'}[criteria]+'排序','success');
+    }
+
+    function adjustFactor(factor){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">调整 ${factor} 参数</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:8px;">调整冲击幅度</label><input type="range" style="width:100%;" min="0" max="300" value="100"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:4px;"><span>0</span><span>150bp</span><span>300bp</span></div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:8px;">自定义损失值(亿)</label><input type="number" style="width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);" placeholder="输入损失金额"></div><div style="display:flex;gap:8px;"><button class="btn" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">取消</button><button class="btn primary" onclick="confirmAdjustFactor('${factor}')" style="flex:1;">应用</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function confirmAdjustFactor(factor){
+      showToast(factor + ' 参数已调整','success');
+    }
+
+    function exportScenario(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">导出压力情景</span></div><div class="modal-body" style="padding:20px;"><p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">选择要导出的压力情景:</p><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">基准情景</label><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">轻度压力</label><label style="display:flex;align-items:center;margin-bottom:8px;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">中度压力</label><label style="display:flex;align-items:center;cursor:pointer;"><input type="checkbox" checked style="margin-right:8px;">极端压力</label></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">导出格式</label><select style="width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"><option>Excel (.xlsx)</option><option>CSV (.csv)</option><option>PDF (.pdf)</option></select></div><button class="btn primary" onclick="confirmExportScenario()" style="width:100%;">确认导出</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showScenarioCompare(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">情景对比分析</span></div><div class="modal-body" style="padding:16px;"><table class="data-table" style="margin-bottom:12px;"><thead><tr><th>指标</th><th>基准</th><th>轻度</th><th>中度</th><th>极端</th></tr></thead><tbody><tr><td class="name-col">资本充足率</td><td style="color:var(--accent-green)">12.8%</td><td>12.1%</td><td>11.5%</td><td style="color:var(--accent-red)">10.2%</td></tr><tr><td class="name-col">预计损失</td><td style="color:var(--accent-green)">286亿</td><td>365亿</td><td>487亿</td><td style="color:var(--accent-red)">856亿</td></tr><tr><td class="name-col">流动性覆盖率</td><td style="color:var(--accent-green)">145%</td><td>138%</td><td>128%</td><td style="color:var(--accent-yellow)">108%</td></tr><tr><td class="name-col">风险敞口集中度</td><td style="color:var(--accent-green)">18.2%</td><td>20.5%</td><td>23.4%</td><td style="color:var(--accent-red)">31.8%</td></tr></tbody></table><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function confirmExportScenario(){
+      showToast('压力情景已导出','success');
+    }
+
+    function showStressConfig(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:520px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">压力情景配置</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:12px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">情景参数配置</div><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">利率冲击幅度 (bp)</label><input type="number" value="100" style="width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"></div><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">汇率冲击幅度 (%)</label><input type="number" value="15" style="width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"></div><div style="margin-bottom:10px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;">股票价格冲击 (%)</label><input type="number" value="30" style="width:100%;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:var(--text-primary);font-size:12px;"></div></div><div style="display:flex;gap:8px;"><button class="btn" onclick="this.closest('.modal-overlay').remove()" style="flex:1;">取消</button><button class="btn primary" onclick="saveStressConfig()" style="flex:1;">保存配置</button></div></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function saveStressConfig(){
+      showToast('压力情景配置已保存','success');
+    }
+
+    function showScenarioManager(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:600px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">情景管理器</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">已保存情景</div><div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(137,180,250,.08);border-radius:6px;margin-bottom:8px;"><div><div style="font-size:12px;color:var(--text-primary);font-weight:500;">基准情景</div><div style="font-size:10px;color:var(--text-secondary);">最后更新：2025-03-20</div></div><div style="display:flex;gap:6px;"><button class="btn" style="padding:4px 10px;font-size:10px;">编辑</button><button class="btn" style="padding:4px 10px;font-size:10px;">删除</button></div></div><div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(243,139,168,.08);border-radius:6px;margin-bottom:8px;"><div><div style="font-size:12px;color:var(--text-primary);font-weight:500;">极端压力情景</div><div style="font-size:10px;color:var(--text-secondary);">最后更新：2025-03-18</div></div><div style="display:flex;gap:6px;"><button class="btn" style="padding:4px 10px;font-size:10px;">编辑</button><button class="btn" style="padding:4px 10px;font-size:10px;">删除</button></div></div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">新建情景</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showSensitivityAnalysis(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">敏感性分析</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">单一风险因子敏感性</div><table class="data-table"><thead><tr><th>风险因子</th><th>变动幅度</th><th>资本充足率影响</th><th>预计损失影响</th></tr></thead><tbody><tr><td class="name-col">利率</td><td>+100bp</td><td style="color:var(--accent-red)">-0.85%</td><td style="color:var(--accent-red)">+45 亿</td></tr><tr><td class="name-col">汇率</td><td>+15%</td><td style="color:var(--accent-yellow)">-0.42%</td><td style="color:var(--accent-yellow)">+28 亿</td></tr><tr><td class="name-col">股票价格</td><td>-30%</td><td style="color:var(--accent-red)">-1.25%</td><td style="color:var(--accent-red)">+68 亿</td></tr><tr><td class="name-col">信用利差</td><td>+50bp</td><td style="color:var(--accent-mauve)">-0.58%</td><td style="color:var(--accent-mauve)">+35 亿</td></tr></tbody></table></div><div style="background:rgba(249,226,175,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">分析结论</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">股票价格冲击对资本充足率影响最大，其次为利率冲击。建议重点关注权益类资产风险敞口，适当降低高风险资产权重。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    document.querySelectorAll('.toggle-switch').forEach(function(sw){sw.addEventListener('click',function(){this.classList.toggle('active');});});
+
+    function showCapitalImpact(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">压力情景下资本充足率影响</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">各情景下资本充足率变化</div><table class="data-table"><thead><tr><th>情景</th><th>核心一级资本</th><th>一级资本</th><th>资本充足率</th></tr></thead><tbody><tr><td class="name-col">基准情景</td><td style="color:var(--accent-green)">11.85%</td><td style="color:var(--accent-green)">13.25%</td><td style="color:var(--accent-green)">15.68%</td></tr><tr><td class="name-col">轻度压力</td><td style="color:var(--accent-blue)">10.52%</td><td style="color:var(--accent-yellow)">12.18%</td><td style="color:var(--accent-yellow)">14.35%</td></tr><tr><td class="name-col">中度压力</td><td style="color:var(--accent-yellow)">9.15%</td><td style="color:var(--accent-red)">10.85%</td><td style="color:var(--accent-red)">12.68%</td></tr><tr><td class="name-col">重度压力</td><td style="color:var(--accent-red)">7.85%</td><td style="color:var(--accent-red)">9.12%</td><td style="color:var(--accent-red)">10.25%</td></tr></tbody></table></div><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">资本影响分析</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">在重度压力情景下，资本充足率可能降至 10.25%，接近监管红线 10.5%。建议提前补充资本或降低风险资产权重。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showReverseStress(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title">反向压力测试</span></div><div class="modal-body" style="padding:16px;"><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">触发资本充足率底线所需的极端情景</div><div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;">股票市场下跌需超过 45%，或信用利差扩大超过 300bp</div><div style="font-size:11px;color:var(--text-secondary);">才会导致资本充足率跌破监管红线</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;margin-bottom:12px;"><div style="font-size:11px;color:var(--text-primary);margin-bottom:8px;font-weight:500;">极端情景参数</div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">股市最大跌幅</span><span style="font-family:'JetBrains Mono';color:var(--accent-red)">-52%</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;"><span style="color:var(--text-secondary);">利率上升</span><span style="font-family:'JetBrains Mono';color:var(--accent-red)">+250bp</span></div><div style="display:flex;justify-content:space-between;font-size:11px;"><span style="color:var(--text-secondary);">汇率贬值</span><span style="font-family:'JetBrains Mono';color:var(--accent-red)">-25%</span></div></div><div style="background:rgba(137,180,250,.08);border-radius:8px;padding:12px;"><div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">反向压力测试结论</div><p style="font-size:11px;color:var(--text-secondary);line-height:1.6;">在正常市场条件下，机构资本充足率能够承受极端压力。但需关注极端尾部风险叠加效应。</p></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function pushStressAlert(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:500px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-bell" style="color:var(--accent-red);margin-right:8px;"></i>压力测试预警推送</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(243,139,168,.08);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;"><i class="fas fa-check-circle" style="color:var(--accent-green);margin-right:8px;"></i>预警推送已发送</div><div style="font-size:11px;color:var(--text-secondary);">生成 5 个压力情景报告</div></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showStressHistory(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-history" style="color:var(--accent-blue);margin-right:8px;"></i>历史情景回溯</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><table class="data-table"><thead><tr><th>日期</th><th>情景</th><th>资本充足率</th></tr></thead><tbody><tr><td class="name-col">2025-03-15</td><td>中度压力</td><td style="color:var(--accent-yellow)">12.68%</td></tr><tr><td class="name-col">2025-02-20</td><td>重度压力</td><td style="color:var(--accent-red)">10.25%</td></tr></tbody></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    function showStressScenarioGen(){
+      const modal=document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML=`<div class="modal-content" style="width:550px;"><div class="modal-header"><div class="traffic-lights"><div class="traffic-light close" onclick="this.closest('.modal-overlay').remove()"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div><span class="modal-title"><i class="fas fa-chart-line" style="color:var(--accent-green);margin-right:8px;"></i>智能情景生成</span></div><div class="modal-body" style="padding:20px;"><div style="background:rgba(137,180,250,.08);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;"><i class="fas fa-robot" style="color:var(--accent-blue);margin-right:8px;"></i>AI 智能生成压力情景</div><div style="font-size:11px;color:var(--text-secondary);">基于历史数据和机器学习模型自动生成</div></div><div style="background:rgba(255,255,255,.03);border-radius:8px;padding:12px;"><table class="data-table"><thead><tr><th>情景名称</th><th>概率</th><th>资本影响</th></tr></thead><tbody><tr><td class="name-col">黑天鹅情景</td><td>2.5%</td><td style="color:var(--accent-red)">-8.5%</td></tr><tr><td class="name-col">市场暴跌情景</td><td>5.0%</td><td style="color:var(--accent-yellow)">-5.2%</td></tr></tbody></table></div><button class="btn primary" onclick="this.closest('.modal-overlay').remove()" style="width:100%;margin-top:12px;">确定</button></div></div>`;
+      document.body.appendChild(modal);
+    }
+  </script>
+</body>
+</html>

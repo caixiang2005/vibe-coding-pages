@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>系统设置 - 安全主题宣传活动统筹管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --mac-accent: #0A84FF;
+            --mac-text: #1C1C1E;
+            --mac-text-secondary: rgba(60, 60, 67, 0.78);
+            --mac-separator: rgba(60, 60, 67, 0.18);
+            --mac-window-bg: rgba(255, 255, 255, 0.7);
+            --mac-titlebar-bg: rgba(250, 250, 252, 0.65);
+            --mac-sidebar-bg: rgba(246, 246, 248, 0.7);
+            --mac-content-bg: #F2F2F7;
+            --mac-shadow: 0 28px 80px rgba(0, 0, 0, 0.18);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--mac-text);
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+        .mac-window { background: var(--mac-window-bg); border: 1px solid var(--mac-separator); border-radius: 18px; box-shadow: var(--mac-shadow); }
+        .mac-titlebar { background: var(--mac-titlebar-bg); backdrop-filter: blur(22px) saturate(1.6); -webkit-backdrop-filter: blur(22px) saturate(1.6); border-bottom: 1px solid var(--mac-separator); }
+        .mac-sidebar { background: var(--mac-sidebar-bg); backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5); border-right: 1px solid var(--mac-separator); }
+        .mac-content-toolbar { background: rgba(250, 250, 252, 0.72); backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6); border-bottom: 1px solid var(--mac-separator); box-shadow: 0 10px 22px rgba(0, 0, 0, 0.04); }
+        .traffic-lights { display: flex; gap: 8px; align-items: center; }
+        .traffic-light { width: 12px; height: 12px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14); }
+        .traffic-light-red { background: #FF5F57; }
+        .traffic-light-yellow { background: #FEBC2E; }
+        .traffic-light-green { background: #28C840; }
+        .sidebar-item-active { background: color-mix(in srgb, var(--mac-accent) 14%, transparent); color: var(--mac-accent); font-weight: 600; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #D1D1D6; border-radius: 10px; }
+        .card-shadow { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); }
+        .status-badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .mac-modal { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(30px); border-radius: 16px; box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25); min-width: 400px; max-width: 600px; transform: scale(0.9) translateY(20px); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); overflow: hidden; }
+        .modal-overlay.active .mac-modal { transform: scale(1) translateY(0); }
+        .modal-titlebar { background: rgba(246, 246, 248, 0.8); padding: 14px 16px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--mac-separator); position: relative; }
+        .modal-titlebar .traffic-lights { position: absolute; left: 16px; }
+        .modal-content { padding: 24px; }
+        .btn-primary { background: var(--mac-accent); color: white; padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { background: #0077ED; transform: translateY(-1px); }
+        .btn-secondary { background: rgba(120, 120, 128, 0.12); color: var(--mac-text); padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-secondary:hover { background: rgba(120, 120, 128, 0.2); }
+        .action-btn { padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 6px; }
+        .action-btn-blue { background: rgba(10, 132, 255, 0.1); color: #0A84FF; }
+        .action-btn-blue:hover { background: rgba(10, 132, 255, 0.2); }
+        .toggle-switch { position: relative; width: 44px; height: 24px; background: rgba(120, 120, 128, 0.2); border-radius: 12px; cursor: pointer; transition: all 0.3s; }
+        .toggle-switch.active { background: #34C759; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: all 0.3s; }
+        .toggle-switch.active::after { left: 22px; }
+        .form-input { width: 100%; padding: 10px 14px; border: 1px solid var(--mac-separator); border-radius: 8px; font-size: 14px; background: white; transition: all 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--mac-accent); box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1); }
+    </style>
+</head>
+<body class="h-screen">
+    <div class="h-full w-full flex items-center justify-center p-6">
+        <div class="mac-window w-full max-w-[1400px] h-[900px] flex flex-col overflow-hidden">
+            <header class="mac-titlebar h-14 relative flex items-center justify-center px-4 md:px-6">
+                <div class="traffic-lights absolute left-4 md:left-6">
+                    <div class="traffic-light traffic-light-red" onclick="window.location.href='main.html'"></div>
+                    <div class="traffic-light traffic-light-yellow"></div>
+                    <div class="traffic-light traffic-light-green"></div>
+                </div>
+                <div class="text-[13px] font-semibold tracking-tight text-[color:var(--mac-text)] text-center">
+                    安全主题宣传活动统筹管理系统
+                </div>
+            </header>
+            <div class="flex flex-1 min-h-0">
+                <aside class="mac-sidebar w-56 flex flex-col min-h-0 pt-4">
+                    <div class="px-4 mb-4">
+                        <a href="main.html" class="flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all">
+                            <i class="fas fa-arrow-left mr-3 text-lg"></i>
+                            返回工作台
+                        </a>
+                    </div>
+                    <div class="px-6 mb-4 flex items-center justify-between">
+                        <h1 class="text-sm font-bold tracking-tight leading-tight">功能菜单</h1>
+                    </div>
+                    <nav class="flex-1 px-3 space-y-1">
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="main.html">
+                            <i class="fas fa-th-large mr-3 text-lg"></i>
+                            工作台
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="activities.html">
+                            <i class="fas fa-calendar-alt mr-3 text-lg"></i>
+                            活动中心
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="tasks.html">
+                            <i class="fas fa-tasks mr-3 text-lg"></i>
+                            任务管理
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="resources.html">
+                            <i class="fas fa-folder-open mr-3 text-lg"></i>
+                            资源管理
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="reports.html">
+                            <i class="fas fa-chart-bar mr-3 text-lg"></i>
+                            报表统计
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm text-[color:var(--mac-text-secondary)] rounded-lg hover:bg-white/50 transition-all" href="knowledge.html">
+                            <i class="fas fa-book-open mr-3 text-lg"></i>
+                            知识库
+                        </a>
+                    </nav>
+                    <div class="p-4 border-t border-[color:var(--mac-separator)]">
+                        <a class="sidebar-item flex items-center px-3 py-2 text-sm rounded-lg transition-all sidebar-item-active" href="settings.html">
+                            <i class="fas fa-cog mr-3 text-lg"></i>
+                            系统设置
+                        </a>
+                    </div>
+                </aside>
+                <main class="flex-1 flex flex-col min-h-0 bg-[color:var(--mac-content-bg)] overflow-hidden">
+                    <div class="mac-content-toolbar flex items-center justify-between gap-4 px-6 py-3">
+                        <div class="flex items-center text-[13px] font-semibold text-[color:var(--mac-text)]">
+                            <i class="fas fa-cog mr-2 text-blue-500"></i>
+                            <span>系统设置</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <div class="p-3 bg-blue-50 rounded-xl">
+                                        <i class="fas fa-user text-blue-500 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">个人资料</h3>
+                                        <p class="text-xs text-gray-500">管理您的个人信息</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-xs text-gray-500 block mb-1">姓名</label>
+                                        <input type="text" class="form-input" value="张晓星" />
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 block mb-1">电子邮箱</label>
+                                        <input type="email" class="form-input" value="zhangxiaoxing@company.com" />
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 block mb-1">联系电话</label>
+                                        <input type="tel" class="form-input" value="138****8888" />
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 block mb-1">所属部门</label>
+                                        <input type="text" class="form-input" value="安全管理部" />
+                                    </div>
+                                    <button class="btn-primary w-full" onclick="showSuccessModal('保存成功', '个人资料已更新')">
+                                        <i class="fas fa-save mr-2"></i> 保存修改
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <div class="p-3 bg-orange-50 rounded-xl">
+                                        <i class="fas fa-bell text-orange-500 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">通知设置</h3>
+                                        <p class="text-xs text-gray-500">管理您的通知偏好</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                                        <div>
+                                            <p class="text-sm font-medium">任务到期提醒</p>
+                                            <p class="text-xs text-gray-500">任务截止前1小时发送通知</p>
+                                        </div>
+                                        <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                                        <div>
+                                            <p class="text-sm font-medium">活动进度更新</p>
+                                            <p class="text-xs text-gray-500">活动状态变更时发送通知</p>
+                                        </div>
+                                        <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                                        <div>
+                                            <p class="text-sm font-medium">系统公告</p>
+                                            <p class="text-xs text-gray-500">接收系统重要通知</p>
+                                        </div>
+                                        <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                                        <div>
+                                            <p class="text-sm font-medium">邮件通知</p>
+                                            <p class="text-xs text-gray-500">通过邮件接收通知</p>
+                                        </div>
+                                        <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between py-3">
+                                        <div>
+                                            <p class="text-sm font-medium">消息推送</p>
+                                            <p class="text-xs text-gray-500">桌面推送通知</p>
+                                        </div>
+                                        <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow mb-6">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="p-3 bg-green-50 rounded-xl">
+                                    <i class="fas fa-shield-alt text-green-500 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">账号安全</h3>
+                                    <p class="text-xs text-gray-500">管理您的账号安全设置</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left" onclick="showChangePwdModal()">
+                                    <i class="fas fa-key text-gray-500 mb-2 block text-lg"></i>
+                                    <p class="text-sm font-medium">修改密码</p>
+                                    <p class="text-xs text-gray-400">定期更换密码保护账号</p>
+                                </button>
+                                <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left" onclick="showTwoFactorModal()">
+                                    <i class="fas fa-mobile-alt text-gray-500 mb-2 block text-lg"></i>
+                                    <p class="text-sm font-medium">两步验证</p>
+                                    <p class="text-xs text-gray-400">增强账号安全保护</p>
+                                </button>
+                                <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left" onclick="showLoginHistoryModal()">
+                                    <i class="fas fa-history text-gray-500 mb-2 block text-lg"></i>
+                                    <p class="text-sm font-medium">登录历史</p>
+                                    <p class="text-xs text-gray-400">查看账号登录记录</p>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow mb-6">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="p-3 bg-purple-50 rounded-xl">
+                                    <i class="fas fa-palette text-purple-500 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">外观设置</h3>
+                                    <p class="text-xs text-gray-500">自定义界面显示效果</p>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                                    <div>
+                                        <p class="text-sm font-medium">深色模式</p>
+                                        <p class="text-xs text-gray-500">切换到深色主题</p>
+                                    </div>
+                                    <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                                </div>
+                                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                                    <div>
+                                        <p class="text-sm font-medium">侧边栏折叠</p>
+                                        <p class="text-xs text-gray-500">自动折叠侧边栏</p>
+                                    </div>
+                                    <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                                </div>
+                                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                                    <div>
+                                        <p class="text-sm font-medium">动画效果</p>
+                                        <p class="text-xs text-gray-500">开启界面过渡动画</p>
+                                    </div>
+                                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                                </div>
+                                <div class="flex items-center justify-between py-3">
+                                    <div>
+                                        <p class="text-sm font-medium">紧凑模式</p>
+                                        <p class="text-xs text-gray-500">减小界面间距</p>
+                                    </div>
+                                    <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-gray-100 card-shadow">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="p-3 bg-red-50 rounded-xl">
+                                    <i class="fas fa-bolt text-red-500 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">快捷操作</h3>
+                                    <p class="text-xs text-gray-500">常用功能快捷入口</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-center" onclick="showInfoModal('数据备份', '数据备份功能将帮助您备份系统数据')">
+                                    <i class="fas fa-database text-blue-500 text-xl mb-2"></i>
+                                    <p class="text-sm font-medium">数据备份</p>
+                                </button>
+                                <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-center" onclick="showInfoModal('清理缓存', '清理浏览器缓存可以提升系统性能')">
+                                    <i class="fas fa-trash text-orange-500 text-xl mb-2"></i>
+                                    <p class="text-sm font-medium">清理缓存</p>
+                                </button>
+                                <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-center" onclick="showExportDataModal()">
+                                    <i class="fas fa-download text-green-500 text-xl mb-2"></i>
+                                    <p class="text-sm font-medium">导出数据</p>
+                                </button>
+                                <button class="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-center" onclick="showConfirmLogout()">
+                                    <i class="fas fa-sign-out-alt text-red-500 text-xl mb-2"></i>
+                                    <p class="text-sm font-medium">退出登录</p>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+    <div id="modal-container"></div>
+    <script>
+        function showModal(title, content, buttons = []) {
+            const container = document.getElementById('modal-container');
+            let buttonsHtml = '';
+            buttons.forEach(btn => {
+                buttonsHtml += `<button class="${btn.class || 'btn-secondary'}" onclick="${btn.onclick}">${btn.text}</button>`;
+            });
+            container.innerHTML = `
+                <div class="modal-overlay active" onclick="closeModal(event)">
+                    <div class="mac-modal" onclick="event.stopPropagation()">
+                        <div class="modal-titlebar">
+                            <div class="traffic-lights">
+                                <div class="traffic-light traffic-light-red" onclick="closeModal()"></div>
+                                <div class="traffic-light traffic-light-yellow"></div>
+                                <div class="traffic-light traffic-light-green"></div>
+                            </div>
+                            <div class="text-[13px] font-semibold tracking-tight text-[color:var(--mac-text)] ml-4">${title}</div>
+                        </div>
+                        <div class="modal-content">
+                            ${content}
+                            <div class="flex justify-center gap-3 mt-6">
+                                ${buttonsHtml}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const container = document.getElementById('modal-container');
+            const overlay = container.querySelector('.modal-overlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+                setTimeout(() => container.innerHTML = '', 300);
+            }
+        }
+        function toggleSwitch(el) {
+            el.classList.toggle('active');
+        }
+        function showChangePwdModal() {
+            showModal('修改密码', `
+                <div class="text-left space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">当前密码</label>
+                        <input type="password" class="form-input" placeholder="请输入当前密码" />
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">新密码</label>
+                        <input type="password" class="form-input" placeholder="请输入新密码" />
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">确认新密码</label>
+                        <input type="password" class="form-input" placeholder="请再次输入新密码" />
+                    </div>
+                    <p class="text-xs text-gray-400">密码长度至少8位，包含字母和数字</p>
+                </div>
+            `, [
+                { text: '取消', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '确认修改', class: 'btn-primary', onclick: 'closeModal(); showSuccessModal("修改成功", "密码已成功修改")' }
+            ]);
+        }
+        function showTwoFactorModal() {
+            showModal('两步验证', `
+                <div class="text-left space-y-4">
+                    <p class="text-sm text-gray-600">两步验证为您的账号提供额外的安全保护。</p>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm font-medium">手机验证码</span>
+                            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                        </div>
+                        <p class="text-xs text-gray-500">通过短信接收验证码</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium">邮箱验证码</span>
+                            <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+                        </div>
+                    </div>
+                </div>
+            `, [
+                { text: '取消', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '保存设置', class: 'btn-primary', onclick: 'closeModal(); showSuccessModal("保存成功", "两步验证设置已更新")' }
+            ]);
+        }
+        function showLoginHistoryModal() {
+            showModal('登录历史', `
+                <div class="text-left space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="text-sm font-medium">当前登录</p>
+                            <p class="text-xs text-gray-500">Windows · Chrome · 2026-03-19 14:30</p>
+                        </div>
+                        <span class="status-badge bg-green-50 text-green-600">当前</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="text-sm font-medium">昨日登录</p>
+                            <p class="text-xs text-gray-500">Windows · Chrome · 2026-03-18 09:15</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="text-sm font-medium">前几日登录</p>
+                            <p class="text-xs text-gray-500">Windows · Chrome · 2026-03-17 16:45</p>
+                        </div>
+                    </div>
+                </div>
+            `, [{ text: '关闭', class: 'btn-primary', onclick: 'closeModal()' }]);
+        }
+        function showExportDataModal() {
+            showModal('导出数据', `
+                <div class="text-left space-y-4">
+                    <p class="text-sm text-gray-500 mb-2">选择导出内容：</p>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                            <input type="checkbox" class="mr-3" checked />
+                            <span class="text-sm">活动数据</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                            <input type="checkbox" class="mr-3" checked />
+                            <span class="text-sm">任务数据</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                            <input type="checkbox" class="mr-3" />
+                            <span class="text-sm">资源文件</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                            <input type="checkbox" class="mr-3" />
+                            <span class="text-sm">系统设置</span>
+                        </label>
+                    </div>
+                </div>
+            `, [
+                { text: '取消', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '导出', class: 'btn-primary', onclick: 'closeModal(); showSuccessModal("导出成功", "数据已导出为Excel文件")' }
+            ]);
+        }
+        function showInfoModal(title, message) {
+            showModal(title, `
+                <div class="text-center">
+                    <i class="fas fa-info-circle text-4xl text-blue-500 mb-4"></i>
+                    <p class="text-gray-600">${message}</p>
+                </div>
+            `, [{ text: '确定', class: 'btn-primary', onclick: 'closeModal()' }]);
+        }
+        function showConfirmLogout() {
+            showModal('退出登录', `
+                <div class="text-center">
+                    <i class="fas fa-sign-out-alt text-4xl text-orange-500 mb-4"></i>
+                    <p class="text-gray-600">确定要退出登录吗？</p>
+                </div>
+            `, [
+                { text: '取消', class: 'btn-secondary', onclick: 'closeModal()' },
+                { text: '退出', class: 'btn-primary', onclick: 'closeModal(); showLogoutSuccess()' }
+            ]);
+        }
+        function showLogoutSuccess() {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="modal-overlay active" onclick="closeModal(event)">
+                    <div class="mac-modal" onclick="event.stopPropagation()" style="min-width: 320px;">
+                        <div class="modal-titlebar">
+                            <div class="traffic-lights">
+                                <div class="traffic-light traffic-light-red" onclick="closeModal()"></div>
+                                <div class="traffic-light traffic-light-yellow"></div>
+                                <div class="traffic-light traffic-light-green"></div>
+                            </div>
+                            <div class="text-[13px] font-semibold tracking-tight text-[color:var(--mac-text)] ml-4">已退出</div>
+                        </div>
+                        <div class="modal-content text-center">
+                            <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+                            <p class="text-gray-600 mb-4">您已成功退出登录</p>
+                            <button class="btn-primary" onclick="window.location.href='main.html'">返回首页</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        function showSuccessModal(title, message) {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="modal-overlay active" onclick="closeModal(event)">
+                    <div class="mac-modal" onclick="event.stopPropagation()" style="min-width: 320px;">
+                        <div class="modal-titlebar">
+                            <div class="traffic-lights">
+                                <div class="traffic-light traffic-light-red" onclick="closeModal()"></div>
+                                <div class="traffic-light traffic-light-yellow"></div>
+                                <div class="traffic-light traffic-light-green"></div>
+                            </div>
+                            <div class="text-[13px] font-semibold tracking-tight text-[color:var(--mac-text)] ml-4">${title}</div>
+                        </div>
+                        <div class="modal-content text-center">
+                            <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+                            <p class="text-gray-600 mb-4">${message}</p>
+                            <button class="btn-primary" onclick="closeModal()">确定</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

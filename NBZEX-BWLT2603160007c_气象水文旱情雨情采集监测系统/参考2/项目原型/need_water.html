@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>流域水资源供需结构分析计算软件</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpg') no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .mac-window {
+      width: 1120px;
+      max-width: 96vw;
+      background: #1e1e1e;
+      border-radius: 10px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .title-bar {
+      height: 38px;
+      background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .title-bar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #999;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .toolbar {
+      height: 40px;
+      background: linear-gradient(180deg, #292929, #232323);
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 2px;
+    }
+
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      color: #aaa;
+      font-size: 11.5px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ddd;
+    }
+
+    .tool-btn:active {
+      transform: scale(0.97);
+    }
+
+    .tool-sep {
+      width: 1px;
+      height: 20px;
+      background: #3a3a3a;
+      margin: 0 6px;
+    }
+
+    .toolbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px 3px 6px;
+      background: rgba(74, 144, 226, 0.12);
+      border: 1px solid rgba(74, 144, 226, 0.25);
+      border-radius: 12px;
+      color: #7ab8f5;
+      font-size: 11px;
+    }
+
+    .user-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .main-layout {
+      display: flex;
+      height: 620px;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #252525;
+      border-right: 1px solid #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 12px 14px 8px;
+      color: #666;
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-item {
+      padding: 6px 8px;
+      color: #aaa;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #ccc;
+    }
+
+    .nav-item:active {
+      transform: scale(0.98);
+    }
+
+    .nav-item.active {
+      background: rgba(74, 144, 226, 0.15);
+      color: #7ab8f5;
+    }
+
+    .nav-item i {
+      width: 13px;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 10px 14px;
+      border-top: 1px solid #1e1e1e;
+    }
+
+    .project-info {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .project-label {
+      color: #555;
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .project-name {
+      color: #bbb;
+      font-size: 11.5px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .project-meta {
+      display: flex;
+      gap: 12px;
+    }
+
+    .project-meta span {
+      color: #666;
+      font-size: 10px;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #1e1e1e;
+    }
+
+    .tab-bar {
+      display: flex;
+      background: #222;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .tab {
+      padding: 9px 18px;
+      color: #777;
+      font-size: 12px;
+      cursor: pointer;
+      border-right: 1px solid #1a1a1a;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .tab:hover { color: #aaa; background: rgba(255, 255, 255, 0.02); }
+    .tab.active { color: #ddd; background: #1e1e1e; }
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #4a90e2;
+    }
+
+    .content-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .content-body::-webkit-scrollbar { width: 6px; }
+    .content-body::-webkit-scrollbar-track { background: transparent; }
+    .content-body::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
+
+    .card {
+      background: #262626;
+      border-radius: 8px;
+      border: 1px solid #333;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      color: #ccc;
+      font-size: 12.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .dot-blue { background: #4a90e2; }
+    .dot-green { background: #28c840; }
+    .dot-orange { background: #f5a623; }
+    .dot-purple { background: #9b59b6; }
+    .dot-red { background: #e74c3c; }
+
+    .card-badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .badge-info {
+      background: rgba(74, 144, 226, 0.12);
+      color: #7ab8f5;
+      border: 1px solid rgba(74, 144, 226, 0.2);
+    }
+
+    .badge-warning {
+      background: rgba(245, 166, 35, 0.12);
+      color: #f5a623;
+      border: 1px solid rgba(245, 166, 35, 0.2);
+    }
+
+    .card-body { padding: 14px; }
+
+    .stats-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .stat-block {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .stat-value.blue { color: #4a90e2; }
+    .stat-value.green { color: #28c840; }
+    .stat-value.orange { color: #f5a623; }
+    .stat-value.purple { color: #9b59b6; }
+
+    .stat-label { color: #777; font-size: 10.5px; }
+    .stat-sub { color: #555; font-size: 9.5px; margin-top: 2px; }
+
+    .full-width { grid-column: 1 / -1; }
+
+    .trend-chart {
+      height: 140px;
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      padding: 0 10px;
+      border-bottom: 1px solid #333;
+    }
+
+    .trend-bar {
+      flex: 1;
+      background: linear-gradient(180deg, #4a90e2, #357abd);
+      border-radius: 2px 2px 0 0;
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .trend-bar:hover {
+      opacity: 0.8;
+    }
+
+    .trend-bar::after {
+      content: attr(data-year);
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: #555;
+    }
+
+    .chart-labels {
+      display: flex;
+      gap: 4px;
+      padding: 8px 10px 0;
+    }
+
+    .chart-labels span {
+      flex: 1;
+      text-align: center;
+      color: #555;
+      font-size: 9px;
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: #888;
+      font-size: 10.5px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    .legend-dot.life { background: #4a90e2; }
+    .legend-dot.industry { background: #f5a623; }
+    .legend-dot.agriculture { background: #28c840; }
+    .legend-dot.ecology { background: #9b59b6; }
+
+    .pie-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .pie-svg {
+      width: 100px;
+      height: 100px;
+      flex-shrink: 0;
+    }
+
+    .pie-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .pie-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #aaa;
+      font-size: 11px;
+    }
+
+    .pie-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .pie-legend-val {
+      margin-left: auto;
+      color: #888;
+      font-size: 10.5px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      padding: 7px 10px;
+      text-align: left;
+      color: #777;
+      font-size: 10.5px;
+      font-weight: 500;
+      border-bottom: 1px solid #333;
+    }
+
+    .data-table td {
+      padding: 6px 10px;
+      color: #bbb;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .td-highlight {
+      color: #4a90e2;
+      font-weight: 500;
+    }
+
+    .status-bar {
+      height: 24px;
+      background: #222;
+      border-top: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+    }
+
+    .status-item {
+      color: #555;
+      font-size: 10.5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #28c840;
+    }
+
+    .status-right {
+      margin-left: auto;
+      display: flex;
+      gap: 14px;
+    }
+
+    .progress-mini {
+      width: 60px;
+      height: 3px;
+      background: #333;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-mini-fill {
+      height: 100%;
+      background: #4a90e2;
+      border-radius: 2px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card { animation: fadeIn 0.4s ease both; }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.2s; }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 2px; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #2a2a2a;
+      border-radius: 10px;
+      border: 1px solid #3a3a3a;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      min-width: 380px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #3a3a3a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .modal-traffic-lights {
+      position: absolute;
+      left: 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #ff5f57;
+      border: 0.5px solid #e0443e;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #febc2e;
+      border: 0.5px solid #dea123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28c840;
+      border: 0.5px solid #1aab29;
+    }
+
+    .modal-title {
+      color: #ddd;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .modal-close {
+      position: absolute;
+      right: 14px;
+      color: #777;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .modal-close:hover { color: #fff; }
+
+    .modal-body { padding: 16px; }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #3a3a3a;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: #3a3a3a; color: #aaa; }
+    .btn-secondary:hover { background: #444; color: #fff; }
+    .btn-primary { background: #4a90e2; color: #fff; }
+    .btn-primary:hover { background: #5a9fe8; }
+
+    .form-group { margin-bottom: 12px; }
+
+    .form-label {
+      display: block;
+      color: #888;
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 12px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #4a90e2;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .form-select:focus { outline: none; border-color: #4a90e2; }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .form-row .form-group { flex: 1; }
+
+    .quota-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .quota-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .quota-item:last-child { border-bottom: none; }
+
+    .quota-name {
+      flex: 1;
+      color: #aaa;
+      font-size: 11.5px;
+    }
+
+    .quota-value {
+      width: 80px;
+      padding: 4px 6px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 3px;
+      color: #ccc;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .method-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: rgba(74, 144, 226, 0.1);
+      border: 1px solid rgba(74, 144, 226, 0.2);
+      border-radius: 3px;
+      color: #7ab8f5;
+      font-size: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <span class="title-bar-text">流域水资源供需结构分析计算软件</span>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool-btn" id="btnBack" onclick="location.href='main.html'">
+        <i class="fa-solid fa-arrow-left"></i>
+        返回
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnAddQuota">
+        <i class="fa-solid fa-plus"></i>
+        新增定额
+      </button>
+      <button class="tool-btn" id="btnImportQuota">
+        <i class="fa-solid fa-upload"></i>
+        导入定额
+      </button>
+      <button class="tool-btn" id="btnExportQuota">
+        <i class="fa-solid fa-download"></i>
+        导出定额
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnCalculate" style="color:#4a90e2;">
+        <i class="fa-solid fa-calculator"></i>
+        预测计算
+      </button>
+      <div class="toolbar-right">
+        <div class="user-badge">
+          <img class="user-avatar" src="https://i01piccdn.sogoucdn.com/4a7eff1521dc451e" alt="于露" />
+          于露
+        </div>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">功能导航</div>
+
+        <div class="nav-item" onclick="location.href='main.html'">
+          <i class="fa-solid fa-table-cells"></i>
+          供需总览
+        </div>
+        <div class="nav-item active">
+          <i class="fa-solid fa-users"></i>
+          需水预测
+        </div>
+        <div class="nav-item" onclick="location.href='supply_analysis.html'">
+          <i class="fa-solid fa-droplet"></i>
+          供水分析
+        </div>
+        <div class="nav-item" onclick="location.href='balance_analysis.html'">
+          <i class="fa-solid fa-chart-column"></i>
+          供需平衡分析
+        </div>
+        <div class="nav-item" onclick="location.href='water_balance_check.html'">
+          <i class="fa-solid fa-check-double"></i>
+          水量平衡校核
+        </div>
+        <div class="nav-item" onclick="location.href='scheme_comparison.html'">
+          <i class="fa-solid fa-code-compare"></i>
+          方案比选
+        </div>
+        <div class="nav-item" onclick="location.href='results_output.html'">
+          <i class="fa-solid fa-file-lines"></i>
+          成果输出
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="project-info">
+            <div class="project-label">当前项目</div>
+            <div class="project-name">海河流域水资源配置</div>
+            <div class="project-meta">
+              <span>规划水平年: 2035</span>
+              <span>P=75%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <div class="content-body">
+          <div class="card full-width">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-blue"></span> 需水预测总览 (2035年)</div>
+              <span class="card-badge badge-info">预测方法: 趋势分析+弹性系数法</span>
+            </div>
+            <div class="card-body">
+              <div class="stats-row">
+                <div class="stat-block">
+                  <div class="stat-value blue">128.5</div>
+                  <div class="stat-label">生活需水 (亿m3)</div>
+                  <div class="stat-sub">占比 27.3%</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value orange">100.7</div>
+                  <div class="stat-label">工业需水 (亿m3)</div>
+                  <div class="stat-sub">占比 21.4%</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value green">199.0</div>
+                  <div class="stat-label">农业需水 (亿m3)</div>
+                  <div class="stat-sub">占比 42.2%</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value purple">43.0</div>
+                  <div class="stat-label">生态需水 (亿m3)</div>
+                  <div class="stat-sub">占比 9.1%</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value blue">471.2</div>
+                  <div class="stat-label">总需水量 (亿m3)</div>
+                  <div class="stat-sub">较现状 +18.7</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-green"></span> 各流域需水结构</div>
+              <span class="card-badge badge-info">2035年</span>
+            </div>
+            <div class="card-body">
+              <div class="pie-container">
+                <svg class="pie-svg" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#333" stroke-width="20" />
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#4a90e2" stroke-width="20"
+                    stroke-dasharray="85.8 172.3" stroke-dashoffset="0" transform="rotate(-90 60 60)" />
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#f5a623" stroke-width="20"
+                    stroke-dasharray="67.2 239.0" stroke-dashoffset="-85.8" transform="rotate(-90 60 60)" />
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#28c840" stroke-width="20"
+                    stroke-dasharray="132.6 182.6" stroke-dashoffset="-153.0" transform="rotate(-90 60 60)" />
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#9b59b6" stroke-width="20"
+                    stroke-dasharray="28.6 286.6" stroke-dashoffset="-285.6" transform="rotate(-90 60 60)" />
+                </svg>
+                <div class="pie-legend">
+                  <div class="pie-legend-item">
+                    <div class="pie-legend-dot" style="background:#4a90e2"></div>
+                    生活
+                    <span class="pie-legend-val">128.5 (27.3%)</span>
+                  </div>
+                  <div class="pie-legend-item">
+                    <div class="pie-legend-dot" style="background:#f5a623"></div>
+                    工业
+                    <span class="pie-legend-val">100.7 (21.4%)</span>
+                  </div>
+                  <div class="pie-legend-item">
+                    <div class="pie-legend-dot" style="background:#28c840"></div>
+                    农业
+                    <span class="pie-legend-val">199.0 (42.2%)</span>
+                  </div>
+                  <div class="pie-legend-item">
+                    <div class="pie-legend-dot" style="background:#9b59b6"></div>
+                    生态
+                    <span class="pie-legend-val">43.0 (9.1%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-orange"></span> 需水定额参数</div>
+              <button class="tool-btn" id="btnEditQuota" style="padding:2px 8px;font-size:10px;">
+                <i class="fa-solid fa-pen"></i>
+                编辑
+              </button>
+            </div>
+            <div class="card-body" style="padding: 8px 14px;">
+              <div class="quota-item">
+                <span class="quota-name">城镇居民用水定额</span>
+                <span class="td-highlight">145 L/人·d</span>
+              </div>
+              <div class="quota-item">
+                <span class="quota-name">农村居民用水定额</span>
+                <span class="td-highlight">85 L/人·d</span>
+              </div>
+              <div class="quota-item">
+                <span class="quota-name">工业万元产值用水量</span>
+                <span class="td-highlight">12.5 m3/万元</span>
+              </div>
+              <div class="quota-item">
+                <span class="quota-name">农田灌溉定额</span>
+                <span class="td-highlight">380 m3/亩</span>
+              </div>
+              <div class="quota-item">
+                <span class="quota-name">城镇公共用水定额</span>
+                <span class="td-highlight">65 L/人·d</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card full-width">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-purple"></span> 分区需水预测成果表</div>
+              <span class="card-badge badge-info">单位: 亿m3</span>
+            </div>
+            <div class="card-body" style="padding: 0; overflow-x: auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>计算分区</th>
+                    <th>生活需水</th>
+                    <th>工业需水</th>
+                    <th>农业需水</th>
+                    <th>生态需水</th>
+                    <th>总需水</th>
+                    <th>预测方法</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>滦河水系</td>
+                    <td>18.3</td>
+                    <td>12.7</td>
+                    <td>28.5</td>
+                    <td>5.2</td>
+                    <td class="td-highlight">64.7</td>
+                    <td><span class="method-tag"><i class="fa-solid fa-chart-line"></i> 趋势法</span></td>
+                  </tr>
+                  <tr>
+                    <td>北三河水系</td>
+                    <td>22.1</td>
+                    <td>15.4</td>
+                    <td>18.6</td>
+                    <td>4.8</td>
+                    <td class="td-highlight">60.9</td>
+                    <td><span class="method-tag"><i class="fa-solid fa-chart-line"></i> 趋势法</span></td>
+                  </tr>
+                  <tr>
+                    <td>永定河水系</td>
+                    <td>15.6</td>
+                    <td>18.2</td>
+                    <td>22.4</td>
+                    <td>6.1</td>
+                    <td class="td-highlight">62.3</td>
+                    <td><span class="method-tag"><i class="fa-solid fa-sliders"></i> 弹性系数</span></td>
+                  </tr>
+                  <tr>
+                    <td>大清河水系</td>
+                    <td>20.8</td>
+                    <td>14.5</td>
+                    <td>25.3</td>
+                    <td>8.7</td>
+                    <td class="td-highlight">69.3</td>
+                    <td><span class="method-tag"><i class="fa-solid fa-chart-line"></i> 趋势法</span></td>
+                  </tr>
+                  <tr>
+                    <td>子牙河水系</td>
+                    <td>12.4</td>
+                    <td>10.8</td>
+                    <td>20.1</td>
+                    <td>3.5</td>
+                    <td class="td-highlight">46.8</td>
+                    <td><span class="method-tag"><i class="fa-solid fa-sliders"></i> 弹性系数</span></td>
+                  </tr>
+                  <tr>
+                    <td>黑龙港</td>
+                    <td>8.6</td>
+                    <td>7.2</td>
+                    <td>22.8</td>
+                    <td>2.4</td>
+                    <td class="td-highlight">41.0</td>
+                    <td><span class="method-tag"><i class="fa-solid fa-chart-line"></i> 趋势法</span></td>
+                  </tr>
+                  <tr>
+                    <td>漳卫河水系</td>
+                    <td>16.2</td>
+                    <td>13.6</td>
+                    <td>30.5</td>
+                    <td>5.8</td>
+                    <td class="td-highlight">66.1</td>
+                    <td><span class="method-tag"><i class="fa-solid fa-chart-line"></i> 趋势法</span></td>
+                  </tr>
+                  <tr>
+                    <td>徒骇马颊河</td>
+                    <td>14.5</td>
+                    <td>8.3</td>
+                    <td>30.8</td>
+                    <td>6.5</td>
+                    <td class="td-highlight">60.1</td>
+                    <td><span class="method-tag"><i class="fa-solid fa-sliders"></i> 弹性系数</span></td>
+                  </tr>
+                  <tr style="background: rgba(74,144,226,0.06);">
+                    <td style="font-weight:600; color:#ddd;">合计</td>
+                    <td style="font-weight:600; color:#ddd;">128.5</td>
+                    <td style="font-weight:600; color:#ddd;">100.7</td>
+                    <td style="font-weight:600; color:#ddd;">199.0</td>
+                    <td style="font-weight:600; color:#ddd;">43.0</td>
+                    <td style="font-weight:600; color:#4a90e2;">471.2</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-dot"></span>
+            模型就绪
+          </div>
+          <div class="status-item">预测年份: 2035</div>
+          <div class="status-item">预测方法: 组合法</div>
+          <div class="status-right">
+            <div class="status-item">计算分区: 8</div>
+            <div class="status-item">数据序列: 1956-2020</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+        <i class="fa-solid fa-xmark modal-close" onclick="closeModal()"></i>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+    const modalClose = document.querySelector('.modal-close');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.getElementById('btnAddQuota').addEventListener('click', () => {
+      openModal(
+        '新增需水定额',
+        `<div class="form-group">
+          <label class="form-label">定额名称</label>
+          <input type="text" class="form-input" placeholder="请输入定额名称">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">定额数值</label>
+            <input type="text" class="form-input" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">计量单位</label>
+            <select class="form-select">
+              <option>L/人·d</option>
+              <option>m3/万元</option>
+              <option>m3/亩</option>
+              <option>m3/人·年</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">适用分区</label>
+          <select class="form-select">
+            <option>全部分区</option>
+            <option>滦河水系</option>
+            <option>北三河水系</option>
+            <option>永定河水系</option>
+            <option>大清河水系</option>
+            <option>子牙河水系</option>
+            <option>黑龙港</option>
+            <option>漳卫河水系</option>
+            <option>徒骇马颊河</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">用水类型</label>
+          <select class="form-select">
+            <option>生活用水</option>
+            <option>工业用水</option>
+            <option>农业用水</option>
+            <option>生态用水</option>
+          </select>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary">保存</button>`
+      );
+    });
+
+    document.getElementById('btnImportQuota').addEventListener('click', () => {
+      openModal(
+        '导入需水定额',
+        `<div class="form-group">
+          <label class="form-label">导入方式</label>
+          <select class="form-select">
+            <option>从Excel文件导入</option>
+            <option>从数据库导入</option>
+            <option>从其他项目导入</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">选择文件</label>
+          <input type="text" class="form-input" placeholder="点击选择或拖拽文件至此">
+        </div>
+        <div class="form-group">
+          <label class="form-label">定额模板</label>
+          <select class="form-select">
+            <option>国家标准定额</option>
+            <option>行业标准定额</option>
+            <option>地方标准定额</option>
+            <option>自定义模板</option>
+          </select>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary">导入</button>`
+      );
+    });
+
+    document.getElementById('btnExportQuota').addEventListener('click', () => {
+      openModal(
+        '导出需水定额',
+        `<div class="form-group">
+          <label class="form-label">导出格式</label>
+          <select class="form-select">
+            <option>Excel格式 (.xlsx)</option>
+            <option>CSV格式 (.csv)</option>
+            <option>PDF格式 (.pdf)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">导出内容</label>
+          <select class="form-select">
+            <option>全部定额</option>
+            <option>生活用水定额</option>
+            <option>工业用水定额</option>
+            <option>农业用水定额</option>
+            <option>生态用水定额</option>
+          </select>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary">导出</button>`
+      );
+    });
+
+    document.getElementById('btnCalculate').addEventListener('click', () => {
+      openModal(
+        '需水预测计算',
+        `<div style="text-align:center;padding:10px;">
+          <i class="fa-solid fa-calculator" style="font-size:32px;color:#4a90e2;margin-bottom:12px;"></i>
+          <div style="color:#888;font-size:11px;margin-bottom:8px;">预测方法: 趋势分析+弹性系数法</div>
+          <div style="color:#aaa;font-size:12px;margin-bottom:12px;">规划水平年: 2035</div>
+        </div>
+        <div style="padding:10px;background:#1e1e1e;border-radius:5px;">
+          <div style="display:flex;justify-content:space-between;color:#777;font-size:10px;margin-bottom:6px;">
+            <span>计算进度</span>
+            <span id="calcProgress">0%</span>
+          </div>
+          <div style="height:4px;background:#333;border-radius:2px;overflow:hidden;">
+            <div id="calcProgressBar" style="height:100%;background:#4a90e2;width:0%;transition:width 0.3s;"></div>
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" id="btnStartCalc">开始计算</button>`
+      );
+
+      let progress = 0;
+      document.getElementById('btnStartCalc').addEventListener('click', function() {
+        this.disabled = true;
+        this.textContent = '计算中...';
+        const interval = setInterval(() => {
+          progress += Math.random() * 20;
+          if (progress >= 100) {
+            progress = 100;
+            clearInterval(interval);
+            document.getElementById('calcProgress').textContent = '100%';
+            document.getElementById('calcProgressBar').style.width = '100%';
+            this.textContent = '计算完成';
+            this.onclick = closeModal;
+          } else {
+            document.getElementById('calcProgress').textContent = Math.round(progress) + '%';
+            document.getElementById('calcProgressBar').style.width = progress + '%';
+          }
+        }, 200);
+      });
+    });
+
+    document.getElementById('btnEditQuota').addEventListener('click', () => {
+      openModal(
+        '编辑需水定额',
+        `<div class="quota-list">
+          <div class="quota-item">
+            <span class="quota-name">城镇居民用水定额</span>
+            <input type="text" class="quota-value" value="145">
+          </div>
+          <div class="quota-item">
+            <span class="quota-name">农村居民用水定额</span>
+            <input type="text" class="quota-value" value="85">
+          </div>
+          <div class="quota-item">
+            <span class="quota-name">城镇公共用水定额</span>
+            <input type="text" class="quota-value" value="65">
+          </div>
+          <div class="quota-item">
+            <span class="quota-name">工业万元产值用水量</span>
+            <input type="text" class="quota-value" value="12.5">
+          </div>
+          <div class="quota-item">
+            <span class="quota-name">农田灌溉定额</span>
+            <input type="text" class="quota-value" value="380">
+          </div>
+          <div class="quota-item">
+            <span class="quota-name">牲畜用水定额</span>
+            <input type="text" class="quota-value" value="25">
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="saveQuota()">保存</button>`
+      );
+    });
+
+    function saveQuota() {
+      const inputs = document.querySelectorAll('.quota-value');
+      const quotaNames = ['城镇居民用水定额', '农村居民用水定额', '城镇公共用水定额', '工业万元产值用水量', '农田灌溉定额', '牲畜用水定额'];
+      const quotaValues = [];
+      
+      inputs.forEach((input, index) => {
+        quotaValues.push({ name: quotaNames[index], value: input.value });
+      });
+
+      openModal(
+        '保存成功',
+        `<div style="text-align:center;padding:20px;">
+          <i class="fa-solid fa-circle-check" style="font-size:48px;color:#28c840;margin-bottom:12px;"></i>
+          <div style="color:#aaa;font-size:12px;margin-bottom:6px;">需水定额已更新</div>
+          <div style="margin-top:12px;text-align:left;padding:12px;background:#1e1e1e;border-radius:5px;max-height:150px;overflow-y:auto;">
+            ${quotaValues.map(q => `<div style="color:#888;font-size:10px;margin-bottom:4px;display:flex;justify-content:space-between;"><span>${q.name}</span><span style="color:#4a90e2;">${q.value}</span></div>`).join('')}
+          </div>
+        </div>`,
+        `<button class="btn btn-primary" onclick="closeModal()">确定</button>`
+      );
+    }
+  </script>
+
+</body>
+
+</html>

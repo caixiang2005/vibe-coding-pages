@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>点云质检 - 水利工程数字化勘测设计与建模软件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --accent: #0a84ff;
+            --surface-0: #12151b;
+            --surface-1: rgba(32, 36, 45, 0.78);
+            --surface-2: rgba(44, 49, 60, 0.72);
+            --surface-3: rgba(22, 26, 34, 0.68);
+            --border-soft: rgba(255, 255, 255, 0.08);
+            --text-main: #e9edf5;
+            --text-subtle: #98a3b8;
+            --shadow-main: 0 20px 40px rgba(0, 0, 0, 0.38);
+            --radius-window: 18px;
+            --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px;
+            letter-spacing: 0.01em;
+            background: url('https://fd.co188.com/group1/M02/8D/B8/rBBhH19EnsmAYlDbAAHfSFltjL4040-1.jpg!610c.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        .window-shell {
+            width: 1680px;
+            height: 100%;
+            margin: 0 auto;
+            border-radius: var(--radius-window);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 40px 80px rgba(3, 6, 13, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            background: rgba(12, 15, 21, 0.56);
+            backdrop-filter: blur(6px);
+        }
+
+        .sidebar { width: 260px; background: var(--surface-1); backdrop-filter: blur(26px) saturate(1.2); border-right: 1px solid var(--border-soft); }
+        .toolbar { height: 56px; background: var(--surface-2); backdrop-filter: blur(30px) saturate(1.1); border-bottom: 1px solid var(--border-soft); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35); }
+        .control-dot { width: 12px; height: 12px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, 0.25); transition: transform 0.2s ease; }
+        .window-controls { gap: 8px; }
+        .mac-content { background: radial-gradient(circle at 10% 10%, #30374a 0%, transparent 40%), radial-gradient(circle at 90% 0%, #263753 0%, transparent 32%), linear-gradient(155deg, #0f1117, #161a22 45%, #10141b); }
+        .glass-chip { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-soft); border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+        .segmented-control { background: rgba(9, 12, 17, 0.45); border: 1px solid var(--border-soft); border-radius: 10px; padding: 3px; }
+        .segmented-item { color: var(--text-subtle); transition: all 0.2s var(--ease-out-quint); border-radius: 7px; text-decoration: none; display: inline-block; }
+        .segmented-item.active { background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08)); color: var(--text-main); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 14px rgba(0, 0, 0, 0.32); }
+        .segmented-item:hover { color: #cdd6e8; background: rgba(255, 255, 255, 0.06); }
+        .floating-card { background: var(--surface-3); border: 1px solid var(--border-soft); backdrop-filter: blur(18px) saturate(1.15); box-shadow: var(--shadow-main); }
+        .primary-action { background: linear-gradient(150deg, #3da0ff, #0a84ff 55%, #0a74df); border: 1px solid rgba(126, 193, 255, 0.5); box-shadow: 0 10px 20px rgba(10, 132, 255, 0.38); cursor: pointer; transition: all 0.22s var(--ease-out-quint); }
+        .primary-action:hover { transform: translateY(-1px); filter: brightness(1.06); }
+        .mac-button { transition: all 0.22s var(--ease-out-quint); border: 1px solid transparent; border-radius: 10px; text-decoration: none; display: block; }
+        .mac-button:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--border-soft); transform: translateY(-1px); }
+        .active-tab { background: linear-gradient(145deg, rgba(10, 132, 255, 0.28), rgba(10, 132, 255, 0.12)); color: #9eccff; border: 1px solid rgba(10, 132, 255, 0.32); }
+        input, select, textarea { background: rgba(16, 19, 26, 0.84) !important; border: 1px solid var(--border-soft) !important; color: var(--text-main) !important; border-radius: 8px; transition: all 0.2s ease; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(10, 132, 255, 0.7) !important; box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.18); }
+        footer { background: rgba(25, 29, 36, 0.74) !important; border-top: 1px solid var(--border-soft) !important; backdrop-filter: blur(20px); color: #a6b0c3 !important; }
+        .status-pill { background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-soft); border-radius: 999px; padding: 2px 8px; }
+        .compliance-pill { background: rgba(24, 199, 126, 0.12); border: 1px solid rgba(24, 199, 126, 0.35); color: #8de7be; border-radius: 999px; padding: 2px 8px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: rgba(182, 198, 226, 0.2); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 16px; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5); min-width: 480px; max-width: 90%; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border-soft); cursor: move; display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.2); }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border-soft); display: flex; justify-content: flex-end; gap: 12px; background: rgba(0, 0, 0, 0.1); }
+
+        .qc-card { transition: all 0.22s var(--ease-out-quint); border: 1px solid var(--border-soft); }
+        .qc-card:hover { transform: translateY(-2px); border-color: rgba(10, 132, 255, 0.4); box-shadow: 0 12px 32px rgba(10, 132, 255, 0.2); }
+        .progress-ring { transform: rotate(-90deg); }
+        .progress-ring-circle { transition: stroke-dashoffset 0.35s; transform-origin: 50% 50%; }
+
+        .tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 500; }
+        .tag-green { background: rgba(24, 199, 126, 0.2); color: #8de7be; }
+        .tag-yellow { background: rgba(254, 188, 46, 0.2); color: #fedc6a; }
+        .tag-red { background: rgba(255, 82, 82, 0.2); color: #ff8585; }
+        .tag-blue { background: rgba(10, 132, 255, 0.2); color: #5eb3ff; }
+
+        .action-btn { padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        .action-btn-primary { background: linear-gradient(150deg, #3da0ff, #0a84ff 55%, #0a74df); color: white; border-color: rgba(126, 193, 255, 0.5); }
+        .action-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .action-btn-secondary { background: rgba(255, 255, 255, 0.08); color: var(--text-main); border-color: var(--border-soft); }
+        .action-btn-secondary:hover { background: rgba(255, 255, 255, 0.12); }
+
+        .point-cloud-view { background: linear-gradient(160deg, rgba(19, 24, 32, 0.92), rgba(14, 18, 24, 0.96)), linear-gradient(25deg, rgba(10, 132, 255, 0.08), transparent 45%); position: relative; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.14); }
+    </style>
+</head>
+
+<body class="h-screen overflow-hidden">
+    <div class="window-shell h-full flex flex-col">
+        <header class="toolbar flex items-center justify-between px-5 z-50">
+            <div class="flex items-center space-x-3">
+                <div class="window-controls flex pr-4">
+                    <div class="control-dot bg-[#ff5f57]"></div>
+                    <div class="control-dot bg-[#febc2e]"></div>
+                    <div class="control-dot bg-[#28c840]"></div>
+                </div>
+                <div class="glass-chip flex items-center space-x-1 px-3 py-1">
+                    <i class="fas fa-folder text-blue-400"></i>
+                    <span class="text-xs font-medium tracking-wide whitespace-nowrap">水利工程数字化勘测设计与建模软件</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-5">
+                <div class="segmented-control flex">
+                    <a href="scheme.html" class="segmented-item px-3.5 py-1 text-xs">设计</a>
+                    <a href="hydrology.html" class="segmented-item px-3.5 py-1 text-xs">推演</a>
+                    <a href="archive.html" class="segmented-item px-3.5 py-1 text-xs">报表</a>
+                </div>
+                <div class="h-6 w-[1px] bg-white/10"></div>
+                <button class="primary-action px-4 py-1.5 rounded-lg text-xs font-medium text-white flex items-center space-x-2">
+                    <i class="fas fa-play"></i>
+                    <span>运行水力模拟</span>
+                </button>
+                <div class="flex items-center -space-x-2">
+                    <img alt="User" class="w-7 h-7 rounded-full border border-gray-800" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/88a6f9a501ac49469ebc7601944e76a8.jpg" />
+                    <div class="w-7 h-7 rounded-full bg-gray-700 border border-gray-800 flex items-center justify-center text-[10px] text-white">+3</div>
+                </div>
+            </div>
+        </header>
+        <div class="mac-content flex-1 flex overflow-hidden">
+            <aside class="sidebar flex flex-col border-right border-black/40">
+                <div class="p-4">
+                    <div class="relative mb-5">
+                        <i class="fas fa-search absolute left-3 top-2.5 text-gray-500"></i>
+                        <input class="w-full bg-black/20 border border-white/5 rounded-lg py-2 pl-9 pr-3 text-xs focus:outline-none focus:border-blue-500/50" placeholder="搜索点云数据..." type="text" />
+                    </div>
+                    <nav class="space-y-1">
+                        <a href="scheme.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button">
+                            <i class="fas fa-lightbulb text-cyan-300"></i>
+                            <span>方案设计</span>
+                        </a>
+                        <a href="point-cloud.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button active-tab">
+                            <i class="fas fa-cloud text-blue-300"></i>
+                            <span>点云质检</span>
+                        </a>
+                        <a href="hydrology.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button">
+                            <i class="fas fa-water text-indigo-300"></i>
+                            <span>水文推演</span>
+                        </a>
+                        <a href="archive.html" class="w-full text-left px-2 py-1.5 rounded-md text-xs flex items-center space-x-2 mac-button">
+                            <i class="fas fa-archive text-violet-300"></i>
+                            <span>成果归档</span>
+                        </a>
+                    </nav>
+                </div>
+                <div class="mt-auto p-4 border-t border-black/20 bg-black/10">
+                    <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2">
+                        <span>协同与版本状态</span>
+                        <span class="text-blue-400">3 人在线 · 自动保存</span>
+                    </div>
+                    <div class="glass-chip w-full h-1 rounded-full overflow-hidden">
+                        <div class="bg-blue-500 h-full w-[86%] shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
+                    </div>
+                </div>
+            </aside>
+            <main class="flex-1 viewport grid-bg flex flex-col p-6 overflow-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 class="text-xl font-semibold text-white mb-1">点云质检</h1>
+                        <p class="text-xs text-gray-500">管理点云数据质量检查与自动标注</p>
+                    </div>
+                    <button onclick="openModal('importModal')" class="action-btn action-btn-primary flex items-center space-x-2">
+                        <i class="fas fa-upload"></i>
+                        <span>导入点云</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="floating-card rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                <i class="fas fa-cloud text-blue-400"></i>
+                            </div>
+                            <div>
+                                <div class="text-xl font-semibold text-white">156</div>
+                                <div class="text-[10px] text-gray-500">点云总数</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="floating-card rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                <i class="fas fa-check-circle text-green-400"></i>
+                            </div>
+                            <div>
+                                <div class="text-xl font-semibold text-white">128</div>
+                                <div class="text-[10px] text-gray-500">已通过</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="floating-card rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                            </div>
+                            <div>
+                                <div class="text-xl font-semibold text-white">18</div>
+                                <div class="text-[10px] text-gray-500">需复查</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="floating-card rounded-xl p-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                <i class="fas fa-bolt text-purple-400"></i>
+                            </div>
+                            <div>
+                                <div class="text-xl font-semibold text-white">98.5%</div>
+                                <div class="text-[10px] text-gray-500">自动质检率</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 mb-4">
+                    <button class="px-3 py-1.5 text-xs rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30">全部数据</button>
+                    <button class="px-3 py-1.5 text-xs rounded-lg bg-transparent text-gray-400 border border-transparent hover:border-gray-600">待质检</button>
+                    <button class="px-3 py-1.5 text-xs rounded-lg bg-transparent text-gray-400 border border-transparent hover:border-gray-600">已通过</button>
+                    <button class="px-3 py-1.5 text-xs rounded-lg bg-transparent text-gray-400 border border-transparent hover:border-gray-600">未通过</button>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="qc-card floating-card rounded-xl p-4 cursor-pointer" onclick="showPointCloudDetail(1)">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                    <i class="fas fa-mountain text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-white">大坝坝体点云</div>
+                                    <div class="text-[10px] text-gray-500">2026-03-15 采集</div>
+                                </div>
+                            </div>
+                            <span class="tag tag-green">已通过</span>
+                        </div>
+                        <div class="point-cloud-view h-32 mb-3 flex items-center justify-center" style="background: url('https://ts1.tc.mm.bing.net/th/id/R-C.01364e49546c5d9c8ec2d29225ed0d99?rik=o0G4p2UbuELzKA&riu=http%3a%2f%2fwww.top-iot.com%2fuploadfile%2fimage%2f20230315%2f20230315092143_41129.png&ehk=7qhXacht2qkui%2fZleD3QC%2fNZUZDJoaTpXcKa%2fWvM2xk%3d&risl=&pid=ImgRaw&r=0') center/cover no-repeat;">
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2">
+                            <span><i class="fas fa-database mr-1"></i> 2.4 GB</span>
+                            <span><i class="fas fa-crosshairs mr-1"></i> 1.2亿点</span>
+                            <span><i class="fas fa-clock mr-1"></i> 45min</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="text-[10px] text-green-400"><i class="fas fa-check-circle mr-1"></i> 质检合格率 98.5%</div>
+                            <button class="text-blue-400 text-xs hover:text-blue-300" onclick="event.stopPropagation(); viewPointCloudDetail(1)">查看详情 <i class="fas fa-arrow-right ml-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="qc-card floating-card rounded-xl p-4 cursor-pointer" onclick="showPointCloudDetail(2)">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center">
+                                    <i class="fas fa-water text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-white">河道断面点云</div>
+                                    <div class="text-[10px] text-gray-500">2026-03-18 采集</div>
+                                </div>
+                            </div>
+                            <span class="tag tag-yellow">需复查</span>
+                        </div>
+                        <div class="point-cloud-view h-32 mb-3 flex items-center justify-center" style="background: url('https://ts3.tc.mm.bing.net/th/id/OIP-C.CQZmZrDiYjPr6t9lpiznFQHaEZ?rs=1&pid=ImgDetMain&o=7&rm=3') center/cover no-repeat;">
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2">
+                            <span><i class="fas fa-database mr-1"></i> 856 MB</span>
+                            <span><i class="fas fa-crosshairs mr-1"></i> 4500万点</span>
+                            <span><i class="fas fa-clock mr-1"></i> 22min</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="text-[10px] text-yellow-400"><i class="fas fa-exclamation-circle mr-1"></i> 3处异常待处理</div>
+                            <button class="text-blue-400 text-xs hover:text-blue-300" onclick="event.stopPropagation(); viewPointCloudDetail(2)">查看详情 <i class="fas fa-arrow-right ml-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="qc-card floating-card rounded-xl p-4 cursor-pointer" onclick="showPointCloudDetail(3)">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                                    <i class="fas fa-archway text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-white">隧洞点云数据</div>
+                                    <div class="text-[10px] text-gray-500">2026-03-10 采集</div>
+                                </div>
+                            </div>
+                            <span class="tag tag-green">已通过</span>
+                        </div>
+                        <div class="point-cloud-view h-32 mb-3 flex items-center justify-center" style="background: url('https://i-blog.csdnimg.cn/blog_migrate/22db43c8ad0fbe54f8aa86e77883128e.jpeg') center/cover no-repeat;">
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2">
+                            <span><i class="fas fa-database mr-1"></i> 1.8 GB</span>
+                            <span><i class="fas fa-crosshairs mr-1"></i> 9800万点</span>
+                            <span><i class="fas fa-clock mr-1"></i> 38min</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="text-[10px] text-green-400"><i class="fas fa-check-circle mr-1"></i> 质检合格率 99.2%</div>
+                            <button class="text-blue-400 text-xs hover:text-blue-300" onclick="event.stopPropagation(); viewPointCloudDetail(3)">查看详情 <i class="fas fa-arrow-right ml-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="qc-card floating-card rounded-xl p-4 cursor-pointer" onclick="showPointCloudDetail(4)">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                                    <i class="fas fa-leaf text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-white">边坡点云数据</div>
+                                    <div class="text-[10px] text-gray-500">2026-03-19 采集</div>
+                                </div>
+                            </div>
+                            <span class="tag tag-blue">处理中</span>
+                        </div>
+                        <div class="point-cloud-view h-32 mb-3 flex items-center justify-center" style="background: url('https://img-blog.csdnimg.cn/2021063016331612.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xpdXFpbmdzb25nbXNkbjIwMTQ=,size_16,color_FFFFFF,t_70') center/cover no-repeat;">
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2">
+                            <span><i class="fas fa-database mr-1"></i> 2.1 GB</span>
+                            <span><i class="fas fa-crosshairs mr-1"></i> 1.1亿点</span>
+                            <span><i class="fas fa-clock mr-1"></i> 60min</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="text-[10px] text-blue-400"><i class="fas fa-cog fa-spin mr-1"></i> 自动质检中...</div>
+                            <button class="text-blue-400 text-xs hover:text-blue-300" onclick="event.stopPropagation(); viewPointCloudDetail(4)">查看详情 <i class="fas fa-arrow-right ml-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="qc-card floating-card rounded-xl p-4 cursor-pointer" onclick="showPointCloudDetail(5)">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                                    <i class="fas fa-building text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-white">厂房点云数据</div>
+                                    <div class="text-[10px] text-gray-500">2026-03-08 采集</div>
+                                </div>
+                            </div>
+                            <span class="tag tag-red">未通过</span>
+                        </div>
+                        <div class="point-cloud-view h-32 mb-3 flex items-center justify-center" style="background: url('https://ts3.tc.mm.bing.net/th/id/OIP-C.31EsZ0OzWSqsyLAQQ0t_4AHaD8?w=642&h=342&rs=1&pid=ImgDetMain&o=7&rm=3') center/cover no-repeat;">
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2">
+                            <span><i class="fas fa-database mr-1"></i> 1.2 GB</span>
+                            <span><i class="fas fa-crosshairs mr-1"></i> 6800万点</span>
+                            <span><i class="fas fa-clock mr-1"></i> 30min</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="text-[10px] text-red-400"><i class="fas fa-times-circle mr-1"></i> 12处质量问题</div>
+                            <button class="text-blue-400 text-xs hover:text-blue-300" onclick="event.stopPropagation(); viewPointCloudDetail(5)">查看详情 <i class="fas fa-arrow-right ml-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="qc-card floating-card rounded-xl p-4 cursor-pointer" onclick="showPointCloudDetail(6)">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
+                                    <i class="fas fa-route text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-white">引水线路点云</div>
+                                    <div class="text-[10px] text-gray-500">2026-03-12 采集</div>
+                                </div>
+                            </div>
+                            <span class="tag tag-green">已通过</span>
+                        </div>
+                        <div class="point-cloud-view h-32 mb-3 flex items-center justify-center" style="background: url('https://ts4.tc.mm.bing.net/th/id/OIP-C.2q6DpvyBVx-CxrOka9RAWgHaE0?rs=1&pid=ImgDetMain&o=7&rm=3') center/cover no-repeat;">
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] text-gray-500 mb-2">
+                            <span><i class="fas fa-database mr-1"></i> 3.2 GB</span>
+                            <span><i class="fas fa-crosshairs mr-1"></i> 1.6亿点</span>
+                            <span><i class="fas fa-clock mr-1"></i> 72min</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="text-[10px] text-green-400"><i class="fas fa-check-circle mr-1"></i> 质检合格率 97.8%</div>
+                            <button class="text-blue-400 text-xs hover:text-blue-300" onclick="event.stopPropagation(); viewPointCloudDetail(6)">查看详情 <i class="fas fa-arrow-right ml-1"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <footer class="h-7 bg-[#252525] border-t border-black/40 flex items-center justify-between px-4 text-[10px] text-gray-500">
+            <div class="flex items-center space-x-3">
+                <div class="status-pill flex items-center space-x-1">
+                    <i class="fas fa-wifi"></i>
+                    <span>加密隧道已开启</span>
+                </div>
+                <span class="text-white">GPU:</span>
+                <span class="text-white">Metal 3.2 (M3 Max 128GB)</span>
+                <span class="status-pill">FPS 120.4</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="compliance-pill flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span>SL/T73.1 合规校验: 正常</span>
+                </div>
+                <span class="status-pill font-mono">X: 25.112 Y: 8.490 Z: 204.11</span>
+                <span class="text-gray-500">UTF-8 · MacOS UI Kit 1.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <div class="modal-overlay" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalHeader">
+                <div class="flex items-center space-x-2">
+                    <div class="flex space-x-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-semibold text-white absolute left-1/2 transform -translate-x-1/2">导入点云数据</span>
+                <button onclick="closeModal('importModal')" class="text-gray-400 hover:text-white ml-auto">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center mb-4 hover:border-blue-500 transition-colors cursor-pointer" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-500 mb-3"></i>
+                    <div class="text-sm text-gray-400 mb-1">拖拽点云文件到此处或点击上传</div>
+                    <div class="text-[10px] text-gray-600">支持 .las / .laz / .ply / .e57 格式</div>
+                    <input type="file" id="fileInput" class="hidden" accept=".las,.laz,.ply,.e57" onchange="handleFileSelect(this)" />
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1.5">项目名称</label>
+                        <input type="text" id="projectName" class="w-full px-3 py-2 text-xs" placeholder="请输入项目名称" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1.5">采集日期</label>
+                            <input type="date" id="collectDate" class="w-full px-3 py-2 text-xs" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 block mb-1.5">采集设备</label>
+                            <select id="collectDevice" class="w-full px-3 py-2 text-xs">
+                                <option>Faro Focus S150</option>
+                                <option>Leica RTC360</option>
+                                <option>Riegl VZ-400i</option>
+                                <option>其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1.5">备注</label>
+                        <textarea id="collectRemark" class="w-full px-3 py-2 text-xs" rows="2" placeholder="请输入备注信息"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('importModal')" class="action-btn action-btn-secondary">取消</button>
+                <button onclick="importPointCloud()" class="action-btn action-btn-primary"><i class="fas fa-upload mr-1"></i> 开始导入</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="pointCloudDetailModal">
+        <div class="modal-content" style="min-width: 560px;">
+            <div class="modal-header" id="detailModalHeader">
+                <div class="flex items-center space-x-2">
+                    <div class="flex space-x-1.5">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                <span class="text-sm font-semibold text-white absolute left-1/2 transform -translate-x-1/2">点云数据详情</span>
+                <button onclick="closeModal('pointCloudDetailModal')" class="text-gray-400 hover:text-white ml-auto">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="flex gap-4 mb-4">
+                    <div class="w-1/2 point-cloud-view h-40 flex items-center justify-center rounded-lg">
+                        <i class="fas fa-cloud-upload-alt text-5xl text-blue-400/50"></i>
+                    </div>
+                    <div class="w-1/2 space-y-3">
+                        <div class="glass-chip p-3">
+                            <div class="text-[10px] text-gray-500 uppercase mb-2">基本信息</div>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between"><span class="text-gray-400">数据名称</span><span class="text-white" id="detailName">-</span></div>
+                                <div class="flex justify-between"><span class="text-gray-400">采集日期</span><span class="text-white" id="detailDate">-</span></div>
+                                <div class="flex justify-between"><span class="text-gray-400">采集设备</span><span class="text-white" id="detailDevice">-</span></div>
+                                <div class="flex justify-between"><span class="text-gray-400">数据大小</span><span class="text-white" id="detailSize">-</span></div>
+                            </div>
+                        </div>
+                        <div class="glass-chip p-3">
+                            <div class="text-[10px] text-gray-500 uppercase mb-2">质检状态</div>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between"><span class="text-gray-400">点云数量</span><span class="text-white" id="detailPoints">-</span></div>
+                                <div class="flex justify-between"><span class="text-gray-400">质检合格率</span><span class="text-green-400" id="detailRate">-</span></div>
+                                <div class="flex justify-between"><span class="text-gray-400">异常数量</span><span class="text-yellow-400" id="detailIssues">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-chip p-3">
+                    <div class="text-[10px] text-gray-500 uppercase mb-2">质检报告</div>
+                    <div class="text-xs text-gray-400 leading-relaxed" id="detailReport">
+                        -
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('pointCloudDetailModal')" class="action-btn action-btn-secondary">关闭</button>
+                <button onclick="downloadPointCloud()" class="action-btn action-btn-primary"><i class="fas fa-download mr-1"></i> 下载数据</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showPointCloudDetail(id) {
+            viewPointCloudDetail(id);
+        }
+
+        const pointCloudData = {
+            1: { name: '大坝坝体点云', date: '2026-03-15', device: 'Faro Focus S150', size: '2.4 GB', points: '1.2亿点', rate: '98.5%', issues: '0处', report: '该点云数据已完成自动质检，整体质量良好。点云密度均匀，覆盖完整，无明显噪点。数据精度符合设计要求，可用于后续三维建模和分析。', image: 'https://ts1.tc.mm.bing.net/th/id/R-C.01364e49546c5d9c8ec2d29225ed0d99?rik=o0G4p2UbuELzKA&riu=http%3a%2f%2fwww.top-iot.com%2fuploadfile%2fimage%2f20230315%2f20230315092143_41129.png&ehk=7qhXacht2qkui%2fZleD3QC%2fNZUZDJoaTpXcKa%2fWvM2xk%3d&risl=&pid=ImgRaw&r=0' },
+            2: { name: '河道断面点云', date: '2026-03-18', device: 'Leica RTC360', size: '856 MB', points: '4500万点', rate: '96.2%', issues: '3处', report: '检测到3处异常区域：(1)桩号K2+150处有少量植被覆盖，建议人工清理；(2)K3+200处存在轻微遮挡，需补测；(3)K4+500处水面反射较强，建议使用滤波器处理。', image: 'https://ts3.tc.mm.bing.net/th/id/OIP-C.CQZmZrDiYjPr6t9lpiznFQHaEZ?rs=1&pid=ImgDetMain&o=7&rm=3' },
+            3: { name: '隧洞点云数据', date: '2026-03-10', device: 'Riegl VZ-400i', size: '1.8 GB', points: '9800万点', rate: '99.2%', issues: '0处', report: '隧洞内部点云数据质量优秀，壁面点云密度高，纹理清晰。仅在入口处有轻微曝光，已自动校正。不需要人工干预，可直接用于施工放样。', image: 'https://i-blog.csdnimg.cn/blog_migrate/22db43c8ad0fbe54f8aa86e77883128e.jpeg' },
+            4: { name: '边坡点云数据', date: '2026-03-19', device: 'Faro Focus S150', size: '2.1 GB', points: '1.1亿点', rate: '97.8%', issues: '2处', report: '自动质检进行中。当前已完成80%进度，检测到2处疑似危岩体，需要人工复核。边坡整体稳定性良好，建议重点关注东北方向区域。', image: 'https://img-blog.csdnimg.cn/2021063016331612.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2xpdXFpbmdzb25nbXNkbjIwMTQ=,size_16,color_FFFFFF,t_70' },
+            5: { name: '厂房点云数据', date: '2026-03-08', device: 'Leica RTC360', size: '1.2 GB', points: '6800万点', rate: '89.5%', issues: '12处', report: '质检未通过，发现12处质量问题：4处钢结构锈蚀区域需重点标注，3处测量盲区需补测，2处设备遮挡导致数据缺失，3处噪声异常需滤波处理。建议重新采集或补充测量。', image: 'https://ts3.tc.mm.bing.net/th/id/OIP-C.31EsZ0OzWSqsyLAQQ0t_4AHaD8?w=642&h=342&rs=1&pid=ImgDetMain&o=7&rm=3' },
+            6: { name: '引水线路点云', date: '2026-03-12', device: 'Riegl VZ-400i', size: '3.2 GB', points: '1.6亿点', rate: '97.8%', issues: '1处', report: '引水线路全线点云数据完整，管道走向清晰。检测到1处轻微变形，位于桩号Y5+320处，建议进一步分析确认。整体质量符合规范要求。', image: 'https://ts4.tc.mm.bing.net/th/id/OIP-C.2q6DpvyBVx-CxrOka9RAWgHaE0?rs=1&pid=ImgDetMain&o=7&rm=3' }
+        };
+
+        function viewPointCloudDetail(id) {
+            const data = pointCloudData[id];
+            if (data) {
+                document.getElementById('detailName').textContent = data.name;
+                document.getElementById('detailDate').textContent = data.date;
+                document.getElementById('detailDevice').textContent = data.device;
+                document.getElementById('detailSize').textContent = data.size;
+                document.getElementById('detailPoints').textContent = data.points;
+                document.getElementById('detailRate').textContent = data.rate;
+                document.getElementById('detailIssues').textContent = data.issues;
+                document.getElementById('detailReport').textContent = data.report;
+                
+                // 更新背景图片
+                const pointCloudView = document.querySelector('#pointCloudDetailModal .point-cloud-view');
+                pointCloudView.style.background = `url('${data.image}') center/cover no-repeat`;
+                pointCloudView.innerHTML = '';
+                
+                if (parseFloat(data.rate) >= 98) {
+                    document.getElementById('detailRate').className = 'text-green-400';
+                } else if (parseFloat(data.rate) >= 90) {
+                    document.getElementById('detailRate').className = 'text-yellow-400';
+                } else {
+                    document.getElementById('detailRate').className = 'text-red-400';
+                }
+                
+                openModal('pointCloudDetailModal');
+            }
+        }
+
+        function downloadPointCloud() {
+            const name = document.getElementById('detailName').textContent;
+            alert('正在下载: ' + name + '\n\n下载功能需要后端服务器支持，当前为演示版本。');
+            closeModal('pointCloudDetailModal');
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0];
+                alert('已选择文件: ' + selectedFile.name + '\n大小: ' + (selectedFile.size / 1024 / 1024).toFixed(2) + ' MB');
+            }
+        }
+
+        function importPointCloud() {
+            const projectName = document.getElementById('projectName').value;
+            const collectDate = document.getElementById('collectDate').value;
+            const collectDevice = document.getElementById('collectDevice').value;
+            const collectRemark = document.getElementById('collectRemark').value;
+            
+            if (!projectName) {
+                alert('请输入项目名称');
+                return;
+            }
+            
+            if (!selectedFile) {
+                alert('请选择要导入的点云文件');
+                return;
+            }
+            
+            alert('点云数据导入成功！\n\n项目名称: ' + projectName + '\n采集日期: ' + (collectDate || '未填写') + '\n采集设备: ' + collectDevice + '\n文件名: ' + selectedFile.name);
+            
+            document.getElementById('projectName').value = '';
+            document.getElementById('collectDate').value = '';
+            document.getElementById('collectRemark').value = '';
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            closeModal('importModal');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        const modal = document.getElementById('importModal');
+        const modalHeader = document.getElementById('modalHeader');
+        let isDragging = false, currentX, currentY, initialX, initialY, xOffset = 0, yOffset = 0;
+
+        modalHeader.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        function dragStart(e) {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+            if (e.target === modalHeader || modalHeader.contains(e.target)) {
+                isDragging = true;
+            }
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                xOffset = currentX;
+                yOffset = currentY;
+                modal.querySelector('.modal-content').style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+        }
+
+        function dragEnd() {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+        }
+
+        const detailModal = document.getElementById('pointCloudDetailModal');
+        const detailModalHeader = document.getElementById('detailModalHeader');
+        let detailIsDragging = false;
+        let detailCurrentX;
+        let detailCurrentY;
+        let detailInitialX;
+        let detailInitialY;
+        let detailXOffset = 0;
+        let detailYOffset = 0;
+
+        detailModalHeader.addEventListener('mousedown', function(e) {
+            detailInitialX = e.clientX - detailXOffset;
+            detailInitialY = e.clientY - detailYOffset;
+            if (e.target === detailModalHeader || detailModalHeader.contains(e.target)) {
+                detailIsDragging = true;
+            }
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (detailIsDragging) {
+                e.preventDefault();
+                detailCurrentX = e.clientX - detailInitialX;
+                detailCurrentY = e.clientY - detailInitialY;
+                detailXOffset = detailCurrentX;
+                detailYOffset = detailCurrentY;
+                detailModal.querySelector('.modal-content').style.transform = `translate(${detailCurrentX}px, ${detailCurrentY}px)`;
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            detailInitialX = detailCurrentX;
+            detailInitialY = detailCurrentY;
+            detailIsDragging = false;
+        });
+    </script>
+</body>
+
+</html>

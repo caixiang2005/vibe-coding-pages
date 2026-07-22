@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>工程管理 - 河湖治理施工进度监控系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+
+        :root {
+            --macos-bg-light: #F2F2F7;
+            --macos-sidebar-light: rgba(255, 255, 255, 0.6);
+            --macos-accent: #007AFF;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: url('./static/bg.jpeg') no-repeat center center;
+            background-size: cover;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .macos-window {
+            position: relative;
+            width: 1200px;
+            height: 800px;
+            background: var(--macos-bg-light);
+            border-radius: 12px;
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-blur {
+            backdrop-filter: blur(20px);
+            background: var(--macos-sidebar-light);
+        }
+
+        .traffic-lights .light { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .light-red { background: #FF5F57; border: 0.5px solid #E0443E; }
+        .light-yellow { background: #FEBC2E; border: 0.5px solid #D89F24; }
+        .light-green { background: #28C840; border: 0.5px solid #1AAB29; }
+
+        .nav-item.active { background: rgba(0, 0, 0, 0.05); border-radius: 6px; }
+        .nav-item:hover:not(.active) { background: rgba(0, 0, 0, 0.03); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
+
+        .dark-mode .macos-window { background: #1C1C1E; color: #FFFFFF; }
+        .dark-mode .sidebar-blur { background: rgba(44, 44, 46, 0.7); }
+        .dark-mode .nav-item.active { background: rgba(255, 255, 255, 0.1); color: #F2F2F7 !important; }
+        .dark-mode .nav-item.active .fa { color: #F2F2F7 !important; }
+        .dark-mode .bg-white { background: #2C2C2E !important; color: white; }
+        .dark-mode .text-gray-500 { color: #8E8E93; }
+        .dark-mode .text-gray-600 { color: #AEAEB2; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3); }
+
+        .card-hover { transition: all 0.2s ease; cursor: pointer; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); }
+
+        .macos-modal { position: absolute; background: white; border-radius: 12px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25); z-index: 1000; display: none; overflow: hidden; }
+        .macos-modal.active { display: block; }
+        .modal-header { background: #EBEBEB; padding: 10px 16px; cursor: move; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #d1d1d1; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 12px 20px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }
+
+        .progress-bar { height: 6px; background: #E5E7EB; border-radius: 3px; overflow: hidden; }
+        .progress-bar .progress { height: 100%; background: linear-gradient(90deg, #007AFF, #34C759); border-radius: 3px; transition: width 0.5s ease; }
+
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(0, 0, 0, 0.8); color: white; padding: 12px 24px; border-radius: 8px; z-index: 2000; transition: transform 0.3s ease; display: flex; align-items: center; gap: 10px; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        .status-badge { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+        .status-active { background: #dbeafe; color: #1d4ed8; }
+        .status-warning { background: #fef3c7; color: #b45309; }
+        .status-completed { background: #dcfce7; color: #15803d; }
+        .status-pending { background: #f3f4f6; color: #6b7280; }
+
+        .filter-btn { padding: 6px 12px; border-radius: 6px; font-size: 12px; transition: all 0.2s; }
+        .filter-btn.active { background: #007AFF; color: white; }
+        .filter-btn:not(.active):hover { background: #f3f4f6; }
+    </style>
+</head>
+
+<body>
+    <div class="macos-window flex flex-row">
+        <aside class="w-64 sidebar-blur border-r border-black/5 flex flex-col pt-4 overflow-hidden">
+            <div class="traffic-lights flex px-5 mb-8">
+                <div class="light light-red"></div>
+                <div class="light light-yellow"></div>
+                <div class="light light-green"></div>
+            </div>
+            <nav class="flex-1 px-3 space-y-1 custom-scrollbar overflow-y-auto">
+                <div class="text-[11px] font-bold text-gray-400 px-3 py-2 uppercase tracking-wider">主菜单</div>
+                <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 hover:bg-black/5 rounded-md" href="./main.html">
+                    <i class="fa-solid fa-house mr-3 w-4"></i>工作台
+                </a>
+                <a class="nav-item active flex items-center px-3 py-2 text-sm text-gray-700 font-medium" href="./engineering.html">
+                    <i class="fa-solid fa-droplet mr-3 w-4"></i>工程管理
+                </a>
+                <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 hover:bg-black/5 rounded-md" href="./tasks.html">
+                    <i class="fa-solid fa-list-check mr-3 w-4"></i>施工任务
+                </a>
+                <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 hover:bg-black/5 rounded-md" href="./schedule.html">
+                    <i class="fa-solid fa-calendar-days mr-3 w-4"></i>工期计划
+                </a>
+                <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 hover:bg-black/5 rounded-md" href="./statistics.html">
+                    <i class="fa-solid fa-chart-pie mr-3 w-4"></i>统计分析
+                </a>
+            </nav>
+            <div class="p-4 border-t border-black/5 flex items-center justify-between">
+                <div class="flex items-center">
+                    <img alt="User avatar" class="w-8 h-8 rounded-full border border-gray-200" src="https://modao.cc/agent-py/media/generated_images/2026-03-10/5a6f55023b5e47f4927f4295928d2c2f.jpg" />
+                    <div class="ml-2 overflow-hidden">
+                        <div class="text-[12px] font-semibold truncate">郭颖</div>
+                        <div class="text-[10px] text-gray-500">专业版账户</div>
+                    </div>
+                </div>
+                <button class="p-1.5 rounded hover:bg-black/10 transition-colors" onclick="toggleDarkMode()">
+                    <i class="fa-solid fa-moon text-gray-500"></i>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-14 border-b border-black/5 flex items-center justify-between px-6 bg-white/50 backdrop-blur-md">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-lg font-bold text-gray-800">工程管理</h1>
+                    <span class="text-[11px] font-semibold text-gray-600 bg-black/5 px-2 py-0.5 rounded">河湖治理施工进度监控系统</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="relative">
+                        <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400"></i>
+                        <input class="bg-black/5 border-none rounded-md py-1.5 pl-9 pr-4 text-xs w-64 focus:ring-2 focus:ring-blue-400" placeholder="搜索工程名称..." type="text" />
+                    </div>
+                    <button class="p-2 rounded-full hover:bg-black/5 transition-colors relative" onclick="openModal('notificationModal')">
+                        <i class="fa-solid fa-bell text-gray-500"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <button class="btn-primary px-4 py-1.5 rounded-md text-white text-sm" onclick="openModal('addProjectModal')">
+                        <i class="fa-solid fa-plus mr-1"></i>新建工程
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#F2F2F7]/50">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-2">
+                        <input type="hidden" id="filterType" value="all">
+                        <button class="filter-btn active" data-type="all" onclick="filterProjects('all', this)">全部 (24)</button>
+                        <button class="filter-btn bg-white" data-type="active" onclick="filterProjects('active', this)">在建 (12)</button>
+                        <button class="filter-btn bg-white" data-type="warning" onclick="filterProjects('warning', this)">预警 (8)</button>
+                        <button class="filter-btn bg-white" data-type="completed" onclick="filterProjects('completed', this)">已完工 (4)</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4" id="projectsGrid">
+                </div>
+            </div>
+
+            <footer class="h-6 border-t border-black/5 bg-[#F2F2F7]/80 flex items-center justify-between px-3 text-[10px] text-gray-500">
+                <div>当前登录：郭颖 | 2026-03-17</div>
+            </footer>
+        </main>
+
+    <div class="macos-modal" id="notificationModal" style="width: 380px;">
+        <div class="modal-header">
+            <div class="flex items-center space-x-2"><div class="w-3 h-3 rounded-full bg-[#FF5F57]"></div><div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div><div class="w-3 h-3 rounded-full bg-[#28C840]"></div></div>
+            <span class="text-xs font-medium text-gray-600">通知消息</span>
+            <button onclick="closeModal('notificationModal')" class="text-gray-400"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+            <div class="space-y-3">
+                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border-l-4 border-red-500">
+                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-triangle-exclamation text-red-600"></i></div>
+                    <div><div class="text-sm font-medium">进度预警提醒</div><div class="text-xs text-gray-500 mt-1">河道二标段滞后5天</div><div class="text-xs text-gray-400 mt-1">5分钟前</div></div>
+                </div>
+                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border-l-4 border-blue-500">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-check-circle text-blue-600"></i></div>
+                    <div><div class="text-sm font-medium">任务完成</div><div class="text-xs text-gray-500 mt-1">清淤二区验收通过</div><div class="text-xs text-gray-400 mt-1">30分钟前</div></div>
+                </div>
+                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer border-l-4 border-green-500">
+                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-user-plus text-green-600"></i></div>
+                    <div><div class="text-sm font-medium">新成员加入</div><div class="text-xs text-gray-500 mt-1">李华加入项目</div><div class="text-xs text-gray-400 mt-1">1小时前</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="macos-modal" id="addProjectModal" style="width: 500px;">
+        <div class="modal-header">
+            <div class="flex items-center space-x-2"><div class="w-3 h-3 rounded-full bg-[#FF5F57]"></div><div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div><div class="w-3 h-3 rounded-full bg-[#28C840]"></div></div>
+            <span class="text-xs font-medium text-gray-600">新建工程</span>
+            <button onclick="closeModal('addProjectModal')" class="text-gray-400"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="space-y-4">
+                <div><label class="block text-xs text-gray-500 mb-1">工程名称</label><input type="text" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="请输入工程名称"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs text-gray-500 mb-1">工程类型</label><select class="w-full px-3 py-2 border rounded-lg text-sm"><option>清淤疏浚</option><option>护岸加固</option><option>生态修复</option></select></div>
+                    <div><label class="block text-xs text-gray-500 mb-1">负责人</label><select class="w-full px-3 py-2 border rounded-lg text-sm"><option>王天明</option><option>李华</option></select></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('addProjectModal')" class="px-4 py-1.5 rounded-md bg-gray-100 text-gray-600 text-sm">取消</button>
+            <button onclick="handleSubmit('addProjectModal', '工程创建成功')" class="px-4 py-1.5 rounded-md btn-primary text-white text-sm">创建</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"><i class="fa-solid fa-circle-check text-green-400"></i><span id="toastMsg">操作成功</span></div>
+
+    <script>
+        let isDragging = false, currentModal = null, dragOffsetX, dragOffsetY;
+
+        const allProjects = [
+            { id: 1, name: '河道一标段清淤工程', location: 'K0+000 ~ K5+200', status: 'active', progress: 75, person: '王天明', date: '2026-03-15' },
+            { id: 2, name: '河道二标段护岸工程', location: 'K5+200 ~ K10+500', status: 'warning', progress: 45, person: '李华', date: '2026-03-17' },
+            { id: 3, name: '河道三标段生态修复', location: 'K10+500 ~ K15+800', status: 'active', progress: 60, person: '周玉玲', date: '2026-03-16' },
+            { id: 4, name: '排涝站扩建工程', location: 'K2+300', status: 'active', progress: 85, person: '刘强', date: '2026-03-14' },
+            { id: 5, name: '护岸加固一期', location: 'K3+200 ~ K3+650', status: 'warning', progress: 38, person: '王天明', date: '2026-03-18' },
+            { id: 6, name: '清淤三区验收', location: 'K6+000 ~ K7+500', status: 'completed', progress: 100, person: '李华', date: '2026-03-10' },
+            { id: 7, name: '生态护坡工程', location: 'K8+000 ~ K9+200', status: 'active', progress: 52, person: '周玉玲', date: '2026-03-15' },
+            { id: 8, name: '水质监测站建设', location: 'K4+500', status: 'active', progress: 70, person: '刘强', date: '2026-03-12' },
+            { id: 9, name: '河道清理工程', location: 'K11+000 ~ K12+300', status: 'warning', progress: 30, person: '王天明', date: '2026-03-17' },
+            { id: 10, name: '景观步道施工', location: 'K13+000 ~ K14+000', status: 'active', progress: 45, person: '李华', date: '2026-03-16' },
+            { id: 11, name: '涵洞改造工程', location: 'K7+800', status: 'completed', progress: 100, person: '周玉玲', date: '2026-03-08' },
+            { id: 12, name: '河床平整工程', location: 'K0+500 ~ K1+500', status: 'active', progress: 90, person: '刘强', date: '2026-03-11' },
+            { id: 13, name: '防汛墙加固', location: 'K5+000 ~ K5+500', status: 'warning', progress: 55, person: '王天明', date: '2026-03-17' },
+            { id: 14, name: '绿化种植工程', location: 'K15+000 ~ K15+800', status: 'active', progress: 25, person: '李华', date: '2026-03-14' },
+            { id: 15, name: '桥梁维修工程', location: 'K9+500', status: 'completed', progress: 100, person: '周玉玲', date: '2026-03-05' },
+            { id: 16, name: '截污管网铺设', location: 'K2+000 ~ K4+000', status: 'active', progress: 65, person: '刘强', date: '2026-03-13' },
+            { id: 17, name: '曝气增氧设备安装', location: 'K6+500', status: 'active', progress: 80, person: '王天明', date: '2026-03-12' },
+            { id: 18, name: '边坡治理工程', location: 'K10+000 ~ K10+300', status: 'warning', progress: 42, person: '李华', date: '2026-03-16' },
+            { id: 19, name: '亲水平台建设', location: 'K12+500', status: 'active', progress: 35, person: '周玉玲', date: '2026-03-15' },
+            { id: 20, name: '水闸除险加固', location: 'K8+200', status: 'completed', progress: 100, person: '刘强', date: '2026-03-06' },
+            { id: 21, name: '沉砂池清淤', location: 'K1+800', status: 'active', progress: 72, person: '王天明', date: '2026-03-14' },
+            { id: 22, name: '生态浮岛安装', location: 'K7+000 ~ K7+300', status: 'active', progress: 58, person: '李华', date: '2026-03-13' },
+            { id: 23, name: '巡检道路硬化', location: 'K3+000 ~ K3+500', status: 'warning', progress: 48, person: '周玉玲', date: '2026-03-17' },
+            { id: 24, name: '灌溉泵站改造', location: 'K14+200', status: 'active', progress: 62, person: '刘强', date: '2026-03-12' }
+        ];
+
+        function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+            const type = document.getElementById('filterType') ? document.getElementById('filterType').value : 'all';
+            
+            const filtered = type === 'all' ? allProjects : allProjects.filter(p => p.status === type);
+            
+            let html = '';
+            filtered.forEach(p => {
+                const statusClass = p.status === 'active' ? 'status-active' : (p.status === 'warning' ? 'status-warning' : 'status-completed');
+                const statusText = p.status === 'active' ? '在建' : (p.status === 'warning' ? '预警' : '已完工');
+                const progressColor = p.status === 'warning' ? 'background: linear-gradient(90deg, #FF9500, #FF3B30);' : '';
+                const progressTextColor = p.status === 'warning' ? 'text-red-600' : 'text-blue-600';
+                
+                html += `
+                <div class="bg-white rounded-xl shadow-sm border border-black/5 overflow-hidden card-hover" data-status="${p.status}" onclick="window.location.href='./engineering_detail.html'">
+                    <div class="p-4">
+                        <div class="flex items-start justify-between mb-3">
+                            <div><h3 class="font-bold text-gray-800">${p.name}</h3><p class="text-xs text-gray-500 mt-1">${p.location}</p></div>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="flex justify-between text-xs text-gray-500 mb-1"><span>施工进度</span><span class="font-medium ${progressTextColor}">${p.progress}%</span></div>
+                            <div class="progress-bar"><div class="progress" style="width: ${p.progress}%; ${progressColor}"></div></div>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-gray-500"><i class="fa-solid fa-user mr-1"></i>${p.person}</span>
+                            <span class="text-gray-400">${p.date}</span>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            grid.innerHTML = html;
+            
+            const counts = { all: allProjects.length, active: allProjects.filter(p => p.status === 'active').length, warning: allProjects.filter(p => p.status === 'warning').length, completed: allProjects.filter(p => p.status === 'completed').length };
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const type = btn.getAttribute('data-type');
+                btn.innerHTML = type === 'all' ? `全部 (${counts.all})` : type === 'active' ? `在建 (${counts.active})` : type === 'warning' ? `预警 (${counts.warning})` : `已完工 (${counts.completed})`;
+            });
+        }
+
+        function toggleDarkMode() { 
+            document.body.classList.toggle('dark-mode'); 
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            showToast('深色模式切换'); 
+        }
+        
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        function filterProjects(type, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('active'); b.classList.add('bg-white'); });
+            btn.classList.add('active'); btn.classList.remove('bg-white');
+            
+            let filterType = type;
+            if (type === 'all') filterType = 'all';
+            else if (type === 'active') filterType = 'active';
+            else if (type === 'warning') filterType = 'warning';
+            else if (type === 'completed') filterType = 'completed';
+            
+            document.getElementById('filterType').value = filterType;
+            renderProjects();
+            
+            const typeNames = { all: '全部', active: '在建', warning: '预警', completed: '已完工' };
+            showToast('已筛选：' + typeNames[type]);
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            
+            if (modalId === 'notificationModal') {
+                const btn = document.querySelector('button[onclick*="notificationModal"]');
+                if (btn) {
+                    const rect = btn.getBoundingClientRect();
+                    const windowEl = document.querySelector('.macos-window');
+                    const windowRect = windowEl.getBoundingClientRect();
+                    let relativeTop = rect.bottom - windowRect.top + 8;
+                    let relativeRight = windowRect.right - rect.right;
+                    
+                    const modalWidth = 400;
+                    const modalHeight = modal.scrollHeight || 400;
+                    
+                    if (relativeRight + modalWidth > windowRect.width) {
+                        relativeRight = windowRect.width - modalWidth - 10;
+                    }
+                    
+                    if (relativeTop + modalHeight > windowRect.height) {
+                        relativeTop = rect.top - windowRect.top - modalHeight - 8;
+                    }
+                    
+                    modal.style.top = relativeTop + 'px';
+                    modal.style.right = relativeRight + 'px';
+                    modal.style.left = 'auto';
+                    modal.style.transform = 'none';
+                }
+            } else {
+                modal.style.top = '50%'; modal.style.left = '50%'; modal.style.transform = 'translate(-50%, -50%)';
+            }
+            modal.classList.add('active');
+            currentModal = modal;
+        }
+
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); currentModal = null; }
+        function closeAllModals() { document.querySelectorAll('.macos-modal').forEach(m => m.classList.remove('active')); }
+        function handleSubmit(modalId, msg) { closeModal(modalId); showToast(msg); }
+        function showToast(msg) { const toast = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
+
+        document.querySelectorAll('.modal-header').forEach(h => {
+            h.addEventListener('mousedown', e => {
+                if (e.target.tagName === 'BUTTON') return;
+                const m = h.parentElement;
+                if (m.id === 'notificationModal') return;
+                isDragging = true;
+                const r = m.getBoundingClientRect();
+                dragOffsetX = e.clientX - r.left; dragOffsetY = e.clientY - r.top;
+                m.style.transform = 'none';
+            });
+        });
+        document.addEventListener('mousemove', e => { if (isDragging && currentModal) { currentModal.style.left = (e.clientX - dragOffsetX) + 'px'; currentModal.style.top = (e.clientY - dragOffsetY) + 'px'; } });
+        document.addEventListener('mouseup', () => isDragging = false);
+        
+        renderProjects();
+    </script>
+</body>
+
+</html>

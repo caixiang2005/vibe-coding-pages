@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a56a0">
+  <title>学生成绩</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #e8edf2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .phone-shell {
+      width: 100%;
+      height: 100vh;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: #1a56a0;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .back-btn {
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .topbar-title {
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      flex: 1;
+      text-align: center;
+    }
+
+    .topbar-right {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 13px;
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 16px;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tab {
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      background: #fff;
+      color: #7090b0;
+      border: 1.5px solid #e0e8f4;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: #1a56a0;
+      color: #fff;
+      border-color: #1a56a0;
+    }
+
+    .filter-tabs .tab:active {
+      transform: scale(0.95);
+    }
+
+    .class-select {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(26, 86, 160, 0.06);
+      cursor: pointer;
+    }
+
+    .class-select-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .class-select-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #e8f1ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1a56a0;
+      font-size: 16px;
+    }
+
+    .class-select-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a2a44;
+    }
+
+    .class-select-info {
+      font-size: 11px;
+      color: #90a0b5;
+      margin-top: 2px;
+    }
+
+    .class-select-arrow {
+      color: #b0c4e0;
+      font-size: 12px;
+    }
+
+    .stat-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-box {
+      flex: 1;
+      background: #fff;
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(26, 86, 160, 0.06);
+    }
+
+    .stat-box-num {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .stat-box-label {
+      font-size: 10px;
+      color: #90a0b5;
+      margin-top: 3px;
+    }
+
+    .student-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 10px rgba(26, 86, 160, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .student-card:active {
+      transform: scale(0.98);
+    }
+
+    .student-rank {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .rank-gold {
+      background: linear-gradient(135deg, #f5a623, #ffd700);
+      color: #fff;
+    }
+
+    .rank-silver {
+      background: linear-gradient(135deg, #b0b0b0, #d0d0d0);
+      color: #fff;
+    }
+
+    .rank-bronze {
+      background: linear-gradient(135deg, #cd7f32, #daa06d);
+      color: #fff;
+    }
+
+    .rank-normal {
+      background: #f0f4fb;
+      color: #7090b0;
+    }
+
+    .student-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .student-info {
+      flex: 1;
+    }
+
+    .student-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a2a44;
+    }
+
+    .student-meta {
+      font-size: 11px;
+      color: #90a0b5;
+      margin-top: 3px;
+    }
+
+    .student-score {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .student-score-num {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .student-score-label {
+      font-size: 10px;
+      color: #90a0b0;
+    }
+
+    .bottom-nav {
+      background: #fff;
+      border-top: 1px solid #e8eef7;
+      display: flex;
+      padding: 14px 0;
+      flex-shrink: 0;
+      box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .nav-item i {
+      font-size: 20px;
+      color: #b0bec5;
+    }
+
+    .nav-item.active i {
+      color: #1a56a0;
+    }
+
+    .nav-item span {
+      font-size: 10px;
+      color: #b0bec5;
+    }
+
+    .nav-item.active span {
+      color: #1a56a0;
+      font-weight: 600;
+    }
+
+    .nav-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-center-btn {
+      width: 46px;
+      height: 46px;
+      background: linear-gradient(135deg, #1a56a0, #3a8ee8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -18px;
+      box-shadow: 0 4px 14px rgba(26, 86, 160, 0.4);
+    }
+
+    .nav-center-btn i {
+      color: #fff;
+      font-size: 20px;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      width: 100%;
+      max-height: 70vh;
+      border-radius: 20px 20px 0 0;
+      padding: 0 0 20px;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f4fb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2a44;
+      text-align: center;
+      flex: 1;
+    }
+
+    .modal-close {
+      color: #b0bec5;
+      font-size: 18px;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      max-height: calc(70vh - 60px);
+    }
+
+    .modal-scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .class-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: #f8f9fb;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .class-option:active {
+      background: #e8f1ff;
+    }
+
+    .class-option.selected {
+      background: #e8f1ff;
+      border: 1.5px solid #1a56a0;
+    }
+
+    .class-option-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1a56a0;
+      font-size: 16px;
+    }
+
+    .class-option-info {
+      flex: 1;
+    }
+
+    .class-option-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a2a44;
+    }
+
+    .class-option-meta {
+      font-size: 11px;
+      color: #90a0b5;
+      margin-top: 2px;
+    }
+
+    .student-detail-card {
+      background: #f8f9fb;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .student-detail-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .student-detail-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .student-detail-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2a44;
+    }
+
+    .student-detail-meta {
+      font-size: 12px;
+      color: #7090b0;
+      margin-top: 3px;
+    }
+
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #e8eef7;
+    }
+
+    .score-row:last-child {
+      border-bottom: none;
+    }
+
+    .score-label {
+      font-size: 13px;
+      color: #445;
+    }
+
+    .score-value {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .btn-confirm {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #1a56a0, #3a8ee8);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-confirm:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="phone-shell">
+    <div class="topbar">
+      <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <span class="topbar-title">学生成绩</span>
+      <span class="topbar-right"><i class="fas fa-search"></i></span>
+    </div>
+
+    <div class="scroll-area">
+      <div class="filter-tabs">
+        <div class="tab active">本周</div>
+        <div class="tab">本月</div>
+        <div class="tab">本学期</div>
+      </div>
+
+      <div class="class-select" id="classSelectBtn">
+        <div class="class-select-left">
+          <div class="class-select-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+          <div>
+            <div class="class-select-name">22计算机1班</div>
+            <div class="class-select-info">42名学生 · 第8周</div>
+          </div>
+        </div>
+        <i class="fas fa-chevron-down class-select-arrow"></i>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-box-num" style="color:#1a56a0;">85.6</div>
+          <div class="stat-box-label">班级平均</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-num" style="color:#1a9c5a;">92</div>
+          <div class="stat-box-label">最高分</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-num" style="color:#e07020;">68</div>
+          <div class="stat-box-label">最低分</div>
+        </div>
+      </div>
+
+      <div class="section-title" style="font-size:14px;font-weight:700;color:#1a2a44;margin:0 0 10px;display:flex;align-items:center;gap:6px;">
+        <i class="fas fa-list" style="color:#1a56a0;"></i> 成绩排名
+      </div>
+
+      <div class="student-card" onclick="showStudentDetail('王思远', '22计算机1班 · 42人', 92)">
+        <div class="student-rank rank-gold">1</div>
+        <img class="student-avatar" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces&q=80" alt="">
+        <div class="student-info">
+          <div class="student-name">王思远</div>
+          <div class="student-meta">22计算机1班 · 第8周</div>
+        </div>
+        <div class="student-score">
+          <div class="student-score-num" style="color:#1a9c5a;">92</div>
+          <div class="student-score-label">综合评分</div>
+        </div>
+      </div>
+
+      <div class="student-card" onclick="showStudentDetail('李晓华', '22计算机1班 · 42人', 90)">
+        <div class="student-rank rank-silver">2</div>
+        <img class="student-avatar" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=faces&q=80" alt="">
+        <div class="student-info">
+          <div class="student-name">李晓华</div>
+          <div class="student-meta">22计算机1班 · 第8周</div>
+        </div>
+        <div class="student-score">
+          <div class="student-score-num" style="color:#1a56a0;">90</div>
+          <div class="student-score-label">综合评分</div>
+        </div>
+      </div>
+
+      <div class="student-card" onclick="showStudentDetail('张明', '22计算机1班 · 42人', 88)">
+        <div class="student-rank rank-bronze">3</div>
+        <img class="student-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=faces&q=80" alt="">
+        <div class="student-info">
+          <div class="student-name">张明</div>
+          <div class="student-meta">22计算机1班 · 第8周</div>
+        </div>
+        <div class="student-score">
+          <div class="student-score-num" style="color:#1a56a0;">88</div>
+          <div class="student-score-label">综合评分</div>
+        </div>
+      </div>
+
+      <div class="student-card" onclick="showStudentDetail('陈雨萱', '22计算机1班 · 42人', 86)">
+        <div class="student-rank rank-normal">4</div>
+        <img class="student-avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=faces&q=80" alt="">
+        <div class="student-info">
+          <div class="student-name">陈雨萱</div>
+          <div class="student-meta">22计算机1班 · 第8周</div>
+        </div>
+        <div class="student-score">
+          <div class="student-score-num" style="color:#6c35d4;">86</div>
+          <div class="student-score-label">综合评分</div>
+        </div>
+      </div>
+
+      <div class="student-card" onclick="showStudentDetail('刘洋', '22计算机1班 · 42人', 85)">
+        <div class="student-rank rank-normal">5</div>
+        <img class="student-avatar" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=faces&q=80" alt="">
+        <div class="student-info">
+          <div class="student-name">刘洋</div>
+          <div class="student-meta">22计算机1班 · 第8周</div>
+        </div>
+        <div class="student-score">
+          <div class="student-score-num" style="color:#6c35d4;">85</div>
+          <div class="student-score-label">综合评分</div>
+        </div>
+      </div>
+
+      <div class="student-card" onclick="showStudentDetail('赵雪', '22计算机1班 · 42人', 83)">
+        <div class="student-rank rank-normal">6</div>
+        <img class="student-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop&crop=faces&q=80" alt="">
+        <div class="student-info">
+          <div class="student-name">赵雪</div>
+          <div class="student-meta">22计算机1班 · 第8周</div>
+        </div>
+        <div class="student-score">
+          <div class="student-score-num" style="color:#7090b0;">83</div>
+          <div class="student-score-label">综合评分</div>
+        </div>
+      </div>
+
+      <div style="height:10px;"></div>
+    </div>
+
+    <div class="bottom-nav">
+      <a href="index.html" class="nav-item"><i class="fas fa-home"></i><span>首页</span></a>
+      <a href="evaluation.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>评价</span></a>
+      <a href="analysis.html" class="nav-item"><i class="fas fa-chart-pie"></i><span>分析</span></a>
+      <a href="profile.html" class="nav-item active"><i class="fas fa-user"></i><span>我的</span></a>
+    </div>
+
+    <div class="modal-overlay" id="classModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">选择班级</span>
+          <span class="modal-close" onclick="closeClassModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body">
+          <div class="class-option" onclick="selectClass(this, '22计算机1班', '42名学生')">
+            <div class="class-option-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div class="class-option-info">
+              <div class="class-option-name">22计算机1班</div>
+              <div class="class-option-meta">42名学生 · 数学基础</div>
+            </div>
+            <i class="fas fa-check" style="color:#1a56a0;display:none;"></i>
+          </div>
+          <div class="class-option" onclick="selectClass(this, '22电子商务2班', '45名学生')">
+            <div class="class-option-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div class="class-option-info">
+              <div class="class-option-name">22电子商务2班</div>
+              <div class="class-option-meta">45名学生 · 数学基础</div>
+            </div>
+            <i class="fas fa-check" style="color:#1a56a0;display:none;"></i>
+          </div>
+          <div class="class-option" onclick="selectClass(this, '22汽修1班', '38名学生')">
+            <div class="class-option-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div class="class-option-info">
+              <div class="class-option-name">22汽修1班</div>
+              <div class="class-option-meta">38名学生 · 数学基础</div>
+            </div>
+            <i class="fas fa-check" style="color:#1a56a0;display:none;"></i>
+          </div>
+          <div class="class-option" onclick="selectClass(this, '22护理3班', '40名学生')">
+            <div class="class-option-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div class="class-option-info">
+              <div class="class-option-name">22护理3班</div>
+              <div class="class-option-meta">40名学生 · 数学基础</div>
+            </div>
+            <i class="fas fa-check" style="color:#1a56a0;display:none;"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="studentModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">学生详情</span>
+          <span class="modal-close" onclick="closeStudentModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body" id="studentDetailContent">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    document.getElementById('classSelectBtn').addEventListener('click', function() {
+      document.getElementById('classModal').classList.add('active');
+    });
+
+    function closeClassModal() {
+      document.getElementById('classModal').classList.remove('active');
+    }
+
+    function selectClass(el, name, info) {
+      document.querySelectorAll('.class-option').forEach(opt => {
+        opt.classList.remove('selected');
+        opt.querySelector('.fa-check').style.display = 'none';
+      });
+      el.classList.add('selected');
+      el.querySelector('.fa-check').style.display = 'block';
+      document.querySelector('.class-select-name').textContent = name;
+      document.querySelector('.class-select-info').textContent = info + ' · 第8周';
+      setTimeout(closeClassModal, 300);
+    }
+
+    function showStudentDetail(name, meta, score) {
+      var content = document.getElementById('studentDetailContent');
+      var avatar = score === 92 ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces&q=80' :
+                   score === 90 ? 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=faces&q=80' :
+                   score === 88 ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=faces&q=80' :
+                   score === 86 ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=faces&q=80' :
+                   score === 85 ? 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=faces&q=80' :
+                   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop&crop=faces&q=80';
+      content.innerHTML = `
+        <div class="student-detail-card">
+          <div class="student-detail-header">
+            <img class="student-detail-avatar" src="${avatar}" alt="">
+            <div>
+              <div class="student-detail-name">${name}</div>
+              <div class="student-detail-meta">${meta}</div>
+            </div>
+          </div>
+          <div class="score-row">
+            <span class="score-label">综合评分</span>
+            <span class="score-value" style="color:#1a56a0;">${score}分</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">课堂表现</span>
+            <span class="score-value" style="color:#1a9c5a;">${score - 2}分</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">作业完成</span>
+            <span class="score-value" style="color:#6c35d4;">${score - 4}分</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">考试成绩</span>
+            <span class="score-value" style="color:#e07020;">${score + 3}分</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">学习态度</span>
+            <span class="score-value" style="color:#1a56a0;">${score - 1}分</span>
+          </div>
+        </div>
+        <button class="btn-confirm" onclick="closeStudentModal()">确定</button>
+      `;
+      document.getElementById('studentModal').classList.add('active');
+    }
+
+    function closeStudentModal() {
+      document.getElementById('studentModal').classList.remove('active');
+    }
+
+    document.getElementById('classModal').addEventListener('click', function(e) {
+      if (e.target === this) closeClassModal();
+    });
+
+    document.getElementById('studentModal').addEventListener('click', function(e) {
+      if (e.target === this) closeStudentModal();
+    });
+  </script>
+</body>
+
+</html>

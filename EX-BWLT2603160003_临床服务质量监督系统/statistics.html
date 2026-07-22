@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据统计 - 临床服务质量监督系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "SimSun", sans-serif;
+        }
+
+        body {
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .window {
+            width: 1200px;
+            height: 720px;
+            max-width: 100%;
+            background: linear-gradient(180deg, #d4d4d8 0%, #c8c8cc 100%);
+            border: 1px solid #888;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title-bar {
+            background: linear-gradient(180deg, #4a5d80 0%, #3d4f6f 50%, #2d3e5c 100%);
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+            user-select: none;
+        }
+
+        .title-bar-text {
+            color: #fff;
+            font-size: 13px;
+            font-weight: normal;
+            padding-left: 6px;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+        }
+
+        .title-bar-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .title-bar-controls button {
+            width: 28px;
+            height: 20px;
+            border: none;
+            background: linear-gradient(180deg, #6b7fa3 0%, #5a6e8f 100%);
+            color: #fff;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title-bar-controls button:hover {
+            background: linear-gradient(180deg, #7b8fb3 0%, #6a7e9f 100%);
+        }
+
+        .title-bar-controls .close-btn:hover {
+            background: #c42b1c;
+        }
+
+        .btn-minimize::before {
+            content: "";
+            width: 10px;
+            height: 1px;
+            background: #fff;
+            display: block;
+        }
+
+        .btn-maximize::before {
+            content: "";
+            width: 10px;
+            height: 8px;
+            border: 1px solid #fff;
+            display: block;
+            background: transparent;
+        }
+
+        .btn-close::before {
+            content: "×";
+            font-size: 16px;
+            font-weight: normal;
+        }
+
+        .menu-bar {
+            background: linear-gradient(180deg, #e8e8ec 0%, #d8d8dc 100%);
+            border-bottom: 1px solid #a0a0a4;
+            padding: 2px 4px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .menu-item {
+            padding: 4px 12px;
+            font-size: 12px;
+            color: #1a1a4a;
+            cursor: pointer;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+
+        .menu-item:hover {
+            background: #b8c8e0;
+            border: 1px solid #8098c0;
+        }
+
+        .menu-item.active {
+            background: #b8c8e0;
+            border: 1px solid #8098c0;
+        }
+
+        .toolbar {
+            background: linear-gradient(180deg, #d0d4dc 0%, #b8bcc8 100%);
+            border-bottom: 1px solid #9098a4;
+            padding: 6px 8px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toolbar-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 12px;
+            background: linear-gradient(180deg, #e8ecf4 0%, #d0d4e0 100%);
+            border: 1px solid #9098a8;
+            cursor: pointer;
+            min-width: 60px;
+            transition: all 0.15s;
+        }
+
+        .toolbar-btn:hover {
+            background: linear-gradient(180deg, #f0f4fc 0%, #e0e4f0 100%);
+            border-color: #7080a0;
+        }
+
+        .toolbar-btn:active {
+            background: linear-gradient(180deg, #c0c4d0 0%, #b0b4c0 100%);
+            transform: translateY(1px);
+        }
+
+        .toolbar-btn i {
+            font-size: 18px;
+            color: #3a4a6a;
+            margin-bottom: 4px;
+        }
+
+        .toolbar-btn span {
+            font-size: 11px;
+            color: #2a3a5a;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            background: linear-gradient(180deg, #a0a4ac 0%, #888c94 100%);
+            margin: 0 4px;
+        }
+
+        .main-content {
+            display: flex;
+            background: #c8ccd4;
+            min-height: 560px;
+        }
+
+        .left-panel {
+            width: 160px;
+            background: linear-gradient(180deg, #d4d8e0 0%, #c0c4cc 100%);
+            border-right: 1px solid #9098a4;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .panel-header {
+            background: linear-gradient(90deg, #4a6a8b 0%, #5a7a9b 100%);
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .nav-list {
+            background: #fff;
+            border: 1px solid #9098a4;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-list-item {
+            padding: 8px 10px;
+            font-size: 12px;
+            color: #1a2a4a;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+
+        .nav-list-item:hover {
+            background: #d0e0f0;
+        }
+
+        .nav-list-item.active {
+            background: #4a6a8b;
+            color: #fff;
+        }
+
+        .nav-list-item i {
+            color: #4a6a8b;
+            font-size: 14px;
+        }
+
+        .nav-list-item.active i {
+            color: #fff;
+        }
+
+        .right-panel {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .page-header {
+            background: linear-gradient(180deg, #e8ecf4 0%, #d8dce4 100%);
+            border: 1px solid #9098a4;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a2a4a;
+            flex: 1;
+        }
+
+        .page-info {
+            font-size: 12px;
+            color: #5a6a7a;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card {
+            background: linear-gradient(180deg, #f8f9fa 0%, #e8eaec 100%);
+            border: 1px solid #9098a4;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 22px;
+            font-weight: bold;
+            color: #3a5a8a;
+        }
+
+        .stat-card .label {
+            font-size: 10px;
+            color: #5a6a7a;
+            margin-top: 4px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .chart-panel {
+            background: #fff;
+            border: 1px solid #9098a4;
+            padding: 12px;
+        }
+
+        .chart-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2a4a;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #c0c4cc;
+        }
+
+        .chart-container {
+            height: 200px;
+        }
+
+        .table-panel {
+            background: #fff;
+            border: 1px solid #9098a4;
+            padding: 12px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th {
+            background: linear-gradient(180deg, #d0d8e4 0%, #b8c0d0 100%);
+            padding: 8px 10px;
+            text-align: left;
+            color: #1a2a4a;
+            border-bottom: 1px solid #9098a4;
+            font-weight: 500;
+        }
+
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e0e0e4;
+            color: #2a3a5a;
+        }
+
+        .data-table tr:hover {
+            background: #e8f0f8;
+        }
+
+        .score-bar {
+            width: 80px;
+            height: 6px;
+            background: #e0e0e4;
+            border-radius: 3px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5a7a9a, #4a6a9a);
+            border-radius: 3px;
+        }
+
+        .stats-container {
+            background: #f4f6f8;
+            border: 1px solid #9098a4;
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .status-bar {
+            background: linear-gradient(180deg, #d8dce4 0%, #c8ccd4 100%);
+            border-top: 1px solid #fff;
+            padding: 4px 12px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #3a4a6a;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 24px;
+            background: #4a6a3a;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+            z-index: 2000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <span class="title-bar-text">
+                <i class="fas fa-clipboard-check"></i> 临床服务质量监督系统
+            </span>
+            <div class="title-bar-controls">
+                <button class="btn-minimize" title="最小化"></button>
+                <button class="btn-maximize" title="最大化"></button>
+                <button class="btn-close close-btn" title="关闭" onclick="window.close()"></button>
+            </div>
+        </div>
+
+        <div class="menu-bar">
+            <div class="menu-item" onclick="location.href='index.html'"><i class="fas fa-home"></i> 首页</div>
+            <div class="menu-item" onclick="location.href='inspection.html'"><i class="fas fa-clipboard-check"></i> 质量检查</div>
+            <div class="menu-item" onclick="location.href='complaint.html'"><i class="fas fa-comment-medical"></i> 投诉管理</div>
+            <div class="menu-item" onclick="location.href='rectification.html'"><i class="fas fa-tasks"></i> 整改任务</div>
+            <div class="menu-item" onclick="location.href='performance.html'"><i class="fas fa-star-half-alt"></i> 绩效考核</div>
+            <div class="menu-item active"><i class="fas fa-chart-bar"></i> 数据统计</div>
+            <div class="menu-item" onclick="location.href='settings.html'"><i class="fas fa-cog"></i> 系统设置</div>
+        </div>
+
+        <div class="toolbar">
+            <button class="toolbar-btn" onclick="changePeriod('month')">
+                <i class="fas fa-calendar"></i>
+                <span>本月统计</span>
+            </button>
+            <button class="toolbar-btn" onclick="changePeriod('quarter')">
+                <i class="fas fa-calendar-alt"></i>
+                <span>本季统计</span>
+            </button>
+            <button class="toolbar-btn" onclick="changePeriod('year')">
+                <i class="fas fa-chart-line"></i>
+                <span>年度统计</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="exportReport()">
+                <i class="fas fa-file-export"></i>
+                <span>导出报告</span>
+            </button>
+            <button class="toolbar-btn" onclick="printReport()">
+                <i class="fas fa-print"></i>
+                <span>打印报表</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="location.href='index.html'">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>返回首页</span>
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="panel-header">统计周期</div>
+                <div class="nav-list">
+                    <div class="nav-list-item active" onclick="filterPeriod('all', this)">
+                        <i class="fas fa-list"></i> 全部周期
+                    </div>
+                    <div class="nav-list-item" onclick="filterPeriod('2024-03', this)">
+                        <i class="fas fa-calendar"></i> 2024年3月
+                    </div>
+                    <div class="nav-list-item" onclick="filterPeriod('2024-02', this)">
+                        <i class="fas fa-calendar"></i> 2024年2月
+                    </div>
+                    <div class="nav-list-item" onclick="filterPeriod('2024-01', this)">
+                        <i class="fas fa-calendar"></i> 2024年1月
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="page-header">
+                    <i class="fas fa-chart-bar" style="font-size:20px;color:#4a6a8b;"></i>
+                    <div>
+                        <div class="page-title">临床服务质量统计分析</div>
+                        <div class="page-info">统计周期: 2024年3月</div>
+                    </div>
+                </div>
+
+                <div class="stats-container">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="number">156</div>
+                        <div class="label">检查次数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">42</div>
+                        <div class="label">投诉总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">38</div>
+                        <div class="label">整改任务</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">91.2%</div>
+                        <div class="label">整改完成率</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">45</div>
+                        <div class="label">绩效考核</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">94.6%</div>
+                        <div class="label">服务满意度</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-panel">
+                        <div class="chart-title"><i class="fas fa-chart-pie"></i> 各科室检查数量分布</div>
+                        <div class="chart-container" id="chartDept"></div>
+                    </div>
+                    <div class="chart-panel">
+                        <div class="chart-title"><i class="fas fa-chart-bar"></i> 每月投诉数量趋势</div>
+                        <div class="chart-container" id="chartTrend"></div>
+                    </div>
+                    <div class="chart-panel">
+                        <div class="chart-title"><i class="fas fa-check-circle"></i> 整改任务完成情况</div>
+                        <div class="chart-container" id="chartRectify"></div>
+                    </div>
+                    <div class="chart-panel">
+                        <div class="chart-title"><i class="fas fa-star"></i> 科室绩效考核评分</div>
+                        <div class="chart-container" id="chartScore"></div>
+                    </div>
+                </div>
+
+                <div class="table-panel">
+                    <div class="chart-title"><i class="fas fa-list"></i> 各科室服务质量统计明细</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>科室名称</th>
+                                <th>检查次数</th>
+                                <th>发现问题</th>
+                                <th>投诉次数</th>
+                                <th>整改任务</th>
+                                <th>完成率</th>
+                                <th>综合评分</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>急诊科</td>
+                                <td>24</td>
+                                <td>8</td>
+                                <td>5</td>
+                                <td>6</td>
+                                <td>
+                                    <div class="score-bar"><div class="score-bar-fill" style="width:83%;"></div></div>
+                                    83.3%
+                                </td>
+                                <td style="color:#10b981;font-weight:600;">92.5</td>
+                            </tr>
+                            <tr>
+                                <td>内科病房</td>
+                                <td>28</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>
+                                    <div class="score-bar"><div class="score-bar-fill" style="width:100%;"></div></div>
+                                    100%
+                                </td>
+                                <td style="color:#10b981;font-weight:600;">94.8</td>
+                            </tr>
+                            <tr>
+                                <td>外科病房</td>
+                                <td>22</td>
+                                <td>4</td>
+                                <td>2</td>
+                                <td>3</td>
+                                <td>
+                                    <div class="score-bar"><div class="score-bar-fill" style="width:100%;"></div></div>
+                                    100%
+                                </td>
+                                <td style="color:#10b981;font-weight:600;">93.2</td>
+                            </tr>
+                            <tr>
+                                <td>门诊部</td>
+                                <td>32</td>
+                                <td>10</td>
+                                <td>8</td>
+                                <td>8</td>
+                                <td>
+                                    <div class="score-bar"><div class="score-bar-fill" style="width:87%;"></div></div>
+                                    87.5%
+                                </td>
+                                <td style="color:#0EA5E9;font-weight:600;">86.4</td>
+                            </tr>
+                            <tr>
+                                <td>检验科</td>
+                                <td>18</td>
+                                <td>2</td>
+                                <td>1</td>
+                                <td>2</td>
+                                <td>
+                                    <div class="score-bar"><div class="score-bar-fill" style="width:100%;"></div></div>
+                                    100%
+                                </td>
+                                <td style="color:#10b981;font-weight:600;">96.1</td>
+                            </tr>
+                            <tr>
+                                <td>影像科</td>
+                                <td>16</td>
+                                <td>3</td>
+                                <td>2</td>
+                                <td>3</td>
+                                <td>
+                                    <div class="score-bar"><div class="score-bar-fill" style="width:100%;"></div></div>
+                                    100%
+                                </td>
+                                <td style="color:#10b981;font-weight:600;">91.7</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span>当前用户: 王明华 (质量监督员) | 科室: 医务质控部</span>
+            <span id="clock"></span>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const toast = document.getElementById('toast');
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        function filterPeriod(period, element) {
+            document.querySelectorAll('.nav-list-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            showToast('已筛选: ' + (period === 'all' ? '全部周期' : period + '年'));
+        }
+
+        function changePeriod(period) {
+            showToast('已切换统计周期');
+            initCharts();
+        }
+
+        function exportReport() {
+            showToast('报告导出成功');
+        }
+
+        function printReport() {
+            showToast('正在准备打印...');
+        }
+
+        var deptChart, trendChart, rectifyChart, scoreChart;
+
+        function initCharts() {
+            if (deptChart) deptChart.dispose();
+            if (trendChart) trendChart.dispose();
+            if (rectifyChart) rectifyChart.dispose();
+            if (scoreChart) scoreChart.dispose();
+
+            deptChart = echarts.init(document.getElementById('chartDept'));
+            deptChart.setOption({
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    data: [
+                        { value: 24, name: '急诊科' },
+                        { value: 28, name: '内科病房' },
+                        { value: 22, name: '外科病房' },
+                        { value: 32, name: '门诊部' },
+                        { value: 18, name: '检验科' },
+                        { value: 16, name: '影像科' }
+                    ],
+                    label: { fontSize: 11 },
+                    itemStyle: {
+                        borderRadius: 4,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }
+                }],
+                color: ['#4a6a9a', '#5a8a9a', '#6a9a8a', '#9a8a5a', '#8a6a9a', '#9a6a6a']
+            });
+
+            trendChart = echarts.init(document.getElementById('chartTrend'));
+            trendChart.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: {
+                    type: 'category',
+                    data: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    axisLabel: { fontSize: 11 }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: { fontSize: 10 }
+                },
+                series: [{
+                    name: '投诉数量',
+                    type: 'bar',
+                    data: [28, 32, 42, 35, 30, 38],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#4a6a9a' },
+                            { offset: 1, color: '#6a8aaa' }
+                        ]),
+                        borderRadius: [4, 4, 0, 0]
+                    }
+                }],
+                grid: { left: 40, right: 16, top: 20, bottom: 30 }
+            });
+
+            rectifyChart = echarts.init(document.getElementById('chartRectify'));
+            rectifyChart.setOption({
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    data: [
+                        { value: 28, name: '已完成' },
+                        { value: 5, name: '执行中' },
+                        { value: 3, name: '待执行' },
+                        { value: 2, name: '已逾期' }
+                    ],
+                    label: { fontSize: 11 },
+                    itemStyle: {
+                        borderRadius: 4,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }
+                }],
+                color: ['#10b981', '#0EA5E9', '#F59E0B', '#EF4444']
+            });
+
+            scoreChart = echarts.init(document.getElementById('chartScore'));
+            scoreChart.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: {
+                    type: 'category',
+                    data: ['急诊科', '内科', '外科', '门诊部', '检验科', '影像科'],
+                    axisLabel: { fontSize: 10, rotate: 0 }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 70,
+                    max: 100,
+                    axisLabel: { fontSize: 10 }
+                },
+                series: [{
+                    name: '综合评分',
+                    type: 'bar',
+                    data: [92.5, 94.8, 93.2, 86.4, 96.1, 91.7],
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#10b981' },
+                            { offset: 1, color: '#34D399' }
+                        ]),
+                        borderRadius: [4, 4, 0, 0]
+                    }
+                }],
+                grid: { left: 50, right: 16, top: 20, bottom: 30 }
+            });
+        }
+
+        window.addEventListener('resize', function() {
+            if (deptChart) deptChart.resize();
+            if (trendChart) trendChart.resize();
+            if (rectifyChart) rectifyChart.resize();
+            if (scoreChart) scoreChart.resize();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+        });
+
+        document.querySelectorAll('.nav-list-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.nav-list-item').forEach(function(i) {
+                    i.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a56a0">
+  <title>数据分析</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #e8edf2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .phone-shell {
+      width: 100%;
+      height: 100vh;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: #1a56a0;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .topbar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .topbar-title {
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .date-tabs {
+      display: flex;
+      gap: 0;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 3px;
+    }
+
+    .date-tab {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.75);
+      cursor: pointer;
+    }
+
+    .date-tab.active {
+      background: #fff;
+      color: #1a56a0;
+      font-weight: 600;
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 16px;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a2a44;
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-title i {
+      color: #1a56a0;
+    }
+
+    .more-link {
+      font-size: 12px;
+      color: #7090b0;
+      font-weight: 400;
+    }
+
+    /* Summary Cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .sum-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 2px 12px rgba(26, 86, 160, 0.07);
+    }
+
+    .sum-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .sum-num {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .sum-label {
+      font-size: 11px;
+      color: #90a0b5;
+    }
+
+    .sum-trend {
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .trend-up {
+      color: #1a9c5a;
+    }
+
+    .trend-down {
+      color: #e05050;
+    }
+
+    /* Bar Chart */
+    .chart-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(26, 86, 160, 0.07);
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 100px;
+      margin-top: 14px;
+    }
+
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .bar {
+      width: 100%;
+      border-radius: 6px 6px 0 0;
+      transition: height 0.5s;
+    }
+
+    .bar-label {
+      font-size: 10px;
+      color: #90a0b5;
+    }
+
+    .bar-val {
+      font-size: 11px;
+      font-weight: 600;
+      color: #1a56a0;
+    }
+
+    /* Radar / Dimension Score */
+    .radar-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(26, 86, 160, 0.07);
+    }
+
+    .dim-score-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .dim-score-name {
+      font-size: 12px;
+      color: #334;
+      width: 72px;
+      flex-shrink: 0;
+    }
+
+    .dim-score-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: #f0f4fb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .dim-score-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+
+    .dim-score-num {
+      font-size: 12px;
+      font-weight: 700;
+      width: 34px;
+      text-align: right;
+    }
+
+    .dim-score-rank {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* Class Compare */
+    .compare-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .compare-card {
+      flex: 1;
+      background: #fff;
+      border-radius: 14px;
+      padding: 13px;
+      box-shadow: 0 2px 10px rgba(26, 86, 160, 0.07);
+    }
+
+    .compare-class {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a2a44;
+      margin-bottom: 8px;
+    }
+
+    .compare-score {
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .compare-trend-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+      font-size: 11px;
+    }
+
+    /* Student Distribution */
+    .dist-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(26, 86, 160, 0.07);
+    }
+
+    .dist-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .dist-label {
+      font-size: 12px;
+      color: #334;
+      width: 50px;
+    }
+
+    .dist-bar-wrap {
+      flex: 1;
+      height: 14px;
+      background: #f0f4fb;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .dist-bar-fill {
+      height: 100%;
+      border-radius: 7px;
+    }
+
+    .dist-count {
+      font-size: 11px;
+      color: #90a0b5;
+      width: 40px;
+      text-align: right;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      background: #fff;
+      border-top: 1px solid #e8eef7;
+      display: flex;
+      padding: 14px 0;
+      flex-shrink: 0;
+      box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .nav-item i {
+      font-size: 20px;
+      color: #b0bec5;
+    }
+
+    .nav-item.active i {
+      color: #1a56a0;
+    }
+
+    .nav-item span {
+      font-size: 10px;
+      color: #b0bec5;
+    }
+
+    .nav-item.active span {
+      color: #1a56a0;
+      font-weight: 600;
+    }
+
+    .nav-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-center-btn {
+      width: 46px;
+      height: 46px;
+      background: linear-gradient(135deg, #1a56a0, #3a8ee8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -18px;
+      box-shadow: 0 4px 14px rgba(26, 86, 160, 0.4);
+    }
+
+    .nav-center-btn i {
+      color: #fff;
+      font-size: 20px;
+    }
+
+    .nav-center span {
+      font-size: 10px;
+      color: #b0bec5;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="phone-shell">
+    <div class="topbar">
+      <div class="topbar-row">
+        <span class="topbar-title">数据分析</span>
+      </div>
+      <div class="date-tabs">
+        <div class="date-tab" onclick="switchDateTab(this, 'month')">本月</div>
+        <div class="date-tab active" onclick="switchDateTab(this, 'semester')">本学期</div>
+        <div class="date-tab" onclick="switchDateTab(this, 'year')">全年</div>
+      </div>
+    </div>
+
+    <div class="scroll-area">
+
+      <!-- Summary -->
+      <div class="summary-grid" style="margin-top:2px;">
+        <div class="sum-card">
+          <div class="sum-icon" style="background:#e8f1ff;color:#1a56a0;"><i class="fas fa-chart-line"></i></div>
+          <div class="sum-num" style="color:#1a56a0;">87.3</div>
+          <div class="sum-label">综合平均分</div>
+          <div class="sum-trend trend-up"><i class="fas fa-arrow-up"></i> +2.1 较上期</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-icon" style="background:#e6f9f0;color:#1a9c5a;"><i class="fas fa-medal"></i></div>
+          <div class="sum-num" style="color:#1a9c5a;">68%</div>
+          <div class="sum-label">优良率</div>
+          <div class="sum-trend trend-up"><i class="fas fa-arrow-up"></i> +5% 较上期</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-icon" style="background:#fff3e6;color:#e07020;"><i class="fas fa-clipboard-list"></i></div>
+          <div class="sum-num" style="color:#e07020;">48</div>
+          <div class="sum-label">累计评价次数</div>
+          <div class="sum-trend" style="color:#7090b0;">本学期第8周</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-icon" style="background:#f2eeff;color:#6c35d4;"><i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div class="sum-num" style="color:#e05050;">3</div>
+          <div class="sum-label">预警班级</div>
+          <div class="sum-trend trend-down"><i class="fas fa-arrow-down"></i> 待关注</div>
+        </div>
+      </div>
+
+      <!-- Weekly Trend Bar Chart -->
+      <div class="chart-card">
+        <div class="section-title"><i class="fas fa-chart-bar"></i> 近8周评分趋势</div>
+        <div class="bar-chart">
+          <div class="bar-col">
+            <div class="bar-val">82</div>
+            <div class="bar" style="height:68px;background:linear-gradient(180deg,#d0e4ff,#b0ccf0);"></div>
+            <div class="bar-label">第1周</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-val">84</div>
+            <div class="bar" style="height:74px;background:linear-gradient(180deg,#c0daff,#a0c0f0);"></div>
+            <div class="bar-label">第2周</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-val">83</div>
+            <div class="bar" style="height:70px;background:linear-gradient(180deg,#c8deff,#a8c6f0);"></div>
+            <div class="bar-label">第3周</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-val">86</div>
+            <div class="bar" style="height:80px;background:linear-gradient(180deg,#b0d0ff,#88b8f0);"></div>
+            <div class="bar-label">第4周</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-val">85</div>
+            <div class="bar" style="height:77px;background:linear-gradient(180deg,#b8d4ff,#90bcf0);"></div>
+            <div class="bar-label">第5周</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-val">88</div>
+            <div class="bar" style="height:85px;background:linear-gradient(180deg,#90c0ff,#60a8e8);"></div>
+            <div class="bar-label">第6周</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-val">92</div>
+            <div class="bar" style="height:95px;background:linear-gradient(180deg,#70aeff,#3a8ee8);"></div>
+            <div class="bar-label">第7周</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-val">87</div>
+            <div class="bar" style="height:82px;background:linear-gradient(180deg,#1a56a0,#1a56a0);"></div>
+            <div class="bar-label">第8周</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dimension Analysis -->
+      <div class="radar-card">
+        <div class="section-title"><i class="fas fa-sliders-h"></i> 各维度得分分析</div>
+        <div style="height:8px;"></div>
+        <div class="dim-score-row">
+          <div class="dim-score-name">教学目标</div>
+          <div class="dim-score-bar-bg">
+            <div class="dim-score-bar-fill" style="width:88%;background:linear-gradient(90deg,#1a56a0,#3a8ee8)"></div>
+          </div>
+          <div class="dim-score-num" style="color:#1a56a0;">88</div>
+          <div class="dim-score-rank" style="background:#e8f1ff;color:#1a56a0;">1</div>
+        </div>
+        <div class="dim-score-row">
+          <div class="dim-score-name">教学过程</div>
+          <div class="dim-score-bar-bg">
+            <div class="dim-score-bar-fill" style="width:86%;background:linear-gradient(90deg,#1a9c5a,#4cda8a)"></div>
+          </div>
+          <div class="dim-score-num" style="color:#1a9c5a;">86</div>
+          <div class="dim-score-rank" style="background:#e6f9f0;color:#1a9c5a;">2</div>
+        </div>
+        <div class="dim-score-row">
+          <div class="dim-score-name">师生互动</div>
+          <div class="dim-score-bar-bg">
+            <div class="dim-score-bar-fill" style="width:82%;background:linear-gradient(90deg,#6c35d4,#9a6dff)"></div>
+          </div>
+          <div class="dim-score-num" style="color:#6c35d4;">82</div>
+          <div class="dim-score-rank" style="background:#f2eeff;color:#6c35d4;">4</div>
+        </div>
+        <div class="dim-score-row">
+          <div class="dim-score-name">课堂管理</div>
+          <div class="dim-score-bar-bg">
+            <div class="dim-score-bar-fill" style="width:90%;background:linear-gradient(90deg,#e07020,#f5a623)"></div>
+          </div>
+          <div class="dim-score-num" style="color:#e07020;">90</div>
+          <div class="dim-score-rank" style="background:#fff3e6;color:#e07020;">★</div>
+        </div>
+        <div class="dim-score-row">
+          <div class="dim-score-name">作业反馈</div>
+          <div class="dim-score-bar-bg">
+            <div class="dim-score-bar-fill" style="width:84%;background:linear-gradient(90deg,#c42882,#e060a0)"></div>
+          </div>
+          <div class="dim-score-num" style="color:#c42882;">84</div>
+          <div class="dim-score-rank" style="background:#ffeef5;color:#c42882;">3</div>
+        </div>
+        <div style="margin-top:10px;padding:10px;background:#fff8e6;border-radius:10px;border-left:3px solid #f5a623;">
+          <div style="font-size:12px;color:#b07010;"><i class="fas fa-lightbulb"></i>
+            <strong>改进建议：</strong>师生互动维度得分较低，建议增加课堂提问和小组讨论环节。
+          </div>
+        </div>
+      </div>
+
+      <!-- Class Comparison -->
+      <div style="margin-bottom:14px;">
+        <div class="section-title" style="margin-bottom:10px;"><i class="fas fa-balance-scale"
+            style="color:#1a56a0;"></i> 班级对比</div>
+        <div class="compare-row">
+          <div class="compare-card">
+            <div class="compare-class">22计算机1班</div>
+            <div class="compare-score" style="color:#1a56a0;">85.2</div>
+            <div class="compare-trend-row trend-up"><i class="fas fa-arrow-up"></i> +1.8</div>
+          </div>
+          <div class="compare-card">
+            <div class="compare-class">22电商2班</div>
+            <div class="compare-score" style="color:#1a9c5a;">89.7</div>
+            <div class="compare-trend-row trend-up"><i class="fas fa-arrow-up"></i> +3.2</div>
+          </div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-card">
+            <div class="compare-class">22汽修1班</div>
+            <div class="compare-score" style="color:#e07020;">82.1</div>
+            <div class="compare-trend-row" style="color:#7090b0;font-size:11px;"><i class="fas fa-minus"></i> 持平</div>
+          </div>
+          <div class="compare-card">
+            <div class="compare-class">22护理3班</div>
+            <div class="compare-score" style="color:#e05050;">78.4</div>
+            <div class="compare-trend-row trend-down"><i class="fas fa-arrow-down"></i> -2.1 <i
+                class="fas fa-exclamation-circle" style="color:#e05050;margin-left:3px;"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Score Distribution -->
+      <div class="dist-card">
+        <div class="section-title"><i class="fas fa-users" style="color:#1a56a0;"></i> 学生成绩分布</div>
+        <div style="height:8px;"></div>
+        <div class="dist-bar-row">
+          <div class="dist-label" style="color:#1a9c5a;font-weight:600;">优秀(90+)</div>
+          <div class="dist-bar-wrap">
+            <div class="dist-bar-fill" style="width:28%;background:linear-gradient(90deg,#1a9c5a,#4cda8a)"></div>
+          </div>
+          <div class="dist-count">42人</div>
+        </div>
+        <div class="dist-bar-row">
+          <div class="dist-label" style="color:#1a56a0;font-weight:600;">良好(80+)</div>
+          <div class="dist-bar-wrap">
+            <div class="dist-bar-fill" style="width:45%;background:linear-gradient(90deg,#1a56a0,#3a8ee8)"></div>
+          </div>
+          <div class="dist-count">68人</div>
+        </div>
+        <div class="dist-bar-row">
+          <div class="dist-label" style="color:#e07020;font-weight:600;">中等(70+)</div>
+          <div class="dist-bar-wrap">
+            <div class="dist-bar-fill" style="width:18%;background:linear-gradient(90deg,#e07020,#f5a623)"></div>
+          </div>
+          <div class="dist-count">28人</div>
+        </div>
+        <div class="dist-bar-row">
+          <div class="dist-label" style="color:#e05050;font-weight:600;">待提升</div>
+          <div class="dist-bar-wrap">
+            <div class="dist-bar-fill" style="width:9%;background:linear-gradient(90deg,#e05050,#ff7070)"></div>
+          </div>
+          <div class="dist-count">14人</div>
+        </div>
+      </div>
+
+      <div style="height:10px;"></div>
+    </div>
+
+    <div class="bottom-nav">
+      <a href="index.html" class="nav-item"><i class="fas fa-home"></i><span>首页</span></a>
+      <a href="evaluation.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>评价</span></a>
+      <div class="nav-center">
+        <a href="task.html" class="nav-center-btn">
+          <i class="fas fa-plus"></i>
+        </a>
+        <span>任务</span>
+      </div>
+      <a href="analysis.html" class="nav-item active"><i class="fas fa-chart-pie"></i><span>分析</span></a>
+      <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>我的</span></a>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <i class="fas fa-check-circle"></i>
+      <span id="toastMessage">操作成功</span>
+    </div>
+
+    <style>
+      .toast {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        background: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        padding: 14px 24px;
+        border-radius: 10px;
+        font-size: 14px;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        z-index: 2000;
+        opacity: 0;
+        transition: all 0.3s ease;
+      }
+
+      .toast.show {
+        display: flex;
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .toast i {
+        color: #4caf50;
+      }
+    </style>
+
+    <script>
+      // Date Tab Switching
+      function switchDateTab(el, type) {
+        document.querySelectorAll('.date-tab').forEach(function(tab) {
+          tab.classList.remove('active');
+        });
+        el.classList.add('active');
+
+        // Update data based on selected period
+        var data = {
+          month: {
+            avgScore: '88.5',
+            excellenceRate: '72%',
+            evalCount: '16',
+            warningCount: '2',
+            avgTrend: '+1.8',
+            excellenceTrend: '+3%',
+            weekLabel: '本月第 4 周'
+          },
+          semester: {
+            avgScore: '87.3',
+            excellenceRate: '68%',
+            evalCount: '48',
+            warningCount: '3',
+            avgTrend: '+2.1',
+            excellenceTrend: '+5%',
+            weekLabel: '本学期第 8 周'
+          },
+          year: {
+            avgScore: '86.8',
+            excellenceRate: '65%',
+            evalCount: '128',
+            warningCount: '5',
+            avgTrend: '+1.5',
+            excellenceTrend: '+8%',
+            weekLabel: '本学年'
+          }
+        };
+
+        var selected = data[type];
+        
+        // Update summary cards with animation
+        updateCardData(selected);
+        
+        showToast('已切换到' + el.textContent);
+      }
+
+      function updateCardData(data) {
+        // Update average score
+        var avgEl = document.querySelector('.sum-card:nth-child(1) .sum-num');
+        var evalCountEl = document.querySelector('.sum-card:nth-child(3) .sum-num');
+        var warningEl = document.querySelector('.sum-card:nth-child(4) .sum-num');
+        var excellenceEl = document.querySelector('.sum-card:nth-child(2) .sum-num');
+        
+        // Animate number change
+        avgEl.style.transform = 'scale(0.9)';
+        evalCountEl.style.transform = 'scale(0.9)';
+        warningEl.style.transform = 'scale(0.9)';
+        excellenceEl.style.transform = 'scale(0.9)';
+        
+        setTimeout(function() {
+          avgEl.textContent = data.avgScore;
+          evalCountEl.textContent = data.evalCount;
+          warningEl.textContent = data.warningCount;
+          excellenceEl.textContent = data.excellenceRate;
+          
+          // Update trends
+          var trends = document.querySelectorAll('.sum-trend');
+          trends[0].innerHTML = '<i class="fas fa-arrow-up"></i> ' + data.avgTrend + ' 较上期';
+          trends[1].innerHTML = '<i class="fas fa-arrow-up"></i> ' + data.excellenceTrend + ' 较上期';
+          trends[2].textContent = data.weekLabel;
+          
+          avgEl.style.transform = 'scale(1)';
+          evalCountEl.style.transform = 'scale(1)';
+          warningEl.style.transform = 'scale(1)';
+          excellenceEl.style.transform = 'scale(1)';
+        }, 200);
+      }
+
+      // Toast Function
+      function showToast(message) {
+        var toast = document.getElementById('toast');
+        var toastMessage = document.getElementById('toastMessage');
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+        setTimeout(function() {
+          toast.classList.remove('show');
+        }, 2000);
+      }
+    </script>
+  </div>
+</body>
+
+</html>

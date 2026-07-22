@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a56a0">
+  <title>课堂评价</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #e8edf2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .phone-shell {
+      width: 100%;
+      height: 100vh;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: #1a56a0;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .topbar-title {
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      flex: 1;
+      text-align: center;
+    }
+
+    .topbar-right {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 14px;
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 16px;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .eval-header {
+      background: linear-gradient(135deg, #e8f1ff, #f4f8ff);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      border: 1px solid #d0e0f7;
+    }
+
+    .eval-class {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2a44;
+      margin-bottom: 6px;
+    }
+
+    .eval-topic {
+      font-size: 13px;
+      color: #7090b0;
+      margin-bottom: 10px;
+    }
+
+    .eval-meta-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .eval-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: #7090b0;
+    }
+
+    .eval-meta-item i {
+      color: #b0c4e0;
+    }
+
+    .dim-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(26, 86, 160, 0.07);
+    }
+
+    .dim-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a2a44;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dim-title i {
+      color: #1a56a0;
+    }
+
+    .dim-title .required {
+      color: #e05050;
+      font-size: 12px;
+    }
+
+    .dim-item {
+      margin-bottom: 16px;
+    }
+
+    .dim-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .dim-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .dim-item-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #1a2a44;
+    }
+
+    .dim-item-score {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a56a0;
+    }
+
+    .slider-wrap {
+      position: relative;
+      padding: 5px 0;
+    }
+
+    .slider-track {
+      height: 8px;
+      background: #e8eef7;
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .slider-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1a56a0, #3a8ee8);
+      border-radius: 4px;
+      transition: width 0.2s;
+    }
+
+    input[type="range"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 8px;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .slider-btns {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+    }
+
+    .slider-btn {
+      font-size: 10px;
+      color: #90a0b5;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .slider-btn:hover, .slider-btn.active {
+      background: #e8f1ff;
+      color: #1a56a0;
+    }
+
+    .text-area-wrap {
+      margin-top: 10px;
+    }
+
+    .text-area {
+      width: 100%;
+      min-height: 80px;
+      border: 1.5px solid #e0e8f4;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      font-family: 'Noto Sans SC', sans-serif;
+      resize: none;
+      color: #1a2a44;
+      box-sizing: border-box;
+    }
+
+    .text-area:focus {
+      outline: none;
+      border-color: #1a56a0;
+    }
+
+    .text-area::placeholder {
+      color: #b0c4e0;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #1a56a0, #3a8ee8);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    .save-draft-btn {
+      width: 100%;
+      padding: 12px;
+      background: #f4f6fb;
+      color: #7090b0;
+      border: 1.5px solid #e0e8f4;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .save-draft-btn:active {
+      transform: scale(0.98);
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      width: 100%;
+      max-height: 50vh;
+      border-radius: 20px 20px 0 0;
+      padding: 0 0 20px;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f4fb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a2a44;
+      text-align: center;
+      flex: 1;
+    }
+
+    .modal-close {
+      color: #b0bec5;
+      font-size: 18px;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      max-height: calc(50vh - 60px);
+    }
+
+    .confirm-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #e6f9f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 20px auto 16px;
+      font-size: 28px;
+      color: #1a9c5a;
+    }
+
+    .confirm-text {
+      text-align: center;
+      font-size: 15px;
+      color: #1a2a44;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .confirm-sub {
+      text-align: center;
+      font-size: 12px;
+      color: #90a0b5;
+      margin-bottom: 20px;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+    }
+
+    .modal-btn-cancel {
+      background: #f4f6fb;
+      color: #7090b0;
+    }
+
+    .modal-btn-confirm {
+      background: #1a56a0;
+      color: #fff;
+    }
+
+    .modal-btn:active, .submit-btn:active, .save-draft-btn:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="phone-shell">
+    <div class="topbar">
+      <a href="evaluation.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      <span class="topbar-title">课堂评价</span>
+      <span class="topbar-right"><i class="fas fa-ellipsis-h"></i></span>
+    </div>
+
+    <div class="scroll-area">
+      <div class="eval-header">
+        <div class="eval-class">22计算机1班</div>
+        <div class="eval-topic">第8周 · 函数的单调性</div>
+        <div class="eval-meta-row">
+          <div class="eval-meta-item"><i class="fas fa-calendar"></i> 2025-03-21</div>
+          <div class="eval-meta-item"><i class="fas fa-clock"></i> 第3节课</div>
+          <div class="eval-meta-item"><i class="fas fa-users"></i> 42人出勤</div>
+        </div>
+      </div>
+
+      <div class="dim-section">
+        <div class="dim-title"><i class="fas fa-bullseye"></i> 教学目标 <span class="required">*</span></div>
+
+        <div class="dim-item">
+          <div class="dim-item-header">
+            <span class="dim-item-name">目标明确程度</span>
+            <span class="dim-item-score" id="score1">85分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-track">
+              <div class="slider-fill" id="fill1" style="width:85%;"></div>
+            </div>
+            <input type="range" min="60" max="100" value="85" oninput="updateSlider(1, this.value)">
+          </div>
+          <div class="slider-btns">
+            <span class="slider-btn" onclick="setSlider(1, 60)">60</span>
+            <span class="slider-btn" onclick="setSlider(1, 70)">70</span>
+            <span class="slider-btn" onclick="setSlider(1, 80)">80</span>
+            <span class="slider-btn active" onclick="setSlider(1, 85)">85</span>
+            <span class="slider-btn" onclick="setSlider(1, 90)">90</span>
+            <span class="slider-btn" onclick="setSlider(1, 100)">100</span>
+          </div>
+        </div>
+
+        <div class="dim-item">
+          <div class="dim-item-header">
+            <span class="dim-item-name">目标达成情况</span>
+            <span class="dim-item-score" id="score2">80分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-track">
+              <div class="slider-fill" id="fill2" style="width:80%;"></div>
+            </div>
+            <input type="range" min="60" max="100" value="80" oninput="updateSlider(2, this.value)">
+          </div>
+          <div class="slider-btns">
+            <span class="slider-btn" onclick="setSlider(2, 60)">60</span>
+            <span class="slider-btn" onclick="setSlider(2, 70)">70</span>
+            <span class="slider-btn active" onclick="setSlider(2, 80)">80</span>
+            <span class="slider-btn" onclick="setSlider(2, 85)">85</span>
+            <span class="slider-btn" onclick="setSlider(2, 90)">90</span>
+            <span class="slider-btn" onclick="setSlider(2, 100)">100</span>
+          </div>
+        </div>
+
+        <div class="text-area-wrap">
+          <textarea class="text-area" placeholder="请输入教学目标评价备注（选填）..."></textarea>
+        </div>
+      </div>
+
+      <div class="dim-section">
+        <div class="dim-title"><i class="fas fa-chalkboard-teacher"></i> 教学过程 <span class="required">*</span></div>
+
+        <div class="dim-item">
+          <div class="dim-item-header">
+            <span class="dim-item-name">教学设计</span>
+            <span class="dim-item-score" id="score3">88分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-track">
+              <div class="slider-fill" id="fill3" style="width:88%;"></div>
+            </div>
+            <input type="range" min="60" max="100" value="88" oninput="updateSlider(3, this.value)">
+          </div>
+          <div class="slider-btns">
+            <span class="slider-btn" onclick="setSlider(3, 60)">60</span>
+            <span class="slider-btn" onclick="setSlider(3, 70)">70</span>
+            <span class="slider-btn" onclick="setSlider(3, 80)">80</span>
+            <span class="slider-btn" onclick="setSlider(3, 85)">85</span>
+            <span class="slider-btn active" onclick="setSlider(3, 88)">88</span>
+            <span class="slider-btn" onclick="setSlider(3, 100)">100</span>
+          </div>
+        </div>
+
+        <div class="dim-item">
+          <div class="dim-item-header">
+            <span class="dim-item-name">课堂节奏</span>
+            <span class="dim-item-score" id="score4">82分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-track">
+              <div class="slider-fill" id="fill4" style="width:82%;"></div>
+            </div>
+            <input type="range" min="60" max="100" value="82" oninput="updateSlider(4, this.value)">
+          </div>
+          <div class="slider-btns">
+            <span class="slider-btn" onclick="setSlider(4, 60)">60</span>
+            <span class="slider-btn" onclick="setSlider(4, 70)">70</span>
+            <span class="slider-btn active" onclick="setSlider(4, 80)">80</span>
+            <span class="slider-btn" onclick="setSlider(4, 85)">85</span>
+            <span class="slider-btn" onclick="setSlider(4, 90)">90</span>
+            <span class="slider-btn" onclick="setSlider(4, 100)">100</span>
+          </div>
+        </div>
+
+        <div class="text-area-wrap">
+          <textarea class="text-area" placeholder="请输入教学过程评价备注（选填）..."></textarea>
+        </div>
+      </div>
+
+      <div class="dim-section">
+        <div class="dim-title"><i class="fas fa-comments"></i> 师生互动 <span class="required">*</span></div>
+
+        <div class="dim-item">
+          <div class="dim-item-header">
+            <span class="dim-item-name">提问与回答</span>
+            <span class="dim-item-score" id="score5">78分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-track">
+              <div class="slider-fill" id="fill5" style="width:78%;"></div>
+            </div>
+            <input type="range" min="60" max="100" value="78" oninput="updateSlider(5, this.value)">
+          </div>
+          <div class="slider-btns">
+            <span class="slider-btn" onclick="setSlider(5, 60)">60</span>
+            <span class="slider-btn active" onclick="setSlider(5, 70)">70</span>
+            <span class="slider-btn" onclick="setSlider(5, 80)">80</span>
+            <span class="slider-btn" onclick="setSlider(5, 85)">85</span>
+            <span class="slider-btn" onclick="setSlider(5, 90)">90</span>
+            <span class="slider-btn" onclick="setSlider(5, 100)">100</span>
+          </div>
+        </div>
+
+        <div class="dim-item">
+          <div class="dim-item-header">
+            <span class="dim-item-name">学生参与度</span>
+            <span class="dim-item-score" id="score6">80分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-track">
+              <div class="slider-fill" id="fill6" style="width:80%;"></div>
+            </div>
+            <input type="range" min="60" max="100" value="80" oninput="updateSlider(6, this.value)">
+          </div>
+          <div class="slider-btns">
+            <span class="slider-btn" onclick="setSlider(6, 60)">60</span>
+            <span class="slider-btn" onclick="setSlider(6, 70)">70</span>
+            <span class="slider-btn active" onclick="setSlider(6, 80)">80</span>
+            <span class="slider-btn" onclick="setSlider(6, 85)">85</span>
+            <span class="slider-btn" onclick="setSlider(6, 90)">90</span>
+            <span class="slider-btn" onclick="setSlider(6, 100)">100</span>
+          </div>
+        </div>
+
+        <div class="text-area-wrap">
+          <textarea class="text-area" placeholder="请输入师生互动评价备注（选填）..."></textarea>
+        </div>
+      </div>
+
+      <div class="dim-section">
+        <div class="dim-title"><i class="fas fa-clipboard-list"></i> 课堂管理 <span class="required">*</span></div>
+
+        <div class="dim-item">
+          <div class="dim-item-header">
+            <span class="dim-item-name">纪律维持</span>
+            <span class="dim-item-score" id="score7">90分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-track">
+              <div class="slider-fill" id="fill7" style="width:90%;"></div>
+            </div>
+            <input type="range" min="60" max="100" value="90" oninput="updateSlider(7, this.value)">
+          </div>
+          <div class="slider-btns">
+            <span class="slider-btn" onclick="setSlider(7, 60)">60</span>
+            <span class="slider-btn" onclick="setSlider(7, 70)">70</span>
+            <span class="slider-btn" onclick="setSlider(7, 80)">80</span>
+            <span class="slider-btn" onclick="setSlider(7, 85)">85</span>
+            <span class="slider-btn active" onclick="setSlider(7, 90)">90</span>
+            <span class="slider-btn" onclick="setSlider(7, 100)">100</span>
+          </div>
+        </div>
+
+        <div class="text-area-wrap">
+          <textarea class="text-area" placeholder="请输入课堂管理评价备注（选填）..."></textarea>
+        </div>
+      </div>
+
+      <div class="dim-section">
+        <div class="dim-title"><i class="fas fa-tasks"></i> 作业反馈</div>
+
+        <div class="dim-item">
+          <div class="dim-item-header">
+            <span class="dim-item-name">作业完成质量</span>
+            <span class="dim-item-score" id="score8">84分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-track">
+              <div class="slider-fill" id="fill8" style="width:84%;"></div>
+            </div>
+            <input type="range" min="60" max="100" value="84" oninput="updateSlider(8, this.value)">
+          </div>
+          <div class="slider-btns">
+            <span class="slider-btn" onclick="setSlider(8, 60)">60</span>
+            <span class="slider-btn" onclick="setSlider(8, 70)">70</span>
+            <span class="slider-btn" onclick="setSlider(8, 80)">80</span>
+            <span class="slider-btn active" onclick="setSlider(8, 84)">84</span>
+            <span class="slider-btn" onclick="setSlider(8, 90)">90</span>
+            <span class="slider-btn" onclick="setSlider(8, 100)">100</span>
+          </div>
+        </div>
+
+        <div class="text-area-wrap">
+          <textarea class="text-area" placeholder="请输入作业反馈评价备注（选填）..."></textarea>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="showConfirmModal()">提交评价</button>
+      <button class="save-draft-btn" onclick="showSaveDraftModal()">保存草稿</button>
+
+      <div style="height:20px;"></div>
+    </div>
+
+    <div class="modal-overlay" id="submitModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">确认提交</span>
+          <span class="modal-close" onclick="closeSubmitModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-icon"><i class="fas fa-check"></i></div>
+          <div class="confirm-text">是否确认提交本次评价？</div>
+          <div class="confirm-sub">提交后将进入审核流程，无法再次修改</div>
+          <div class="modal-btn-row">
+            <div class="modal-btn modal-btn-cancel" onclick="closeSubmitModal()">取消</div>
+            <div class="modal-btn modal-btn-confirm" onclick="submitEvaluation()">确认提交</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="draftModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">保存草稿</span>
+          <span class="modal-close" onclick="closeDraftModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-icon" style="background:#e8f1ff;"><i class="fas fa-save" style="color:#1a56a0;"></i></div>
+          <div class="confirm-text">是否保存当前评价为草稿？</div>
+          <div class="confirm-sub">草稿可在评价任务中继续编辑</div>
+          <div class="modal-btn-row">
+            <div class="modal-btn modal-btn-cancel" onclick="closeDraftModal()">取消</div>
+            <div class="modal-btn modal-btn-confirm" onclick="saveDraft()">保存草稿</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="successModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span style="width:24px;"></span>
+          <span class="modal-title">提交成功</span>
+          <span class="modal-close" onclick="closeSuccessModal()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-icon"><i class="fas fa-check"></i></div>
+          <div class="confirm-text">评价已成功提交！</div>
+          <div class="confirm-sub">感谢您的评价，审核结果将在24小时内完成</div>
+          <div class="modal-btn-row">
+            <div class="modal-btn modal-btn-confirm" onclick="goToReport()">查看报告</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updateSlider(id, value) {
+      document.getElementById('score' + id).textContent = value + '分';
+      document.getElementById('fill' + id).style.width = value + '%';
+      updateSliderBtns(id, value);
+    }
+
+    function setSlider(id, value) {
+      document.getElementById('score' + id).textContent = value + '分';
+      document.getElementById('fill' + id).style.width = value + '%';
+      document.querySelector('#fill' + id).previousElementSibling.querySelector('input').value = value;
+      updateSliderBtns(id, value);
+    }
+
+    function updateSliderBtns(id, activeValue) {
+      var btns = document.querySelectorAll('#fill' + id).parentElement.parentElement.nextElementSibling.querySelectorAll('.slider-btn');
+      btns.forEach(function(btn) {
+        btn.classList.remove('active');
+        if (btn.textContent == activeValue) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    function showConfirmModal() {
+      document.getElementById('submitModal').classList.add('active');
+    }
+
+    function closeSubmitModal() {
+      document.getElementById('submitModal').classList.remove('active');
+    }
+
+    function submitEvaluation() {
+      closeSubmitModal();
+      document.getElementById('successModal').classList.add('active');
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('successModal').classList.remove('active');
+      window.location.href = 'report.html';
+    }
+
+    function goToReport() {
+      window.location.href = 'report.html';
+    }
+
+    function showSaveDraftModal() {
+      document.getElementById('draftModal').classList.add('active');
+    }
+
+    function closeDraftModal() {
+      document.getElementById('draftModal').classList.remove('active');
+    }
+
+    function saveDraft() {
+      closeDraftModal();
+      alert('草稿已保存');
+    }
+
+    document.getElementById('submitModal').addEventListener('click', function(e) {
+      if (e.target === this) closeSubmitModal();
+    });
+
+    document.getElementById('draftModal').addEventListener('click', function(e) {
+      if (e.target === this) closeDraftModal();
+    });
+
+    document.getElementById('successModal').addEventListener('click', function(e) {
+      if (e.target === this) closeSuccessModal();
+    });
+  </script>
+</body>
+
+</html>

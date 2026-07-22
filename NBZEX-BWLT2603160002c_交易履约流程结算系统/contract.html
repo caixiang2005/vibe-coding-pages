@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>合同登记 - 交易履约流程结算系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", "SimSun", sans-serif; }
+        body { background: #0078d4; height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .window { width: 100%; max-width: 1400px; height: 90vh; background: #f0f0f0; border: 1px solid #707070; box-shadow: 0 8px 32px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+        .title-bar { background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%); border-bottom: 1px solid #c0c0c0; display: flex; justify-content: space-between; align-items: center; padding: 0; height: 32px; user-select: none; }
+        .title-bar-left { display: flex; align-items: center; padding-left: 8px; gap: 8px; }
+        .title-bar-left i { color: #0078d4; font-size: 14px; }
+        .title-bar-left span { font-size: 12px; color: #333; }
+        .window-controls { display: flex; height: 100%; }
+        .window-controls button { width: 46px; height: 100%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
+        .window-controls button:hover { background: #e5e5e5; }
+        .window-controls .close-btn:hover { background: #e81123; }
+        .window-controls .close-btn:hover i { color: white; }
+        .window-controls i { font-size: 10px; color: #333; }
+        .menu-bar { background: #f0f0f0; border-bottom: 1px solid #c0c0c0; display: flex; align-items: center; padding: 2px 4px; gap: 0; }
+        .menu-item { padding: 4px 12px; font-size: 12px; color: #333; cursor: pointer; position: relative; }
+        .menu-item:hover { background: #e5f3ff; }
+        .menu-item u { text-decoration: underline; }
+        .toolbar { background: linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%); border-bottom: 1px solid #c0c0c0; display: flex; align-items: center; padding: 4px 8px; gap: 2px; flex-wrap: wrap; }
+        .toolbar-btn { width: 28px; height: 26px; border: 1px solid transparent; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 2px; }
+        .toolbar-btn:hover { background: #cce8ff; border-color: #99d1ff; }
+        .toolbar-btn i { font-size: 12px; color: #555; }
+        .toolbar-separator { width: 1px; height: 20px; background: #c0c0c0; margin: 0 4px; }
+        .toolbar-select { height: 24px; border: 1px solid #ababab; font-size: 12px; padding: 0 4px; min-width: 120px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; background: #ffffff; overflow: hidden; }
+        .content-header { background: linear-gradient(180deg, #6b9dc8 0%, #5a8cb8 100%); color: white; padding: 8px 12px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .content-body { flex: 1; overflow: auto; padding: 0; }
+        .info-panel { background: #f8f8f8; border-bottom: 1px solid #d0d0d0; padding: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px; }
+        .info-item { display: flex; gap: 8px; }
+        .info-label { color: #666; min-width: 70px; }
+        .info-value { color: #333; font-weight: 500; }
+        .action-bar { background: #f5f5f5; border-bottom: 1px solid #d0d0d0; padding: 8px 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .action-btn { padding: 5px 15px; border: 1px solid #ababab; background: linear-gradient(180deg, #f8f8f8 0%, #e8e8e8 100%); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .action-btn:hover { background: linear-gradient(180deg, #e5f3ff 0%, #cce8ff 100%); border-color: #99d1ff; }
+        .action-btn i { font-size: 11px; color: #555; }
+        .quick-filters { background: #f8f8f8; border-bottom: 1px solid #d0d0d0; padding: 8px 12px; display: flex; align-items: center; gap: 12px; font-size: 12px; }
+        .filter-group { display: flex; align-items: center; gap: 6px; }
+        .filter-group label { color: #555; }
+        .filter-group input, .filter-group select { padding: 4px 8px; border: 1px solid #ababab; font-size: 12px; }
+        .data-table-container { overflow: auto; flex: 1; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table th { background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%); border: 1px solid #c0c0c0; padding: 8px 6px; text-align: left; font-weight: normal; color: #333; white-space: nowrap; position: sticky; top: 0; }
+        .data-table td { border: 1px solid #d0d0d0; padding: 6px; background: #fff; }
+        .data-table tr:hover td { background: #e5f3ff; cursor: pointer; }
+        .data-table tr.selected td { background: #cce8ff; }
+        .status-pending { color: #d97706; }
+        .status-completed { color: #059669; }
+        .status-processing { color: #2563eb; }
+        .status-rejected { color: #dc2626; }
+        .amount { text-align: right; font-family: "Consolas", monospace; }
+        .highlight-yellow { background: #fff9c4 !important; }
+        .log-panel { background: #fffde7; border-top: 3px solid #81d4fa; padding: 10px; font-size: 12px; max-height: 100px; overflow: auto; }
+        .log-title { background: #81d4fa; color: #333; padding: 4px 8px; margin: -10px -10px 10px -10px; font-weight: bold; }
+        .log-item { padding: 2px 0; color: #333; border-bottom: 1px dotted #e0e0e0; }
+        .status-bar { background: #f0f0f0; border-top: 1px solid #c0c0c0; padding: 4px 12px; font-size: 11px; color: #666; display: flex; justify-content: space-between; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #f0f0f0; border: 1px solid #707070; box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 700px; width: 95%; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-title-bar { background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%); border-bottom: 1px solid #c0c0c0; display: flex; justify-content: space-between; align-items: center; padding: 0; height: 32px; }
+        .modal-title-bar span { padding-left: 10px; font-size: 12px; color: #333; text-align: center; flex: 1; }
+        .modal-close { width: 46px; height: 100%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #e81123; }
+        .modal-close:hover i { color: white; }
+        .modal-close i { font-size: 10px; color: #333; }
+        .modal-content { padding: 20px; overflow: auto; flex: 1; }
+        .form-section { margin-bottom: 20px; }
+        .form-section-title { background: linear-gradient(180deg, #6b9dc8 0%, #5a8cb8 100%); color: white; padding: 6px 10px; font-size: 12px; font-weight: bold; margin-bottom: 12px; text-align: center; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group.full-width { grid-column: span 2; }
+        .form-group label { font-size: 12px; color: #333; text-align: right; }
+        .form-group label .required { color: #e53935; }
+        .form-group input, .form-group select, .form-group textarea { padding: 6px 8px; border: 1px solid #ababab; font-size: 12px; background: #fff; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #0078d4; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .modal-footer { background: #f0f0f0; border-top: 1px solid #c0c0c0; padding: 12px 20px; display: flex; justify-content: center; gap: 12px; }
+        .btn { padding: 6px 20px; border: 1px solid #ababab; background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%); font-size: 12px; cursor: pointer; min-width: 80px; }
+        .btn:hover { background: linear-gradient(180deg, #e8e8e8 0%, #d5d5d5 100%); }
+        .btn-primary { background: linear-gradient(180deg, #0078d4 0%, #006cbd 100%); color: white; border-color: #005a9e; }
+        .btn-primary:hover { background: linear-gradient(180deg, #006cbd 0%, #005a9e 100%); }
+        .btn-danger { background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%); color: white; border-color: #991b1b; }
+        .btn-danger:hover { background: linear-gradient(180deg, #b91c1c 0%, #991b1b 100%); }
+        .detail-panel { background: #fff; border: 1px solid #d0d0d0; margin: 10px; padding: 0; }
+        .detail-header { background: linear-gradient(180deg, #5a8cb8 0%, #4a7ca8 100%); color: white; padding: 6px 10px; font-size: 12px; display: flex; justify-content: space-between; }
+        .detail-body { padding: 12px; }
+        .detail-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 6px 0; border-bottom: 1px dotted #e0e0e0; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: #666; font-size: 12px; }
+        .detail-value { color: #333; font-size: 12px; font-weight: 500; }
+        .nav-links { display: flex; gap: 8px; margin-left: auto; }
+        .nav-link { padding: 4px 12px; background: rgba(255,255,255,0.1); border-radius: 3px; color: white; text-decoration: none; font-size: 11px; }
+        .nav-link:hover { background: rgba(255,255,255,0.2); }
+        ::-webkit-scrollbar { width: 16px; height: 16px; }
+        ::-webkit-scrollbar-track { background: #f0f0f0; }
+        ::-webkit-scrollbar-thumb { background: #c0c0c0; border: 3px solid #f0f0f0; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+        .message { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 25px; background: #4caf50; color: white; border-radius: 4px; font-size: 13px; z-index: 2000; display: none; }
+        .message.error { background: #f44336; }
+        .tab-nav { background: #e8e8e8; display: flex; padding: 4px 8px 0; gap: 2px; border-bottom: 1px solid #c0c0c0; }
+        .tab-btn { padding: 8px 20px; background: #d8d8d8; border: 1px solid #b0b0b0; border-bottom: none; cursor: pointer; font-size: 12px; color: #333; border-radius: 3px 3px 0 0; position: relative; top: 1px; }
+        .tab-btn:hover { background: #e5e5e5; }
+        .tab-btn.active { background: #ffffff; border-color: #c0c0c0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="title-bar-left">
+                <i class="fas fa-exchange-alt"></i>
+                <span>交易履约流程结算系统</span>
+            </div>
+            <div class="window-controls">
+                <button class="minimize-btn"><i class="fas fa-minus"></i></button>
+                <button class="maximize-btn"><div style="width:10px;height:10px;border:1px solid #333;background:transparent;"></div></button>
+                <button class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="toolbar">
+            <button class="toolbar-btn" title="新增" onclick="showModal('add')"><i class="fas fa-plus"></i></button>
+            <button class="toolbar-btn" title="编辑" onclick="editContract()"><i class="fas fa-edit"></i></button>
+            <button class="toolbar-btn" title="删除" onclick="deleteContract()"><i class="fas fa-trash"></i></button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" title="审核" onclick="auditContract()"><i class="fas fa-check"></i></button>
+            <button class="toolbar-btn" title="生效" onclick="activateContract()"><i class="fas fa-check-circle"></i></button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" title="刷新" onclick="refreshData()"><i class="fas fa-sync-alt"></i></button>
+            <button class="toolbar-btn" title="打印" onclick="printData()"><i class="fas fa-print"></i></button>
+            <button class="toolbar-btn" title="导出" onclick="exportData()"><i class="fas fa-file-export"></i></button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" title="第一条" onclick="goFirst()"><i class="fas fa-step-backward"></i></button>
+            <button class="toolbar-btn" title="上一条" onclick="goPrev()"><i class="fas fa-chevron-left"></i></button>
+            <button class="toolbar-btn" title="下一条" onclick="goNext()"><i class="fas fa-chevron-right"></i></button>
+            <button class="toolbar-btn" title="最后一条" onclick="goLast()"><i class="fas fa-step-forward"></i></button>
+        </div>
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="window.location.href='index.html'">合同登记</button>
+            <button class="tab-btn" onclick="window.location.href='fulfill.html'">履约跟踪</button>
+            <button class="tab-btn" onclick="window.location.href='settle.html'">结算处理</button>
+            <button class="tab-btn" onclick="window.location.href='reconcile.html'">对账管理</button>
+            <button class="tab-btn" onclick="window.location.href='report.html'">报表统计</button>
+        </div>
+        <div class="main-content">
+            <div class="content-header">合同登记管理</div>
+            <div class="info-panel">
+                <div class="info-item"><span class="info-label">登记单位:</span><span class="info-value">华北区域结算中心</span></div>
+                <div class="info-item"><span class="info-label">业务类型:</span><span class="info-value">商品贸易结算</span></div>
+                <div class="info-item"><span class="info-label">经办人:</span><span class="info-value">李金栓</span></div>
+                <div class="info-item"><span class="info-label">本月合同:</span><span class="info-value">28 笔</span></div>
+            </div>
+            <div class="action-bar">
+                <button class="action-btn" onclick="showModal('add')"><i class="fas fa-plus"></i> 新增合同</button>
+                <button class="action-btn" onclick="editContract()"><i class="fas fa-edit"></i> 修改合同</button>
+                <button class="action-btn" onclick="copyContract()"><i class="fas fa-copy"></i> 复制合同</button>
+                <button class="action-btn" onclick="viewContract()"><i class="fas fa-eye"></i> 查看详情</button>
+                <button class="action-btn" onclick="auditContract()"><i class="fas fa-check"></i> 合同审核</button>
+                <button class="action-btn" onclick="showModal('terminate')"><i class="fas fa-ban"></i> 终止合同</button>
+            </div>
+            <div class="quick-filters">
+                <div class="filter-group"><label>合同编号:</label><input type="text" placeholder="输入查询" style="width:120px;"></div>
+                <div class="filter-group"><label>签订日期:</label><input type="date"><span>至</span><input type="date"></div>
+                <div class="filter-group"><label>状态:</label><select><option>全部</option><option>待审核</option><option>已生效</option><option>已完结</option></select></div>
+                <button class="action-btn" style="margin-left:auto;" onclick="searchData()"><i class="fas fa-search"></i> 查询</button>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead><tr><th style="width:30px;"><input type="checkbox"></th><th>合同编号</th><th>合同名称</th><th>供应商</th><th>签订日期</th><th>金额</th><th>币种</th><th>付款方式</th><th>履约期限</th><th>状态</th></tr></thead>
+                    <tbody id="tableBody">
+                        <tr onclick="selectRow(this)" data-id="1"><td><input type="checkbox"></td><td>HT2024030001</td><td>电子元器件采购合同</td><td>深圳市鑫达电子有限公司</td><td>2024-03-01</td><td class="amount">1,250,000.00</td><td>CNY</td><td>月结30天</td><td>至2024-08-31</td><td class="status-completed">已生效</td></tr>
+                        <tr onclick="selectRow(this)" data-id="2"><td><input type="checkbox"></td><td>HT2024030002</td><td>机械设备维保服务合同</td><td>北京宏远机械科技有限公司</td><td>2024-03-05</td><td class="amount">480,000.00</td><td>CNY</td><td>预付50%</td><td>至2025-03-04</td><td class="status-completed">已生效</td></tr>
+                        <tr onclick="selectRow(this)" data-id="3" class="highlight-yellow"><td><input type="checkbox"></td><td>HT2024030003</td><td>原材料供应框架协议</td><td>山东盛泰化工集团</td><td>2024-03-10</td><td class="amount">3,680,000.00</td><td>CNY</td><td>货到付款</td><td>至2024-12-31</td><td class="status-pending">待审核</td></tr>
+                        <tr onclick="selectRow(this)" data-id="4"><td><input type="checkbox"></td><td>HT2024030004</td><td>仓储物流服务合同</td><td>中远海运物流有限公司</td><td>2024-03-12</td><td class="amount">720,000.00</td><td>CNY</td><td>月结45天</td><td>至2024-09-11</td><td class="status-completed">已生效</td></tr>
+                        <tr onclick="selectRow(this)" data-id="5"><td><input type="checkbox"></td><td>HT2024030005</td><td>软件系统开发合同</td><td>杭州云智科技股份有限公司</td><td>2024-03-15</td><td class="amount">2,150,000.00</td><td>CNY</td><td>分期付款</td><td>至2024-10-14</td><td class="status-processing">执行中</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="log-panel"><div class="log-title">操作日志</div><div class="log-item">2024-03-26 09:15:32 合同 HT2024030003 已提交审核</div><div class="log-item">2024-03-25 16:42:18 合同 HT2024030006 审核通过</div></div>
+        </div>
+        <div class="status-bar"><span>共 5 条记录</span><span>当前用户: 李金栓</span></div>
+    </div>
+
+    <div class="modal-overlay" id="modal-add"><div class="modal"><div class="modal-title-bar"><span>新增合同</span><button class="modal-close" onclick="closeModal('add')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="form-section"><div class="form-section-title">基本信息</div><div class="form-grid"><div class="form-group"><label>合同编号 <span class="required">*</span></label><input type="text" value="HT2024030007"></div><div class="form-group"><label>签订日期</label><input type="date" value="2024-03-26"></div><div class="form-group full-width"><label>合同名称 <span class="required">*</span></label><input type="text" placeholder="请输入合同名称"></div><div class="form-group"><label>供应商名称 <span class="required">*</span></label><select><option>请选择供应商</option><option>深圳市鑫达电子有限公司</option><option>北京宏远机械科技有限公司</option><option>山东盛泰化工集团</option></select></div><div class="form-group"><label>业务类型</label><select><option>商品采购</option><option>服务采购</option><option>工程承包</option></select></div><div class="form-group"><label>合同金额 <span class="required">*</span></label><input type="number" placeholder="0.00"></div><div class="form-group"><label>币种</label><select><option>CNY 人民币</option><option>USD 美元</option><option>EUR 欧元</option></select></div><div class="form-group"><label>付款方式</label><select><option>月结30天</option><option>月结45天</option><option>预付</option><option>货到付款</option></select></div><div class="form-group"><label>履约开始日期</label><input type="date"></div><div class="form-group"><label>履约结束日期</label><input type="date"></div><div class="form-group full-width"><label>备注</label><textarea placeholder="请输入备注信息"></textarea></div></div></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('add')">取消</button><button class="btn btn-primary" onclick="saveAdd()">保存</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-edit"><div class="modal"><div class="modal-title-bar"><span>编辑合同</span><button class="modal-close" onclick="closeModal('edit')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="form-section"><div class="form-section-title">合同信息</div><div class="form-grid"><div class="form-group"><label>合同编号</label><input type="text" value="HT2024030001" readonly style="background:#e8e8e8;"></div><div class="form-group"><label>签订日期</label><input type="date" value="2024-03-01"></div><div class="form-group full-width"><label>合同名称</label><input type="text" value="电子元器件采购合同"></div><div class="form-group"><label>供应商名称</label><select><option selected>深圳市鑫达电子有限公司</option></select></div><div class="form-group"><label>业务类型</label><select><option selected>商品采购</option></select></div><div class="form-group"><label>合同金额</label><input type="number" value="1250000.00"></div><div class="form-group"><label>付款方式</label><select><option selected>月结30天</option></select></div><div class="form-group"><label>履约开始</label><input type="date" value="2024-03-01"></div><div class="form-group"><label>履约结束</label><input type="date" value="2024-08-31"></div></div></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('edit')">取消</button><button class="btn btn-primary" onclick="saveEdit()">保存</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-view"><div class="modal" style="max-width:800px;"><div class="modal-title-bar"><span>合同详情</span><button class="modal-close" onclick="closeModal('view')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="detail-panel"><div class="detail-header"><span>基本信息</span><span style="font-size:11px;">HT2024030001</span></div><div class="detail-body"><div class="detail-row"><div><span class="detail-label">合同名称:</span><span class="detail-value">电子元器件采购合同</span></div><div><span class="detail-label">供应商:</span><span class="detail-value">深圳市鑫达电子有限公司</span></div><div><span class="detail-label">签订日期:</span><span class="detail-value">2024-03-01</span></div><div><span class="detail-label">合同金额:</span><span class="detail-value amount">1,250,000.00 CNY</span></div><div><span class="detail-label">付款方式:</span><span class="detail-value">月结30天</span></div><div><span class="detail-label">履约期限:</span><span class="detail-value">2024-03-01 至 2024-08-31</span></div><div><span class="detail-label">状态:</span><span class="detail-value status-completed">已生效</span></div><div><span class="detail-label">创建人:</span><span class="detail-value">李金栓</span></div></div></div></div><div class="detail-panel" style="margin-top:15px;"><div class="detail-header"><span>关联信息</span></div><div class="detail-body"><div class="detail-row"><div><span class="detail-label">订单数量:</span><span class="detail-value">5 笔</span></div><div><span class="detail-label">已结算:</span><span class="detail-value">2 笔</span></div><div><span class="detail-label">待结算:</span><span class="detail-value">3 笔</span></div><div><span class="detail-label">执行进度:</span><span class="detail-value">75%</span></div></div></div></div></div><div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('view')">关闭</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-audit"><div class="modal"><div class="modal-title-bar"><span>合同审核</span><button class="modal-close" onclick="closeModal('audit')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="form-section"><div class="form-section-title">审核信息</div><div class="form-grid"><div class="form-group full-width"><label>合同编号</label><input type="text" value="HT2024030003" readonly style="background:#e8e8e8;"></div><div class="form-group full-width"><label>合同名称</label><input type="text" value="原材料供应框架协议" readonly style="background:#e8e8e8;"></div><div class="form-group full-width"><label>合同金额</label><input type="text" value="3,680,000.00" readonly style="background:#e8e8e8;"></div><div class="form-group full-width"><label>审核结果</label><select id="auditResult"><option value="">请选择审核结果</option><option value="pass">审核通过</option><option value="reject">审核驳回</option></select></div><div class="form-group full-width"><label>审核意见</label><textarea id="auditComment" placeholder="请输入审核意见"></textarea></div></div></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('audit')">取消</button><button class="btn btn-primary" onclick="submitAudit()">提交</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-terminate"><div class="modal"><div class="modal-title-bar"><span>终止合同</span><button class="modal-close" onclick="closeModal('terminate')"><i class="fas fa-times"></i></button></div><div class="modal-content"><div class="form-section"><div class="form-section-title">终止确认</div><div class="form-grid"><div class="form-group full-width"><label>合同编号</label><input type="text" placeholder="请输入要终止的合同编号"></div><div class="form-group full-width"><label>终止原因 <span class="required">*</span></label><textarea placeholder="请输入终止原因"></textarea></div></div></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('terminate')">取消</button><button class="btn btn-danger" onclick="confirmTerminate()">确认终止</button></div></div></div></div>
+
+    <div class="modal-overlay" id="modal-message"><div class="modal" style="max-width:400px;"><div class="modal-title-bar"><span id="msgTitle">提示</span><button class="modal-close" onclick="closeModal('message')"><i class="fas fa-times"></i></button></div><div class="modal-content" style="text-align:center;padding:30px;"><i id="msgIcon" class="fas fa-check-circle" style="font-size:48px;color:#4caf50;margin-bottom:15px;"></i><p id="msgText" style="font-size:14px;color:#333;"></p></div><div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('message')">确定</button></div></div></div>
+
+    <div class="message" id="toastMessage"></div>
+
+    <script>
+        let selectedRow = null;
+        function selectRow(row) {
+            document.querySelectorAll('.data-table tbody tr').forEach(r => r.classList.remove('selected'));
+            row.classList.add('selected');
+            selectedRow = row;
+        }
+        function switchTab(tab) {
+            window.location.href = tab + '.html';
+        }
+        function showModal(id) { document.getElementById('modal-' + id).classList.add('active'); }
+        function closeModal(id) { document.getElementById('modal-' + id).classList.remove('active'); }
+        function showMessage(title, text, isError) {
+            document.getElementById('msgTitle').textContent = title;
+            document.getElementById('msgText').textContent = text;
+            document.getElementById('msgIcon').className = isError ? 'fas fa-times-circle' : 'fas fa-check-circle';
+            document.getElementById('msgIcon').style.color = isError ? '#f44336' : '#4caf50';
+            showModal('message');
+        }
+        function showToast(text, isError) {
+            const toast = document.getElementById('toastMessage');
+            toast.textContent = text;
+            toast.className = isError ? 'message error' : 'message';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+        function editContract() {
+            if (!selectedRow) { showToast('请先选择要编辑的合同', true); return; }
+            showModal('edit');
+        }
+        function deleteContract() {
+            if (!selectedRow) { showToast('请先选择要删除的合同', true); return; }
+            if (confirm('确定要删除选中的合同吗？')) { showToast('删除成功'); }
+        }
+        function viewContract() {
+            if (!selectedRow) { showToast('请先选择要查看的合同', true); return; }
+            showModal('view');
+        }
+        function auditContract() {
+            if (!selectedRow) { showToast('请先选择要审核的合同', true); return; }
+            showModal('audit');
+        }
+        function copyContract() { showToast('合同复制成功'); }
+        function saveAdd() { showToast('新增合同保存成功'); closeModal('add'); }
+        function saveEdit() { showToast('合同更新成功'); closeModal('edit'); }
+        function submitAudit() {
+            const result = document.getElementById('auditResult').value;
+            if (!result) { showToast('请选择审核结果', true); return; }
+            showToast('审核提交成功'); closeModal('audit');
+        }
+        function confirmTerminate() { showToast('合同已终止'); closeModal('terminate'); }
+        function refreshData() { showToast('数据已刷新'); }
+        function printData() { showToast('正在准备打印...'); setTimeout(() => window.print(), 500); }
+        function exportData() { showToast('正在导出数据...'); }
+        function searchData() { showToast('查询完成'); }
+        function goFirst() { showToast('已是第一条记录'); }
+        function goPrev() { showToast('上一条'); }
+        function goNext() { showToast('下一条'); }
+        function goLast() { showToast('已是最后一条'); }
+        function activateContract() { showToast('合同已生效'); }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(overlay.id.replace('modal-', '')); });
+        });
+    </script>
+</body>
+</html>

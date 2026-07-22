@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4A6CF7">
+  <title>每日一练 - 中职数学课程辅助学习软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    :root{--primary:#4A6CF7;--primary-light:#6B8AFF;--primary-dark:#3451D1;--accent:#FF6B6B;--accent-orange:#FF9F43;--accent-green:#2ED573;--accent-purple:#A66CFF;--bg:#F5F7FB;--card:#FFFFFF;--text:#1E293B;--text-sec:#64748B;--text-light:#94A3B8;--border:#E2E8F0;--shadow:0 2px 12px rgba(74,108,247,0.08);--shadow-lg:0 8px 32px rgba(74,108,247,0.12);--radius:16px}
+    html,body{font-family:'Noto Sans SC',sans-serif;background:#1a1a2e;height:100%;overflow:hidden}
+    .phone-frame{width:100%;height:100vh;background:var(--bg);overflow:hidden;position:relative}
+    .page{height:100%;overflow-y:auto;overflow-x:hidden;background:var(--bg);-webkit-overflow-scrolling:touch}
+    .page::-webkit-scrollbar{display:none}
+    .sub-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+    .sub-back{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+    .sub-back:active{transform:scale(0.9)}
+    .sub-title{color:#fff;font-size:17px;font-weight:700;flex:1}
+    .sub-body{padding:16px}
+    .quiz-progress{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    .quiz-progress-text{font-size:13px;color:var(--text-sec);min-width:50px}
+    .quiz-progress-bar{flex:1;height:6px;background:#E8EDFF;border-radius:6px;overflow:hidden}
+    .quiz-progress-fill{height:100%;background:var(--primary);border-radius:6px;transition:width 0.3s ease}
+    .quiz-card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+    .quiz-type{font-size:11px;color:var(--primary);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:4px}
+    .quiz-question{font-size:16px;color:var(--text);line-height:1.7;font-weight:500}
+    .quiz-options{margin-top:16px}
+    .quiz-option{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border-radius:12px;margin-bottom:10px;cursor:pointer;transition:all 0.2s;border:2px solid transparent}
+    .quiz-option:active{transform:scale(0.98)}
+    .quiz-option.selected{border-color:var(--primary);background:#F8FAFF}
+    .quiz-option.correct{border-color:var(--accent-green);background:#ECFDF5}
+    .quiz-option.wrong{border-color:var(--accent);background:#FFF0F0}
+    .quiz-option.disabled{pointer-events:none;opacity:0.7}
+    .quiz-opt-mark{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text-light);flex-shrink:0}
+    .quiz-option.selected .quiz-opt-mark{border-color:var(--primary);background:var(--primary);color:#fff}
+    .quiz-option.correct .quiz-opt-mark{border-color:var(--accent-green);background:var(--accent-green);color:#fff}
+    .quiz-option.wrong .quiz-opt-mark{border-color:var(--accent);background:var(--accent);color:#fff}
+    .quiz-opt-text{flex:1;font-size:14px;color:var(--text)}
+    .quiz-btn{width:100%;padding:14px;background:var(--primary);color:#fff;font-size:15px;font-weight:600;border:none;border-radius:var(--radius);cursor:pointer;font-family:inherit;transition:all 0.2s}
+    .quiz-btn:active{background:var(--primary-dark);transform:scale(0.98)}
+    .quiz-btn:disabled{background:var(--text-light);cursor:not-allowed}
+    .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#1E293B;color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;font-weight:500;z-index:1000;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:all 0.3s}
+    .modal-overlay.show{opacity:1;pointer-events:auto}
+    .modal{background:var(--card);border-radius:var(--radius);width:85%;max-width:320px;transform:scale(0.9);transition:all 0.3s}
+    .modal.show{transform:scale(1)}
+    .modal-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:16px;border-radius:var(--radius) var(--radius) 0 0;text-align:center}
+    .modal-title{color:#fff;font-size:16px;font-weight:700}
+    .modal-body{padding:20px;text-align:center}
+    .modal-score{font-size:48px;font-weight:900;color:var(--primary);margin:10px 0}
+    .modal-desc{font-size:14px;color:var(--text-light)}
+    .modal-btn{display:block;width:100%;padding:14px;background:var(--primary);color:#fff;font-size:15px;font-weight:600;border:none;border-radius:0 0 var(--radius) var(--radius);cursor:pointer;font-family:inherit;transition:all 0.2s}
+    .modal-btn:active{background:var(--primary-dark)}
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="page">
+      <div class="sub-header">
+        <div class="sub-back" onclick="location.href='home.html'"><i class="ri-arrow-left-s-line"></i></div>
+        <div class="sub-title">每日一练</div>
+      </div>
+      <div class="sub-body">
+        <div class="quiz-progress">
+          <div class="quiz-progress-text">1/10</div>
+          <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:10%"></div></div>
+        </div>
+        <div class="quiz-card">
+          <div class="quiz-type"><i class="ri-error-warning-line"></i> 单选题</div>
+          <div class="quiz-question">已知集合 A={1,2,3}，B={2,3,4}，则 A∩B 等于？</div>
+          <div class="quiz-options">
+            <div class="quiz-option" onclick="selectOpt(this,0)">
+              <div class="quiz-opt-mark">A</div>
+              <div class="quiz-opt-text">{1,4}</div>
+            </div>
+            <div class="quiz-option" onclick="selectOpt(this,1)">
+              <div class="quiz-opt-mark">B</div>
+              <div class="quiz-opt-text">{2,3}</div>
+            </div>
+            <div class="quiz-option" onclick="selectOpt(this,2)">
+              <div class="quiz-opt-mark">C</div>
+              <div class="quiz-opt-text">{1,2,3,4}</div>
+            </div>
+            <div class="quiz-option" onclick="selectOpt(this,3)">
+              <div class="quiz-opt-mark">D</div>
+              <div class="quiz-opt-text">{1}</div>
+            </div>
+          </div>
+        </div>
+        <button class="quiz-btn" id="nextBtn" onclick="nextQuestion()">确定</button>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="modal-overlay" id="resultModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">答题完成</div>
+        </div>
+        <div class="modal-body">
+          <div style="font-size:14px;color:var(--text-light)">本次得分</div>
+          <div class="modal-score">80</div>
+          <div class="modal-desc">答对 8 题，用时 5 分 32 秒</div>
+        </div>
+        <button class="modal-btn" onclick="closeResultModal()">返回首页</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    let currentQuestion=0;
+    let selectedOpt=-1;
+    const correctAnswer=1;
+    function selectOpt(el,idx){
+      if(el.classList.contains('disabled'))return;
+      document.querySelectorAll('.quiz-option').forEach(o=>{
+        o.classList.remove('selected');
+      });
+      el.classList.add('selected');
+      selectedOpt=idx;
+    }
+    function nextQuestion(){
+      if(selectedOpt<0){
+        showToast('请先选择一个答案');
+        return;
+      }
+      const opts=document.querySelectorAll('.quiz-option');
+      opts.forEach(o=>o.classList.add('disabled'));
+      if(selectedOpt===correctAnswer){
+        opts[selectedOpt].classList.add('correct');
+        showToast('回答正确！');
+      }else{
+        opts[selectedOpt].classList.add('wrong');
+        opts[correctAnswer].classList.add('correct');
+        showToast('回答错误，正确答案是 B');
+      }
+      setTimeout(()=>{
+        if(currentQuestion<8){
+          currentQuestion++;
+          document.querySelector('.quiz-progress-text').textContent=(currentQuestion+1)+'/10';
+          document.querySelector('.quiz-progress-fill').style.width=((currentQuestion+1)*10)+'%';
+          opts.forEach(o=>{
+            o.classList.remove('selected','correct','wrong','disabled');
+          });
+          selectedOpt=-1;
+        }else{
+          document.getElementById('resultModal').classList.add('show');
+        }
+      },1500);
+    }
+    function closeResultModal(){
+      location.href='home.html';
+    }
+    function showToast(msg){
+      const t=document.getElementById('toast');
+      t.textContent=msg;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'),2000);
+    }
+  </script>
+</body>
+</html>

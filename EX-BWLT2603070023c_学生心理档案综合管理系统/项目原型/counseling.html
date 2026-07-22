@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>咨询预约管理 — 学生心理档案综合管理系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root{--primary:#2C6BAC;--primary-light:#4A8FD4;--primary-dark:#1A4F85;--accent:#5BB8A0;--accent2:#F0A500;--danger:#E05555;--warn:#E08A30;--bg:#F4F7FB;--sidebar-bg:#1C2D4A;--sidebar-text:#B8CCDF;--card-bg:#FFFFFF;--text-main:#1A2A3C;--text-sub:#5C7A96;--border:#DDE6F0;--shadow:0 2px 16px rgba(44,107,172,0.10);--shadow-lg:0 8px 32px rgba(44,107,172,0.16);--radius:14px;--radius-sm:8px;--font-serif:'Noto Serif SC',serif;--font-sans:'Noto Sans SC',sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--font-sans);background:var(--bg);color:var(--text-main);min-height:100vh;display:flex;overflow-x:hidden;}
+  .sidebar{width:240px;min-height:calc(100vh - 64px);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;left:0;top:64px;bottom:0;z-index:100;box-shadow:4px 0 24px rgba(0,0,0,0.15);}
+  .sidebar-logo{padding:28px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#4A8FD4,#5BB8A0);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:22px;color:#fff;}
+  .sidebar-logo h1{font-family:var(--font-serif);font-size:14px;color:#fff;font-weight:600;line-height:1.5;}
+  .sidebar-logo p{font-size:11px;color:var(--sidebar-text);margin-top:3px;opacity:0.7;}
+  .sidebar-nav{flex:1;padding:16px 0;overflow-y:auto;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--sidebar-text);text-decoration:none;font-size:13.5px;border-left:3px solid transparent;transition:all 0.2s;cursor:pointer;}
+  .nav-item i{width:20px;text-align:center;font-size:15px;opacity:0.8;}
+  .nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;border-left-color:rgba(255,255,255,0.3);}
+  .nav-item.active{background:rgba(44,107,172,0.25);color:#fff;border-left-color:var(--primary-light);font-weight:500;}
+  .nav-item.active i{opacity:1;color:var(--primary-light);}
+  .nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;}
+  .sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08);}
+  .user-info{display:flex;align-items:center;gap:10px;}
+  .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4A8FD4,#5BB8A0);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;overflow:hidden;}
+  .user-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .user-name{font-size:13px;color:#fff;font-weight:500;}
+  .user-role{font-size:11px;color:var(--sidebar-text);opacity:0.7;}
+  .main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;padding-top:64px;}
+  .topbar{height:64px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px 0 10px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:110;box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+  .topbar-brand{display:flex;align-items:center;gap:10px;font-family:var(--font-serif);font-size:18px;font-weight:700;color:var(--primary-dark);white-space:nowrap;}
+  .topbar-divider{width:1px;height:20px;background:var(--border);}
+  .topbar-title{font-size:17px;font-weight:600;color:var(--text-main);font-family:var(--font-serif);}
+  .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-sub);}
+  .breadcrumb a{color:var(--primary);text-decoration:none;}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:500;cursor:pointer;border:none;transition:all 0.2s;font-family:var(--font-sans);text-decoration:none;}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(44,107,172,0.3);}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--border);}
+  .btn-outline:hover{border-color:var(--primary);background:#F0F6FF;}
+  .btn-sm{padding:7px 14px;font-size:12.5px;}
+  .btn-green{background:var(--accent);color:#fff;}
+  .btn-red{background:var(--danger);color:#fff;}
+  .page-content{padding:28px;flex:1;}
+  .tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:500;}
+  .tag-green{background:#E6F7F3;color:#2D9C84;}.tag-orange{background:#FEF3E2;color:#C07B20;}.tag-red{background:#FDEAEA;color:#C04040;}.tag-blue{background:#E8F1FA;color:#2C6BAC;}.tag-yellow{background:#FFFBF0;color:#A07800;}
+
+  /* MAIN LAYOUT */
+  .page-layout{display:grid;grid-template-columns:1fr 340px;gap:20px;}
+  
+  /* CALENDAR */
+  .cal-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);}
+  .cal-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+  .cal-header h3{font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif);}
+  .cal-nav{display:flex;align-items:center;gap:12px;margin-left:auto;}
+  .cal-month{font-size:14px;font-weight:600;color:var(--text-main);}
+  .cal-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);background:#fff;color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all 0.2s;}
+  .cal-btn:hover{border-color:var(--primary);color:var(--primary);}
+
+  .calendar-grid{padding:20px 22px;}
+  .cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px;}
+  .cal-day-name{text-align:center;font-size:12px;color:var(--text-sub);font-weight:600;padding:4px;}
+  .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-day{height:80px;border-radius:var(--radius-sm);padding:6px 8px;cursor:pointer;transition:all 0.2s;border:1.5px solid transparent;}
+  .cal-day:hover{background:#F0F6FF;border-color:var(--primary-light);}
+  .cal-day.today{background:#EBF5FF;border-color:var(--primary);}
+  .cal-day.other-month{opacity:0.35;}
+  .day-num{font-size:13px;font-weight:500;color:var(--text-main);margin-bottom:4px;}
+  .cal-day.today .day-num{color:var(--primary);font-weight:700;}
+  .appt-dot{display:flex;align-items:center;gap:3px;margin-bottom:2px;font-size:10.5px;color:var(--text-sub);line-height:1.2;}
+  .appt-dot::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .appt-dot.type-1::before{background:#2C6BAC;}
+  .appt-dot.type-2::before{background:#E05555;}
+  .appt-dot.type-3::before{background:#5BB8A0;}
+  .appt-dot.type-4::before{background:#F0A500;}
+
+  /* QUEUE / SIDEBAR */
+  .queue-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+  .queue-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+  .queue-header h3{font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif);}
+  .queue-count{margin-left:auto;background:var(--danger);color:#fff;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;}
+
+  .appt-list{padding:10px 0;}
+  .appt-item{padding:14px 20px;border-bottom:1px solid #F0F5FA;cursor:pointer;transition:background 0.15s;}
+  .appt-item:hover{background:#F8FAFD;}
+  .appt-item:last-child{border-bottom:none;}
+  .appt-item-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .appt-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0;}
+  .appt-name{font-size:14px;font-weight:600;color:var(--text-main);}
+  .appt-class{font-size:11.5px;color:var(--text-sub);}
+  .appt-type{margin-left:auto;}
+  .appt-item-bottom{display:flex;align-items:center;gap:8px;}
+  .appt-time{font-size:12px;color:var(--text-sub);display:flex;align-items:center;gap:4px;}
+  .appt-counselor{font-size:12px;color:var(--text-sub);margin-left:auto;display:flex;align-items:center;gap:4px;}
+  .appt-actions{display:flex;gap:6px;padding:10px 20px;background:#F8FAFD;border-top:1px solid var(--border);}
+
+  /* SELECTED DETAIL */
+  .detail-panel{padding:20px;}
+  .detail-title{font-size:15px;font-weight:600;margin-bottom:14px;color:var(--text-main);font-family:var(--font-serif);}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .detail-item label{font-size:11.5px;color:var(--text-sub);display:block;margin-bottom:3px;}
+  .detail-item span{font-size:13.5px;font-weight:500;color:var(--text-main);}
+  .notes-area{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--text-sub);line-height:1.6;background:#FAFCFF;min-height:80px;}
+  .topbar-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all 0.2s}
+  .topbar-btn:hover{background:var(--border);color:var(--primary)}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-nav">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>系统总览</span></a>
+    <a href="student-files.html" class="nav-item"><i class="fa-solid fa-folder-open"></i><span>学生心理档案</span></a>
+    <a href="assessment.html" class="nav-item"><i class="fa-solid fa-clipboard-check"></i><span>心理测评管理</span></a>
+    <a href="counseling.html" class="nav-item active"><i class="fa-solid fa-comments"></i><span>咨询预约管理</span><span class="nav-badge">5</span></a>
+    <a href="crisis.html" class="nav-item"><i class="fa-solid fa-triangle-exclamation"></i><span>危机预警干预</span><span class="nav-badge">3</span></a>
+    <a href="group-activities.html" class="nav-item"><i class="fa-solid fa-people-group"></i><span>团体活动管理</span></a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar"><img src="https://i04piccdn.sogoucdn.com/e19a983de5cef917" alt="孙家祺"></div>
+      <div><div class="user-name">孙家祺</div><div class="user-role">管理员</div></div>
+    </div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-brand"><span>学生心理档案综合管理系统</span></div>
+    <div class="topbar-divider"></div>
+    <div>
+      <div class="topbar-title">咨询预约管理</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-outline btn-sm" onclick="toggleView()"><i class="fa-solid fa-list"></i> 列表视图</button>
+      <button class="btn btn-primary" onclick="openNewApptModal()"><i class="fa-solid fa-calendar-plus"></i> 新建预约</button>
+      <div style="position:relative;margin-left:8px">
+        <div class="icon-btn" onclick="toggleNotificationDropdown()" style="position:relative"><i class="fa-regular fa-bell"></i><span class="dot"></span></div>
+        <div id="notificationDropdown" style="display:none;position:absolute;top:48px;right:0;width:360px;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(44,107,172,0.2);border:1px solid var(--border);z-index:1000;overflow:hidden">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:14px;font-weight:600;color:var(--text-dark)">通知中心</div>
+            <span style="font-size:11px;color:var(--accent);cursor:pointer">全部已读</span>
+          </div>
+          <div style="max-height:320px;overflow-y:auto">
+            <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start;background:#FFF9F0" onclick="markAsRead(1)">
+              <div style="width:36px;height:36px;border-radius:50%;background:#FDEAEA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-triangle-exclamation" style="color:#C04040;font-size:14px"></i></div>
+              <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">一级危机预警</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">林雨桐测评显示重度抑郁倾向，请立即处理</div><div style="font-size:11px;color:#999;margin-top:4px">10分钟前</div></div>
+            </div>
+            <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start;background:#F8FAFD" onclick="markAsRead(2)">
+              <div style="width:36px;height:36px;border-radius:50%;background:#E8F1FA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-clipboard-check" style="color:#2C6BAC;font-size:14px"></i></div>
+              <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">测评任务完成</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">高一新生适应性测评已完成，523人已提交</div><div style="font-size:11px;color:#999;margin-top:4px">30分钟前</div></div>
+            </div>
+            <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start" onclick="markAsRead(3)">
+              <div style="width:36px;height:36px;border-radius:50%;background:#E6F7F3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-calendar-check" style="color:#2D9C84;font-size:14px"></i></div>
+              <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">咨询预约提醒</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">张明轩的咨询预约将于明天10:00开始</div><div style="font-size:11px;color:#999;margin-top:4px">1小时前</div></div>
+            </div>
+            <div style="padding:12px 16px;display:flex;gap:12px;align-items:flex-start" onclick="markAsRead(4)">
+              <div style="width:36px;height:36px;border-radius:50%;background:#FEF3E2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-clock" style="color:#C07B20;font-size:14px"></i></div>
+              <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">待处理预警</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">您有3条危机预警待处理，请及时跟进</div><div style="font-size:11px;color:#999;margin-top:4px">2小时前</div></div>
+            </div>
+          </div>
+          <div style="padding:10px 16px;border-top:1px solid var(--border);text-align:center"><span style="font-size:12px;color:var(--primary);cursor:pointer">查看全部通知</span></div>
+        </div>
+      </div>
+      <button class="topbar-btn" id="loginBtn" onclick="goToLogin()" style="margin-left:8px">
+        <i class="fa-solid fa-right-to-bracket"></i>
+      </button>
+      <button class="topbar-btn" id="logoutBtn" onclick="logout()" style="display:none;margin-left:8px">
+        <i class="fa-solid fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="page-layout">
+      <!-- CALENDAR -->
+      <div class="cal-card">
+        <div class="cal-header">
+          <div style="width:32px;height:32px;background:#E8F1FA;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:15px;"><i class="fa-solid fa-calendar-days"></i></div>
+          <h3>咨询日历</h3>
+          <div style="display:flex;gap:12px;margin-left:20px;font-size:12px;color:var(--text-sub);">
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2C6BAC;margin-right:4px;"></span>个体咨询</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E05555;margin-right:4px;"></span>危机干预</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#5BB8A0;margin-right:4px;"></span>随访跟进</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#F0A500;margin-right:4px;"></span>家长咨询</span>
+          </div>
+          <div class="cal-nav">
+            <div class="cal-btn"><i class="fa-solid fa-chevron-left"></i></div>
+            <div class="cal-month">2026年 3月</div>
+            <div class="cal-btn"><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+        </div>
+
+        <div class="calendar-grid">
+          <div class="cal-days-header">
+            <div class="cal-day-name">日</div><div class="cal-day-name">一</div><div class="cal-day-name">二</div>
+            <div class="cal-day-name">三</div><div class="cal-day-name">四</div><div class="cal-day-name">五</div><div class="cal-day-name">六</div>
+          </div>
+          <div class="cal-days" id="calDays"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <!-- Pending -->
+        <div class="queue-card">
+          <div class="queue-header">
+            <div style="width:28px;height:28px;background:#FDEAEA;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--danger);font-size:13px;"><i class="fa-solid fa-hourglass-half"></i></div>
+            <h3>待确认预约</h3>
+            <div class="queue-count">5</div>
+          </div>
+          <div class="appt-list">
+            <div class="appt-item">
+              <div class="appt-item-top">
+                <img src="https://img95.699pic.com/photo/60070/9246.jpg_wh860.jpg" class="appt-avatar" style="border-radius:50%;object-fit:cover;width:40px;height:40px;">
+                <div><div class="appt-name">林雨桐</div><div class="appt-class">高二(5)班</div></div>
+                <div class="appt-type"><span class="tag tag-red">危机干预</span></div>
+              </div>
+              <div class="appt-item-bottom">
+                <div class="appt-time"><i class="fa-regular fa-clock"></i> 今天 14:00–15:00</div>
+                <div class="appt-counselor"><i class="fa-solid fa-user"></i> 李老师</div>
+              </div>
+            </div>
+            <div class="appt-actions">
+              <button class="btn btn-green btn-sm" style="flex:1"><i class="fa-solid fa-check"></i> 确认</button>
+              <button class="btn btn-outline btn-sm" style="flex:1" onclick="openRescheduleModal(1)"><i class="fa-solid fa-calendar-xmark"></i> 改期</button>
+            </div>
+
+            <div class="appt-item">
+              <div class="appt-item-top">
+                <img src="https://tse1.mm.bing.net/th/id/OIP.4MnXVEX8r83UhILnBAGYnAHaE7?rs=1&pid=ImgDetMain&o=7&rm=3" class="appt-avatar" style="border-radius:50%;object-fit:cover;width:40px;height:40px;">
+                <div><div class="appt-name">张明轩</div><div class="appt-class">高三(2)班</div></div>
+                <div class="appt-type"><span class="tag tag-blue">个体咨询</span></div>
+              </div>
+              <div class="appt-item-bottom">
+                <div class="appt-time"><i class="fa-regular fa-clock"></i> 明天 10:00–11:00</div>
+                <div class="appt-counselor"><i class="fa-solid fa-user"></i> 王老师</div>
+              </div>
+            </div>
+            <div class="appt-actions">
+              <button class="btn btn-green btn-sm" style="flex:1"><i class="fa-solid fa-check"></i> 确认</button>
+              <button class="btn btn-outline btn-sm" style="flex:1" onclick="openRescheduleModal(2)"><i class="fa-solid fa-calendar-xmark"></i> 改期</button>
+            </div>
+
+            <div class="appt-item">
+              <div class="appt-item-top">
+                <img src="https://img95.699pic.com/photo/60077/5399.jpg_wh860.jpg" class="appt-avatar" style="border-radius:50%;object-fit:cover;width:40px;height:40px;">
+                <div><div class="appt-name">陈家亮（家长）</div><div class="appt-class">初三(1)班</div></div>
+                <div class="appt-type"><span class="tag tag-yellow">家长咨询</span></div>
+              </div>
+              <div class="appt-item-bottom">
+                <div class="appt-time"><i class="fa-regular fa-clock"></i> 03-18 16:00</div>
+                <div class="appt-counselor"><i class="fa-solid fa-user"></i> 周老师</div>
+              </div>
+            </div>
+            <div class="appt-actions">
+              <button class="btn btn-green btn-sm" style="flex:1"><i class="fa-solid fa-check"></i> 确认</button>
+              <button class="btn btn-outline btn-sm" style="flex:1" onclick="openRescheduleModal(3)"><i class="fa-solid fa-calendar-xmark"></i> 改期</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today -->
+        <div class="queue-card">
+          <div class="queue-header">
+            <div style="width:28px;height:28px;background:#E6F7F3;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:13px;"><i class="fa-solid fa-calendar-check"></i></div>
+            <h3>今日已排咨询</h3>
+            <span style="margin-left:auto;font-size:12px;color:var(--text-sub);">3 场</span>
+          </div>
+          <div style="padding:10px 14px;display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#F8FAFD;border-radius:8px;border-left:3px solid var(--primary);">
+              <img src="https://img95.699pic.com/photo/50053/8365.jpg_wh860.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+              <div style="flex:1">
+                <div style="font-size:13.5px;font-weight:500;color:var(--text-main);">赵文静</div>
+                <div style="font-size:11.5px;color:var(--text-sub);">初三(2)班 · 持续焦虑</div>
+              </div>
+              <span class="tag tag-green" style="font-size:11px;">已完成</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#F8FAFD;border-radius:8px;border-left:3px solid var(--accent2);">
+              <img src="https://img95.699pic.com/photo/60070/9246.jpg_wh860.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+              <div style="flex:1">
+                <div style="font-size:13.5px;font-weight:500;color:var(--text-main);">林雨桐</div>
+                <div style="font-size:11.5px;color:var(--text-sub);">高二(5)班 · 危机干预</div>
+              </div>
+              <span class="tag tag-orange" style="font-size:11px;">即将开始</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#F8FAFD;border-radius:8px;border-left:3px solid #DDE6F0;">
+              <img src="https://imgs.699pic.com/images/601/064/841.jpg!detail.v1" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+              <div style="flex:1">
+                <div style="font-size:13.5px;font-weight:500;color:var(--text-main);">孙艺涵</div>
+                <div style="font-size:11.5px;color:var(--text-sub);">初二(3)班 · 情绪调节</div>
+              </div>
+              <span class="tag tag-blue" style="font-size:11px;">待开始</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Simple calendar generator
+const calDays = document.getElementById('calDays');
+const year = 2026, month = 3; // March 2026
+const firstDay = new Date(year, month-1, 1).getDay(); // 0=Sun
+const daysInMonth = new Date(year, month, 0).getDate();
+const prevDays = new Date(year, month-1, 0).getDate();
+
+const appts = {
+  3: [{type:1,text:'张明轩'},{type:3,text:'随访'}],
+  5: [{type:1,text:'王晓雯'}],
+  10: [{type:2,text:'危机评估'},{type:1,text:'陈思远'}],
+  12: [{type:4,text:'家长会'}],
+  14: [{type:1,text:'刘浩然'},{type:3,text:'2次随访'}],
+  16: [{type:2,text:'林雨桐'},{type:1,text:'张明轩'},{type:3,text:'孙艺涵'}],
+  18: [{type:4,text:'陈家长'},{type:1,text:'高磊'}],
+  20: [{type:1,text:'2次咨询'}],
+  23: [{type:1,text:'王晓雯'},{type:2,text:'预警复查'}],
+  25: [{type:3,text:'赵文静'},{type:1,text:'刘浩然'}],
+  28: [{type:1,text:'3次咨询'}],
+};
+
+const typeClass = ['','type-1','type-2','type-3','type-4'];
+
+let html = '';
+// Prev month days
+for(let i = firstDay - 1; i >= 0; i--) {
+  html += `<div class="cal-day other-month"><div class="day-num">${prevDays - i}</div></div>`;
+}
+// This month
+for(let d = 1; d <= daysInMonth; d++) {
+  const isToday = d === 16;
+  const dayAppts = appts[d] || [];
+  let dotHtml = dayAppts.slice(0, 3).map(a => 
+    `<div class="appt-dot ${typeClass[a.type]}">${a.text}</div>`
+  ).join('');
+  if(dayAppts.length > 3) dotHtml += `<div style="font-size:9px;color:var(--text-sub)">+${dayAppts.length-3}更多</div>`;
+  html += `<div class="cal-day${isToday?' today':''}"><div class="day-num">${d}</div>${dotHtml}</div>`;
+}
+// Next month
+const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+for(let d = 1; d <= totalCells - firstDay - daysInMonth; d++) {
+  html += `<div class="cal-day other-month"><div class="day-num">${d}</div></div>`;
+}
+calDays.innerHTML = html;
+</script>
+
+<script>
+function checkLoginStatus(){const l=document.getElementById('loginBtn'),o=document.getElementById('logoutBtn');sessionStorage.getItem('isLoggedIn')==='true'?(l.style.display='none',o.style.display='flex'):(l.style.display='flex',o.style.display='none')}
+function goToLogin(){window.location.href='login.html'}
+function logout(){sessionStorage.removeItem('isLoggedIn');sessionStorage.removeItem('userName');sessionStorage.removeItem('userRole');checkLoginStatus()}
+checkLoginStatus();
+</script>
+
+<div class="modal-overlay" id="newApptModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header" id="newApptModalHeader" style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)"><i class="fa-solid fa-calendar-plus"></i> 新建预约</div>
+      <button class="modal-close" onclick="closeNewApptModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">学生姓名</label><input type="text" class="form-input" placeholder="搜索学生姓名..." style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">预约日期</label><input type="date" class="form-input" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">预约时间</label><input type="time" class="form-input" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">咨询类型</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>个体咨询</option><option>家庭咨询</option><option>危机干预</option><option>随访跟进</option></select></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">咨询师</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>李老师</option><option>王老师</option><option>周老师</option></select></div>
+      </div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">预约地点</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>心理辅导室 201</option><option>心理辅导室 202</option><option>心理辅导室 203</option><option>心理活动室A</option></select></div>
+      <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">备注说明</label><textarea placeholder="添加预约备注..." style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;font-size:13px;font-family:var(--font-sans)"></textarea></div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
+      <button onclick="closeNewApptModal()" class="btn btn-outline btn-sm" style="height:34px">取消</button>
+      <button onclick="saveNewAppt()" class="btn btn-primary btn-sm" style="height:34px"><i class="fa-solid fa-check"></i> 确认预约</button>
+    </div>
+  </div>
+</div>
+
+<style>.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.3);display:none;align-items:center;justify-content:center;z-index:1000}.modal-overlay.show{display:flex}.modal{background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(44,107,172,0.16);position:fixed;top:50%;left:50%;transform:translate(-50%,-50%)}</style>
+
+<div class="modal-overlay" id="rescheduleModal">
+  <div class="modal" style="max-width:480px">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)"><i class="fa-solid fa-calendar-xmark"></i> 改期预约</div>
+      <button onclick="closeRescheduleModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="padding:20px">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px;background:#F8FAFD;border-radius:10px;margin-bottom:16px">
+        <img id="rs-avatar" src="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
+        <div>
+          <div id="rs-name" style="font-size:15px;font-weight:600;color:var(--text-dark)"></div>
+          <div id="rs-info" style="font-size:12px;color:var(--text-sub);margin-top:2px"></div>
+        </div>
+        <div id="rs-type" style="margin-left:auto"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">原预约时间</label>
+          <div id="rs-original" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;display:flex;align-items:center;font-size:13px;color:var(--text-sub);background:#f5f5f5"></div>
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">咨询师</label>
+          <div id="rs-counselor" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;display:flex;align-items:center;font-size:13px;color:var(--text-sub);background:#f5f5f5"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--accent);margin-bottom:6px">新预约日期 <span style="color:#E05555">*</span></label>
+          <input type="date" id="rs-new-date" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%">
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--accent);margin-bottom:6px">新预约时间 <span style="color:#E05555">*</span></label>
+          <input type="time" id="rs-new-time" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%">
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">改期原因</label>
+        <select id="rs-reason" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff">
+          <option>学生时间冲突</option>
+          <option>咨询师时间调整</option>
+          <option>紧急情况</option>
+          <option>其他原因</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">备注说明</label>
+        <textarea id="rs-note" placeholder="填写改期备注..." style="width:100%;min-height:60px;border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;font-size:13px;font-family:var(--font-sans)"></textarea>
+      </div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
+      <button onclick="closeRescheduleModal()" class="btn btn-outline btn-sm" style="height:34px">取消</button>
+      <button onclick="saveReschedule()" class="btn btn-primary btn-sm" style="height:34px"><i class="fa-solid fa-check"></i> 确认改期</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openNewApptModal(){document.getElementById('newApptModal').classList.add('show')}
+function closeNewApptModal(){document.getElementById('newApptModal').classList.remove('show')}
+function saveNewAppt(){closeNewApptModal();alert('预约创建成功')}
+function toggleView(){alert('切换到列表视图')}
+function toggleNotificationDropdown(){const d=document.getElementById('notificationDropdown');d.style.display=d.style.display==='none'?'block':'none'}
+function markAsRead(id){alert('标记通知'+id+'为已读')}
+document.addEventListener('click',function(e){const d=document.getElementById('notificationDropdown');if(!e.target.closest('.icon-btn')&&d&&e.target.closest('.topbar-right')!==e.target.closest('.topbar-right')){d.style.display='none'}});
+
+const apptData = {
+  1: {name:'林雨桐',cls:'高二(5)班',type:'危机干预',typeTag:'tag-red',time:'今天 14:00–15:00',counselor:'李老师',avatar:'https://img95.699pic.com/photo/60070/9246.jpg_wh860.jpg'},
+  2: {name:'张明轩',cls:'高三(2)班',type:'个体咨询',typeTag:'tag-blue',time:'明天 10:00–11:00',counselor:'王老师',avatar:'https://tse1.mm.bing.net/th/id/OIP.4MnXVEX8r83UhILnBAGYnAHaE7?rs=1&pid=ImgDetMain&o=7&rm=3'},
+  3: {name:'陈家亮（家长）',cls:'初三(1)班',type:'家长咨询',typeTag:'tag-yellow',time:'03-18 16:00',counselor:'周老师',avatar:'https://img95.699pic.com/photo/60077/5399.jpg_wh860.jpg'}
+};
+
+function openRescheduleModal(id) {
+  const d = apptData[id] || apptData[1];
+  document.getElementById('rs-avatar').src = d.avatar;
+  document.getElementById('rs-name').textContent = d.name;
+  document.getElementById('rs-info').textContent = d.cls + ' · ' + d.time;
+  document.getElementById('rs-type').innerHTML = '<span class="tag ' + d.typeTag + '">' + d.type + '</span>';
+  document.getElementById('rs-original').textContent = d.time;
+  document.getElementById('rs-counselor').textContent = d.counselor;
+  document.getElementById('rs-new-date').value = '';
+  document.getElementById('rs-new-time').value = '';
+  document.getElementById('rs-note').value = '';
+  document.getElementById('rescheduleModal').dataset.apptId = id;
+  document.getElementById('rescheduleModal').classList.add('show');
+}
+function closeRescheduleModal(){document.getElementById('rescheduleModal').classList.remove('show')}
+function saveReschedule(){
+  const newDate = document.getElementById('rs-new-date').value;
+  const newTime = document.getElementById('rs-new-time').value;
+  if(!newDate || !newTime){alert('请选择新的预约日期和时间');return;}
+  closeRescheduleModal();
+  alert('改期成功！\\n新的预约时间：' + newDate + ' ' + newTime);
+}
+</script>
+</body>
+</html>

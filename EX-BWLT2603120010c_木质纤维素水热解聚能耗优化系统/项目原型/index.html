@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>主控制面板 - 木质纤维素水热解聚能耗优化系统</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial;
+        }
+        .sidebar-item-active {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+        }
+        .sidebar-item:hover:not(.sidebar-item-active) {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+        }
+        .glass-card {
+            background: rgba(28, 28, 28, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .mac-traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .content-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .content-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        .btn-active {
+            background: #3b82f6;
+        }
+        .btn-danger {
+            background: #dc2626;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+            transform: translateY(-1px);
+        }
+        .btn-danger:active {
+            transform: scale(0.98);
+        }
+        .btn-success {
+            background: #16a34a;
+            transition: all 0.2s;
+        }
+        .btn-success:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+        }
+        .btn-warning {
+            background: #d97706;
+            transition: all 0.2s;
+        }
+        .btn-warning:hover {
+            background: #b45309;
+            transform: translateY(-1px);
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: modalIn 0.2s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .modal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .hover-lift {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .rotate-animation {
+            animation: rotate3d 8s linear infinite;
+        }
+        @keyframes rotate3d {
+            from { transform: perspective(500px) rotateY(0deg); }
+            to { transform: perspective(500px) rotateY(360deg); }
+        }
+        .view-container {
+            position: relative;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .equipment {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.3s;
+        }
+        .pipe {
+            position: absolute;
+            background: linear-gradient(90deg, #4a5568, #718096, #4a5568);
+            transition: opacity 0.3s;
+        }
+        .pipe-h {
+            height: 6px;
+            border-radius: 3px;
+        }
+        .pipe-v {
+            width: 6px;
+            border-radius: 3px;
+        }
+        .instrument {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: opacity 0.3s;
+        }
+        .fullscreen-mode {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: none !important;
+            z-index: 9999 !important;
+            border-radius: 0 !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-black">
+    <div id="modal-container"></div>
+    <div class="w-[1280px] max-w-[95vw] h-[900px] max-h-[90vh] flex overflow-hidden rounded-[24px] border border-white/10 bg-[#050505]">
+        <aside class="w-[240px] h-full flex flex-col p-4 bg-[#1e1e1e] border-r border-white/5">
+            <div class="flex gap-2 mb-8 px-2">
+                <div class="mac-traffic-light bg-[#ff5f56]"></div>
+                <div class="mac-traffic-light bg-[#ffbd2e]"></div>
+                <div class="mac-traffic-light bg-[#27c93f]"></div>
+            </div>
+            <div class="px-2 mb-4">
+                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest">核心任务</p>
+            </div>
+            <nav class="flex-1 space-y-1">
+                <a class="sidebar-item sidebar-item-active flex items-center gap-3 px-3 py-2 text-[13px]" href="index.html">
+                    <i class="fa-solid fa-table-cells text-blue-400"></i>
+                    主控制面板
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="settings.html">
+                    <i class="fa-solid fa-gear"></i>
+                    工艺参数设置
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="monitor.html">
+                    <i class="fa-solid fa-chart-line"></i>
+                    实时监测仪表盘
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="energy.html">
+                    <i class="fa-solid fa-leaf"></i>
+                    能耗优化分析
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2 text-[13px] text-gray-400 hover:text-white transition-colors" href="data.html">
+                    <i class="fa-solid fa-database"></i>
+                    历史数据报表
+                </a>
+            </nav>
+            <div class="mt-auto p-3 glass-card rounded-xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full overflow-hidden">
+                        <img src="https://i01piccdn.sogoucdn.com/9f0c81ee016b30c7" alt="郑鹏" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium">郑鹏</p>
+                        <p class="text-[10px] text-gray-500">在线 (已授权)</p>
+                    </div>
+                    <a class="ml-auto text-gray-500 hover:text-red-400 transition-colors" href="login.html">
+                        <i class="fa-solid fa-door-open"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        <main class="flex-1 h-full flex flex-col bg-[#121212] overflow-hidden">
+            <header class="h-16 flex items-center justify-between px-8 border-b border-white/5 bg-[#1e1e1e]/50">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-house text-blue-500"></i>
+                    <span>木质纤维素水热解聚能耗优化系统</span>
+                </h2>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded-full text-xs">
+                        <span class="pulse-dot block w-2 h-2 bg-green-400 rounded-full"></span>
+                        系统健康度: 98.4%
+                    </div>
+                    <div class="text-gray-400 text-sm" id="current-time"></div>
+                </div>
+            </header>
+            <div class="flex-1 p-6 grid grid-cols-12 gap-6 overflow-y-auto content-scroll">
+                <div class="col-span-8 glass-card rounded-[20px] p-6 relative overflow-hidden flex flex-col min-h-[360px]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-medium text-lg">实时工艺流场图</h3>
+                        <div class="flex gap-2">
+                            <button onclick="showModal('3d-view')" class="px-3 py-1 bg-white/10 rounded-md text-xs hover:bg-white/20 transition-colors">
+                                <i class="fa-solid fa-cube mr-1"></i>3D 视图
+                            </button>
+                            <button onclick="showModal('piping-view')" class="px-3 py-1 bg-blue-600 rounded-md text-xs">
+                                <i class="fa-solid fa-project-diagram mr-1"></i>Piping 视图
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex-1 flex items-center justify-center border border-white/5 rounded-xl bg-black/40 relative">
+                        <img alt="Hydrothermal liquefaction system diagram" class="w-full h-full object-contain opacity-50" src="https://modao.cc/agent-py/media/generated_images/2026-03-20/7a27d1ff2dc040bc933a0871ebc88a5d.jpg" />
+                        <div class="absolute top-10 left-10 p-4 border-l-2 border-orange-500 bg-orange-500/5">
+                            <p class="text-[10px] text-orange-400 uppercase">反应器 A-01</p>
+                            <p class="text-2xl font-light">117.5 ℃</p>
+                            <p class="text-xs text-gray-500">压力: 12.8 MPa</p>
+                        </div>
+                        <div class="absolute bottom-10 right-10 p-4 border-l-2 border-blue-500 bg-blue-500/5">
+                            <p class="text-[10px] text-blue-400 uppercase">多级热交换</p>
+                            <p class="text-2xl font-light">84.2 ℃</p>
+                            <p class="text-xs text-gray-500">能效比: 3.4 COP</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-span-4 space-y-6 h-full flex flex-col">
+                    <div class="glass-card rounded-[20px] p-6 hover-lift">
+                        <h3 class="font-medium mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-yellow-500"></i>
+                            温压解耦控制状态
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">解耦模式</span>
+                                <span class="text-xs px-2 py-0.5 bg-blue-600 rounded text-white">低温运行 (清华技术)</span>
+                            </div>
+                            <div class="h-[1px] bg-white/5"></div>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <p class="text-[10px] text-gray-500 uppercase">加热控制</p>
+                                    <p class="text-xl">稳态控制中</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[10px] text-gray-500 uppercase">响应延迟</p>
+                                    <p class="text-xl">120ms</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-[20px] p-6 hover-lift">
+                        <h3 class="font-medium mb-4">实时能效指标</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 bg-white/5 rounded-xl border border-white/5">
+                                <p class="text-[10px] text-gray-400 uppercase">转化率估算</p>
+                                <p class="text-2xl font-light text-blue-400">86.4%</p>
+                            </div>
+                            <div class="p-3 bg-white/5 rounded-xl border border-white/5">
+                                <p class="text-[10px] text-gray-400 uppercase">单位能耗</p>
+                                <p class="text-2xl font-light text-green-400">0.42</p>
+                                <p class="text-[10px] text-gray-500">kWh/kg</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-red-900/20 border border-red-500/30 rounded-[20px] p-6 text-red-100 font-medium flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-shield-halved text-2xl"></i>
+                            <span>系统安全锁定位</span>
+                        </div>
+                        <button onclick="showModal('emergency')" class="btn-danger px-4 py-1.5 rounded-lg text-sm shadow-lg">
+                            <i class="fa-solid fa-triangle-exclamation mr-1"></i>紧急切断
+                        </button>
+                    </div>
+                </div>
+                <div class="col-span-12 glass-card rounded-[20px] p-6 overflow-hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-medium text-lg">系统操作日志</h3>
+                        <button onclick="showModal('full-log')" class="text-blue-400 text-sm hover:underline">
+                            <i class="fa-solid fa-list mr-1"></i>查看完整日志
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 text-xs">
+                            <span class="w-16 text-gray-500">14:32:05</span>
+                            <span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">系统</span>
+                            <span class="flex-1">自动加载匹配模型：[玉米秸秆_低温_V2] 已激活。</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-xs font-medium">
+                            <span class="w-16 text-gray-500">14:28:12</span>
+                            <span class="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded">用户</span>
+                            <span class="flex-1">郑鹏 执行"阶段预热"指令，热量回收泵启动。</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-xs">
+                            <span class="w-16 text-gray-500">14:15:00</span>
+                            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">系统</span>
+                            <span class="flex-1">传感器自检通过。压力密封性测试：0.2MPa/h (正常)。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let isAutoRotating = false;
+        let isFullscreen = false;
+        let showEquipment = true;
+        let showPipes = true;
+        let showInstruments = true;
+
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).replace(/\//g, '.');
+            document.getElementById('current-time').textContent = timeStr;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        function showModal(type) {
+            const container = document.getElementById('modal-container');
+            let content = '';
+            if (type === '3d-view') {
+                isAutoRotating = false;
+                isFullscreen = false;
+                content = `
+                    <div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                        <div id="modal-3d" class="modal-content glass-card rounded-2xl w-[700px] max-w-[90vw] overflow-hidden" onclick="event.stopPropagation()">
+                            <div class="modal-header">
+                                <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                                <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                                <div class="modal-dot bg-[#27c93f]"></div>
+                                <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-cube text-blue-400 mr-2"></i>3D 工艺流场视图</h3>
+                            </div>
+                            <div class="p-4">
+                                <div id="view-3d-container" class="view-container h-[400px] flex items-center justify-center">
+                                    <div id="model-3d" class="relative" style="width: 300px; height: 280px;">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <div class="text-center">
+                                                <i class="fa-solid fa-cube text-8xl text-blue-500/50 mb-4"></i>
+                                                <p class="text-gray-400 text-sm">水热解聚反应系统 3D 模型</p>
+                                                <p class="text-gray-500 text-xs mt-1">拖拽旋转 | 滚轮缩放</p>
+                                            </div>
+                                        </div>
+                                        <div class="absolute top-4 left-1/2 -translate-x-1/2 bg-orange-500/20 border border-orange-500/50 rounded-lg p-2 px-3">
+                                            <span class="text-orange-400 text-xs">反应器 A-01</span>
+                                        </div>
+                                        <div class="absolute bottom-16 left-4 bg-blue-500/20 border border-blue-500/50 rounded-lg p-2 px-3">
+                                            <span class="text-blue-400 text-xs">热交换器</span>
+                                        </div>
+                                        <div class="absolute top-20 right-4 bg-green-500/20 border border-green-500/50 rounded-lg p-2 px-3">
+                                            <span class="text-green-400 text-xs">进料系统</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-center gap-3 mt-4">
+                                    <button id="btn-rotate" onclick="toggleAutoRotate()" class="btn-primary px-4 py-2 rounded-lg text-sm">
+                                        <i class="fa-solid fa-rotate mr-1"></i>自动旋转
+                                    </button>
+                                    <button id="btn-fullscreen" onclick="toggleFullscreen('3d')" class="btn-primary px-4 py-2 rounded-lg text-sm">
+                                        <i class="fa-solid fa-expand mr-1"></i>全屏
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (type === 'piping-view') {
+                showEquipment = true;
+                showPipes = true;
+                showInstruments = true;
+                content = `
+                    <div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                        <div id="modal-piping" class="modal-content glass-card rounded-2xl w-[800px] max-w-[95vw] overflow-hidden" onclick="event.stopPropagation()">
+                            <div class="modal-header">
+                                <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                                <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                                <div class="modal-dot bg-[#27c93f]"></div>
+                                <h3 class="text-lg font-medium text-center flex-1 pr-12"><i class="fa-solid fa-project-diagram text-green-400 mr-2"></i>Piping & Instrumentation 视图</h3>
+                            </div>
+                            <div class="p-4">
+                                <div id="view-piping-container" class="view-container h-[380px] relative">
+                                    <div id="equipment-layer" class="absolute inset-0">
+                                        <div class="equipment" style="top: 30px; left: 50px;">
+                                            <div class="w-16 h-16 bg-blue-500/30 border-2 border-blue-400 rounded-lg flex items-center justify-center">
+                                                <i class="fa-solid fa-fire-flame-curved text-2xl text-blue-400"></i>
+                                            </div>
+                                            <span class="text-blue-400 text-xs mt-1">反应器 R-01</span>
+                                        </div>
+                                        <div class="equipment" style="top: 30px; left: 250px;">
+                                            <div class="w-16 h-16 bg-orange-500/30 border-2 border-orange-400 rounded-lg flex items-center justify-center">
+                                                <i class="fa-solid fa-temperature-half text-2xl text-orange-400"></i>
+                                            </div>
+                                            <span class="text-orange-400 text-xs mt-1">预热器 H-01</span>
+                                        </div>
+                                        <div class="equipment" style="top: 30px; right: 80px;">
+                                            <div class="w-16 h-16 bg-green-500/30 border-2 border-green-400 rounded-lg flex items-center justify-center">
+                                                <i class="fa-solid fa-wind text-2xl text-green-400"></i>
+                                            </div>
+                                            <span class="text-green-400 text-xs mt-1">换热器 E-01</span>
+                                        </div>
+                                        <div class="equipment" style="bottom: 40px; left: 50px;">
+                                            <div class="w-16 h-16 bg-purple-500/30 border-2 border-purple-400 rounded-lg flex items-center justify-center">
+                                                <i class="fa-solid fa-droplet text-2xl text-purple-400"></i>
+                                            </div>
+                                            <span class="text-purple-400 text-xs mt-1">分离器 S-01</span>
+                                        </div>
+                                        <div class="equipment" style="bottom: 40px; right: 50px;">
+                                            <div class="w-16 h-16 bg-cyan-500/30 border-2 border-cyan-400 rounded-lg flex items-center justify-center">
+                                                <i class="fa-solid fa-tint text-2xl text-cyan-400"></i>
+                                            </div>
+                                            <span class="text-cyan-400 text-xs mt-1">产物罐 T-01</span>
+                                        </div>
+                                    </div>
+                                    <div id="pipe-layer" class="absolute inset-0">
+                                        <div class="pipe pipe-h" style="top: 58px; left: 106px; width: 144px;"></div>
+                                        <div class="pipe pipe-h" style="top: 58px; width: 60px; left: 266px;"></div>
+                                        <div class="pipe pipe-v" style="top: 58px; height: 40px; right: 120px;"></div>
+                                        <div class="pipe pipe-h" style="bottom: 82px; width: 60px; left: 106px;"></div>
+                                        <div class="pipe pipe-v" style="bottom: 82px; height: 60px; left: 106px;"></div>
+                                        <div class="pipe pipe-h" style="bottom: 98px; left: 122px; width: 340px;"></div>
+                                        <div class="pipe pipe-v" style="bottom: 98px; height: 60px; right: 122px;"></div>
+                                    </div>
+                                    <div id="instrument-layer" class="absolute inset-0">
+                                        <div class="instrument" style="top: 20px; left: 80px;">
+                                            <i class="fa-solid fa-gauge-high text-orange-400 mr-1"></i>T:117.5℃
+                                        </div>
+                                        <div class="instrument" style="top: 20px; left: 280px;">
+                                            <i class="fa-solid fa-gauge text-orange-400 mr-1"></i>P:12.8MPa
+                                        </div>
+                                        <div class="instrument" style="top: 20px; right: 60px;">
+                                            <i class="fa-solid fa-chart-line text-green-400 mr-1"></i>COP:3.4
+                                        </div>
+                                        <div class="instrument" style="bottom: 30px; left: 80px;">
+                                            <i class="fa-solid fa-droplet text-purple-400 mr-1"></i>L:72%
+                                        </div>
+                                        <div class="instrument" style="bottom: 30px; right: 40px;">
+                                            <i class="fa-solid fa-flask text-cyan-400 mr-1"></i>F:125kg/h
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 mt-4 justify-center flex-wrap">
+                                    <button id="btn-equipment" onclick="toggleLayer('equipment')" class="btn-primary px-3 py-1.5 rounded text-xs">
+                                        <i class="fa-solid fa-eye mr-1"></i>显示设备
+                                    </button>
+                                    <button id="btn-pipes" onclick="toggleLayer('pipes')" class="btn-primary px-3 py-1.5 rounded text-xs">
+                                        <i class="fa-solid fa-eye-dropper mr-1"></i>显示管道
+                                    </button>
+                                    <button id="btn-instruments" onclick="toggleLayer('instruments')" class="btn-primary px-3 py-1.5 rounded text-xs">
+                                        <i class="fa-solid fa-temperature-half mr-1"></i>显示仪表
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (type === 'full-log') {
+                content = `
+                    <div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                        <div class="modal-content glass-card rounded-2xl w-[650px] max-w-[90vw] max-h-[80vh] overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+                            <div class="modal-header">
+                                <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                                <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                                <div class="modal-dot bg-[#27c93f]"></div>
+                                <h3 class="text-lg font-medium text-center flex-1 pr-12">完整系统操作日志</h3>
+                            </div>
+                            <div class="flex-1 overflow-y-auto p-4 space-y-2 text-sm">
+                                <div class="flex items-center gap-3 p-2 bg-white/5 rounded"><span class="text-gray-500 w-20">14:35:12</span><span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-xs">系统</span><span>数据采集周期完成，当前批次处理量 1250kg</span></div>
+                                <div class="flex items-center gap-3 p-2 bg-white/5 rounded"><span class="text-gray-500 w-20">14:32:05</span><span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-xs">系统</span><span>自动加载匹配模型：[玉米秸秆_低温_V2] 已激活</span></div>
+                                <div class="flex items-center gap-3 p-2 bg-white/5 rounded"><span class="text-gray-500 w-20">14:30:00</span><span class="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded text-xs">用户</span><span>郑鹏 查看实时工艺参数</span></div>
+                                <div class="flex items-center gap-3 p-2 bg-white/5 rounded"><span class="text-gray-500 w-20">14:28:12</span><span class="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded text-xs">用户</span><span>郑鹏 执行"阶段预热"指令</span></div>
+                                <div class="flex items-center gap-3 p-2 bg-white/5 rounded"><span class="text-gray-500 w-20">14:25:00</span><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">系统</span><span>热量回收系统效率提升至 78.5%</span></div>
+                                <div class="flex items-center gap-3 p-2 bg-white/5 rounded"><span class="text-gray-500 w-20">14:20:00</span><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">系统</span><span>反应器A-01温度稳定在 117.5℃</span></div>
+                                <div class="flex items-center gap-3 p-2 bg-white/5 rounded"><span class="text-gray-500 w-20">14:15:00</span><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">系统</span><span>传感器自检通过，压力密封性正常</span></div>
+                                <div class="flex items-center gap-3 p-2 bg-white/5 rounded"><span class="text-gray-500 w-20">14:10:00</span><span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded text-xs">系统</span><span>批次工艺流程启动，当前阶段：预热</span></div>
+                            </div>
+                            <div class="p-4 border-t border-white/10 flex justify-center">
+                                <button onclick="closeModal()" class="btn-primary px-6 py-2 rounded-lg"><i class="fa-solid fa-xmark mr-1"></i>关闭</button>
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (type === 'emergency') {
+                content = `
+                    <div class="fixed inset-0 modal-overlay flex items-center justify-center z-50" onclick="closeModal(event)">
+                        <div class="modal-content glass-card rounded-2xl w-[450px] max-w-[90vw] overflow-hidden border-2 border-red-500/50" onclick="event.stopPropagation()">
+                            <div class="modal-header bg-red-900/20">
+                                <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                                <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                                <div class="modal-dot bg-[#27c93f]"></div>
+                                <h3 class="text-lg font-medium text-center flex-1 pr-12 text-red-400">紧急切断确认</h3>
+                            </div>
+                            <div class="p-6">
+                                <div class="text-center mb-4">
+                                    <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-3"></i>
+                                    <p class="text-gray-400">此操作将立即停止所有设备运行</p>
+                                </div>
+                                <div class="bg-red-900/20 rounded-lg p-3 mb-4 text-sm">
+                                    <p class="text-red-300"><i class="fa-solid fa-circle-info mr-2"></i>执行后将：</p>
+                                    <ul class="text-gray-400 mt-2 space-y-1 text-xs list-disc list-inside">
+                                        <li>关闭所有加热元件</li>
+                                        <li>停止进料泵运转</li>
+                                        <li>启动安全泄压程序</li>
+                                        <li>记录当前工艺状态</li>
+                                    </ul>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+                                        <i class="fa-solid fa-arrow-left mr-1"></i>取消操作
+                                    </button>
+                                    <button onclick="executeEmergency()" class="flex-1 btn-danger px-4 py-2 rounded-lg">
+                                        <i class="fa-solid fa-check mr-1"></i>确认切断
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            container.innerHTML = content;
+        }
+
+        function toggleAutoRotate() {
+            const btn = document.getElementById('btn-rotate');
+            const model = document.getElementById('model-3d');
+            isAutoRotating = !isAutoRotating;
+            if (isAutoRotating) {
+                btn.classList.add('btn-active');
+                btn.innerHTML = '<i class="fa-solid fa-pause mr-1"></i>停止旋转';
+                model.classList.add('rotate-animation');
+            } else {
+                btn.classList.remove('btn-active');
+                btn.innerHTML = '<i class="fa-solid fa-rotate mr-1"></i>自动旋转';
+                model.classList.remove('rotate-animation');
+            }
+        }
+
+        function toggleFullscreen(viewType) {
+            const btn = document.getElementById('btn-fullscreen');
+            const modal = viewType === '3d' ? document.getElementById('modal-3d') : document.getElementById('modal-piping');
+            const container = viewType === '3d' ? document.getElementById('view-3d-container') : document.getElementById('view-piping-container');
+            
+            isFullscreen = !isFullscreen;
+            if (isFullscreen) {
+                btn.classList.add('btn-active');
+                btn.innerHTML = '<i class="fa-solid fa-compress mr-1"></i>退出全屏';
+                modal.classList.add('fullscreen-mode');
+                container.style.height = 'calc(100vh - 120px)';
+            } else {
+                btn.classList.remove('btn-active');
+                btn.innerHTML = '<i class="fa-solid fa-expand mr-1"></i>全屏';
+                modal.classList.remove('fullscreen-mode');
+                container.style.height = viewType === '3d' ? '400px' : '380px';
+            }
+        }
+
+        function toggleLayer(layer) {
+            const btn = layer === 'equipment' ? document.getElementById('btn-equipment') :
+                        layer === 'pipes' ? document.getElementById('btn-pipes') :
+                        document.getElementById('btn-instruments');
+            const element = layer === 'equipment' ? document.getElementById('equipment-layer') :
+                           layer === 'pipes' ? document.getElementById('pipe-layer') :
+                           document.getElementById('instrument-layer');
+
+            if (layer === 'equipment') {
+                showEquipment = !showEquipment;
+                element.style.opacity = showEquipment ? '1' : '0.2';
+                btn.classList.toggle('btn-active', showEquipment);
+            } else if (layer === 'pipes') {
+                showPipes = !showPipes;
+                element.style.opacity = showPipes ? '1' : '0.2';
+                btn.classList.toggle('btn-active', showPipes);
+            } else {
+                showInstruments = !showInstruments;
+                element.style.opacity = showInstruments ? '1' : '0.2';
+                btn.classList.toggle('btn-active', showInstruments);
+            }
+        }
+
+        function executeEmergency() {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 modal-overlay flex items-center justify-center z-50">
+                    <div class="modal-content glass-card rounded-2xl w-[400px] text-center overflow-hidden">
+                        <div class="modal-header">
+                            <div class="modal-dot bg-[#ff5f56] mr-2"></div>
+                            <div class="modal-dot bg-[#ffbd2e] mr-2"></div>
+                            <div class="modal-dot bg-[#27c93f]"></div>
+                            <h3 class="text-lg font-medium flex-1 pr-12">执行结果</h3>
+                        </div>
+                        <div class="p-8">
+                            <i class="fa-solid fa-circle-check text-5xl text-green-500 mb-4"></i>
+                            <h3 class="text-xl font-bold">紧急切断已执行</h3>
+                            <p class="text-gray-400 mt-2">所有设备已安全停止</p>
+                            <p class="text-xs text-gray-500 mt-4">系统将于 30 秒后进入待机状态</p>
+                        </div>
+                    </div>
+                </div>`;
+            setTimeout(closeModal, 3000);
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            isAutoRotating = false;
+            isFullscreen = false;
+            document.getElementById('modal-container').innerHTML = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

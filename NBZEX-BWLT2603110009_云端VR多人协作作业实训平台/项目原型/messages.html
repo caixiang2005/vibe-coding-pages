@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>消息中心 - 云端VR多人协作作业实训平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        body { font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .mac-window { width: 1200px; height: 800px; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 20px; box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; position: relative; margin: 20px auto; }
+        .sidebar { width: 240px; background: rgba(255, 255, 255, 0.2); border-right: 1px solid rgba(255, 255, 255, 0.2); }
+        .glass-btn { transition: all 0.3s ease; }
+        .glass-btn:hover { background: rgba(255, 255, 255, 0.4); }
+        .liquid-card { background: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.4); transition: all 0.3s; }
+        .liquid-card:hover { transform: translateY(-4px); background: rgba(255, 255, 255, 0.5); }
+        .message-item { transition: all 0.2s; }
+        .message-item:hover { background: rgba(255, 255, 255, 0.3); }
+        .message-item.unread { border-left: 3px solid #3b82f6; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 16px; padding: 0; min-width: 500px; max-width: 550px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); cursor: move; }
+        .modal-header { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 16px 20px; border-radius: 16px 16px 0 0; display: flex; align-items: center; position: relative; }
+        .modal-body { padding: 24px; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid rgba(0, 0, 0, 0.1); display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 10px 24px; border-radius: 10px; font-weight: 600; transition: all 0.3s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+        .btn-secondary { background: #f3f4f6; color: #6b7280; padding: 10px 24px; border-radius: 10px; font-weight: 600; transition: all 0.3s; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .input-field { width: 100%; padding: 12px 16px; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 10px; background: rgba(255, 255, 255, 0.8); transition: all 0.3s; }
+        .input-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        .tab-btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; color: #6b7280; transition: all 0.3s; cursor: pointer; }
+        .tab-btn.active { background: #3b82f6; color: white; }
+        .tab-btn:not(.active):hover { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="mac-window overflow-hidden">
+        <div class="h-10 flex items-center justify-between px-4 shrink-0">
+            <div class="flex space-x-2">
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FF5F56] shadow-inner"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FFBD2E] shadow-inner"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#27C93F] shadow-inner"></div>
+            </div>
+            <div class="text-xs font-semibold text-gray-600 flex items-center space-x-4">
+                <span class="flex items-center"><i class="fa-solid fa-cloud mr-1"></i> 云服务连接正常</span>
+                <span class="flex items-center"><i class="fa-solid fa-signal mr-1 text-green-600"></i> 延迟: 12ms</span>
+                <span>2026年3月21日 11:00</span>
+            </div>
+        </div>
+        <div class="flex-1 flex overflow-hidden">
+            <nav class="sidebar p-4 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center space-x-3 mb-10 px-2">
+                        <div class="w-10 h-10 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                            <i class="fa-solid fa-vr-cardboard w-6 h-6"></i>
+                        </div>
+                        <span class="text-sm font-bold text-gray-800 leading-tight">云端VR多人协作<br>作业实训平台</span>
+                    </div>
+                    <ul class="space-y-1">
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="index.html"><i class="fa-solid fa-house w-5"></i> <span>工作台</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="training.html"><i class="fa-solid fa-photo-film w-5"></i> <span>实训广场</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="resources.html"><i class="fa-solid fa-box-open w-5"></i> <span>资源仓库</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="admin.html"><i class="fa-solid fa-chart-line w-5"></i> <span>数据评估</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="profile.html"><i class="fa-solid fa-user w-5"></i> <span>个人中心</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 bg-white/40 rounded-lg text-blue-600 font-medium" href="messages.html"><i class="fa-solid fa-envelope w-5"></i> <span>消息中心</span></a></li>
+                        <li><a class="flex items-center space-x-3 px-3 py-2 text-gray-600 glass-btn rounded-lg" href="appointments.html"><i class="fa-solid fa-calendar w-5"></i> <span>预约管理</span></a></li>
+                    </ul>
+                </div>
+                <div class="px-2 pb-4">
+                    <div class="bg-white/30 rounded-xl p-3 flex items-center space-x-3">
+                        <img alt="User" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="https://i01piccdn.sogoucdn.com/b0d2f6ab67584bd8" />
+                        <div class="overflow-hidden">
+                            <p class="text-sm font-bold text-gray-800 truncate">张明远</p>
+                            <p class="text-[10px] text-gray-500">在线</p>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <main class="flex-1 p-8 overflow-y-auto bg-white/10">
+                <header class="mb-6 flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-gray-800 mb-2">消息中心</h1>
+                        <p class="text-gray-500">共 <span id="unreadCount" class="font-bold text-blue-600">3</span> 条未读消息</p>
+                    </div>
+                    <button class="btn-primary flex items-center gap-2" onclick="openCompose()">
+                        <i class="fa-solid fa-pen-to-square"></i> 写消息
+                    </button>
+                </header>
+                <div class="flex gap-2 mb-6">
+                    <button class="tab-btn active" onclick="filterMessages('all')">全部</button>
+                    <button class="tab-btn" onclick="filterMessages('system')">系统通知</button>
+                    <button class="tab-btn" onclick="filterMessages('team')">团队消息</button>
+                    <button class="tab-btn" onclick="filterMessages('private')">私信</button>
+                </div>
+                <div class="liquid-card rounded-2xl p-4 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-gray-800">全部消息</h3>
+                        <button class="text-sm text-blue-600 hover:underline" onclick="markAllRead()">全部标为已读</button>
+                    </div>
+                    <div id="messageList" class="space-y-2">
+                        <div class="message-item unread p-4 rounded-xl cursor-pointer flex items-start gap-4" onclick="openMessage(1)">
+                            <img alt="Avatar" class="w-12 h-12 rounded-full border-2 border-white" src="https://i02piccdn.sogoucdn.com/e4067c391d3a0fd1" />
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-gray-800">李晓华</span>
+                                        <span class="badge bg-blue-100 text-blue-600">私信</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400">10分钟前</span>
+                                </div>
+                                <p class="text-sm text-gray-600 truncate">明天上午的机械臂实训可以一起参加吗？我想和你组队。</p>
+                            </div>
+                            <button class="text-gray-400 hover:text-red-500 p-2" onclick="event.stopPropagation(); deleteMessage(1)"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div class="message-item unread p-4 rounded-xl cursor-pointer flex items-start gap-4" onclick="openMessage(2)">
+                            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 border-2 border-white">
+                                <i class="fa-solid fa-robot"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-gray-800">系统通知</span>
+                                        <span class="badge bg-green-100 text-green-600">系统</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400">1小时前</span>
+                                </div>
+                                <p class="text-sm text-gray-600 truncate">恭喜您完成了「机械臂协同精密组装」实训，获得95分！</p>
+                            </div>
+                            <button class="text-gray-400 hover:text-red-500 p-2" onclick="event.stopPropagation(); deleteMessage(2)"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div class="message-item unread p-4 rounded-xl cursor-pointer flex items-start gap-4" onclick="openMessage(3)">
+                            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 border-2 border-white">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-gray-800">虚拟医疗实训小组</span>
+                                        <span class="badge bg-purple-100 text-purple-600">团队</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400">3小时前</span>
+                                </div>
+                                <p class="text-sm text-gray-600 truncate">王主任邀请您参与「智慧手术室：微创辅助实训」，请尽快确认。</p>
+                            </div>
+                            <button class="text-gray-400 hover:text-red-500 p-2" onclick="event.stopPropagation(); deleteMessage(3)"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div class="message-item p-4 rounded-xl cursor-pointer flex items-start gap-4" onclick="openMessage(4)">
+                            <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 border-2 border-white">
+                                <i class="fa-solid fa-bell"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-gray-800">平台公告</span>
+                                        <span class="badge bg-amber-100 text-amber-600">公告</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400">昨天</span>
+                                </div>
+                                <p class="text-sm text-gray-600 truncate">系统将于3月22日凌晨进行维护升级，届时平台暂停服务。</p>
+                            </div>
+                            <button class="text-gray-400 hover:text-red-500 p-2" onclick="event.stopPropagation(); deleteMessage(4)"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <div class="message-item p-4 rounded-xl cursor-pointer flex items-start gap-4" onclick="openMessage(5)">
+                            <img alt="Avatar" class="w-12 h-12 rounded-full border-2 border-white" src="https://i03piccdn.sogoucdn.com/59a0b337a74cb66f" />
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-gray-800">王大力</span>
+                                        <span class="badge bg-blue-100 text-blue-600">私信</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400">2天前</span>
+                                </div>
+                                <p class="text-sm text-gray-600 truncate">你的化学实验操作非常规范，可以教我一些技巧吗？</p>
+                            </div>
+                            <button class="text-gray-400 hover:text-red-500 p-2" onclick="event.stopPropagation(); deleteMessage(5)"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <div class="modal-overlay" id="composeModal">
+        <div class="modal-box" id="composeModalContent">
+            <div class="modal-header">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+                </div>
+                <span class="font-bold text-lg absolute left-1/2 -translate-x-1/2">写消息</span>
+                <button class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition ml-auto" onclick="closeCompose()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">收件人</label>
+                    <select class="input-field">
+                        <option>李晓华</option>
+                        <option>王大力</option>
+                        <option>陈思思</option>
+                        <option>刘洋</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">主题</label>
+                    <input type="text" class="input-field" placeholder="请输入消息主题" />
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">内容</label>
+                    <textarea class="input-field" rows="5" placeholder="请输入消息内容"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeCompose()">取消</button>
+                <button class="btn-primary" onclick="sendMessage()"><i class="fa-solid fa-paper-plane mr-2"></i>发送</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="messageModal">
+        <div class="modal-box" id="messageModalContent">
+            <div class="modal-header">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+                </div>
+                <span class="font-bold text-lg absolute left-1/2 -translate-x-1/2" id="messageTitle">消息详情</span>
+                <button class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition ml-auto" onclick="closeMessageDetail()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="messageDetail">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeMessageDetail()">关闭</button>
+                <button class="btn-primary" onclick="replyMessage()"><i class="fa-solid fa-reply mr-2"></i>回复</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const messageData = {
+            1: { from: '李晓华', avatar: 'https://i02piccdn.sogoucdn.com/e4067c391d3a0fd1', type: '私信', time: '10分钟前', title: '组队邀请', content: '明天上午的机械臂实训可以一起参加吗？我想和你组队。我们可以互相配合，提高效率。' },
+            2: { from: '系统通知', avatar: 'fa-solid fa-robot', type: '系统', time: '1小时前', title: '实训完成通知', content: '恭喜您完成了「机械臂协同精密组装」实训，获得95分！继续保持，期待您更出色的表现。' },
+            3: { from: '虚拟医疗实训小组', avatar: 'fa-solid fa-users', type: '团队', time: '3小时前', title: '实训邀请', content: '王主任邀请您参与「智慧手术室：微创辅助实训」，请尽快确认。团队需要您的加入！' },
+            4: { from: '平台公告', avatar: 'fa-solid fa-bell', type: '公告', time: '昨天', title: '系统维护通知', content: '系统将于3月22日凌晨2:00-6:00进行维护升级，届时平台暂停服务。请提前完成实训任务。' },
+            5: { from: '王大力', avatar: 'https://i03piccdn.sogoucdn.com/59a0b337a74cb66f', type: '私信', time: '2天前', title: '学习交流', content: '你的化学实验操作非常规范，可以教我一些技巧吗？期待你的回复！' }
+        };
+        function openCompose() { document.getElementById('composeModal').classList.add('active'); }
+        function closeCompose() { document.getElementById('composeModal').classList.remove('active'); }
+        function sendMessage() { alert('消息发送成功！'); closeCompose(); }
+        function openMessage(id) {
+            const msg = messageData[id];
+            document.getElementById('messageTitle').textContent = msg.title;
+            let avatarHtml = msg.avatar.startsWith('http') ? `<img src="${msg.avatar}" class="w-12 h-12 rounded-full border-2 border-white" />` : `<div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 border-2 border-white"><i class="${msg.avatar}"></i></div>`;
+            document.getElementById('messageDetail').innerHTML = `
+                <div class="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-xl">
+                    ${avatarHtml}
+                    <div>
+                        <h4 class="font-bold text-gray-800">${msg.from}</h4>
+                        <p class="text-xs text-gray-400">${msg.time}</p>
+                    </div>
+                    <span class="badge bg-blue-100 text-blue-600 ml-auto">${msg.type}</span>
+                </div>
+                <p class="text-gray-600 leading-relaxed">${msg.content}</p>
+            `;
+            document.getElementById('messageModal').classList.add('active');
+            document.getElementById('unreadCount').textContent = Math.max(0, parseInt(document.getElementById('unreadCount').textContent) - 1);
+        }
+        function closeMessageDetail() { document.getElementById('messageModal').classList.remove('active'); }
+        function replyMessage() { closeMessageDetail(); openCompose(); }
+        function deleteMessage(id) { if(confirm('确定要删除这条消息吗？')) { alert('消息已删除'); } }
+        function markAllRead() { document.getElementById('unreadCount').textContent = '0'; alert('已全部标为已读'); }
+        function filterMessages(type) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        function makeDraggable(element) {
+            let isDragging = false, offsetX, offsetY;
+            const header = element.querySelector('.modal-header');
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.closest('button')) return;
+                isDragging = true;
+                offsetX = e.clientX - element.getBoundingClientRect().left;
+                offsetY = e.clientY - element.getBoundingClientRect().top;
+                element.style.transition = 'none';
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                element.style.left = (e.clientX - offsetX) + 'px';
+                element.style.top = (e.clientY - offsetY) + 'px';
+                element.style.transform = 'none';
+            });
+            document.addEventListener('mouseup', function() { isDragging = false; element.style.transition = ''; });
+        }
+        makeDraggable(document.getElementById('composeModalContent'));
+        makeDraggable(document.getElementById('messageModalContent'));
+        document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); }));
+    </script>
+</body>
+</html>

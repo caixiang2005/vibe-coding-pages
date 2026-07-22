@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>团体活动管理 — 学生心理档案综合管理系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root{--primary:#2C6BAC;--primary-light:#4A8FD4;--accent:#5BB8A0;--accent2:#F0A500;--danger:#E05555;--warn:#E08A30;--bg:#F4F7FB;--sidebar-bg:#1C2D4A;--sidebar-text:#B8CCDF;--card-bg:#FFFFFF;--text-main:#1A2A3C;--text-sub:#5C7A96;--border:#DDE6F0;--shadow:0 2px 16px rgba(44,107,172,0.10);--shadow-lg:0 8px 32px rgba(44,107,172,0.16);--radius:14px;--radius-sm:8px;--font-serif:'Noto Serif SC',serif;--font-sans:'Noto Sans SC',sans-serif;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--font-sans);background:var(--bg);color:var(--text-main);min-height:100vh;display:flex;overflow-x:hidden;}
+  .sidebar{width:240px;min-height:calc(100vh - 64px);background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;left:0;top:64px;bottom:0;z-index:100;box-shadow:4px 0 24px rgba(0,0,0,0.15);}
+  .sidebar-logo{padding:28px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#4A8FD4,#5BB8A0);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:22px;color:#fff;}
+  .sidebar-logo h1{font-family:var(--font-serif);font-size:14px;color:#fff;font-weight:600;line-height:1.5;}
+  .sidebar-logo p{font-size:11px;color:var(--sidebar-text);margin-top:3px;opacity:0.7;}
+  .sidebar-nav{flex:1;padding:16px 0;overflow-y:auto;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--sidebar-text);text-decoration:none;font-size:13.5px;border-left:3px solid transparent;transition:all 0.2s;}
+  .nav-item i{width:20px;text-align:center;font-size:15px;opacity:0.8;}
+  .nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;border-left-color:rgba(255,255,255,0.3);}
+  .nav-item.active{background:rgba(44,107,172,0.25);color:#fff;border-left-color:var(--primary-light);font-weight:500;}
+  .nav-item.active i{opacity:1;color:var(--primary-light);}
+  .nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;}
+  .sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08);}
+  .user-info{display:flex;align-items:center;gap:10px;}
+  .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4A8FD4,#5BB8A0);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;overflow:hidden;}
+  .user-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .user-name{font-size:13px;color:#fff;font-weight:500;}
+  .user-role{font-size:11px;color:var(--sidebar-text);opacity:0.7;}
+  .main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;padding-top:64px;}
+  .topbar{height:64px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px 0 10px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:110;box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+  .topbar-brand{display:flex;align-items:center;gap:10px;font-family:var(--font-serif);font-size:18px;font-weight:700;color:#1A4F85;white-space:nowrap;}
+  .topbar-divider{width:1px;height:20px;background:var(--border);}
+  .topbar-title{font-size:17px;font-weight:600;color:var(--text-main);font-family:var(--font-serif);}
+  .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-sub);}
+  .breadcrumb a{color:var(--primary);text-decoration:none;}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:500;cursor:pointer;border:none;transition:all 0.2s;font-family:var(--font-sans);text-decoration:none;}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(44,107,172,0.3);}
+  .btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--border);}
+  .btn-outline:hover{border-color:var(--primary);background:#F0F6FF;}
+  .btn-sm{padding:7px 14px;font-size:12.5px;}
+  .page-content{padding:28px;flex:1;}
+  .tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:500;}
+  .tag-green{background:#E6F7F3;color:#2D9C84;}.tag-orange{background:#FEF3E2;color:#C07B20;}.tag-blue{background:#E8F1FA;color:#2C6BAC;}.tag-purple{background:#F0E8FE;color:#7040C0;}.tag-pink{background:#FEE8F2;color:#C0407A;}
+
+  /* ACTIVITY CARDS */
+  .activity-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;}
+  .activity-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;cursor:pointer;}
+  .activity-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);}
+  .activity-cover{height:150px;position:relative;overflow:hidden;}
+  .activity-cover img{width:100%;height:100%;object-fit:cover;transition:transform 0.4s;}
+  .activity-card:hover .activity-cover img{transform:scale(1.05);}
+  .activity-cover-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(10,20,40,0.75));}
+  .activity-cover-bottom{position:absolute;bottom:12px;left:16px;right:16px;display:flex;align-items:flex-end;justify-content:space-between;}
+  .activity-title-over{font-family:var(--font-serif);font-size:16px;font-weight:700;color:#fff;line-height:1.3;}
+  .status-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;backdrop-filter:blur(6px);}
+  .status-running{background:rgba(91,184,160,0.9);color:#fff;}
+  .status-upcoming{background:rgba(44,107,172,0.9);color:#fff;}
+  .status-done{background:rgba(120,140,160,0.85);color:#fff;}
+  .activity-body{padding:16px;}
+  .activity-desc{font-size:13px;color:var(--text-sub);line-height:1.6;margin-bottom:14px;}
+  .activity-info-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
+  .info-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-sub);}
+  .info-item i{color:var(--primary);font-size:12px;}
+  .participants-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .participant-avatars{display:flex;}
+  .p-avatar{width:28px;height:28px;border-radius:50%;border:2px solid #fff;margin-left:-8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;}
+  .p-avatar:first-child{margin-left:0;}
+  .p-more{font-size:12px;color:var(--text-sub);}
+  .progress-wrap{margin-bottom:14px;}
+  .progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-sub);margin-bottom:5px;}
+  .progress-bar{height:6px;background:#EFF3F9;border-radius:10px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:10px;}
+  .activity-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;}
+
+  /* STATS ROW */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+  .mini-stat{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;}
+  .mini-stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .mini-stat-val{font-size:24px;font-weight:700;color:var(--text-main);}
+  .mini-stat-lbl{font-size:12px;color:var(--text-sub);margin-top:2px;}
+  .topbar-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all 0.2s}
+  .topbar-btn:hover{background:var(--border);color:var(--primary)}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-nav">
+    <a href="index.html" class="nav-item"><i class="fa-solid fa-gauge-high"></i><span>系统总览</span></a>
+    <a href="student-files.html" class="nav-item"><i class="fa-solid fa-folder-open"></i><span>学生心理档案</span></a>
+    <a href="assessment.html" class="nav-item"><i class="fa-solid fa-clipboard-check"></i><span>心理测评管理</span></a>
+    <a href="counseling.html" class="nav-item"><i class="fa-solid fa-comments"></i><span>咨询预约管理</span><span class="nav-badge">5</span></a>
+    <a href="crisis.html" class="nav-item"><i class="fa-solid fa-triangle-exclamation"></i><span>危机预警干预</span><span class="nav-badge">3</span></a>
+    <a href="group-activities.html" class="nav-item active"><i class="fa-solid fa-people-group"></i><span>团体活动管理</span></a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar"><img src="https://i04piccdn.sogoucdn.com/e19a983de5cef917" alt="孙家祺"></div>
+      <div><div class="user-name">孙家祺</div><div class="user-role">管理员</div></div>
+    </div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-brand"><span>学生心理档案综合管理系统</span></div>
+    <div class="topbar-divider"></div>
+    <div>
+      <div class="topbar-title">团体活动管理</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-outline btn-sm"><i class="fa-solid fa-filter"></i> 筛选</button>
+      <button class="btn btn-primary" onclick="openNewActivityModal()"><i class="fa-solid fa-plus"></i> 创建活动</button>
+      <div style="position:relative;margin-left:8px">
+        <div class="icon-btn" onclick="toggleNotificationDropdown()"><i class="fa-regular fa-bell"></i><span class="dot"></span></div>
+        <div id="notificationDropdown" style="display:none;position:absolute;top:48px;right:0;width:360px;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(44,107,172,0.2);border:1px solid var(--border);z-index:1000;overflow:hidden">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between"><div style="font-size:14px;font-weight:600;color:var(--text-dark)">通知中心</div><span style="font-size:11px;color:var(--accent);cursor:pointer">全部已读</span></div>
+          <div style="max-height:320px;overflow-y:auto">
+            <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start;background:#FFF9F0" onclick="markAsRead(1)"><div style="width:36px;height:36px;border-radius:50%;background:#FDEAEA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-triangle-exclamation" style="color:#C04040;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">一级危机预警</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">林雨桐测评显示重度抑郁倾向，请立即处理</div><div style="font-size:11px;color:#999;margin-top:4px">10分钟前</div></div></div>
+            <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start;background:#F8FAFD" onclick="markAsRead(2)"><div style="width:36px;height:36px;border-radius:50%;background:#E8F1FA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-clipboard-check" style="color:#2C6BAC;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">测评任务完成</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">高一新生适应性测评已完成，523人已提交</div><div style="font-size:11px;color:#999;margin-top:4px">30分钟前</div></div></div>
+            <div style="padding:12px 16px;border-bottom:1px solid #f0f5fa;display:flex;gap:12px;align-items:flex-start" onclick="markAsRead(3)"><div style="width:36px;height:36px;border-radius:50%;background:#E6F7F3;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-calendar-check" style="color:#2D9C84;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">咨询预约提醒</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">张明轩的咨询预约将于明天10:00开始</div><div style="font-size:11px;color:#999;margin-top:4px">1小时前</div></div></div>
+            <div style="padding:12px 16px;display:flex;gap:12px;align-items:flex-start" onclick="markAsRead(4)"><div style="width:36px;height:36px;border-radius:50%;background:#FEF3E2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa-solid fa-clock" style="color:#C07B20;font-size:14px"></i></div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px">待处理预警</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4">您有3条危机预警待处理，请及时跟进</div><div style="font-size:11px;color:#999;margin-top:4px">2小时前</div></div></div>
+          </div>
+          <div style="padding:10px 16px;border-top:1px solid var(--border);text-align:center"><span style="font-size:12px;color:var(--primary);cursor:pointer">查看全部通知</span></div>
+        </div>
+      </div>
+      <button class="topbar-btn" id="loginBtn" onclick="goToLogin()" style="margin-left:8px">
+        <i class="fa-solid fa-right-to-bracket"></i>
+      </button>
+      <button class="topbar-btn" id="logoutBtn" onclick="logout()" style="display:none;margin-left:8px">
+        <i class="fa-solid fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="stats-row">
+      <div class="mini-stat">
+        <div class="mini-stat-icon" style="background:#E8F1FA;color:#2C6BAC"><i class="fa-solid fa-calendar-days"></i></div>
+        <div><div class="mini-stat-val">12</div><div class="mini-stat-lbl">本学期活动总数</div></div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-icon" style="background:#E6F7F3;color:#2D9C84"><i class="fa-solid fa-circle-play"></i></div>
+        <div><div class="mini-stat-val">3</div><div class="mini-stat-lbl">进行中</div></div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-icon" style="background:#FEF3E2;color:#C07B20"><i class="fa-solid fa-users"></i></div>
+        <div><div class="mini-stat-val">248</div><div class="mini-stat-lbl">参与学生人次</div></div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-icon" style="background:#F0E8FE;color:#7040C0"><i class="fa-solid fa-star"></i></div>
+        <div><div class="mini-stat-val">4.8</div><div class="mini-stat-lbl">平均满意度</div></div>
+      </div>
+    </div>
+
+    <div class="activity-grid">
+
+      <!-- Activity 1 -->
+      <div class="activity-card">
+        <div class="activity-cover">
+          <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=500&q=70&auto=format&fit=crop" alt="">
+          <div class="activity-cover-overlay"></div>
+          <div class="activity-cover-bottom">
+            <div class="activity-title-over">青春减压团体辅导</div>
+            <span class="status-badge status-running"><i class="fa-solid fa-circle-play"></i> 进行中</span>
+          </div>
+        </div>
+        <div class="activity-body">
+          <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <span class="tag tag-blue">情绪管理</span><span class="tag tag-green">高中生</span>
+          </div>
+          <div class="activity-desc">帮助高三学生掌握压力管理技巧，通过正念冥想、认知重构等方法减轻高考焦虑，提升心理韧性。</div>
+          <div class="activity-info-row">
+            <div class="info-item"><i class="fa-solid fa-calendar"></i> 每周三 14:00–16:00</div>
+            <div class="info-item"><i class="fa-solid fa-location-dot"></i> 心理活动室A</div>
+            <div class="info-item"><i class="fa-solid fa-user-tie"></i> 王明远</div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>课程进度</span><span>4 / 8 课时</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:50%;background:linear-gradient(90deg,#2C6BAC,#4A8FD4);"></div></div>
+          </div>
+          <div class="participants-row">
+            <div class="participant-avatars">
+              <div class="p-avatar" style="background:#2C6BAC">张</div>
+              <div class="p-avatar" style="background:#5BB8A0">刘</div>
+              <div class="p-avatar" style="background:#E08A30">王</div>
+              <div class="p-avatar" style="background:#A060C8">陈</div>
+              <div class="p-avatar" style="background:#E05555">高</div>
+            </div>
+            <div class="p-more">等 18 名学生</div>
+          </div>
+        </div>
+        <div class="activity-footer">
+          <button class="btn btn-primary btn-sm" onclick="openDetailModal(1)"><i class="fa-solid fa-eye"></i> 查看详情</button>
+          <button class="btn btn-outline btn-sm" onclick="openEditModal()"><i class="fa-solid fa-pen"></i> 编辑</button>
+          <button class="btn btn-outline btn-sm" onclick="openRecordModal()"><i class="fa-solid fa-file-lines"></i> 记录</button>
+        </div>
+      </div>
+
+      <!-- Activity 2 -->
+      <div class="activity-card">
+        <div class="activity-cover">
+          <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500&q=70&auto=format&fit=crop" alt="">
+          <div class="activity-cover-overlay" style="background:linear-gradient(180deg,transparent 30%,rgba(30,60,40,0.75));"></div>
+          <div class="activity-cover-bottom">
+            <div class="activity-title-over">正念冥想体验工作坊</div>
+            <span class="status-badge status-running"><i class="fa-solid fa-circle-play"></i> 进行中</span>
+          </div>
+        </div>
+        <div class="activity-body">
+          <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <span class="tag tag-green">正念减压</span><span class="tag tag-purple">全年级</span>
+          </div>
+          <div class="activity-desc">通过正念呼吸、身体扫描等技术，帮助学生培养专注力与情绪觉察能力，改善睡眠质量。</div>
+          <div class="activity-info-row">
+            <div class="info-item"><i class="fa-solid fa-calendar"></i> 每周五 15:30–17:00</div>
+            <div class="info-item"><i class="fa-solid fa-location-dot"></i> 多功能厅</div>
+            <div class="info-item"><i class="fa-solid fa-user-tie"></i> 李心怡</div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>课程进度</span><span>2 / 6 课时</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:33%;background:linear-gradient(90deg,#2D9C84,#5BB8A0);"></div></div>
+          </div>
+          <div class="participants-row">
+            <div class="participant-avatars">
+              <div class="p-avatar" style="background:#5BB8A0">孙</div>
+              <div class="p-avatar" style="background:#2C6BAC">周</div>
+              <div class="p-avatar" style="background:#E05555">林</div>
+            </div>
+            <div class="p-more">等 24 名学生</div>
+          </div>
+        </div>
+        <div class="activity-footer">
+          <button class="btn btn-primary btn-sm" onclick="openDetailModal(2)"><i class="fa-solid fa-eye"></i> 查看详情</button>
+          <button class="btn btn-outline btn-sm" onclick="openEditModal()"><i class="fa-solid fa-pen"></i> 编辑</button>
+          <button class="btn btn-outline btn-sm" onclick="openRecordModal()"><i class="fa-solid fa-file-lines"></i> 记录</button>
+        </div>
+      </div>
+
+      <!-- Activity 3 -->
+      <div class="activity-card">
+        <div class="activity-cover">
+          <img src="https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=500&q=70&auto=format&fit=crop" alt="">
+          <div class="activity-cover-overlay" style="background:linear-gradient(180deg,transparent 30%,rgba(60,30,80,0.75));"></div>
+          <div class="activity-cover-bottom">
+            <div class="activity-title-over">人际关系提升小组</div>
+            <span class="status-badge status-upcoming"><i class="fa-regular fa-calendar"></i> 即将开始</span>
+          </div>
+        </div>
+        <div class="activity-body">
+          <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <span class="tag tag-purple">人际技能</span><span class="tag tag-blue">初中生</span>
+          </div>
+          <div class="activity-desc">通过角色扮演、团队游戏等互动方式，帮助学生改善社交技能，建立健康的同伴关系。</div>
+          <div class="activity-info-row">
+            <div class="info-item"><i class="fa-solid fa-calendar"></i> 03-20 开始，共6次</div>
+            <div class="info-item"><i class="fa-solid fa-location-dot"></i> 心理活动室B</div>
+            <div class="info-item"><i class="fa-solid fa-user-tie"></i> 周晓燕</div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>报名情况</span><span>12 / 15 名额</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:80%;background:linear-gradient(90deg,#A060C8,#CC80E8);"></div></div>
+          </div>
+          <div class="participants-row">
+            <div class="participant-avatars">
+              <div class="p-avatar" style="background:#A060C8">赵</div>
+              <div class="p-avatar" style="background:#4A8FD4">郑</div>
+              <div class="p-avatar" style="background:#5BB8A0">吴</div>
+            </div>
+            <div class="p-more">等 12 名已报名</div>
+          </div>
+        </div>
+        <div class="activity-footer">
+          <button class="btn btn-primary btn-sm" onclick="openDetailModal(3)"><i class="fa-solid fa-eye"></i> 查看详情</button>
+          <button class="btn btn-outline btn-sm" onclick="openEditModal()"><i class="fa-solid fa-pen"></i> 编辑</button>
+          <button class="btn btn-outline btn-sm" onclick="openRecordModal()"><i class="fa-solid fa-file-lines"></i> 记录</button>
+        </div>
+      </div>
+
+      <!-- Activity 4 - Add new -->
+      <div class="activity-card" style="border:2px dashed var(--border);background:#FAFCFF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:320px;cursor:pointer;" onclick="openNewActivityModal()">
+        <div style="width:60px;height:60px;border-radius:50%;background:#E8F1FA;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--primary);opacity:0.7;">
+          <i class="fa-solid fa-circle-plus"></i>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:15px;font-weight:600;color:var(--primary);margin-bottom:6px;">创建新团体活动</div>
+          <div style="font-size:13px;color:var(--text-sub);">设计活动主题、安排时间场地<br>邀请适合的学生参与</div>
+        </div>
+        <button class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> 立即创建</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function checkLoginStatus(){const l=document.getElementById('loginBtn'),o=document.getElementById('logoutBtn');sessionStorage.getItem('isLoggedIn')==='true'?(l.style.display='none',o.style.display='flex'):(l.style.display='flex',o.style.display='none')}
+function goToLogin(){window.location.href='login.html'}
+function logout(){sessionStorage.removeItem('isLoggedIn');sessionStorage.removeItem('userName');sessionStorage.removeItem('userRole');checkLoginStatus()}
+checkLoginStatus();
+</script>
+
+<div class="modal-overlay" id="newActivityModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header" id="newActivityModalHeader" style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)"><i class="fa-solid fa-plus"></i> 创建新团体活动</div>
+      <button class="modal-close" onclick="closeNewActivityModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:20px;max-height:70vh;overflow-y:auto">
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动名称</label><input type="text" class="form-input" placeholder="请输入活动名称" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动类型</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>情绪管理</option><option>压力管理</option><option>人际关系</option><option>学习方法</option><option>心理韧性</option></select></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">目标年级</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>初中</option><option>高中</option><option>全年级</option></select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动地点</label><input type="text" placeholder="如：心理活动室A" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">负责教师</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>李老师</option><option>王老师</option><option>周老师</option></select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动日期</label><input type="date" class="form-input" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动时段</label><input type="time" class="form-input" value="14:00" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      </div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动时长</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>60分钟</option><option selected>90分钟</option><option>120分钟</option></select></div>
+      <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动简介</label><textarea placeholder="请输入活动简介..." style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;font-size:13px;font-family:var(--font-sans)"></textarea></div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
+      <button onclick="closeNewActivityModal()" class="btn btn-outline btn-sm" style="height:34px">取消</button>
+      <button onclick="saveNewActivity()" class="btn btn-primary btn-sm" style="height:34px"><i class="fa-solid fa-check"></i> 创建活动</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header" style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)"><i class="fa-solid fa-pen"></i> 编辑团体活动</div>
+      <button onclick="closeEditModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:20px;max-height:70vh;overflow-y:auto">
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动名称</label><input type="text" class="form-input" value="心灵成长工作坊" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动类型</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option selected>情绪管理</option><option>压力管理</option><option>人际关系</option><option>学习方法</option><option>心理韧性</option></select></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">目标年级</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>初中</option><option selected>高中</option><option>全年级</option></select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动地点</label><input type="text" value="心理活动室A" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">负责教师</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option selected>李老师</option><option>王老师</option><option>周老师</option></select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动日期</label><input type="date" value="2024-12-05" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动时段</label><input type="time" value="14:00" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      </div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动时长</label><select style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#fff"><option>60分钟</option><option selected>90分钟</option><option>120分钟</option></select></div>
+      <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动简介</label><textarea style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;font-size:13px;font-family:var(--font-sans)">帮助学生认识情绪、表达情绪、管理情绪，通过冥想、音乐疗法等方式提升心理韧性。</textarea></div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
+      <button onclick="closeEditModal()" class="btn btn-outline btn-sm" style="height:34px">取消</button>
+      <button onclick="saveEdit()" class="btn btn-primary btn-sm" style="height:34px"><i class="fa-solid fa-check"></i> 保存修改</button>
+    </div>
+  </div>
+</div>
+
+<style>.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.3);display:none;align-items:center;justify-content:center;z-index:1000}.modal-overlay.show{display:flex}.modal{background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(44,107,172,0.16);position:fixed;top:50%;left:50%;transform:translate(-50%,-50%)}</style>
+
+<script>
+function openNewActivityModal(){document.getElementById('newActivityModal').classList.add('show')}
+function closeNewActivityModal(){document.getElementById('newActivityModal').classList.remove('show')}
+function saveNewActivity(){closeNewActivityModal();alert('活动创建成功')}
+function openRecordModal(){document.getElementById('recordModal').classList.add('show')}
+function closeRecordModal(){document.getElementById('recordModal').classList.remove('show')}
+function saveRecord(){closeRecordModal();alert('活动记录保存成功')}
+function closeAddMemberModal(){document.getElementById('addMemberModal').classList.remove('show')}
+function addMembers(){closeAddMemberModal();alert('成员添加成功')}
+function openEditModal(){document.getElementById('editModal').classList.add('show')}
+function closeEditModal(){document.getElementById('editModal').classList.remove('show')}
+function saveEdit(){closeEditModal();alert('活动信息已保存')}
+function openNotificationModal(){document.getElementById('notificationModal').classList.add('show')}
+function closeNotificationModal(){document.getElementById('notificationModal').classList.remove('show')}
+function toggleNotificationDropdown(){const d=document.getElementById('notificationDropdown');d.style.display=d.style.display==='none'?'block':'none'}
+function markAsRead(id){alert('标记通知'+id+'为已读')}
+document.addEventListener('click',function(e){const d=document.getElementById('notificationDropdown');if(d&&!e.target.closest('.icon-btn')&&!e.target.closest('#notificationDropdown')){d.style.display='none'}});
+</script>
+
+<div class="modal-overlay" id="recordModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header" id="recordModalHeader" style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)"><i class="fa-solid fa-file-lines"></i> 活动记录</div>
+      <button class="modal-close" onclick="closeRecordModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动名称</label><input type="text" class="form-input" value="青春减压团体辅导" disabled style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%;background:#f5f5f5"></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">记录日期</label><input type="date" class="form-input" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+        <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">参与人数</label><input type="number" class="form-input" value="18" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      </div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">本次主题</label><input type="text" class="form-input" placeholder="请输入本次主题" style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">活动内容</label><textarea placeholder="请描述本次活动的具体内容..." style="width:100%;min-height:100px;border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;font-size:13px;font-family:var(--font-sans)"></textarea></div>
+      <div><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">学生反馈</label><textarea placeholder="请记录学生的反馈和表现..." style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;font-size:13px;font-family:var(--font-sans)"></textarea></div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
+      <button onclick="closeRecordModal()" class="btn btn-outline btn-sm" style="height:34px">取消</button>
+      <button onclick="saveRecord()" class="btn btn-primary btn-sm" style="height:34px"><i class="fa-solid fa-check"></i> 保存记录</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addMemberModal">
+  <div class="modal" style="max-width:450px">
+    <div class="modal-header" id="addMemberModalHeader" style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)"><i class="fa-solid fa-user-plus"></i> 添加成员</div>
+      <button class="modal-close" onclick="closeAddMemberModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:6px">搜索学生</label><input type="text" placeholder="输入姓名或学号搜索..." style="height:38px;border:1.5px solid var(--border);border-radius:6px;padding:0 12px;font-size:13px;width:100%"></div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:8px">或从名单选择</label>
+        <div style="border:1.5px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;padding:8px">
+          <label style="display:flex;align-items:center;gap:10px;padding:10px;cursor:pointer;border-radius:6px;margin-bottom:4px;background:#f8f9fa"><input type="checkbox" style="width:16px;height:16px"><img src="https://i.pravatar.cc/32?img=12" style="width:32px;height:32px;border-radius:50%;object-fit:cover"><span style="font-size:14px">李明</span><span style="font-size:12px;color:var(--text-sub);margin-left:auto">高三(1)班</span></label>
+          <label style="display:flex;align-items:center;gap:10px;padding:10px;cursor:pointer;border-radius:6px;margin-bottom:4px;background:#f8f9fa"><input type="checkbox" style="width:16px;height:16px"><img src="https://i.pravatar.cc/32?img=25" style="width:32px;height:32px;border-radius:50%;object-fit:cover"><span style="font-size:14px">王芳</span><span style="font-size:12px;color:var(--text-sub);margin-left:auto">高三(3)班</span></label>
+          <label style="display:flex;align-items:center;gap:10px;padding:10px;cursor:pointer;border-radius:6px;background:#f8f9fa"><input type="checkbox" style="width:16px;height:16px"><img src="https://i.pravatar.cc/32?img=33" style="width:32px;height:32px;border-radius:50%;object-fit:cover"><span style="font-size:14px">张强</span><span style="font-size:12px;color:var(--text-sub);margin-left:auto">高二(4)班</span></label>
+        </div>
+      </div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
+      <button onclick="closeAddMemberModal()" class="btn btn-outline btn-sm" style="height:34px">取消</button>
+      <button onclick="addMembers()" class="btn btn-primary btn-sm" style="height:34px"><i class="fa-solid fa-plus"></i> 添加成员</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" style="max-width:540px">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text-main);font-family:var(--font-serif)"><i class="fa-solid fa-info-circle"></i> 活动详情</div>
+      <button onclick="closeDetailModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);color:var(--text-sub);cursor:pointer"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="padding:20px">
+      <img id="detail-cover" src="" style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:600;color:var(--text-main);margin-bottom:12px" id="detail-title"></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px">
+        <div style="background:#F8FAFD;padding:12px;border-radius:8px;font-size:13px;color:var(--text-sub)"><i class="fa-solid fa-user" style="margin-right:6px;color:var(--accent)"></i><span id="detail-leader"></span></div>
+        <div style="background:#F8FAFD;padding:12px;border-radius:8px;font-size:13px;color:var(--text-sub)"><i class="fa-solid fa-clock" style="margin-right:6px;color:var(--accent)"></i><span id="detail-time"></span></div>
+        <div style="background:#F8FAFD;padding:12px;border-radius:8px;font-size:13px;color:var(--text-sub)"><i class="fa-solid fa-location-dot" style="margin-right:6px;color:var(--accent)"></i><span id="detail-room"></span></div>
+        <div style="background:#F8FAFD;padding:12px;border-radius:8px;font-size:13px;color:var(--text-sub)" id="detail-type"></div>
+      </div>
+      <div style="margin-bottom:12px"><span id="detail-status"></span></div>
+      <div style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-sub);margin-bottom:6px"><span>报名进度</span><span id="detail-members"></span></div>
+        <div style="height:8px;background:#EFF3F9;border-radius:4px"><div id="detail-progress-bar" style="height:100%;background:var(--accent);border-radius:4px;transition:width .3s"></div></div>
+      </div>
+      <div style="padding:14px;background:#F8FAFD;border-radius:8px">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px">活动简介</div>
+        <div style="font-size:13px;color:var(--text-dark);line-height:1.6" id="detail-desc"></div>
+      </div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+      <button onclick="closeDetailModal()" class="btn btn-outline btn-sm" style="height:34px">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function closeAddMemberModal(){document.getElementById('addMemberModal').classList.remove('show')}
+function addMembers(){closeAddMemberModal();alert('成员添加成功')}
+document.getElementById('addMemberModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show')});
+document.getElementById('detailModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show')});
+
+const activityData = {
+  1: {title:'青春减压团体辅导',leader:'周雪琴',date:'2024-03-15',time:'14:00-16:00',room:'团体辅导室203',type:'压力管理',status:'进行中',statusTag:'tag-running',desc:'通过冥想、呼吸训练和小组讨论，帮助学生释放学业压力，改善情绪管理能力。',members:18,maxMembers:20,cover:'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=70'},
+  2: {title:'情绪管理工作坊',leader:'李明',date:'2024-03-10',time:'10:00-12:00',room:'心理中心102',type:'情绪调节',status:'进行中',statusTag:'tag-running',desc:'学习识别和表达情绪，掌握积极应对策略，提升心理韧性。',members:15,maxMembers:16,cover:'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=70'},
+  3: {title:'人际交往训练营',leader:'王芳',date:'2024-03-18',time:'15:00-17:00',room:'团体辅导室201',type:'人际交往',status:'预告',statusTag:'tag-upcoming',desc:'提升社交技能，学习有效沟通方式，建立健康人际关系。',members:12,maxMembers:20,cover:'https://images.unsplash.com/photo-1528605105345-5344ea20e269?w=600&q=70'}
+};
+
+function openDetailModal(id) {
+  const d = activityData[id] || activityData[1];
+  document.getElementById('detail-title').textContent = d.title;
+  document.getElementById('detail-leader').textContent = '负责人：' + d.leader;
+  document.getElementById('detail-time').textContent = d.date + ' ' + d.time;
+  document.getElementById('detail-room').textContent = '地点：' + d.room;
+  document.getElementById('detail-type').innerHTML = '<span class="tag tag-blue">' + d.type + '</span>';
+  document.getElementById('detail-status').innerHTML = '<span class="tag ' + d.statusTag + '">' + d.status + '</span>';
+  document.getElementById('detail-desc').textContent = d.desc;
+  document.getElementById('detail-cover').src = d.cover;
+  document.getElementById('detail-members').textContent = d.members + '/' + d.maxMembers + ' 人';
+  document.getElementById('detail-progress-bar').style.width = (d.members/d.maxMembers*100) + '%';
+  document.getElementById('detailModal').classList.add('show');
+}
+function closeDetailModal(){document.getElementById('detailModal').classList.remove('show')}
+</script>
+</body>
+</html>

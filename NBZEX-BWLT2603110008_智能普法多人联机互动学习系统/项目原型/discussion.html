@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>案例讨论 - 智能普法多人联机互动学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#0EA5E9',
+                        accent: '#38BDF8',
+                        dark: '#020617',
+                        surface: '#020617',
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .macos-window {
+            width: 1440px;
+            min-height: 900px;
+            background: #020617;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        }
+        .traffic-lights {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background: rgba(37, 99, 235, 0.16);
+            transform: translateX(4px);
+        }
+        .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.32), transparent);
+        }
+        .discussion-card {
+            transition: all 0.3s ease;
+        }
+        .discussion-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+            border-color: rgba(37, 99, 235, 0.4);
+        }
+        .online-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563EB 0%, #0EA5E9 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        .modal-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .modal-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .content-hidden { display: none; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+    <div class="macos-window rounded-xl overflow-hidden">
+        <div class="bg-surface/80 backdrop-blur-xl px-5 py-3 flex items-center border-b border-white/5 relative z-[1000]">
+            <div class="flex gap-2">
+                <div class="traffic-lights bg-red-500"></div>
+                <div class="traffic-lights bg-yellow-500"></div>
+                <div class="traffic-lights bg-green-500"></div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="text-sm font-medium text-white/80">智能普法多人联机互动学习系统</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10">
+                    <div class="online-indicator"></div>
+                    <span class="text-xs text-green-400 font-medium">1,247 人在线</span>
+                </div>
+                <div class="relative">
+                    <button onclick="toggleNotification()" class="relative">
+                        <i class="fa-regular fa-bell w-5 h-5 text-white/60 cursor-pointer hover:text-white transition"></i>
+                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">3</span>
+                    </button>
+                    <div id="notificationDropdown" class="hidden absolute right-0 top-full mt-2 w-80 glass-card rounded-xl overflow-hidden shadow-xl z-[9999]">
+                        <div class="p-4 border-b border-white/10">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-white font-bold">通知中心</h3>
+                                <button class="text-xs text-primary hover:underline">全部已读</button>
+                            </div>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto">
+                            <div class="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-comment text-red-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">您的话题有新回复</p>
+                                        <p class="text-xs text-white/40 mt-1">5分钟前</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-thumbs-up text-green-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">您的回复被点赞</p>
+                                        <p class="text-xs text-white/40 mt-1">30分钟前</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-star text-blue-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">您被关注</p>
+                                        <p class="text-xs text-white/40 mt-1">1小时前</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex h-[856px]">
+            <div class="w-64 bg-surface/40 border-r border-white/5 p-4">
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" 
+                             class="w-12 h-12 rounded-full border-2 border-primary/50" alt="用户头像">
+                        <div class="flex-1">
+                            <p class="text-white font-semibold text-sm">张明</p>
+                            <p class="text-xs text-white/50">中级学员 · Lv.8</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-white/5">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-white/60">学习进度</span>
+                            <span class="text-primary font-semibold">68%</span>
+                        </div>
+                        <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-primary to-secondary w-[68%] rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="space-y-1">
+                    <a href="main.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-home w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">学习大厅</span>
+                    </a>
+                    <a href="rooms.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-users w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">多人房间</span>
+                        <span class="ml-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">3</span>
+                    </a>
+                    <a href="live.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-video w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">直播课堂</span>
+                    </a>
+                    <a href="laws.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-book-open w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">法规库</span>
+                    </a>
+                    <div class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-comments w-5 h-5 text-primary"></i>
+                        <span class="text-sm font-medium text-white">案例讨论</span>
+                    </div>
+                    <a href="achievements.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-trophy w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">成就中心</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="flex-1 overflow-y-auto scrollbar-thin">
+                <div class="sticky top-0 bg-dark/95 backdrop-blur-xl border-b border-white/5 px-8 py-4 z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 class="text-2xl font-bold text-white">案例讨论</h1>
+                            <p class="text-sm text-white/60 mt-1">分享案例、讨论法律问题、与学友交流心得</p>
+                        </div>
+                        <button onclick="openNewPostModal()" class="btn-primary px-5 py-2.5 rounded-lg text-white text-sm font-semibold">
+                            <i class="fa-solid fa-pen-to-square mr-2"></i>发布话题
+                        </button>
+                    </div>
+                    <div class="flex gap-6">
+                        <button onclick="switchTab('all')" id="tab-all" class="tab-btn px-1 py-2 text-sm font-semibold text-primary border-b-2 border-primary">全部话题</button>
+                        <button onclick="switchTab('hot')" id="tab-hot" class="tab-btn px-1 py-2 text-sm font-medium text-white/60 hover:text-white transition">热门</button>
+                        <button onclick="switchTab('latest')" id="tab-latest" class="tab-btn px-1 py-2 text-sm font-medium text-white/60 hover:text-white transition">最新</button>
+                        <button onclick="switchTab('follow')" id="tab-follow" class="tab-btn px-1 py-2 text-sm font-medium text-white/60 hover:text-white transition">我的关注</button>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <div id="content-all" class="content-section">
+                        <div class="space-y-4">
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('离婚房产分割问题咨询', '刘晓梅', '民法', '4小时前', 28, 156, true)">
+                                <div class="flex gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">离婚房产分割问题咨询</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>刘晓梅</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>民法</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-clock"></i>4小时前</span>
+                                                </div>
+                                            </div>
+                                            <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
+                                                <i class="fa-solid fa-circle text-[6px] mr-1"></i>进行中
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">我和丈夫结婚8年，婚后共同购买了一套房产，现在面临离婚，请问房产应如何分割？</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>28回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>156点赞</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('劳动合同试用期被辞退', '李梅', '劳动法', '昨天', 67, 289, true)">
+                                <div class="flex gap-4">
+                                    <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">劳动合同试用期被辞退</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>李梅</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>劳动法</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-clock"></i>昨天</span>
+                                                </div>
+                                            </div>
+                                            <span class="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full">
+                                                <i class="fa-solid fa-fire mr-1"></i>热门
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">我试用期刚过一半，公司以"不符合岗位要求"为由辞退我，这种情况我能维权吗？</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>67回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>289点赞</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-hot" class="content-section content-hidden">
+                        <div class="space-y-4">
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('劳动合同试用期被辞退', '李梅', '劳动法', '昨天', 156, 892, true)">
+                                <div class="flex gap-4">
+                                    <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">劳动合同试用期被辞退</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>李梅</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>劳动法</span>
+                                                </div>
+                                            </div>
+                                            <span class="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full">
+                                                <i class="fa-solid fa-fire mr-1"></i>热门
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">我试用期刚过一半，公司以"不符合岗位要求"为由辞退我，这种情况我能维权吗？</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>156回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>892点赞</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('离婚房产分割问题咨询', '刘晓梅', '民法', '4小时前', 89, 456, true)">
+                                <div class="flex gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">离婚房产分割问题咨询</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>刘晓梅</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>民法</span>
+                                                </div>
+                                            </div>
+                                            <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
+                                                <i class="fa-solid fa-circle text-[6px] mr-1"></i>热议中
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">我和丈夫结婚8年，婚后共同购买了一套房产，现在面临离婚，请问房产应如何分割？</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>89回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>456点赞</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('交通事故责任划分疑问', '王师傅', '行政法', '2天前', 45, 234, false)">
+                                <div class="flex gap-4">
+                                    <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">交通事故责任划分疑问</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>王师傅</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>行政法</span>
+                                                </div>
+                                            </div>
+                                            <span class="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full">
+                                                <i class="fa-solid fa-fire mr-1"></i>热门
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">对方闯红灯导致事故，但交警认定我次责，这合理吗？</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>45回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>234点赞</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-latest" class="content-section content-hidden">
+                        <div class="space-y-4">
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('民间借贷利息如何计算', '周律师', '债权', '刚刚', 3, 12, false)">
+                                <div class="flex gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">民间借贷利息如何计算</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>周律师</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>债权</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-clock"></i>刚刚</span>
+                                                </div>
+                                            </div>
+                                            <span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                                                <i class="fa-solid fa-bolt mr-1"></i>新帖
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">朋友向我借款10万元，约定月息2分，借期一年。请问到期后我应收回多少本息？</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>3回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>12点赞</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('网购退货遭商家拒绝怎么办', '陈小姐', '民法', '10分钟前', 8, 35, true)">
+                                <div class="flex gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">网购退货遭商家拒绝怎么办</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>陈小姐</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>民法</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-clock"></i>10分钟前</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">在网上买了衣服，收到后发现质量问题，但商家以"已拆封"为由拒绝退货...</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>8回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>35点赞</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('邻居装修噪音扰民能投诉吗', '张先生', '民法', '30分钟前', 15, 67, true)">
+                                <div class="flex gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">邻居装修噪音扰民能投诉吗</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>张先生</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>民法</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-clock"></i>30分钟前</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">邻居周末早上8点就开始装修，电钻声震耳欲聋，严重影响休息...</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>15回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>67点赞</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('公司拖欠工资如何维权', '刘先生', '劳动法', '1小时前', 42, 189, true)">
+                                <div class="flex gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">公司拖欠工资如何维权</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>刘先生</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>劳动法</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-clock"></i>1小时前</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">公司已经拖欠三个月工资了，老板一直说过几天就发，我应该怎么维权？</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>42回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>189点赞</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-follow" class="content-section content-hidden">
+                        <div class="space-y-4">
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('离婚房产分割问题咨询', '刘晓梅', '民法', '4小时前', 28, 156, true)">
+                                <div class="flex gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">离婚房产分割问题咨询</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>刘晓梅</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>民法</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-clock"></i>4小时前</span>
+                                                </div>
+                                            </div>
+                                            <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
+                                                <i class="fa-solid fa-circle text-[6px] mr-1"></i>进行中
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">我和丈夫结婚8年，婚后共同购买了一套房产，现在面临离婚，请问房产应如何分割？</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>28回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>156点赞</span>
+                                            <span class="flex items-center gap-1 ml-auto"><i class="fa-solid fa-user-check text-primary"></i>已关注</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('民间借贷利息如何计算', '周律师', '债权', '刚刚', 5, 23, false)">
+                                <div class="flex gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">民间借贷利息如何计算</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>周律师</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>债权</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-clock"></i>刚刚</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">朋友向我借款10万元，约定月息2分，借期一年。请问到期后我应收回多少本息？</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>5回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>23点赞</span>
+                                            <span class="flex items-center gap-1 ml-auto"><i class="fa-solid fa-user-check text-primary"></i>已关注</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="discussion-card glass-card rounded-xl p-5 cursor-pointer" onclick="openPostDetail('公司拖欠工资如何维权', '刘先生', '劳动法', '1小时前', 42, 189, true)">
+                                <div class="flex gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-full shrink-0">
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h3 class="text-white font-bold text-lg mb-1">公司拖欠工资如何维权</h3>
+                                                <div class="flex items-center gap-3 text-xs text-white/50">
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-user"></i>刘先生</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-tag"></i>劳动法</span>
+                                                    <span class="flex items-center gap-1"><i class="fa-solid fa-clock"></i>1小时前</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-white/70 mb-3 line-clamp-2">公司已经拖欠三个月工资了，老板一直说过几天就发，我应该怎么维权？</p>
+                                        <div class="flex items-center gap-4 text-sm text-white/50">
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i>42回复</span>
+                                            <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i>189点赞</span>
+                                            <span class="flex items-center gap-1 ml-auto"><i class="fa-solid fa-user-check text-primary"></i>已关注</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-80 bg-surface/40 border-l border-white/5 p-6 overflow-y-auto scrollbar-thin">
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-tags w-5 h-5 text-primary"></i>
+                        热门话题标签
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1.5 bg-primary/20 text-primary text-xs rounded-full cursor-pointer hover:bg-primary/30 transition">婚姻家庭</span>
+                        <span class="px-3 py-1.5 bg-white/10 text-white/80 text-xs rounded-full cursor-pointer hover:bg-white/20 transition">劳动纠纷</span>
+                        <span class="px-3 py-1.5 bg-white/10 text-white/80 text-xs rounded-full cursor-pointer hover:bg-white/20 transition">合同争议</span>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-crown w-5 h-5 text-yellow-500"></i>
+                        活跃用户
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-10 h-10 rounded-full">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">刘晓梅</p>
+                                <p class="text-xs text-white/40">发布156条话题</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-10 h-10 rounded-full">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">周律师</p>
+                                <p class="text-xs text-white/40">优质回答者</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="newPostModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+        <div class="modal-content glass-card rounded-2xl p-6 w-[560px]">
+            <div class="flex items-center justify-between mb-6">
+                <div class="modal-dots">
+                    <span class="bg-red-500"></span>
+                    <span class="bg-yellow-500"></span>
+                    <span class="bg-green-500"></span>
+                </div>
+                <h3 class="text-xl font-bold text-white text-center flex-1">发布新话题</h3>
+                <button onclick="closeNewPostModal()" class="text-white/60 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">话题标题</label>
+                    <input type="text" placeholder="请输入话题标题" 
+                           class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-primary transition">
+                </div>
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">选择分类</label>
+                    <select class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition">
+                        <option value="">请选择话题分类</option>
+                        <option value="civil">民法</option>
+                        <option value="criminal">刑法</option>
+                        <option value="labor">劳动法</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-white/80 mb-2">话题内容</label>
+                    <textarea placeholder="请详细描述您的问题或案例..." rows="4"
+                              class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-primary transition resize-none"></textarea>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeNewPostModal()" class="btn-secondary flex-1 py-3 rounded-lg text-white font-medium">
+                    取消
+                </button>
+                <button onclick="publishPost()" class="btn-primary flex-1 py-3 rounded-lg text-white font-semibold">
+                    <i class="fa-solid fa-paper-plane mr-2"></i>发布话题
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="postModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+        <div class="modal-content glass-card rounded-2xl p-6 w-[640px] max-h-[80vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div class="modal-dots">
+                    <span class="bg-red-500"></span>
+                    <span class="bg-yellow-500"></span>
+                    <span class="bg-green-500"></span>
+                </div>
+                <h3 id="postModalTitle" class="text-xl font-bold text-white text-center flex-1">话题详情</h3>
+                <button onclick="closePostModal()" class="text-white/60 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center gap-4 p-4 bg-white/5 rounded-xl">
+                    <img id="postAvatar" src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-12 h-12 rounded-full">
+                    <div class="flex-1">
+                        <h4 id="postAuthor" class="text-white font-bold">刘晓梅</h4>
+                        <p id="postMeta" class="text-sm text-white/60">民法 · 4小时前</p>
+                    </div>
+                    <span id="postStatus" class="px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full">
+                        进行中
+                    </span>
+                </div>
+                <div>
+                    <h3 id="postTitle" class="text-lg font-bold text-white mb-3">离婚房产分割问题咨询</h3>
+                    <p id="postContent" class="text-white/80 leading-relaxed">我和丈夫结婚8年，婚后共同购买了一套房产，现在面临离婚，请问房产应如何分割？</p>
+                </div>
+                <div class="flex items-center gap-4 text-sm text-white/50 pt-4 border-t border-white/5">
+                    <span class="flex items-center gap-1"><i class="fa-regular fa-comment"></i><span id="postReplies">28回复</span></span>
+                    <span class="flex items-center gap-1"><i class="fa-regular fa-heart"></i><span id="postLikes">156点赞</span></span>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closePostModal()" class="btn-secondary flex-1 py-3 rounded-lg text-white font-medium">
+                    关闭
+                </button>
+                <button onclick="joinDiscussion()" class="btn-primary flex-1 py-3 rounded-lg text-white font-semibold">
+                    <i class="fa-solid fa-comment mr-2"></i>参与讨论
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleNotification() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const bell = e.target.closest('.fa-bell');
+            if (!bell && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+                btn.classList.add('text-white/60', 'font-medium');
+            });
+            document.getElementById('tab-' + tab).classList.remove('text-white/60', 'font-medium');
+            document.getElementById('tab-' + tab).classList.add('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+            
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.add('content-hidden');
+            });
+            document.getElementById('content-' + tab).classList.remove('content-hidden');
+        }
+
+        function openNewPostModal() {
+            document.getElementById('newPostModal').classList.remove('hidden');
+            document.getElementById('newPostModal').classList.add('flex');
+        }
+
+        function closeNewPostModal() {
+            document.getElementById('newPostModal').classList.add('hidden');
+            document.getElementById('newPostModal').classList.remove('flex');
+        }
+
+        function publishPost() {
+            alert('话题发布成功！');
+            closeNewPostModal();
+        }
+
+        function openPostDetail(title, author, category, time, replies, likes, isActive) {
+            document.getElementById('postTitle').textContent = title;
+            document.getElementById('postModalTitle').textContent = title;
+            document.getElementById('postAuthor').textContent = author;
+            document.getElementById('postMeta').textContent = category + ' · ' + time;
+            document.getElementById('postReplies').textContent = replies + '回复';
+            document.getElementById('postLikes').textContent = likes + '点赞';
+            
+            const statusEl = document.getElementById('postStatus');
+            if (isActive) {
+                statusEl.className = 'px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full';
+                statusEl.innerHTML = '<i class="fa-solid fa-circle text-[6px] mr-1"></i>进行中';
+            } else {
+                statusEl.className = 'px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded-full';
+                statusEl.innerHTML = '<i class="fa-solid fa-check mr-1"></i>已解决';
+            }
+            
+            document.getElementById('postModal').classList.remove('hidden');
+            document.getElementById('postModal').classList.add('flex');
+        }
+
+        function closePostModal() {
+            document.getElementById('postModal').classList.add('hidden');
+            document.getElementById('postModal').classList.remove('flex');
+        }
+
+        function joinDiscussion() {
+            alert('正在加入讨论...');
+        }
+
+        document.getElementById('newPostModal').addEventListener('click', function(e) {
+            if (e.target === this) closeNewPostModal();
+        });
+
+        document.getElementById('postModal').addEventListener('click', function(e) {
+            if (e.target === this) closePostModal();
+        });
+    </script>
+</body>
+</html>

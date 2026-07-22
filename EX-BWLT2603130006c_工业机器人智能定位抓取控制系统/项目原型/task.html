@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工业机器人智能定位抓取控制系统</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --mac-bg: #1a1a2e;
+      --window-bg: #1e1e2e;
+      --titlebar: #2a2a3e;
+      --sidebar-bg: #232336;
+      --card-bg: #2a2a40;
+      --card-border: #3a3a55;
+      --text-primary: #e0e0ec;
+      --text-secondary: #8888a8;
+      --text-dim: #5a5a78;
+      --accent-blue: #4a9eff;
+      --accent-green: #34d399;
+      --accent-orange: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #a78bfa;
+      --accent-cyan: #22d3ee;
+      --divider: #333350;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: url('./static/bg.jpg') no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .mac-window { width: 1280px; max-width: 96vw; background: var(--window-bg); border-radius: 12px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5); overflow: hidden; }
+    .title-bar { height: 52px; background: var(--titlebar); border-bottom: 1px solid var(--divider); display: flex; align-items: center; padding: 0 16px; position: relative; }
+    .traffic-lights { display: flex; gap: 8px; z-index: 2; }
+    .traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .title-bar-text { position: absolute; left: 50%; transform: translateX(-50%); color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+
+    .toolbar { height: 42px; background: linear-gradient(180deg, #2a2a3e, #252538); border-bottom: 1px solid var(--divider); display: flex; align-items: center; padding: 0 12px; gap: 2px; }
+    .tool-btn { display: flex; align-items: center; gap: 5px; padding: 5px 10px; color: var(--text-secondary); font-size: 11.5px; border: none; background: none; cursor: pointer; border-radius: 5px; transition: all 0.15s; }
+    .tool-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); }
+    .tool-btn:active { transform: scale(0.97); }
+    .tool-btn i { font-size: 12px; }
+    .tool-btn.primary { color: var(--accent-blue); }
+    .tool-btn.success { color: var(--accent-green); }
+    .tool-btn.danger { color: var(--accent-red); }
+    .tool-sep { width: 1px; height: 20px; background: var(--divider); margin: 0 6px; }
+    .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .user-badge { display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 6px; background: rgba(74, 158, 255, 0.12); border: 1px solid rgba(74, 158, 255, 0.25); border-radius: 12px; color: var(--accent-blue); font-size: 11px; }
+    .user-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+
+    .main-layout { display: flex; height: 620px; }
+    .sidebar { width: 200px; background: var(--sidebar-bg); border-right: 1px solid var(--divider); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { padding: 14px 14px 10px; color: var(--text-dim); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+    .nav-item { padding: 7px 12px; color: var(--text-secondary); font-size: 12px; cursor: pointer; border-radius: 5px; transition: all 0.15s; display: flex; align-items: center; gap: 8px; margin: 0 6px 2px; text-decoration: none; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--text-primary); }
+    .nav-item.active { background: rgba(74, 158, 255, 0.15); color: var(--accent-blue); }
+    .nav-item i { width: 14px; height: 14px; font-size: 13px; flex-shrink: 0; }
+
+    .sidebar-footer { margin-top: auto; padding: 12px 14px; border-top: 1px solid var(--divider); }
+    .robot-status { background: rgba(255, 255, 255, 0.03); border-radius: 6px; padding: 10px; }
+    .robot-label { color: var(--text-dim); font-size: 10px; margin-bottom: 4px; }
+    .robot-name { color: var(--text-primary); font-size: 11.5px; font-weight: 500; margin-bottom: 6px; }
+    .robot-meta { display: flex; gap: 12px; }
+    .robot-meta span { color: var(--text-dim); font-size: 10px; }
+
+    .content-area { flex: 1; overflow-y: auto; background: var(--window-bg); }
+    .content-body { padding: 16px; }
+
+    .flow-card { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--card-border); padding: 14px; margin-bottom: 12px; }
+    .flow-card h4 { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+    .flow-card h4 i { color: var(--accent-blue); font-size: 11px; }
+
+    .flow-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .flow-step { background: #1a1a2e; border: 1px solid var(--card-border); border-radius: 8px; padding: 10px 16px; font-size: 12px; min-width: 120px; text-align: center; }
+    .flow-step.active { border-color: rgba(74, 158, 255, 0.3); box-shadow: 0 0 12px rgba(74, 158, 255, 0.1); }
+    .flow-step-num { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+    .flow-arrow { color: var(--text-dim); font-size: 12px; }
+
+    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+    .btn { padding: 6px 14px; border-radius: 5px; font-size: 12px; cursor: pointer; transition: all 0.15s; border: none; font-family: 'Noto Sans SC', sans-serif; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent-blue); color: #fff; }
+    .btn-primary:hover { background: #5aadff; }
+    .btn-secondary { background: var(--card-border); color: var(--text-secondary); }
+    .btn-secondary:hover { background: #444460; color: var(--text-primary); }
+    .btn-success { background: var(--accent-green); color: #0a2020; }
+    .btn-danger { background: var(--accent-red); color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--card-border); color: var(--text-secondary); }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.04); color: var(--text-primary); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .info-card { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--card-border); padding: 14px; }
+    .info-card h4 { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .info-card h4 i { color: var(--accent-blue); font-size: 11px; }
+
+    .task-list { display: flex; flex-direction: column; gap: 6px; }
+    .task-item { display: flex; align-items: center; gap: 10px; padding: 8px; background: #1a1a2e; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+    .task-item:hover { background: rgba(255, 255, 255, 0.04); }
+    .task-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .task-status.running { background: var(--accent-green); box-shadow: 0 0 6px rgba(52, 211, 153, 0.5); }
+    .task-status.ready { background: var(--accent-blue); }
+    .task-status.pending { background: var(--accent-orange); }
+    .task-status.done { background: var(--text-dim); }
+    .task-info { flex: 1; min-width: 0; }
+    .task-name { font-size: 12px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .task-time { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--card-border); }
+    .stat-item:last-child { border-bottom: none; }
+    .stat-label { font-size: 11px; color: var(--text-secondary); }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; }
+    .stat-value.blue { color: var(--accent-blue); }
+    .stat-value.green { color: var(--accent-green); }
+    .stat-value.orange { color: var(--accent-orange); }
+    .stat-value.red { color: var(--accent-red); }
+
+    .status-bar { height: 26px; background: #222233; border-top: 1px solid var(--divider); display: flex; align-items: center; padding: 0 12px; gap: 16px; }
+    .status-item { color: var(--text-dim); font-size: 10.5px; display: flex; align-items: center; gap: 4px; }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-green); }
+    .status-right { margin-left: auto; display: flex; gap: 14px; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.65); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.25s ease; }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); min-width: 380px; max-width: 500px; transform: scale(0.9) translateY(-20px); transition: transform 0.25s ease; }
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-header { padding: 12px 16px; border-bottom: 1px solid var(--divider); display: flex; align-items: center; justify-content: center; position: relative; background: var(--titlebar); border-radius: 10px 10px 0 0; }
+    .modal-traffic-lights { position: absolute; left: 14px; display: flex; gap: 8px; }
+    .modal-traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .modal-traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .modal-traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .modal-traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+    .modal-title { color: var(--text-primary); font-size: 14px; font-weight: 500; text-align: center; }
+    .modal-body { padding: 16px; }
+    .modal-footer { padding: 12px 16px; border-top: 1px solid var(--divider); display: flex; justify-content: flex-end; gap: 8px; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; color: var(--text-dim); font-size: 11px; margin-bottom: 5px; }
+    .form-input { width: 100%; padding: 7px 10px; background: #1a1a2e; border: 1px solid var(--card-border); border-radius: 5px; color: var(--text-primary); font-size: 12px; transition: border-color 0.15s; }
+    .form-input:focus { outline: none; border-color: var(--accent-blue); }
+    .form-select { width: 100%; padding: 7px 10px; background: #1a1a2e; border: 1px solid var(--card-border); border-radius: 5px; color: var(--text-primary); font-size: 12px; cursor: pointer; }
+    .form-select:focus { outline: none; border-color: var(--accent-blue); }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+    .checkbox-group { display: flex; flex-direction: column; gap: 6px; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .checkbox-item input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent-blue); cursor: pointer; }
+    .checkbox-item span { color: var(--text-secondary); font-size: 12px; }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <span class="title-bar-text">工业机器人智能定位抓取控制系统</span>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool-btn success" id="btnNewTask">
+        <i class="fa-solid fa-plus"></i>
+        新建任务
+      </button>
+      <button class="tool-btn primary" id="btnImportTask">
+        <i class="fa-solid fa-file-import"></i>
+        导入任务
+      </button>
+      <button class="tool-btn" id="btnExportTask">
+        <i class="fa-solid fa-file-export"></i>
+        导出任务
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnBatchOp">
+        <i class="fa-solid fa-layer-group"></i>
+        批量操作
+      </button>
+      <button class="tool-btn" id="btnFilter">
+        <i class="fa-solid fa-filter"></i>
+        任务筛选
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnRefresh">
+        <i class="fa-solid fa-rotate"></i>
+        刷新
+      </button>
+      <button class="tool-btn" id="btnHelp">
+        <i class="fa-solid fa-circle-question"></i>
+        帮助
+      </button>
+      <div class="toolbar-right">
+        <div class="user-badge">
+          <img class="user-avatar" src="https://i02piccdn.sogoucdn.com/93b2fc982f88939f" alt="王晓岚头像">
+          王晓岚
+        </div>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">功能导航</div>
+        <nav>
+          <a class="nav-item" href="./main.html"><i class="fa-solid fa-house"></i>系统概览</a>
+          <a class="nav-item" href="./vision.html"><i class="fa-solid fa-eye"></i>视觉定位</a>
+          <a class="nav-item" href="./control.html"><i class="fa-solid fa-gamepad"></i>运动控制</a>
+          <a class="nav-item active" href="./task.html"><i class="fa-solid fa-list-check"></i>任务编排</a>
+          <a class="nav-item" href="./statistics.html"><i class="fa-solid fa-chart-bar"></i>数据统计</a>
+          <a class="nav-item" href="./alarm.html"><i class="fa-solid fa-bell"></i>报警管理</a>
+          <a class="nav-item" href="./maintenance.html"><i class="fa-solid fa-wrench"></i>维护管理</a>
+          <a class="nav-item" href="./log.html"><i class="fa-solid fa-file-lines"></i>运行日志</a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="robot-status">
+            <div class="robot-label">当前机器人</div>
+            <div class="robot-name">FANUC M-20iD/25</div>
+            <div class="robot-meta"><span>192.168.1.100</span><span>在线</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <div class="content-body">
+          <div class="flow-card">
+            <h4><i class="fa-solid fa-diagram-project"></i>任务流程编排</h4>
+            <div class="flow-steps">
+              <div class="flow-step" style="color:var(--accent-blue)">
+                <div class="flow-step-num">STEP 1</div>
+                视觉定位
+              </div>
+              <div class="flow-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+              <div class="flow-step" style="color:var(--accent-green)">
+                <div class="flow-step-num">STEP 2</div>
+                路径规划
+              </div>
+              <div class="flow-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+              <div class="flow-step active" style="color:var(--accent-orange)">
+                <div class="flow-step-num">STEP 3</div>
+                逼近目标
+              </div>
+              <div class="flow-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+              <div class="flow-step" style="color:var(--accent-purple)">
+                <div class="flow-step-num">STEP 4</div>
+                抓取执行
+              </div>
+              <div class="flow-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+              <div class="flow-step" style="color:var(--accent-cyan)">
+                <div class="flow-step-num">STEP 5</div>
+                搬运放置
+              </div>
+              <div class="flow-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+              <div class="flow-step" style="color:var(--text-secondary)">
+                <div class="flow-step-num">STEP 6</div>
+                质检确认
+              </div>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-success" id="btnStartFlow"><i class="fa-solid fa-play" style="margin-right:4px"></i>启动流程</button>
+              <button class="btn btn-outline" id="btnPauseFlow"><i class="fa-solid fa-pause" style="margin-right:4px"></i>暂停</button>
+              <button class="btn btn-danger" id="btnStopFlow"><i class="fa-solid fa-stop" style="margin-right:4px"></i>终止</button>
+              <button class="btn btn-outline" id="btnEditFlow"><i class="fa-solid fa-pen" style="margin-right:4px"></i>编辑流程</button>
+              <button class="btn btn-outline" id="btnImportTpl"><i class="fa-solid fa-folder-open" style="margin-right:4px"></i>导入模板</button>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="info-card">
+              <h4><i class="fa-solid fa-list-check"></i>已保存任务模板</h4>
+              <div class="task-list">
+                <div class="task-item">
+                  <div class="task-status running"></div>
+                  <div class="task-info">
+                    <div class="task-name">PCB板分拣 - A产线</div>
+                    <div class="task-time">运行中</div>
+                  </div>
+                </div>
+                <div class="task-item">
+                  <div class="task-status ready"></div>
+                  <div class="task-info">
+                    <div class="task-name">IC芯片上料 - B产线</div>
+                    <div class="task-time">就绪</div>
+                  </div>
+                </div>
+                <div class="task-item">
+                  <div class="task-status ready"></div>
+                  <div class="task-info">
+                    <div class="task-name">模组装配 - 工位C</div>
+                    <div class="task-time">就绪</div>
+                  </div>
+                </div>
+                <div class="task-item">
+                  <div class="task-status done"></div>
+                  <div class="task-info">
+                    <div class="task-name">成品码垛 - 出料口</div>
+                    <div class="task-time">未启用</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <h4><i class="fa-solid fa-chart-line"></i>任务执行统计</h4>
+              <div class="stat-grid">
+                <div class="stat-item">
+                  <span class="stat-label">今日任务总数</span>
+                  <span class="stat-value blue">1,247</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">成功完成</span>
+                  <span class="stat-value green">1,230</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">异常中断</span>
+                  <span class="stat-value red">17</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">平均周期时间</span>
+                  <span class="stat-value">4.2s</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">节拍效率 (UPH)</span>
+                  <span class="stat-value orange">857</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">成功率</span>
+                  <span class="stat-value green">98.6%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-item"><span class="status-dot"></span>系统就绪</div>
+          <div class="status-item">任务执行: 1/4</div>
+          <div class="status-item">当前任务: PCB板分拣</div>
+          <div class="status-right">
+            <div class="status-item">FANUC M-20iD/25</div>
+            <div class="status-item">最后更新: 14:27:03</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() { modalOverlay.classList.remove('active'); }
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    document.getElementById('btnNewTask').addEventListener('click', () => {
+      openModal('新建任务', `<div class="form-group"><label class="form-label">任务名称</label><input type="text" class="form-input" placeholder="请输入任务名称"></div><div class="form-row"><div class="form-group"><label class="form-label">任务类型</label><select class="form-select"><option>抓取任务</option><option>放置任务</option><option>搬运任务</option><option>装配任务</option></select></div><div class="form-group"><label class="form-label">优先级</label><select class="form-select"><option>高</option><option selected>中</option><option>低</option></select></div></div><div class="form-group"><label class="form-label">任务描述</label><input type="text" class="form-input" placeholder="请输入任务描述"></div><div class="form-group"><label class="form-label">备注</label><input type="text" class="form-input" placeholder="选填"></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">创建</button>`);
+    });
+
+    document.getElementById('btnImportTask').addEventListener('click', () => {
+      openModal('导入任务', `<div class="form-group"><label class="form-label">选择文件</label><input type="file" class="form-input" accept=".json,.xml,.txt" style="padding:6px"></div><div class="form-group"><label class="form-label">导入模式</label><select class="form-select"><option>追加模式</option><option>覆盖模式</option></select></div><div style="padding:10px;background:rgba(74,158,255,0.1);border-radius:6px"><div style="font-size:11px;color:var(--accent-blue);margin-bottom:4px">支持格式</div><div style="font-size:10px;color:var(--text-secondary)">JSON (.json) | XML (.xml) | 文本 (.txt)</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">导入</button>`);
+    });
+
+    document.getElementById('btnExportTask').addEventListener('click', () => {
+      openModal('导出任务', `<div class="form-group"><label class="form-label">导出格式</label><select class="form-select"><option>JSON (.json)</option><option>XML (.xml)</option><option>文本 (.txt)</option></select></div><div class="form-group"><label class="form-label">选择任务</label><div class="checkbox-group"><label class="checkbox-item"><input type="checkbox" checked><span>PCB板分拣 - A产线</span></label><label class="checkbox-item"><input type="checkbox" checked><span>IC芯片上料 - B产线</span></label><label class="checkbox-item"><input type="checkbox"><span>模组装配 - 工位C</span></label></div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">导出</button>`);
+    });
+
+    document.getElementById('btnBatchOp').addEventListener('click', () => {
+      openModal('批量操作', `<div class="form-group"><label class="form-label">批量操作类型</label><select class="form-select"><option>批量删除</option><option>批量启用</option><option>批量禁用</option><option>批量修改优先级</option></select></div><div class="form-group"><label class="form-label">选择任务</label><div class="checkbox-group"><label class="checkbox-item"><input type="checkbox"><span>PCB板分拣 - A产线</span></label><label class="checkbox-item"><input type="checkbox"><span>IC芯片上料 - B产线</span></label><label class="checkbox-item"><input type="checkbox"><span>模组装配 - 工位C</span></label><label class="checkbox-item"><input type="checkbox"><span>成品码垛 - 出料口</span></label></div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">执行</button>`);
+    });
+
+    document.getElementById('btnFilter').addEventListener('click', () => {
+      openModal('任务筛选', `<div class="form-group"><label class="form-label">任务状态</label><div class="checkbox-group"><label class="checkbox-item"><input type="checkbox" checked><span>全部</span></label><label class="checkbox-item"><input type="checkbox"><span>运行中</span></label><label class="checkbox-item"><input type="checkbox"><span>就绪</span></label><label class="checkbox-item"><input type="checkbox"><span>暂停</span></label><label class="checkbox-item"><input type="checkbox"><span>已完成</span></label></div></div><div class="form-row"><div class="form-group"><label class="form-label">优先级</label><select class="form-select"><option>全部</option><option>高</option><option>中</option><option>低</option></select></div><div class="form-group"><label class="form-label">任务类型</label><select class="form-select"><option>全部</option><option>抓取</option><option>放置</option><option>搬运</option></select></div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">应用</button>`);
+    });
+
+    document.getElementById('btnRefresh').addEventListener('click', () => {
+      openModal('刷新任务', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-rotate" style="font-size:48px;color:var(--accent-blue);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认刷新任务列表？</div><div style="color:var(--text-secondary);font-size:12px">将重新加载所有任务数据</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">刷新</button>`);
+    });
+
+    document.getElementById('btnHelp').addEventListener('click', () => {
+      openModal('帮助', `<div style="padding:10px"><div style="font-size:12px;color:var(--text-primary);margin-bottom:12px;font-weight:600">任务编排使用说明</div><div style="font-size:11px;color:var(--text-secondary);line-height:1.8"><div style="margin-bottom:8px">1. 新建任务：创建新的抓取或放置任务</div><div style="margin-bottom:8px">2. 编辑流程：修改任务执行步骤</div><div style="margin-bottom:8px">3. 启动流程：开始执行任务</div><div style="margin-bottom:8px">4. 暂停/终止：控制任务执行状态</div><div>5. 导入/导出：备份或恢复任务配置</div></div></div>`,
+        `<button class="btn btn-primary" onclick="closeModal()">知道了</button>`);
+    });
+
+    document.getElementById('btnStartFlow').addEventListener('click', () => {
+      openModal('启动流程', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-play" style="font-size:48px;color:var(--accent-green);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认启动任务流程？</div><div style="color:var(--text-secondary);font-size:12px">当前任务: PCB板分拣 - A产线</div></div><div class="checkbox-group" style="margin-top:12px"><label class="checkbox-item"><input type="checkbox" checked><span>完成后自动记录数据</span></label><label class="checkbox-item"><input type="checkbox" checked><span>异常时自动暂停</span></label></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-success" onclick="closeModal()">启动</button>`);
+    });
+
+    document.getElementById('btnPauseFlow').addEventListener('click', () => {
+      openModal('暂停流程', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-pause" style="font-size:48px;color:var(--accent-orange);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认暂停任务流程？</div><div style="color:var(--text-secondary);font-size:12px">当前任务将被暂停，可恢复继续</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">暂停</button>`);
+    });
+
+    document.getElementById('btnStopFlow').addEventListener('click', () => {
+      openModal('终止流程', `<div style="text-align:center;padding:10px"><i class="fa-solid fa-stop" style="font-size:48px;color:var(--accent-red);margin-bottom:16px"></i><div style="color:var(--accent-red);font-size:14px;margin-bottom:8px;font-weight:600">警告：终止操作不可恢复！</div><div style="color:var(--text-secondary);font-size:12px">当前任务将被强制终止</div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="closeModal()">确认终止</button>`);
+    });
+
+    document.getElementById('btnEditFlow').addEventListener('click', () => {
+      openModal('编辑流程', `<div class="form-group"><label class="form-label">选择流程模板</label><select class="form-select"><option>PCB板分拣流程</option><option>IC上料流程</option><option>模组装配流程</option></select></div><div class="form-group"><label class="form-label">流程步骤</label><div class="checkbox-group"><label class="checkbox-item"><input type="checkbox" checked><span>STEP 1 - 视觉定位</span></label><label class="checkbox-item"><input type="checkbox" checked><span>STEP 2 - 路径规划</span></label><label class="checkbox-item"><input type="checkbox" checked><span>STEP 3 - 逼近目标</span></label><label class="checkbox-item"><input type="checkbox" checked><span>STEP 4 - 抓取执行</span></label><label class="checkbox-item"><input type="checkbox" checked><span>STEP 5 - 搬运放置</span></label><label class="checkbox-item"><input type="checkbox"><span>STEP 6 - 质检确认</span></label></div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">保存</button>`);
+    });
+
+    document.getElementById('btnImportTpl').addEventListener('click', () => {
+      openModal('导入模板', `<div class="form-group"><label class="form-label">选择模板文件</label><input type="file" class="form-input" accept=".json,.xml" style="padding:6px"></div><div class="form-group"><label class="form-label">模板预览</label><div style="padding:10px;background:#1a1a2e;border-radius:5px;font-size:11px;color:var(--text-secondary)"><div>模板名称: PCB标准流程</div><div>步骤数: 6步</div><div>创建时间: 2026-03-15</div></div></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">导入</button>`);
+    });
+  </script>
+</body>
+
+</html>

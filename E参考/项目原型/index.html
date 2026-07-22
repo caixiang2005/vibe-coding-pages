@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新能源储能系统运行监控与能效分析系统</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0EA5E9;
+    --primary-dark: #0284C7;
+    --primary-light: #E0F2FE;
+    --accent: #10B981;
+    --accent-warm: #F59E0B;
+    --danger: #EF4444;
+    --warning: #F97316;
+    --bg: #F0F6FF;
+    --sidebar-bg: #0F2744;
+    --sidebar-active: #1A3A5C;
+    --card-bg: #FFFFFF;
+    --text-primary: #0F2744;
+    --text-secondary: #5A7A99;
+    --text-light: #94A3B8;
+    --border: #DCE8F5;
+    --shadow: 0 4px 24px rgba(14,165,233,0.10);
+    --shadow-card: 0 2px 12px rgba(15,39,68,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px; background: var(--sidebar-bg); display: flex; flex-direction: column;
+    position: relative; z-index: 10; flex-shrink: 0;
+  }
+  .sidebar::after {
+    content: ''; position: absolute; top: 0; right: 0; width: 1px; height: 100%;
+    background: linear-gradient(to bottom, transparent, #1E4976, transparent);
+  }
+  .logo-area {
+    padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .logo-icon {
+    width: 40px; height: 40px; background: linear-gradient(135deg, #0EA5E9, #10B981);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .logo-icon i { color: white; font-size: 18px; }
+  .logo-title { color: white; font-size: 13px; font-weight: 600; line-height: 1.4; }
+  .logo-sub { color: rgba(255,255,255,0.4); font-size: 10px; margin-top: 2px; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px; }
+
+  .nav-section { flex: 1; padding: 16px 12px; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border-radius: 8px; cursor: pointer; margin-bottom: 2px;
+    color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 500;
+    transition: all 0.2s; text-decoration: none;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+  .nav-item.active { background: linear-gradient(135deg, #0EA5E9, #0284C7); color: white; box-shadow: 0 4px 12px rgba(14,165,233,0.3); }
+  .nav-item i { width: 18px; text-align: center; font-size: 14px; }
+  .nav-badge { margin-left: auto; background: var(--danger); color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-family: 'JetBrains Mono'; }
+
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
+  .user-card { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0EA5E9, #10B981); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .user-avatar img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .user-info .name { color: white; font-size: 12px; font-weight: 600; }
+  .user-info .role { color: rgba(255,255,255,0.4); font-size: 10px; }
+
+  /* MAIN */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* TOPBAR */
+  .topbar {
+    height: 60px; background: white; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 28px; gap: 16px;
+    box-shadow: 0 1px 8px rgba(15,39,68,0.06);
+  }
+  .topbar-breadcrumb { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .breadcrumb-item { color: var(--text-secondary); font-size: 13px; }
+  .breadcrumb-item.current { color: var(--text-primary); font-weight: 600; }
+  .breadcrumb-sep { color: var(--text-light); font-size: 12px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-time { font-family: 'JetBrains Mono'; font-size: 13px; color: var(--text-secondary); background: var(--bg); padding: 6px 12px; border-radius: 6px; }
+  .topbar-btn {
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+    background: white; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-secondary); position: relative; transition: all 0.2s;
+  }
+  .topbar-btn:hover { background: var(--bg); color: var(--primary); }
+  .topbar-btn .dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; background: var(--danger); border-radius: 50%; border: 1.5px solid white; }
+
+  /* CONTENT */
+  .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+  /* STATUS STRIP */
+  .status-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
+  }
+  .stat-card {
+    background: white; border-radius: 14px; padding: 20px;
+    box-shadow: var(--shadow-card); border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .stat-card.blue::before { background: linear-gradient(90deg, #0EA5E9, #38BDF8); }
+  .stat-card.green::before { background: linear-gradient(90deg, #10B981, #34D399); }
+  .stat-card.amber::before { background: linear-gradient(90deg, #F59E0B, #FCD34D); }
+  .stat-card.red::before { background: linear-gradient(90deg, #EF4444, #F87171); }
+  .stat-icon {
+    width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  }
+  .stat-icon.blue { background: #EFF8FF; color: #0EA5E9; }
+  .stat-icon.green { background: #ECFDF5; color: #10B981; }
+  .stat-icon.amber { background: #FFFBEB; color: #F59E0B; }
+  .stat-icon.red { background: #FEF2F2; color: #EF4444; }
+  .stat-icon i { font-size: 22px; }
+  .stat-info { flex: 1; }
+  .stat-value { font-size: 26px; font-weight: 700; font-family: 'Rajdhani'; line-height: 1; margin-bottom: 4px; }
+  .stat-value.blue { color: #0EA5E9; }
+  .stat-value.green { color: #10B981; }
+  .stat-value.amber { color: #F59E0B; }
+  .stat-value.red { color: #EF4444; }
+  .stat-unit { font-size: 12px; color: var(--text-light); margin-left: 2px; }
+  .stat-label { font-size: 12px; color: var(--text-secondary); }
+  .stat-trend { font-size: 11px; margin-top: 4px; }
+  .stat-trend.up { color: #10B981; }
+  .stat-trend.down { color: #EF4444; }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+
+  .panel {
+    background: white; border-radius: 14px; padding: 20px;
+    box-shadow: var(--shadow-card); border: 1px solid var(--border);
+  }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .panel-title { font-size: 14px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+  .panel-title i { color: var(--primary); }
+  .panel-action { font-size: 12px; color: var(--primary); cursor: pointer; padding: 4px 10px; border: 1px solid var(--primary-light); border-radius: 6px; background: var(--primary-light); text-decoration: none; }
+  .panel-action:hover { background: var(--primary); color: white; }
+
+  /* CHART PLACEHOLDER */
+  .chart-area {
+    height: 200px; background: linear-gradient(180deg, #F0F9FF 0%, #E0F2FE 100%);
+    border-radius: 10px; position: relative; overflow: hidden; display: block;
+  }
+  .chart-bars { display: flex; align-items: flex-end; gap: 6px; padding: 12px 16px; width: 100%; height: 100%; }
+  .bar-group { display: flex; gap: 3px; align-items: flex-end; flex: 1; }
+  .bar {
+    flex: 1; border-radius: 4px 4px 0 0; position: relative;
+    transition: opacity 0.2s; cursor: pointer;
+  }
+  .bar:hover { opacity: 0.8; }
+  .bar.charge { background: linear-gradient(180deg, #0EA5E9, #38BDF8); }
+  .bar.discharge { background: linear-gradient(180deg, #10B981, #34D399); }
+  .chart-legend { display: flex; gap: 16px; margin-top: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* LINE CHART */
+  .line-chart-area {
+    height: 160px; position: relative; overflow: hidden;
+  }
+  .line-chart-area svg { width: 100%; height: 100%; }
+
+  /* SOC GAUGE */
+  .soc-display { text-align: center; padding: 16px 0; }
+  .soc-ring { width: 120px; height: 120px; margin: 0 auto 12px; position: relative; }
+  .soc-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .soc-ring-bg { fill: none; stroke: #E2EEF9; stroke-width: 10; }
+  .soc-ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+  .soc-value-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .soc-pct { font-size: 26px; font-weight: 700; font-family: 'Rajdhani'; color: #0EA5E9; }
+  .soc-lbl { font-size: 10px; color: var(--text-light); }
+
+  /* DEVICE LIST */
+  .device-row {
+    display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .device-row:last-child { border-bottom: none; }
+  .device-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .device-status.online { background: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+  .device-status.warning { background: #F59E0B; box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+  .device-status.offline { background: #94A3B8; }
+  .device-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .device-meta { font-size: 11px; color: var(--text-light); font-family: 'JetBrains Mono'; }
+  .device-power { font-size: 13px; font-weight: 600; color: var(--primary); font-family: 'Rajdhani'; min-width: 60px; text-align: right; }
+
+  /* ALERT LIST */
+  .alert-item {
+    display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+    border-radius: 8px; margin-bottom: 8px; background: var(--bg);
+  }
+  .alert-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .alert-icon.crit { background: #FEF2F2; color: #EF4444; }
+  .alert-icon.warn { background: #FFFBEB; color: #F59E0B; }
+  .alert-icon.info { background: #EFF8FF; color: #0EA5E9; }
+  .alert-icon i { font-size: 12px; }
+  .alert-text { flex: 1; }
+  .alert-title { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+  .alert-time { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+
+  /* SOC MULTI */
+  .soc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .soc-name { font-size: 12px; color: var(--text-secondary); width: 60px; flex-shrink: 0; }
+  .soc-bar-wrap { flex: 1; height: 8px; background: #E2EEF9; border-radius: 4px; overflow: hidden; }
+  .soc-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #0EA5E9, #38BDF8); }
+  .soc-pct-val { font-size: 12px; font-weight: 600; font-family: 'JetBrains Mono'; color: var(--primary); width: 38px; text-align: right; }
+
+  /* TEMP CARD */
+  .temp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .temp-cell { background: var(--bg); border-radius: 8px; padding: 10px; text-align: center; }
+  .temp-val { font-size: 18px; font-weight: 700; font-family: 'Rajdhani'; }
+  .temp-val.ok { color: #10B981; }
+  .temp-val.warm { color: #F59E0B; }
+  .temp-lbl { font-size: 10px; color: var(--text-light); margin-top: 2px; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #10B981; display: inline-block; animation: pulse 2s infinite; margin-right: 6px; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo-area">
+    <div class="logo-title">新能源储能系统运行监控与能效分析系统</div>
+  </div>
+  <nav class="nav-section">
+    <a href="index.html" class="nav-item active"><i class="fa-solid fa-gauge-high"></i>总览仪表板</a>
+    <a href="monitor.html" class="nav-item"><i class="fa-solid fa-display"></i>实时监控</a>
+    <a href="efficiency.html" class="nav-item"><i class="fa-solid fa-chart-line"></i>能效分析</a>
+    <a href="alarm.html" class="nav-item"><i class="fa-solid fa-bell"></i>告警管理<span class="nav-badge">5</span></a>
+    <a href="device.html" class="nav-item"><i class="fa-solid fa-server"></i>设备管理</a>
+    <a href="report.html" class="nav-item"><i class="fa-solid fa-file-lines"></i>报表中心</a>
+    
+  </nav>
+  <div class="sidebar-footer">
+    <button onclick="window.location.href='login.html'" style="width:100%;padding:10px;margin-bottom:12px;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;font-size:13px;font-family:'Noto Sans SC';display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s">
+      <i class="fa-solid fa-sign-out-alt"></i> 退出登录
+    </button>
+    <div class="user-card">
+      <div class="user-avatar"><img src="static/avatar.jpg" alt="用户头像"></div>
+      <div class="user-info">
+        <div class="name">华南农业大学</div>
+        <div class="role">系统管理员</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      <span class="breadcrumb-item">首页</span>
+      <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right" style="font-size:10px"></i></span>
+      <span class="breadcrumb-item current">总览仪表板</span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock">--:--:--</div>
+      <div class="topbar-btn"><i class="fa-solid fa-magnifying-glass"></i></div>
+      
+      <div class="topbar-btn"><i class="fa-solid fa-expand"></i></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="status-strip">
+      <div class="stat-card blue">
+        <div class="stat-icon blue"><i class="fa-solid fa-battery-three-quarters"></i></div>
+        <div class="stat-info">
+          <div class="stat-value blue">78.5<span class="stat-unit">%</span></div>
+          <div class="stat-label">系统总SOC</div>
+          <div class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> 较昨日 +3.2%</div>
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon green"><i class="fa-solid fa-plug-circle-bolt"></i></div>
+        <div class="stat-info">
+          <div class="stat-value green">2,456<span class="stat-unit">kW</span></div>
+          <div class="stat-label">当前充放电功率</div>
+          <div class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> 放电中</div>
+        </div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-icon amber"><i class="fa-solid fa-solar-panel"></i></div>
+        <div class="stat-info">
+          <div class="stat-value amber">18,432<span class="stat-unit">kWh</span></div>
+          <div class="stat-label">今日能量吞吐</div>
+          <div class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> 较昨日 +8.7%</div>
+        </div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stat-info">
+          <div class="stat-value red">5<span class="stat-unit">条</span></div>
+          <div class="stat-label">活跃告警</div>
+          <div class="stat-trend down"><i class="fa-solid fa-arrow-trend-down"></i> 需立即处理</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN ROW -->
+    <div class="grid-2">
+      <!-- POWER CHART -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-wave-square"></i>今日功率曲线 <span class="live-dot"></span></div>
+          <a href="efficiency.html" class="panel-action">查看详情</a>
+        </div>
+        <div class="chart-area">
+          <div id="powerChart" style="width:100%;height:100%"></div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#0EA5E9"></span>充电功率(kW)</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#10B981"></span>放电功率(kW)</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#F59E0B"></span>当前时刻</div>
+        </div>
+      </div>
+
+      <!-- ALERTS -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-bell"></i>最新告警</div>
+          <a href="alarm.html" class="panel-action">全部告警</a>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon crit"><i class="fa-solid fa-exclamation"></i></div>
+          <div class="alert-text">
+            <div class="alert-title">BMS#03 电芯温度超限 58.2°C</div>
+            <div class="alert-time"><i class="fa-regular fa-clock"></i> 14:32:10 · 严重</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon warn"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div class="alert-text">
+            <div class="alert-title">PCS#01 直流母线电压偏低</div>
+            <div class="alert-time"><i class="fa-regular fa-clock"></i> 13:58:44 · 警告</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon warn"><i class="fa-solid fa-wind"></i></div>
+          <div class="alert-text">
+            <div class="alert-title">热管理系统风扇转速异常</div>
+            <div class="alert-time"><i class="fa-regular fa-clock"></i> 13:21:05 · 警告</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon info"><i class="fa-solid fa-info"></i></div>
+          <div class="alert-text">
+            <div class="alert-title">系统完成一次充放电循环</div>
+            <div class="alert-time"><i class="fa-regular fa-clock"></i> 12:05:30 · 信息</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon info"><i class="fa-solid fa-plug"></i></div>
+          <div class="alert-text">
+            <div class="alert-title">EMS通信恢复正常</div>
+            <div class="alert-time"><i class="fa-regular fa-clock"></i> 11:44:17 · 信息</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="grid-3">
+      <!-- SOC STATUS -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-battery-half"></i>各簇SOC状态</div>
+        </div>
+        <div class="soc-row">
+          <span class="soc-name">簇 #01</span>
+          <div class="soc-bar-wrap"><div class="soc-bar-fill" style="width:82%"></div></div>
+          <span class="soc-pct-val">82%</span>
+        </div>
+        <div class="soc-row">
+          <span class="soc-name">簇 #02</span>
+          <div class="soc-bar-wrap"><div class="soc-bar-fill" style="width:75%;background:linear-gradient(90deg,#10B981,#34D399)"></div></div>
+          <span class="soc-pct-val" style="color:#10B981">75%</span>
+        </div>
+        <div class="soc-row">
+          <span class="soc-name">簇 #03</span>
+          <div class="soc-bar-wrap"><div class="soc-bar-fill" style="width:91%"></div></div>
+          <span class="soc-pct-val">91%</span>
+        </div>
+        <div class="soc-row">
+          <span class="soc-name">簇 #04</span>
+          <div class="soc-bar-wrap"><div class="soc-bar-fill" style="width:68%;background:linear-gradient(90deg,#F59E0B,#FCD34D)"></div></div>
+          <span class="soc-pct-val" style="color:#F59E0B">68%</span>
+        </div>
+        <div class="soc-row">
+          <span class="soc-name">簇 #05</span>
+          <div class="soc-bar-wrap"><div class="soc-bar-fill" style="width:79%"></div></div>
+          <span class="soc-pct-val">79%</span>
+        </div>
+        <div class="soc-row">
+          <span class="soc-name">簇 #06</span>
+          <div class="soc-bar-wrap"><div class="soc-bar-fill" style="width:83%"></div></div>
+          <span class="soc-pct-val">83%</span>
+        </div>
+      </div>
+
+      <!-- DEVICE STATUS -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-server"></i>关键设备状态</div>
+          <a href="device.html" class="panel-action">设备管理</a>
+        </div>
+        <div class="device-row">
+          <span class="device-status online"></span>
+          <span class="device-name">PCS变流器 #01</span>
+          <span class="device-meta">运行</span>
+          <span class="device-power">+1200 kW</span>
+        </div>
+        <div class="device-row">
+          <span class="device-status online"></span>
+          <span class="device-name">PCS变流器 #02</span>
+          <span class="device-meta">运行</span>
+          <span class="device-power">+1256 kW</span>
+        </div>
+        <div class="device-row">
+          <span class="device-status warning"></span>
+          <span class="device-name">BMS电池管理 #03</span>
+          <span class="device-meta">告警</span>
+          <span class="device-power" style="color:#F59E0B">-- kW</span>
+        </div>
+        <div class="device-row">
+          <span class="device-status online"></span>
+          <span class="device-name">热管理系统 HVAC</span>
+          <span class="device-meta">制冷中</span>
+          <span class="device-power" style="color:#10B981">正常</span>
+        </div>
+        <div class="device-row">
+          <span class="device-status online"></span>
+          <span class="device-name">EMS能量管理主机</span>
+          <span class="device-meta">在线</span>
+          <span class="device-power" style="color:#10B981">正常</span>
+        </div>
+        <div class="device-row">
+          <span class="device-status offline"></span>
+          <span class="device-name">辅助变压器 #02</span>
+          <span class="device-meta">离线</span>
+          <span class="device-power" style="color:#94A3B8">-- kW</span>
+        </div>
+      </div>
+
+      <!-- TEMPERATURE -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title"><i class="fa-solid fa-temperature-half"></i>温度监测</div>
+        </div>
+        <div class="temp-grid">
+          <div class="temp-cell"><div class="temp-val ok">32.4°</div><div class="temp-lbl">电池簇1</div></div>
+          <div class="temp-cell"><div class="temp-val ok">31.8°</div><div class="temp-lbl">电池簇2</div></div>
+          <div class="temp-cell"><div class="temp-val warm">58.2°</div><div class="temp-lbl">电池簇3⚠</div></div>
+          <div class="temp-cell"><div class="temp-val ok">30.5°</div><div class="temp-lbl">电池簇4</div></div>
+          <div class="temp-cell"><div class="temp-val ok">33.1°</div><div class="temp-lbl">PCS#01</div></div>
+          <div class="temp-cell"><div class="temp-val ok">34.7°</div><div class="temp-lbl">PCS#02</div></div>
+        </div>
+        <div style="margin-top:14px; padding:10px; background:#ECFDF5; border-radius:8px; border-left:3px solid #10B981;">
+          <div style="font-size:12px;font-weight:600;color:#059669">环境温度</div>
+          <div style="font-size:22px;font-weight:700;font-family:'Rajdhani';color:#10B981;margin-top:2px">28.3°C <span style="font-size:12px;color:#6EE7B7">湿度 62%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script>
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('zh-CN', {hour12: false});
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  const powerChartEl = document.getElementById('powerChart');
+  if (powerChartEl && window.echarts) {
+    const xData = Array.from({ length: 25 }, (_, i) => String(i).padStart(2, '0') + ':00');
+    const chargeData = [0, 0, 0, 0, 0, 180, 420, 680, 520, 310, 120, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const dischargeData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 120, 360, 520, 740, 860, 820, 610, 430, 260, 140, 60, 0, 0];
+
+    const now = new Date();
+    const currentHour = Math.min(Math.max(now.getHours(), 0), 23);
+    const currentLabel = String(currentHour).padStart(2, '0') + ':00';
+    const currentY = (dischargeData[currentHour] || 0) || (chargeData[currentHour] || 0);
+
+    const powerChart = echarts.init(powerChartEl);
+    powerChart.setOption({
+      animationDuration: 600,
+      grid: { left: 46, right: 16, top: 14, bottom: 30 },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: 'rgba(15,39,68,0.92)',
+        borderWidth: 0,
+        textStyle: { color: '#fff', fontSize: 12 },
+        axisPointer: { type: 'line', lineStyle: { color: 'rgba(245,158,11,0.9)', width: 1, type: 'dashed' } }
+      },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: xData,
+        axisLine: { lineStyle: { color: 'rgba(148,163,184,0.45)' } },
+        axisTick: { show: false },
+        axisLabel: { color: '#94A3B8', fontFamily: 'JetBrains Mono', fontSize: 10, interval: 5 }
+      },
+      yAxis: {
+        type: 'value',
+        splitNumber: 4,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: '#94A3B8', fontFamily: 'JetBrains Mono', fontSize: 10 },
+        splitLine: { lineStyle: { color: 'rgba(220,232,245,0.9)' } }
+      },
+      series: [
+        {
+          name: '充电功率',
+          type: 'line',
+          smooth: true,
+          showSymbol: false,
+          data: chargeData,
+          lineStyle: { color: '#0EA5E9', width: 2.5 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(14,165,233,0.28)' },
+              { offset: 1, color: 'rgba(14,165,233,0.02)' }
+            ])
+          }
+        },
+        {
+          name: '放电功率',
+          type: 'line',
+          smooth: true,
+          showSymbol: false,
+          data: dischargeData,
+          lineStyle: { color: '#10B981', width: 2.5 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(16,185,129,0.26)' },
+              { offset: 1, color: 'rgba(16,185,129,0.02)' }
+            ])
+          },
+          markLine: {
+            symbol: 'none',
+            label: { show: false },
+            lineStyle: { color: '#F59E0B', width: 1.5, type: 'dashed' },
+            data: [{ xAxis: currentLabel }]
+          }
+        },
+        {
+          name: '当前时刻',
+          type: 'scatter',
+          data: [[currentLabel, currentY]],
+          symbol: 'circle',
+          symbolSize: 10,
+          itemStyle: { color: '#F59E0B' },
+          z: 10
+        }
+      ]
+    });
+
+    window.addEventListener('resize', () => powerChart.resize());
+  }
+</script>
+</body>
+</html>

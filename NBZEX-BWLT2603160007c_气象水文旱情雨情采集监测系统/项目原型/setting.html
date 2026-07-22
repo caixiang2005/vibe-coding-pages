@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>气象水文旱情雨情采集监测系统 - 系统设置</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpg') center center no-repeat;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 30px;
+    }
+
+    .mac-window {
+      width: 1280px;
+      background: #1a1d23;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .titlebar {
+      height: 42px;
+      background: linear-gradient(180deg, #3a3d44 0%, #2d3038 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #1a1a1e;
+    }
+
+    .traffic-lights { display: flex; gap: 8px; }
+    .traffic-lights span { width: 12px; height: 12px; border-radius: 50%; display: inline-block; cursor: pointer; }
+    .tl-close { background: #ff5f57; border: 1px solid #e14640; }
+    .tl-minimize { background: #febc2e; border: 1px solid #d4a123; }
+    .tl-maximize { background: #28c840; border: 1px solid #1aab29; }
+
+    .titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      color: #b0b3ba;
+      font-weight: 500;
+    }
+
+    .main-layout { display: flex; height: 720px; }
+
+    .sidebar {
+      width: 220px;
+      background: #1f222a;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 16px 0;
+    }
+
+    .sidebar-header {
+      padding: 8px 20px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 12px;
+    }
+
+    .sidebar-header h3 {
+      font-size: 11px;
+      color: #5b8def;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-header p { font-size: 10px; color: #555a65; }
+
+    .nav-group { padding: 0 12px; margin-bottom: 8px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      color: #8a8f9c;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nav-item:hover { background: rgba(255, 255, 255, 0.04); color: #c0c4ce; }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, #2d5dd4 0%, #3b6ce8 100%);
+      color: #fff;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(45, 93, 212, 0.3);
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .content { flex: 1; overflow-y: auto; padding: 24px; background: #14161c; }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .top-bar h1 { font-size: 20px; color: #e8eaf0; font-weight: 600; }
+
+    .toolbar { display: flex; gap: 10px; }
+
+    .toolbar-btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #a0a5b5;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .toolbar-btn:hover { background: rgba(255, 255, 255, 0.08); color: #c0c4ce; }
+    .toolbar-btn.primary { background: #2d5dd4; color: #fff; border-color: #2d5dd4; }
+    .toolbar-btn.primary:hover { background: #3b6ce8; }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 20px;
+      height: calc(100% - 60px);
+    }
+
+    .settings-nav {
+      background: linear-gradient(145deg, #1e2130 0%, #1a1d28 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .settings-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: #8a8f9c;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 4px;
+    }
+
+    .settings-nav-item:hover { background: rgba(255, 255, 255, 0.04); color: #c0c4ce; }
+    .settings-nav-item.active { background: rgba(45, 93, 212, 0.15); color: #60a5fa; }
+
+    .settings-content {
+      background: linear-gradient(145deg, #1e2130 0%, #1a1d28 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .settings-section { margin-bottom: 24px; }
+    .settings-section:last-child { margin-bottom: 0; }
+
+    .section-title {
+      font-size: 13px;
+      color: #c0c4d0;
+      font-weight: 600;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .setting-row:last-child { border-bottom: none; }
+
+    .setting-info { flex: 1; }
+    .setting-label { font-size: 12px; color: #a0a5b5; margin-bottom: 2px; }
+    .setting-desc { font-size: 10px; color: #5b6078; }
+
+    .setting-control { display: flex; align-items: center; gap: 8px; }
+
+    .toggle-switch {
+      width: 40px;
+      height: 20px;
+      background: #333;
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .toggle-switch.active { background: #2d5dd4; }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: all 0.2s;
+    }
+
+    .toggle-switch.active::after { left: 22px; }
+
+    .setting-input {
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      background: #14161c;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #a0a5b5;
+      outline: none;
+      font-family: 'Noto Sans SC', sans-serif;
+      width: 120px;
+      text-align: center;
+    }
+
+    .setting-select {
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      background: #14161c;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #a0a5b5;
+      outline: none;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer;
+    }
+
+    .setting-btn {
+      padding: 5px 12px;
+      border-radius: 5px;
+      font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: transparent;
+      color: #6b7080;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .setting-btn:hover { background: rgba(255, 255, 255, 0.04); color: #a0a5b5; }
+
+    .user-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 6px;
+    }
+
+    .user-info { display: flex; align-items: center; gap: 10px; }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2d5dd4, #3b6ce8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .user-name { font-size: 12px; color: #c0c4d0; }
+    .user-role { font-size: 10px; color: #5b6078; }
+
+    .user-actions { display: flex; gap: 6px; }
+
+    .action-btn {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: transparent;
+      color: #6b7080;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover { background: rgba(255, 255, 255, 0.04); color: #a0a5b5; }
+    .action-btn.danger:hover { background: rgba(239, 68, 68, 0.1); color: #f87171; border-color: rgba(239, 68, 68, 0.2); }
+
+    .sys-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .sys-info-item {
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 6px;
+    }
+
+    .sys-info-label { font-size: 10px; color: #5b6078; margin-bottom: 4px; }
+    .sys-info-value { font-size: 14px; color: #c0c4d0; font-weight: 500; }
+    .sys-info-value.green { color: #22c55e; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: #1e2130;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-header {
+      height: 42px;
+      background: linear-gradient(180deg, #3a3d44 0%, #2d3038 100%);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #1a1a1e;
+    }
+
+    .modal-traffic-lights { display: flex; gap: 8px; }
+    .modal-traffic-lights span { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+    .modal-title {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      color: #b0b3ba;
+      font-weight: 500;
+    }
+
+    .modal-body { padding: 20px; }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-label {
+      font-size: 11px;
+      color: #6b7080;
+      font-weight: 500;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #14161c;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #a0a5b5;
+      outline: none;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    .form-input:focus { border-color: #2d5dd4; }
+    .form-input[readonly] { opacity: 0.6; cursor: not-allowed; }
+
+    .form-select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #14161c;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #a0a5b5;
+      outline: none;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #a0a5b5;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .modal-btn:hover { background: rgba(255, 255, 255, 0.08); color: #c0c4ce; }
+    .modal-btn.primary { background: #2d5dd4; color: #fff; border-color: #2d5dd4; }
+    .modal-btn.primary:hover { background: #3b6ce8; }
+    .modal-btn.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+    .modal-btn.danger:hover { background: #ef4444; }
+  </style>
+</head>
+
+<body>
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <span class="tl-close"></span>
+        <span class="tl-minimize"></span>
+        <span class="tl-maximize"></span>
+      </div>
+      <div class="titlebar-text">气象水文旱情雨情采集监测系统</div>
+    </div>
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h3>监测中心</h3>
+          <p>水利部信息中心</p>
+        </div>
+        <div class="nav-group">
+          <div class="nav-item" onclick="window.location.href='dashboard.html'">
+            <span class="nav-icon">&#9632;</span> 综合总览
+          </div>
+          <div class="nav-item" onclick="window.location.href='warning.html'">
+            <span class="nav-icon">&#9733;</span> 预警管理
+          </div>
+          <div class="nav-item" onclick="window.location.href='stations.html'">
+            <span class="nav-icon">&#9881;</span> 站点管理
+          </div>
+          <div class="nav-item" onclick="window.location.href='report.html'">
+            <span class="nav-icon">&#9776;</span> 报表统计
+          </div>
+          <div class="nav-item" onclick="window.location.href='rainfall.html'">
+            <span class="nav-icon">&#9650;</span> 雨情监测
+          </div>
+          <div class="nav-item" onclick="window.location.href='water.html'">
+            <span class="nav-icon">&#9644;</span> 水情监测
+          </div>
+          <div class="nav-item" onclick="window.location.href='drought.html'">
+            <span class="nav-icon">&#9673;</span> 旱情监测
+          </div>
+          <div class="nav-item active" onclick="window.location.href='setting.html'">
+            <span class="nav-icon">&#9881;</span> 系统设置
+          </div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="top-bar">
+          <h1>系统设置</h1>
+          <div class="toolbar">
+            <button class="toolbar-btn" onclick="showModal('aboutModal')">关于系统</button>
+            <button class="toolbar-btn primary" onclick="saveAllSettings()">保存设置</button>
+          </div>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-nav">
+            <div class="settings-nav-item active" onclick="switchTab(this, 'basic')">
+              <span>&#9881;</span> 基本设置
+            </div>
+            <div class="settings-nav-item" onclick="switchTab(this, 'data')">
+              <span>&#9650;</span> 数据配置
+            </div>
+            <div class="settings-nav-item" onclick="switchTab(this, 'warning')">
+              <span>&#9733;</span> 预警设置
+            </div>
+            <div class="settings-nav-item" onclick="switchTab(this, 'user')">
+              <span>&#9787;</span> 用户管理
+            </div>
+            <div class="settings-nav-item" onclick="switchTab(this, 'system')">
+              <span>&#9881;</span> 系统维护
+            </div>
+          </div>
+          <div class="settings-content" id="settingsContent">
+            <div class="settings-section" id="section-basic">
+              <div class="section-title">基本设置</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">系统名称</div>
+                  <div class="setting-desc">显示在界面顶部的系统名称</div>
+                </div>
+                <div class="setting-control">
+                  <input type="text" class="setting-input" value="气象水文旱情雨情采集监测系统" style="width:200px;text-align:left">
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">数据刷新频率</div>
+                  <div class="setting-desc">实时数据的自动刷新间隔</div>
+                </div>
+                <div class="setting-control">
+                  <select class="setting-select" onchange="showSuccess('刷新频率已更改')">
+                    <option>30秒</option>
+                    <option selected>1分钟</option>
+                    <option>5分钟</option>
+                    <option>10分钟</option>
+                  </select>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">自动登录</div>
+                  <div class="setting-desc">启动时自动登录上次用户</div>
+                </div>
+                <div class="setting-control">
+                  <div class="toggle-switch active" onclick="toggleSwitch(this); showSuccess('设置已更新')"></div>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">声音提醒</div>
+                  <div class="setting-desc">收到预警时播放提示音</div>
+                </div>
+                <div class="setting-control">
+                  <div class="toggle-switch" onclick="toggleSwitch(this); showSuccess('设置已更新')"></div>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">界面主题</div>
+                  <div class="setting-desc">选择系统界面颜色主题</div>
+                </div>
+                <div class="setting-control">
+                  <select class="setting-select" onchange="showSuccess('主题已更换')">
+                    <option selected>深色主题</option>
+                    <option>浅色主题</option>
+                    <option>跟随系统</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section" id="section-data" style="display:none">
+              <div class="section-title">数据配置</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">数据存储路径</div>
+                  <div class="setting-desc">监测数据的本地存储位置</div>
+                </div>
+                <div class="setting-control">
+                  <input type="text" class="setting-input" value="/data/monitor" style="width:180px;text-align:left">
+                  <button class="setting-btn" onclick="showSuccess('路径已更新')">浏览</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">数据备份周期</div>
+                  <div class="setting-desc">自动备份监测数据的周期</div>
+                </div>
+                <div class="setting-control">
+                  <select class="setting-select" onchange="showSuccess('备份周期已更改')">
+                    <option>每天</option>
+                    <option selected>每周</option>
+                    <option>每月</option>
+                  </select>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">数据保留时长</div>
+                  <div class="setting-desc">历史数据的保留期限</div>
+                </div>
+                <div class="setting-control">
+                  <select class="setting-select" onchange="showSuccess('保留时长已更改')">
+                    <option>6个月</option>
+                    <option selected>1年</option>
+                    <option>2年</option>
+                    <option>永久</option>
+                  </select>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">数据压缩存储</div>
+                  <div class="setting-desc">启用后可节省存储空间</div>
+                </div>
+                <div class="setting-control">
+                  <div class="toggle-switch active" onclick="toggleSwitch(this); showSuccess('设置已更新')"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section" id="section-warning" style="display:none">
+              <div class="section-title">预警设置</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">预警声音</div>
+                  <div class="setting-desc">启用预警提示音</div>
+                </div>
+                <div class="setting-control">
+                  <div class="toggle-switch active" onclick="toggleSwitch(this); showSuccess('设置已更新')"></div>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">预警推送</div>
+                  <div class="setting-desc">启用短信/邮件推送</div>
+                </div>
+                <div class="setting-control">
+                  <div class="toggle-switch" onclick="toggleSwitch(this); showSuccess('设置已更新')"></div>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">预警阈值</div>
+                  <div class="setting-desc">配置各类型预警阈值</div>
+                </div>
+                <div class="setting-control">
+                  <button class="setting-btn" onclick="showModal('thresholdModal')">配置</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">自动确认</div>
+                  <div class="setting-desc">低级别预警自动确认</div>
+                </div>
+                <div class="setting-control">
+                  <select class="setting-select" onchange="showSuccess('设置已更新')">
+                    <option>全部自动确认</option>
+                    <option selected>仅蓝色预警</option>
+                    <option>关闭</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section" id="section-user" style="display:none">
+              <div class="section-title">用户管理</div>
+              <div class="user-list">
+                <div class="user-item">
+                  <div class="user-info">
+                    <div class="user-avatar">管</div>
+                    <div>
+                      <div class="user-name">管理员</div>
+                      <div class="user-role">系统管理员</div>
+                    </div>
+                  </div>
+                  <div class="user-actions">
+                    <button class="action-btn" onclick="editUser('admin', '管理员', 'admin', '系统管理员', '138****5678')">编辑</button>
+                    <button class="action-btn danger" onclick="deleteUser('admin', '管理员')">删除</button>
+                  </div>
+                </div>
+                <div class="user-item">
+                  <div class="user-info">
+                    <div class="user-avatar">操</div>
+                    <div>
+                      <div class="user-name">操作员01</div>
+                      <div class="user-role">数据操作员</div>
+                    </div>
+                  </div>
+                  <div class="user-actions">
+                    <button class="action-btn" onclick="editUser('op01', '操作员01', 'operator01', '数据操作员', '139****8765')">编辑</button>
+                    <button class="action-btn danger" onclick="deleteUser('op01', '操作员01')">删除</button>
+                  </div>
+                </div>
+                <div class="user-item">
+                  <div class="user-info">
+                    <div class="user-avatar">访</div>
+                    <div>
+                      <div class="user-name">访客用户</div>
+                      <div class="user-role">访客</div>
+                    </div>
+                  </div>
+                  <div class="user-actions">
+                    <button class="action-btn" onclick="editUser('guest', '访客用户', 'guest', '访客', '--')">编辑</button>
+                    <button class="action-btn danger" onclick="deleteUser('guest', '访客用户')">删除</button>
+                  </div>
+                </div>
+              </div>
+              <button class="toolbar-btn" style="margin-top:12px" onclick="showModal('addUserModal')">+ 添加用户</button>
+            </div>
+
+            <div class="settings-section" id="section-system" style="display:none">
+              <div class="section-title">系统信息</div>
+              <div class="sys-info-grid">
+                <div class="sys-info-item">
+                  <div class="sys-info-label">系统名称</div>
+                  <div class="sys-info-value">气象水文旱情雨情采集监测系统</div>
+                </div>
+                <div class="sys-info-item">
+                  <div class="sys-info-label">运行状态</div>
+                  <div class="sys-info-value green">正常运行</div>
+                </div>
+                <div class="sys-info-item">
+                  <div class="sys-info-label">开发单位</div>
+                  <div class="sys-info-value">水利部信息中心</div>
+                </div>
+                <div class="sys-info-item">
+                  <div class="sys-info-label">部署日期</div>
+                  <div class="sys-info-value">2025-06-15</div>
+                </div>
+                <div class="sys-info-item">
+                  <div class="sys-info-label">数据站点</div>
+                  <div class="sys-info-value">1,247 个</div>
+                </div>
+                <div class="sys-info-item">
+                  <div class="sys-info-label">在线率</div>
+                  <div class="sys-info-value green">95.6%</div>
+                </div>
+              </div>
+              <div class="section-title" style="margin-top:20px">系统操作</div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">数据备份</div>
+                  <div class="setting-desc">立即备份当前系统数据</div>
+                </div>
+                <div class="setting-control">
+                  <button class="setting-btn" onclick="showSuccess('数据备份已启动')">立即备份</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">系统日志</div>
+                  <div class="setting-desc">查看系统运行日志</div>
+                </div>
+                <div class="setting-control">
+                  <button class="setting-btn" onclick="showModal('logModal')">查看日志</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">清除缓存</div>
+                  <div class="setting-desc">清除系统临时缓存文件</div>
+                </div>
+                <div class="setting-control">
+                  <button class="setting-btn" onclick="showSuccess('缓存已清除')">清除缓存</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="addUserModal">
+    <div class="modal" style="width:420px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">添加用户</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">用户名</label>
+          <input type="text" class="form-input" id="addUsername" placeholder="输入用户名">
+        </div>
+        <div class="form-group">
+          <label class="form-label">真实姓名</label>
+          <input type="text" class="form-input" id="addRealname" placeholder="输入真实姓名">
+        </div>
+        <div class="form-group">
+          <label class="form-label">用户角色</label>
+          <select class="form-select" id="addRole">
+            <option>系统管理员</option>
+            <option>数据操作员</option>
+            <option>普通用户</option>
+            <option>访客</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">初始密码</label>
+          <input type="password" class="form-input" id="addPassword" placeholder="输入初始密码">
+        </div>
+        <div class="form-group">
+          <label class="form-label">联系电话</label>
+          <input type="text" class="form-input" id="addPhone" placeholder="输入联系电话">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('addUserModal')">取消</button>
+        <button class="modal-btn primary" onclick="confirmAddUser()">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="editUserModal">
+    <div class="modal" style="width:420px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">编辑用户</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">用户名</label>
+          <input type="text" class="form-input" id="editUsername" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">真实姓名</label>
+          <input type="text" class="form-input" id="editRealname">
+        </div>
+        <div class="form-group">
+          <label class="form-label">用户角色</label>
+          <select class="form-select" id="editRole">
+            <option>系统管理员</option>
+            <option>数据操作员</option>
+            <option>普通用户</option>
+            <option>访客</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">新密码</label>
+          <input type="password" class="form-input" id="editPassword" placeholder="留空则不修改">
+        </div>
+        <div class="form-group">
+          <label class="form-label">联系电话</label>
+          <input type="text" class="form-input" id="editPhone">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('editUserModal')">取消</button>
+        <button class="modal-btn primary" onclick="confirmEditUser()">保存修改</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal" style="width:360px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">确认删除</div>
+      </div>
+      <div class="modal-body" style="text-align:center;padding:30px 20px">
+        <div style="font-size:40px;margin-bottom:12px;color:#ef4444">&#9888;</div>
+        <p style="color:#a0a5b5;font-size:13px" id="deleteMsg">确定要删除该用户吗？</p>
+        <p style="color:#6b7080;font-size:11px;margin-top:8px">此操作不可撤销</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center">
+        <button class="modal-btn" onclick="closeModal('deleteModal')">取消</button>
+        <button class="modal-btn danger" onclick="confirmDelete()">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="aboutModal">
+    <div class="modal" style="width:400px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">关于系统</div>
+      </div>
+      <div class="modal-body" style="text-align:center;padding:30px 20px">
+        <div style="font-size:48px;margin-bottom:16px">&#9919;</div>
+        <h2 style="color:#e8eaf0;font-size:16px;margin-bottom:8px">气象水文旱情雨情采集监测系统</h2>
+        <div style="background:#14161c;padding:16px;border-radius:8px;text-align:left;margin-top:16px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="color:#5b6078;font-size:11px">开发单位</span>
+            <span style="color:#a0a5b5;font-size:11px">水利部信息中心</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="color:#5b6078;font-size:11px">部署日期</span>
+            <span style="color:#a0a5b5;font-size:11px">2025-06-15</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="color:#5b6078;font-size:11px">数据站点</span>
+            <span style="color:#a0a5b5;font-size:11px">1,247 个</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:#5b6078;font-size:11px">系统状态</span>
+            <span style="color:#22c55e;font-size:11px">正常运行</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:center">
+        <button class="modal-btn primary" onclick="closeModal('aboutModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="thresholdModal">
+    <div class="modal" style="width:480px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">预警阈值配置</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">水位预警阈值 (m)</label>
+          <div style="display:flex;gap:12px">
+            <input type="text" class="form-input" value="340.00" style="width:100px">
+            <select class="form-select" style="width:100px">
+              <option>警戒</option>
+              <option>保证</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">雨量预警阈值 (mm)</label>
+          <div style="display:flex;gap:12px">
+            <input type="text" class="form-input" value="50" style="width:100px">
+            <select class="form-select" style="width:100px">
+              <option>暴雨</option>
+              <option>大暴雨</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">土壤湿度预警阈值 (%)</label>
+          <input type="text" class="form-input" value="45" style="width:100px">
+        </div>
+        <div class="form-group">
+          <label class="form-label">流量预警阈值 (m³/s)</label>
+          <input type="text" class="form-input" value="500" style="width:100px">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('thresholdModal')">取消</button>
+        <button class="modal-btn primary" onclick="closeModal('thresholdModal'); showSuccess('阈值配置已保存')">保存配置</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="logModal">
+    <div class="modal" style="width:600px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">系统日志</div>
+      </div>
+      <div class="modal-body" style="max-height:400px;overflow-y:auto">
+        <div style="background:#14161c;padding:12px;border-radius:6px;font-family:monospace;font-size:11px;color:#6b7080">
+          <div style="margin-bottom:8px">[2026-03-25 14:32:08] 系统运行正常<br>
+          [2026-03-25 14:30:00] 数据同步完成: 1247站点<br>
+          [2026-03-25 14:25:15] 用户admin登录系统<br>
+          [2026-03-25 14:20:00] 预警规则评估完成,无新预警<br>
+          [2026-03-25 14:15:33] 站点临潼水文站数据异常,已自动标记<br>
+          [2026-03-25 14:10:00] 数据备份任务执行成功<br>
+          [2026-03-25 14:00:00] 定时报表生成完成<br>
+          [2026-03-25 13:48:22] 预警发布: 渭河临潼段水位超警戒<br>
+          [2026-03-25 13:30:00] 站点状态巡检完成,在线率95.6%<br>
+          [2026-03-25 13:00:00] 系统自检完成,所有服务正常</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" onclick="closeModal('logModal')">关闭</button>
+        <button class="modal-btn primary" onclick="showSuccess('日志已刷新')">刷新</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="successModal">
+    <div class="modal" style="width:320px">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <span style="background:#ff5f57;border:1px solid #e14640"></span>
+          <span style="background:#febc2e;border:1px solid #d4a123"></span>
+          <span style="background:#28c840;border:1px solid #1aab29"></span>
+        </div>
+        <div class="modal-title">操作成功</div>
+      </div>
+      <div class="modal-body" style="text-align:center;padding:30px 20px">
+        <div style="font-size:40px;margin-bottom:12px;color:#22c55e">&#10003;</div>
+        <p style="color:#a0a5b5;font-size:13px" id="successMsg">设置已保存</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center">
+        <button class="modal-btn primary" onclick="closeModal('successModal')">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let deleteTarget = '';
+
+    function showModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    function toggleSwitch(el) {
+      el.classList.toggle('active');
+    }
+
+    function switchTab(el, section) {
+      document.querySelectorAll('.settings-nav-item').forEach(item => item.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.settings-section').forEach(s => s.style.display = 'none');
+      document.getElementById('section-' + section).style.display = 'block';
+    }
+
+    function showSuccess(msg) {
+      document.getElementById('successMsg').textContent = msg;
+      showModal('successModal');
+    }
+
+    function saveAllSettings() {
+      showSuccess('所有设置已保存');
+    }
+
+    function confirmAddUser() {
+      const username = document.getElementById('addUsername').value;
+      const realname = document.getElementById('addRealname').value;
+      if (!username || !realname) {
+        alert('请填写用户名和真实姓名');
+        return;
+      }
+      closeModal('addUserModal');
+      document.getElementById('addUsername').value = '';
+      document.getElementById('addRealname').value = '';
+      document.getElementById('addPassword').value = '';
+      document.getElementById('addPhone').value = '';
+      showSuccess('用户添加成功');
+    }
+
+    function editUser(id, name, username, role, phone) {
+      document.getElementById('editUsername').value = username;
+      document.getElementById('editRealname').value = name;
+      document.getElementById('editRole').value = role;
+      document.getElementById('editPhone').value = phone;
+      document.getElementById('editPassword').value = '';
+      deleteTarget = id;
+      showModal('editUserModal');
+    }
+
+    function confirmEditUser() {
+      closeModal('editUserModal');
+      showSuccess('用户信息已更新');
+    }
+
+    function deleteUser(id, name) {
+      deleteTarget = id;
+      document.getElementById('deleteMsg').textContent = '确定要删除用户 "' + name + '" 吗？此操作不可撤销。';
+      showModal('deleteModal');
+    }
+
+    function confirmDelete() {
+      closeModal('deleteModal');
+      showSuccess('用户已删除');
+    }
+  </script>
+</body>
+
+</html>

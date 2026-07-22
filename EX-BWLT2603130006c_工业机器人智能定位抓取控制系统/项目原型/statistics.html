@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工业机器人智能定位抓取控制系统</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root { --mac-bg: #1a1a2e; --window-bg: #1e1e2e; --titlebar: #2a2a3e; --sidebar-bg: #232336; --card-bg: #2a2a40; --card-border: #3a3a55; --text-primary: #e0e0ec; --text-secondary: #8888a8; --text-dim: #5a5a78; --accent-blue: #4a9eff; --accent-green: #34d399; --accent-orange: #f59e0b; --accent-red: #ef4444; --accent-purple: #a78bfa; --accent-cyan: #22d3ee; --divider: #333350; }
+    body { font-family: 'Noto Sans SC', sans-serif; background: url('./static/bg.jpg') no-repeat; background-size: cover; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .mac-window { width: 1280px; max-width: 96vw; background: var(--window-bg); border-radius: 12px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5); overflow: hidden; }
+    .title-bar { height: 52px; background: var(--titlebar); border-bottom: 1px solid var(--divider); display: flex; align-items: center; padding: 0 16px; position: relative; }
+    .traffic-lights { display: flex; gap: 8px; }
+    .traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+    .title-bar-text { position: absolute; left: 50%; transform: translateX(-50%); color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+    .toolbar { height: 42px; background: linear-gradient(180deg, #2a2a3e, #252538); border-bottom: 1px solid var(--divider); display: flex; align-items: center; padding: 0 12px; gap: 2px; }
+    .tool-btn { display: flex; align-items: center; gap: 5px; padding: 5px 10px; color: var(--text-secondary); font-size: 11.5px; border: none; background: none; cursor: pointer; border-radius: 5px; transition: all 0.15s; }
+    .tool-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); }
+    .tool-btn:active { transform: scale(0.97); }
+    .tool-btn i { font-size: 12px; }
+    .tool-btn.primary { color: var(--accent-blue); }
+    .tool-sep { width: 1px; height: 20px; background: var(--divider); margin: 0 6px; }
+    .toolbar-right { margin-left: auto; }
+    .user-badge { display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 6px; background: rgba(74, 158, 255, 0.12); border: 1px solid rgba(74, 158, 255, 0.25); border-radius: 12px; color: var(--accent-blue); font-size: 11px; }
+    .user-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+    .main-layout { display: flex; height: 620px; }
+    .sidebar { width: 200px; background: var(--sidebar-bg); border-right: 1px solid var(--divider); display: flex; flex-direction: column; }
+    .sidebar-header { padding: 14px 14px 10px; color: var(--text-dim); font-size: 10.5px; font-weight: 600; text-transform: uppercase; }
+    .nav-item { padding: 7px 12px; color: var(--text-secondary); font-size: 12px; cursor: pointer; border-radius: 5px; transition: all 0.15s; display: flex; align-items: center; gap: 8px; margin: 0 6px 2px; text-decoration: none; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--text-primary); }
+    .nav-item.active { background: rgba(74, 158, 255, 0.15); color: var(--accent-blue); }
+    .nav-item i { width: 14px; font-size: 13px; }
+    .sidebar-footer { margin-top: auto; padding: 12px 14px; border-top: 1px solid var(--divider); }
+    .robot-status { background: rgba(255, 255, 255, 0.03); border-radius: 6px; padding: 10px; }
+    .robot-label { color: var(--text-dim); font-size: 10px; margin-bottom: 4px; }
+    .robot-name { color: var(--text-primary); font-size: 11.5px; font-weight: 500; margin-bottom: 6px; }
+    .robot-meta { display: flex; gap: 12px; }
+    .robot-meta span { color: var(--text-dim); font-size: 10px; }
+    .content-area { flex: 1; overflow-y: auto; background: var(--window-bg); }
+    .content-body { padding: 16px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .stat-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; position: relative; overflow: hidden; }
+    .stat-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+    .stat-box.blue::before { background: linear-gradient(90deg, var(--accent-blue), transparent); }
+    .stat-box.green::before { background: linear-gradient(90deg, var(--accent-green), transparent); }
+    .stat-box.orange::before { background: linear-gradient(90deg, var(--accent-orange), transparent); }
+    .stat-box.purple::before { background: linear-gradient(90deg, var(--accent-purple), transparent); }
+    .stat-box-label { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+    .stat-box-value { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--text-primary); }
+    .stat-box-trend { font-size: 10px; margin-top: 4px; }
+    .stat-box-trend.up { color: var(--accent-green); }
+    .chart-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; }
+    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .chart-title { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .chart-container { height: 180px; display: flex; align-items: flex-end; gap: 8px; padding: 0 4px; }
+    .chart-bar-group { flex: 1; display: flex; gap: 3px; align-items: flex-end; height: 100%; }
+    .chart-bar { flex: 1; border-radius: 3px 3px 0 0; background: var(--accent-blue); min-height: 4px; cursor: pointer; transition: opacity 0.15s; }
+    .chart-bar:hover { opacity: 0.8; }
+    .chart-bar.orange { background: var(--accent-orange); }
+    .chart-legend { display: flex; gap: 16px; justify-content: center; margin-top: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-secondary); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+    .filter-tabs { display: flex; gap: 6px; }
+    .filter-tab { padding: 4px 10px; border-radius: 6px; font-size: 10px; border: 1px solid var(--card-border); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+    .filter-tab.active { background: rgba(74, 158, 255, 0.12); color: var(--accent-blue); border-color: rgba(74, 158, 255, 0.3); }
+    .btn { padding: 6px 14px; border-radius: 5px; font-size: 12px; cursor: pointer; border: none; font-family: 'Noto Sans SC', sans-serif; transition: all 0.15s; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent-blue); color: #fff; }
+    .btn-primary:hover { background: #5aadff; }
+    .btn-outline { background: transparent; border: 1px solid var(--card-border); color: var(--text-secondary); }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.04); }
+    .btn-secondary { background: var(--card-border); color: var(--text-secondary); }
+    .btn-secondary:hover { background: #444460; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { padding: 8px 10px; text-align: left; color: var(--text-dim); font-size: 10.5px; font-weight: 500; border-bottom: 1px solid var(--divider); }
+    .data-table td { padding: 8px 10px; color: var(--text-secondary); font-size: 11px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
+    .data-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.65); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.25s ease; }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); min-width: 380px; transform: scale(0.9) translateY(-20px); transition: transform 0.25s ease; }
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+    .modal-header { padding: 12px 16px; border-bottom: 1px solid var(--divider); display: flex; align-items: center; justify-content: center; position: relative; background: var(--titlebar); border-radius: 10px 10px 0 0; }
+    .modal-traffic-lights { position: absolute; left: 14px; display: flex; gap: 8px; }
+    .modal-traffic-light { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+    .modal-traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .modal-traffic-light.minimize { background: #febc2e; }
+    .modal-traffic-light.maximize { background: #28c840; }
+    .modal-title { color: var(--text-primary); font-size: 14px; font-weight: 500; }
+    .modal-body { padding: 16px; }
+    .modal-footer { padding: 12px 16px; border-top: 1px solid var(--divider); display: flex; justify-content: flex-end; gap: 8px; }
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; color: var(--text-dim); font-size: 11px; margin-bottom: 5px; }
+    .form-input { width: 100%; padding: 7px 10px; background: #1a1a2e; border: 1px solid var(--card-border); border-radius: 5px; color: var(--text-primary); font-size: 12px; }
+    .form-input:focus { outline: none; border-color: var(--accent-blue); }
+    .form-select { width: 100%; padding: 7px 10px; background: #1a1a2e; border: 1px solid var(--card-border); border-radius: 5px; color: var(--text-primary); font-size: 12px; cursor: pointer; }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 6px; }
+    .checkbox-item input { accent-color: var(--accent-blue); }
+    .checkbox-item span { color: var(--text-secondary); font-size: 12px; }
+    .progress-bar { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+    .progress-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+    .status-bar { height: 26px; background: #222233; border-top: 1px solid var(--divider); display: flex; align-items: center; padding: 0 12px; gap: 16px; }
+    .status-item { color: var(--text-dim); font-size: 10.5px; }
+    .status-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--accent-green); margin-right: 4px; }
+  </style>
+</head>
+
+<body>
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights"><div class="traffic-light close"></div><div class="traffic-light minimize"></div><div class="traffic-light maximize"></div></div>
+      <span class="title-bar-text">工业机器人智能定位抓取控制系统</span>
+    </div>
+    <div class="toolbar">
+      <button class="tool-btn primary" id="btnNewStat"><i class="fa-solid fa-plus"></i>新建统计</button>
+      <button class="tool-btn" id="btnExport"><i class="fa-solid fa-file-export"></i>数据导出</button>
+      <button class="tool-btn" id="btnRefresh"><i class="fa-solid fa-rotate"></i>刷新数据</button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnFilter"><i class="fa-solid fa-filter"></i>筛选</button>
+      <div class="toolbar-right"><div class="user-badge"><img class="user-avatar" src="https://i02piccdn.sogoucdn.com/93b2fc982f88939f" alt="王晓岚">王晓岚</div></div>
+    </div>
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">功能导航</div>
+        <nav>
+          <a class="nav-item" href="./main.html"><i class="fa-solid fa-house"></i>系统概览</a>
+          <a class="nav-item" href="./vision.html"><i class="fa-solid fa-eye"></i>视觉定位</a>
+          <a class="nav-item" href="./control.html"><i class="fa-solid fa-gamepad"></i>运动控制</a>
+          <a class="nav-item" href="./task.html"><i class="fa-solid fa-list-check"></i>任务编排</a>
+          <a class="nav-item active" href="./statistics.html"><i class="fa-solid fa-chart-bar"></i>数据统计</a>
+          <a class="nav-item" href="./alarm.html"><i class="fa-solid fa-bell"></i>报警管理</a>
+          <a class="nav-item" href="./maintenance.html"><i class="fa-solid fa-wrench"></i>维护管理</a>
+          <a class="nav-item" href="./log.html"><i class="fa-solid fa-file-lines"></i>运行日志</a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="robot-status"><div class="robot-label">当前机器人</div><div class="robot-name">FANUC M-20iD/25</div><div class="robot-meta"><span>192.168.1.100</span><span>在线</span></div></div>
+        </div>
+      </div>
+      <div class="content-area">
+        <div class="content-body">
+          <div class="stats-grid">
+            <div class="stat-box blue"><div class="stat-box-label">今日抓取总数</div><div class="stat-box-value">1,247</div><div class="stat-box-trend up">+12.3% 较昨日</div></div>
+            <div class="stat-box green"><div class="stat-box-label">抓取成功率</div><div class="stat-box-value">98.6%</div><div class="stat-box-trend up">+0.4% 较昨日</div></div>
+            <div class="stat-box orange"><div class="stat-box-label">平均周期时间</div><div class="stat-box-value">4.2s</div><div class="stat-box-trend" style="color:var(--accent-green)">-0.3s 较昨日</div></div>
+            <div class="stat-box purple"><div class="stat-box-label">系统运行时长</div><div class="stat-box-value" id="uptime-stat">14:27</div><div class="stat-box-trend">连续运行</div></div>
+          </div>
+          <div class="chart-card" style="margin-bottom:16px">
+            <div class="chart-header"><span class="chart-title">每小时抓取量趋势</span>
+              <div class="filter-tabs"><button class="filter-tab active">今日</button><button class="filter-tab">本周</button><button class="filter-tab">本月</button></div>
+            </div>
+            <div class="chart-container">
+              <div class="chart-bar-group"><div class="chart-bar" style="height:45%"></div><div class="chart-bar orange" style="height:40%"></div></div>
+              <div class="chart-bar-group"><div class="chart-bar" style="height:62%"></div><div class="chart-bar orange" style="height:55%"></div></div>
+              <div class="chart-bar-group"><div class="chart-bar" style="height:78%"></div><div class="chart-bar orange" style="height:70%"></div></div>
+              <div class="chart-bar-group"><div class="chart-bar" style="height:55%"></div><div class="chart-bar orange" style="height:50%"></div></div>
+              <div class="chart-bar-group"><div class="chart-bar" style="height:88%"></div><div class="chart-bar orange" style="height:80%"></div></div>
+              <div class="chart-bar-group"><div class="chart-bar" style="height:95%"></div><div class="chart-bar orange" style="height:88%"></div></div>
+              <div class="chart-bar-group"><div class="chart-bar" style="height:82%"></div><div class="chart-bar orange" style="height:75%"></div></div>
+              <div class="chart-bar-group"><div class="chart-bar" style="height:70%"></div><div class="chart-bar orange" style="height:65%"></div></div>
+              <div class="chart-bar-group"><div class="chart-bar" style="height:60%"></div><div class="chart-bar orange" style="height:55%"></div></div>
+              <div class="chart-bar-group"><div class="chart-bar" style="height:50%"></div><div class="chart-bar orange" style="height:45%"></div></div>
+            </div>
+            <div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--accent-blue)"></div>今日</div><div class="legend-item"><div class="legend-dot" style="background:var(--accent-orange)"></div>昨日</div></div>
+          </div>
+          <div class="chart-card" style="margin-bottom:16px">
+            <div class="chart-header"><span class="chart-title">任务类型分布</span><button class="btn btn-outline" style="padding:4px 10px;font-size:10px" id="btnConfig">配置</button></div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+              <div style="text-align:center"><div style="font-size:20px;font-weight:700;color:var(--accent-blue)">523</div><div style="font-size:10px;color:var(--text-dim);margin-top:4px">PCB板</div><div class="progress-bar"><div class="progress-bar-fill" style="width:42%;background:var(--accent-blue)"></div></div></div>
+              <div style="text-align:center"><div style="font-size:20px;font-weight:700;color:var(--accent-green)">312</div><div style="font-size:10px;color:var(--text-dim);margin-top:4px">IC芯片</div><div class="progress-bar"><div class="progress-bar-fill" style="width:25%;background:var(--accent-green)"></div></div></div>
+              <div style="text-align:center"><div style="font-size:20px;font-weight:700;color:var(--accent-orange)">198</div><div style="font-size:10px;color:var(--text-dim);margin-top:4px">模组</div><div class="progress-bar"><div class="progress-bar-fill" style="width:16%;background:var(--accent-orange)"></div></div></div>
+              <div style="text-align:center"><div style="font-size:20px;font-weight:700;color:var(--accent-purple)">127</div><div style="font-size:10px;color:var(--text-dim);margin-top:4px">连接器</div><div class="progress-bar"><div class="progress-bar-fill" style="width:10%;background:var(--accent-purple)"></div></div></div>
+              <div style="text-align:center"><div style="font-size:20px;font-weight:700;color:var(--accent-cyan)">87</div><div style="font-size:10px;color:var(--text-dim);margin-top:4px">其他</div><div class="progress-bar"><div class="progress-bar-fill" style="width:7%;background:var(--accent-cyan)"></div></div></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header"><span class="chart-title">产线任务统计</span><button class="btn btn-primary" style="padding:4px 10px;font-size:10px" id="btnAdd">新建</button></div>
+            <table class="data-table"><thead><tr><th>产线名称</th><th>今日任务</th><th>完成数</th><th>成功率</th><th>平均节拍</th><th>负载率</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td>A产线 - PCB分拣</td><td style="font-family:'JetBrains Mono'">486</td><td style="font-family:'JetBrains Mono'">482</td><td style="color:var(--accent-green)">99.2%</td><td style="font-family:'JetBrains Mono'">4.1s</td><td style="font-family:'JetBrains Mono'">87%</td><td><span style="color:var(--accent-green);font-size:10px;padding:2px 6px;background:rgba(52,211,153,0.1);border-radius:4px">正常</span></td></tr>
+              <tr><td>B产线 - IC上料</td><td style="font-family:'JetBrains Mono'">312</td><td style="font-family:'JetBrains Mono'">308</td><td style="color:var(--accent-green)">98.7%</td><td style="font-family:'JetBrains Mono'">3.8s</td><td style="font-family:'JetBrains Mono'">76%</td><td><span style="color:var(--accent-green);font-size:10px;padding:2px 6px;background:rgba(52,211,153,0.1);border-radius:4px">正常</span></td></tr>
+              <tr><td>C工位 - 模组装配</td><td style="font-family:'JetBrains Mono'">198</td><td style="font-family:'JetBrains Mono'">193</td><td style="color:var(--accent-green)">97.5%</td><td style="font-family:'JetBrains Mono'">5.2s</td><td style="font-family:'JetBrains Mono'">65%</td><td><span style="color:var(--accent-orange);font-size:10px;padding:2px 6px;background:rgba(245,158,11,0.1);border-radius:4px">繁忙</span></td></tr>
+              <tr><td>D工位 - 成品码垛</td><td style="font-family:'JetBrains Mono'">251</td><td style="font-family:'JetBrains Mono'">251</td><td style="color:var(--accent-green)">100%</td><td style="font-family:'JetBrains Mono'">6.0s</td><td style="font-family:'JetBrains Mono'">52%</td><td><span style="color:var(--accent-blue);font-size:10px;padding:2px 6px;background:rgba(74,158,255,0.1);border-radius:4px">空闲</span></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+        <div class="status-bar"><div class="status-item"><span class="status-dot"></span>系统就绪</div><div class="status-item">数据更新: 14:27:03</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modalOverlay"><div class="modal"><div class="modal-header"><div class="modal-traffic-lights"><div class="modal-traffic-light close" onclick="closeModal()"></div><div class="modal-traffic-light minimize"></div><div class="modal-traffic-light maximize"></div></div><span class="modal-title" id="modalTitle">弹窗标题</span></div><div class="modal-body" id="modalBody"></div><div class="modal-footer" id="modalFooter"></div></div></div>
+  <script>
+    const modalOverlay=document.getElementById('modalOverlay'),modalTitle=document.getElementById('modalTitle'),modalBody=document.getElementById('modalBody'),modalFooter=document.getElementById('modalFooter');
+    function openModal(t,b,f){modalTitle.textContent=t;modalBody.innerHTML=b;modalFooter.innerHTML=f;modalOverlay.classList.add('active');}
+    function closeModal(){modalOverlay.classList.remove('active');}
+    modalOverlay.addEventListener('click',e=>{if(e.target===modalOverlay)closeModal();});
+    document.getElementById('btnNewStat').onclick=()=>openModal('新建统计',`<div class="form-group"><label class="form-label">统计名称</label><input type="text" class="form-input" placeholder="请输入统计名称"></div><div class="form-row"><div class="form-group"><label class="form-label">开始日期</label><input type="date" class="form-input" value="2026-03-23"></div><div class="form-group"><label class="form-label">结束日期</label><input type="date" class="form-input" value="2026-03-23"></div></div><div class="form-group"><label class="form-label">统计类型</label><select class="form-select"><option>产线统计</option><option>关节负载</option><option>任务分析</option><option>效率分析</option></select></div>`,`<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">创建</button>`);
+    document.getElementById('btnExport').onclick=()=>openModal('数据导出',`<div class="form-group"><label class="form-label">导出格式</label><select class="form-select"><option>Excel (.xlsx)</option><option>CSV (.csv)</option><option>PDF 报告 (.pdf)</option></select></div><div class="form-group"><label class="form-label">时间范围</label><select class="form-select"><option>今日</option><option selected>本周</option><option>本月</option></select></div><div class="form-group"><label class="form-label">包含内容</label><label class="checkbox-item"><input type="checkbox" checked><span>任务统计</span></label><label class="checkbox-item"><input type="checkbox" checked><span>关节负载数据</span></label><label class="checkbox-item"><input type="checkbox"><span>报警记录</span></label></div>`,`<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">导出</button>`);
+    document.getElementById('btnRefresh').onclick=()=>openModal('刷新数据',`<div style="text-align:center;padding:10px"><i class="fa-solid fa-rotate" style="font-size:48px;color:var(--accent-blue);margin-bottom:16px"></i><div style="color:var(--text-primary);font-size:14px;margin-bottom:8px">确认刷新统计数据？</div></div>`,`<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">刷新</button>`);
+    document.getElementById('btnFilter').onclick=()=>openModal('筛选',`<div class="form-group"><label class="form-label">时间范围</label><select class="form-select"><option>今日</option><option selected>本周</option><option>本月</option><option>自定义</option></select></div><div class="form-group"><label class="form-label">产线筛选</label><label class="checkbox-item"><input type="checkbox" checked><span>A产线</span></label><label class="checkbox-item"><input type="checkbox" checked><span>B产线</span></label><label class="checkbox-item"><input type="checkbox" checked><span>C工位</span></label><label class="checkbox-item"><input type="checkbox" checked><span>D工位</span></label></div>`,`<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">应用</button>`);
+    document.getElementById('btnConfig').onclick=()=>openModal('任务类型配置',`<div class="form-group"><label class="form-label">任务类型名称</label><input type="text" class="form-input" placeholder="请输入任务类型名称"></div><div class="form-row"><div class="form-group"><label class="form-label">优先级</label><select class="form-select"><option>高</option><option selected>中</option><option>低</option></select></div><div class="form-group"><label class="form-label">允许重试次数</label><input type="text" class="form-input" value="3"></div></div>`,`<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">保存</button>`);
+    document.getElementById('btnAdd').onclick=()=>openModal('新建统计任务',`<div class="form-group"><label class="form-label">产线名称</label><input type="text" class="form-input" placeholder="请输入产线名称"></div><div class="form-group"><label class="form-label">统计指标</label><select class="form-select"><option>抓取数量</option><option>成功率</option><option>节拍时间</option><option>负载率</option></select></div><div class="form-group"><label class="form-label">备注</label><input type="text" class="form-input" placeholder="选填"></div>`,`<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal()">创建</button>`);
+    document.querySelectorAll('.filter-tab').forEach(t=>t.addEventListener('click',function(){document.querySelectorAll('.filter-tab').forEach(x=>x.classList.remove('active'));this.classList.add('active');}));
+    let uptimeSeconds=51623;setInterval(()=>{uptimeSeconds++;const h=Math.floor(uptimeSeconds/3600),m=Math.floor((uptimeSeconds%3600)/60);document.getElementById('uptime-stat').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');},1000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佳晔新能源物联网终端管控系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: #0a1628; color: #fff; overflow: hidden; height: 100vh; }
+        .title-bar { height: 32px; background: linear-gradient(180deg, #1a2a4a 0%, #0d1a30 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-bottom: 1px solid #1e3a5f; }
+        .title-bar-left { display: flex; align-items: center; gap: 8px; }
+        .title-bar-icon { width: 16px; height: 16px; background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); border-radius: 2px; }
+        .title-bar-text { font-size: 12px; color: #a0c4e8; }
+        .title-bar-controls { display: flex; height: 100%; }
+        .title-bar-btn { width: 46px; height: 100%; border: none; background: transparent; color: #a0c4e8; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .title-bar-btn:hover { background: rgba(255,255,255,0.1); }
+        .title-bar-btn.close:hover { background: #e81123; color: #fff; }
+        .title-bar-btn svg { width: 10px; height: 10px; }
+        .maximize-icon { width: 10px; height: 10px; border: 1px solid #a0c4e8; background: transparent; }
+        .main-container { height: calc(100vh - 32px); display: flex; flex-direction: column; }
+        .nav-bar { height: 50px; background: linear-gradient(180deg, #0d2040 0%, #081830 100%); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #1e4a7a; position: relative; }
+        .nav-tabs { display: flex; gap: 4px; }
+        .nav-tab { padding: 8px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px 4px 0 0; color: #7ab8e0; cursor: pointer; font-size: 14px; transition: all 0.2s; text-decoration: none; }
+        .nav-tab:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); color: #9ad8ff; }
+        .nav-tab.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 15px; }
+        .nav-btn { padding: 6px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .nav-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; color: #9ad8ff; }
+        .content-area { flex: 1; display: flex; overflow: hidden; }
+        .left-panel { width: 200px; padding: 15px 10px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #1e4a7a; }
+        .menu-btn { padding: 12px 15px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .menu-btn i { width: 16px; text-align: center; }
+        .menu-btn:hover { background: linear-gradient(180deg, #2a4a6a 0%, #1a3555 100%); border-color: #3a7aba; }
+        .menu-btn.active { background: linear-gradient(180deg, #006699 0%, #004466 100%); border-color: #00aadd; color: #fff; }
+        .main-content { flex: 1; padding: 15px; overflow: auto; background: linear-gradient(90deg, rgba(0,170,220,0.03) 1px, transparent 1px), linear-gradient(rgba(0,170,220,0.03) 1px, transparent 1px); background-size: 30px 30px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #2a5a8a; border-radius: 8px; width: 700px; max-height: 80vh; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-header { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-bottom: 1px solid #2a5a8a; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 16px; color: #00d4ff; font-weight: bold; text-align: center; flex: 1; }
+        .modal-close { width: 28px; height: 28px; background: transparent; border: 1px solid #3a5a7a; border-radius: 4px; color: #7ab8e0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .modal-close:hover { background: #e81123; border-color: #e81123; color: #fff; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; color: #7ab8e0; margin-bottom: 6px; }
+        .form-label .required { color: #ff4444; }
+        .form-input { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: #00aadd; }
+        .form-select { width: 100%; padding: 10px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; cursor: pointer; }
+        .form-select:focus { outline: none; border-color: #00aadd; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .modal-footer { padding: 15px 20px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border-top: 1px solid #2a5a8a; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { padding: 10px 25px; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all 0.2s; border: 1px solid; }
+        .btn-primary { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .btn-primary:hover { background: linear-gradient(180deg, #00b8f6 0%, #0098d6 100%); }
+        .btn-secondary { background: linear-gradient(180deg, #3a5a7a 0%, #2a4a6a 100%); border-color: #4a7a9a; color: #a0c4e8; }
+        .btn-secondary:hover { background: linear-gradient(180deg, #4a6a8a 0%, #3a5a7a 100%); color: #fff; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 15px; }
+        .search-input { flex: 1; max-width: 250px; padding: 8px 12px; background: #0a1628; border: 1px solid #2a5a8a; border-radius: 4px; color: #fff; font-size: 13px; }
+        .search-input:focus { outline: none; border-color: #00aadd; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th { background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); padding: 12px 10px; text-align: left; color: #00d4ff; border-bottom: 1px solid #2a5a8a; font-weight: normal; }
+        .data-table td { padding: 10px; border-bottom: 1px solid #1e3a5a; color: #a0c4e8; }
+        .data-table tr:hover td { background: rgba(0,170,220,0.05); }
+        .table-btn { padding: 4px 10px; background: linear-gradient(180deg, #1a4a6a 0%, #0d3555 100%); border: 1px solid #2a6a9a; border-radius: 3px; color: #7ab8e0; cursor: pointer; font-size: 11px; margin-right: 5px; }
+        .table-btn:hover { background: linear-gradient(180deg, #2a5a7a 0%, #1a4565 100%); color: #fff; }
+        .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 15px; }
+        .page-btn { padding: 6px 12px; background: linear-gradient(180deg, #1a3a5a 0%, #0d2545 100%); border: 1px solid #2a5a8a; border-radius: 4px; color: #7ab8e0; cursor: pointer; font-size: 12px; }
+        .page-btn:hover, .page-btn.active { background: linear-gradient(180deg, #00a8e6 0%, #0088c6 100%); border-color: #00c8ff; color: #fff; }
+        .status-tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; }
+        .status-tag.unhandled { background: rgba(255,68,68,0.2); color: #ff4444; border: 1px solid #cc3333; }
+        .status-tag.handling { background: rgba(255,170,0,0.2); color: #ffaa00; border: 1px solid #cc8800; }
+        .status-tag.handled { background: rgba(0,255,136,0.2); color: #00ff88; border: 1px solid #00aa66; }
+        .alarm-level-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .alarm-level-dot.high { background: #ff4444; box-shadow: 0 0 8px #ff4444; }
+        .alarm-level-dot.medium { background: #ffaa00; box-shadow: 0 0 8px #ffaa00; }
+        .alarm-level-dot.low { background: #00aadd; box-shadow: 0 0 8px #00aadd; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a1628; }
+        ::-webkit-scrollbar-thumb { background: #2a5a8a; border-radius: 4px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 18px; color: #00d4ff; }
+        .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #1e4a7a; border-radius: 6px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #00d4ff; margin-bottom: 5px; }
+        .stat-label { font-size: 13px; color: #7a9ab8; }
+        .alarm-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .alarm-summary-card { background: linear-gradient(180deg, #0d2545 0%, #081830 100%); border: 1px solid #1e4a7a; border-radius: 6px; padding: 15px; }
+        .alarm-summary-card.high { border-left: 4px solid #ff4444; }
+        .alarm-summary-card.medium { border-left: 4px solid #ffaa00; }
+        .alarm-summary-card.low { border-left: 4px solid #00aadd; }
+        .alarm-summary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .alarm-summary-title { font-size: 13px; color: #a0c4e8; }
+        .alarm-summary-count { font-size: 24px; font-weight: bold; }
+        .alarm-summary-card.high .alarm-summary-count { color: #ff4444; }
+        .alarm-summary-card.medium .alarm-summary-count { color: #ffaa00; }
+        .alarm-summary-card.low .alarm-summary-count { color: #00aadd; }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <div class="title-bar-icon"></div>
+            <span class="title-bar-text">佳晔新能源物联网终端管控系统</span>
+        </div>
+        <div class="title-bar-controls">
+            <button class="title-bar-btn minimize" onclick="showMessage('窗口最小化')"><svg viewBox="0 0 10 10" fill="currentColor"><rect x="0" y="4.5" width="10" height="1"/></svg></button>
+            <button class="title-bar-btn maximize" onclick="showMessage('窗口最大化')"><div class="maximize-icon"></div></button>
+            <button class="title-bar-btn close" onclick="showMessage('系统关闭中...')"><svg viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2"><line x1="0" y1="0" x2="10" y2="10"/><line x1="10" y1="0" x2="0" y2="10"/></svg></button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="nav-bar">
+            <div class="nav-tabs">
+                <a href="index.html" class="nav-tab">主界面</a>
+                <a href="device-registry.html" class="nav-tab">设备台账</a>
+                <a href="alarm-center.html" class="nav-tab active">告警中心</a>
+                <a href="data-report.html" class="nav-tab">数据报表</a>
+                <a href="user-management.html" class="nav-tab">用户管理</a>
+                <a href="role-permission.html" class="nav-tab">角色权限</a>
+                <a href="system-log.html" class="nav-tab">系统日志</a>
+                <a href="system-setting.html" class="nav-tab">系统设置</a>
+            </div>
+            <div class="nav-right">
+                <button class="nav-btn" onclick="showMessage('跳转到告警管理')"><i class="fas fa-bell"></i> 告警管理</button>
+                <button class="nav-btn" onclick="showMessage('跳转到数据查询')"><i class="fas fa-search"></i> 数据查询</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="left-panel">
+                <button class="menu-btn active" onclick="switchTab('alarm-list', this)"><i class="fas fa-exclamation-triangle"></i> 告警列表</button>
+                <button class="menu-btn" onclick="switchTab('alarm-statistics', this)"><i class="fas fa-chart-pie"></i> 告警统计</button>
+                <button class="menu-btn" onclick="switchTab('alarm-config', this)"><i class="fas fa-cog"></i> 告警配置</button>
+                <button class="menu-btn" onclick="switchTab('alarm-history', this)"><i class="fas fa-history"></i> 历史记录</button>
+            </div>
+
+            <div class="main-content">
+                <!-- 告警列表 -->
+                <div id="alarm-list">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-exclamation-triangle"></i> 告警管理中心</h2>
+                        <button class="btn btn-primary" onclick="exportAlarms()"><i class="fas fa-download"></i> 导出告警</button>
+                    </div>
+
+                <div class="stats-row">
+                    <div class="stat-card"><div class="stat-value">156</div><div class="stat-label">告警总数</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color:#ff4444;">23</div><div class="stat-label">未处理</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color:#ffaa00;">8</div><div class="stat-label">处理中</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color:#00ff88;">125</div><div class="stat-label">已处理</div></div>
+                    <div class="stat-card"><div class="stat-value" style="color:#00d4ff;">98.5%</div><div class="stat-label">处理率</div></div>
+                </div>
+
+                <div class="alarm-summary">
+                    <div class="alarm-summary-card high">
+                        <div class="alarm-summary-header">
+                            <span class="alarm-summary-title"><i class="fas fa-circle" style="font-size:8px;color:#ff4444;margin-right:6px;"></i>高级告警</span>
+                            <span class="alarm-summary-count">5</span>
+                        </div>
+                        <div style="font-size:12px;color:#7a9ab8;">需立即处理</div>
+                    </div>
+                    <div class="alarm-summary-card medium">
+                        <div class="alarm-summary-header">
+                            <span class="alarm-summary-title"><i class="fas fa-circle" style="font-size:8px;color:#ffaa00;margin-right:6px;"></i>中级告警</span>
+                            <span class="alarm-summary-count">12</span>
+                        </div>
+                        <div style="font-size:12px;color:#7a9ab8;">需及时处理</div>
+                    </div>
+                    <div class="alarm-summary-card low">
+                        <div class="alarm-summary-header">
+                            <span class="alarm-summary-title"><i class="fas fa-circle" style="font-size:8px;color:#00aadd;margin-right:6px;"></i>低级告警</span>
+                            <span class="alarm-summary-count">6</span>
+                        </div>
+                        <div style="font-size:12px;color:#7a9ab8;">需关注处理</div>
+                    </div>
+                </div>
+
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="搜索告警内容、设备名称...">
+                    <select class="form-select" style="width:120px;">
+                        <option value="">全部级别</option>
+                        <option value="high">高级告警</option>
+                        <option value="medium">中级告警</option>
+                        <option value="low">低级告警</option>
+                    </select>
+                    <select class="form-select" style="width:120px;">
+                        <option value="">全部状态</option>
+                        <option value="unhandled">未处理</option>
+                        <option value="handling">处理中</option>
+                        <option value="handled">已处理</option>
+                    </select>
+                    <select class="form-select" style="width:150px;">
+                        <option value="">全部设备类型</option>
+                        <option value="storage">储能终端</option>
+                        <option value="charging">充电桩</option>
+                        <option value="solar">光伏逆变器</option>
+                        <option value="power">配电设备</option>
+                    </select>
+                    <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                    <button class="nav-btn"><i class="fas fa-redo"></i> 重置</button>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">序号</th>
+                            <th style="width:80px;">级别</th>
+                            <th>告警内容</th>
+                            <th style="width:120px;">设备名称</th>
+                            <th style="width:140px;">告警时间</th>
+                            <th style="width:80px;">状态</th>
+                            <th style="width:150px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td><span class="alarm-level-dot high" title="高级告警"></span></td>
+                            <td>电池温度过高 (68°C)，已触发过温保护</td>
+                            <td>储能柜 A-03</td>
+                            <td>2024-03-15 14:32</td>
+                            <td><span class="status-tag unhandled">未处理</span></td>
+                            <td><button class="table-btn" onclick="showHandleModal('电池温度过高')">处理</button><button class="table-btn" onclick="showMessage('已忽略该告警')">忽略</button></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><span class="alarm-level-dot medium" title="中级告警"></span></td>
+                            <td>设备通信异常，连续 3 次采集失败</td>
+                            <td>充电桩 B-07</td>
+                            <td>2024-03-15 14:28</td>
+                            <td><span class="status-tag unhandled">未处理</span></td>
+                            <td><button class="table-btn" onclick="showHandleModal('设备通信异常')">处理</button><button class="table-btn" onclick="showMessage('已忽略该告警')">忽略</button></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td><span class="alarm-level-dot medium" title="中级告警"></span></td>
+                            <td>负载率超过 85% 阈值 (86.5%)</td>
+                            <td>配电柜 PDU-02</td>
+                            <td>2024-03-15 13:58</td>
+                            <td><span class="status-tag handling">处理中</span></td>
+                            <td><button class="table-btn" onclick="showMessage('已加速处理')">催办</button><button class="table-btn" onclick="showDetailModal('负载率超过阈值')">查看</button></td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td><span class="alarm-level-dot low" title="低级告警"></span></td>
+                            <td>逆变器效率偏低 (92.3%)</td>
+                            <td>光伏逆变器 C-12</td>
+                            <td>2024-03-15 14:15</td>
+                            <td><span class="status-tag unhandled">未处理</span></td>
+                            <td><button class="table-btn" onclick="showHandleModal('逆变器效率偏低')">处理</button><button class="table-btn" onclick="showMessage('已忽略该告警')">忽略</button></td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td><span class="alarm-level-dot low" title="低级告警"></span></td>
+                            <td>电池 SOC 低于 25% 警戒值</td>
+                            <td>储能终端 A-05</td>
+                            <td>2024-03-15 12:45</td>
+                            <td><span class="status-tag handled">已处理</span></td>
+                            <td><button class="table-btn" onclick="showDetailModal('电池 SOC 低于警戒值')">查看</button><button class="table-btn" onclick="showMessage('已重新打开告警')">重新打开</button></td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td><span class="alarm-level-dot high" title="高级告警"></span></td>
+                            <td>直流电压异常升高 (820V)</td>
+                            <td>光伏逆变器 C-05</td>
+                            <td>2024-03-15 11:20</td>
+                            <td><span class="status-tag handled">已处理</span></td>
+                            <td><button class="table-btn" onclick="showDetailModal('直流电压异常')">查看</button><button class="table-btn" onclick="showMessage('已重新打开告警')">重新打开</button></td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td><span class="alarm-level-dot medium" title="中级告警"></span></td>
+                            <td>充电枪温度过高 (55°C)</td>
+                            <td>充电桩 B-03</td>
+                            <td>2024-03-15 10:15</td>
+                            <td><span class="status-tag handling">处理中</span></td>
+                            <td><button class="table-btn" onclick="showMessage('已加速处理')">催办</button><button class="table-btn" onclick="showDetailModal('充电枪温度过高')">查看</button></td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td><span class="alarm-level-dot low" title="低级告警"></span></td>
+                            <td>环境湿度过高 (85%)</td>
+                            <td>储能站 A 区</td>
+                            <td>2024-03-15 09:30</td>
+                            <td><span class="status-tag handled">已处理</span></td>
+                            <td><button class="table-btn" onclick="showDetailModal('环境湿度过高')">查看</button><button class="table-btn" onclick="showMessage('已重新打开告警')">重新打开</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pagination">
+                        <button class="page-btn">上一页</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">4</button>
+                        <button class="page-btn">下一页</button>
+                    </div>
+                </div>
+
+                <!-- 告警统计 -->
+                <div id="alarm-statistics" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-chart-pie"></i> 告警统计分析</h2>
+                        <button class="btn btn-primary" onclick="showMessage('统计报表已导出')"><i class="fas fa-download"></i> 导出统计</button>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="date" class="form-input" style="width:180px;" value="2024-03-01">
+                        <span style="color:#7ab8e0;line-height:36px;">至</span>
+                        <input type="date" class="form-input" style="width:180px;" value="2024-03-31">
+                        <select class="form-select" style="width:150px;">
+                            <option value="day">按天统计</option>
+                            <option value="week">按周统计</option>
+                            <option value="month" selected>按月统计</option>
+                        </select>
+                        <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card"><div class="stat-value">156</div><div class="stat-label">告警总数</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#ff4444;">23</div><div class="stat-label">高级告警</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#ffaa00;">58</div><div class="stat-label">中级告警</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#00aadd;">75</div><div class="stat-label">低级告警</div></div>
+                        <div class="stat-card"><div class="stat-value" style="color:#00ff88;">98.5%</div><div class="stat-label">处理率</div></div>
+                    </div>
+
+                    <div class="chart-placeholder" style="margin-bottom:20px;">
+                        <div class="chart-title"><i class="fas fa-chart-line"></i> 告警趋势分析</div>
+                        <div class="chart-area">
+                            <div class="chart-bar" style="height:45%;"><span class="chart-bar-value">45</span><span class="chart-bar-label">3.1</span></div>
+                            <div class="chart-bar" style="height:62%;"><span class="chart-bar-value">62</span><span class="chart-bar-label">3.5</span></div>
+                            <div class="chart-bar" style="height:38%;"><span class="chart-bar-value">38</span><span class="chart-bar-label">3.10</span></div>
+                            <div class="chart-bar" style="height:75%;"><span class="chart-bar-value">75</span><span class="chart-bar-label">3.15</span></div>
+                            <div class="chart-bar" style="height:58%;"><span class="chart-bar-value">58</span><span class="chart-bar-label">3.20</span></div>
+                            <div class="chart-bar" style="height:82%;"><span class="chart-bar-value">82</span><span class="chart-bar-label">3.25</span></div>
+                            <div class="chart-bar" style="height:68%;"><span class="chart-bar-value">68</span><span class="chart-bar-label">3.30</span></div>
+                        </div>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">序号</th>
+                                <th>设备类型</th>
+                                <th>高级告警</th>
+                                <th>中级告警</th>
+                                <th>低级告警</th>
+                                <th>告警总数</th>
+                                <th>已处理</th>
+                                <th>处理率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>储能终端</td>
+                                <td style="color:#ff4444;">8</td>
+                                <td style="color:#ffaa00;">22</td>
+                                <td style="color:#00aadd;">28</td>
+                                <td>58</td>
+                                <td>57</td>
+                                <td><span style="color:#00ff88;">98.3%</span></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>充电桩</td>
+                                <td style="color:#ff4444;">5</td>
+                                <td style="color:#ffaa00;">18</td>
+                                <td style="color:#00aadd;">25</td>
+                                <td>48</td>
+                                <td>47</td>
+                                <td><span style="color:#00ff88;">97.9%</span></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>光伏逆变器</td>
+                                <td style="color:#ff4444;">6</td>
+                                <td style="color:#ffaa00;">12</td>
+                                <td style="color:#00aadd;">15</td>
+                                <td>33</td>
+                                <td>33</td>
+                                <td><span style="color:#00ff88;">100%</span></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>配电设备</td>
+                                <td style="color:#ff4444;">4</td>
+                                <td style="color:#ffaa00;">6</td>
+                                <td style="color:#00aadd;">7</td>
+                                <td>17</td>
+                                <td>16</td>
+                                <td><span style="color:#00ff88;">94.1%</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 告警配置 -->
+                <div id="alarm-config" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-cog"></i> 告警规则配置</h2>
+                        <button class="btn btn-primary" onclick="showMessage('新增告警规则')"><i class="fas fa-plus"></i> 新增规则</button>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="搜索规则名称...">
+                        <select class="form-select" style="width:150px;">
+                            <option value="">全部类型</option>
+                            <option value="temperature">温度告警</option>
+                            <option value="voltage">电压告警</option>
+                            <option value="current">电流告警</option>
+                            <option value="communication">通信告警</option>
+                        </select>
+                        <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">序号</th>
+                                <th>规则名称</th>
+                                <th>告警类型</th>
+                                <th>触发条件</th>
+                                <th>告警级别</th>
+                                <th>通知方式</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>电池温度过高告警</td>
+                                <td>温度告警</td>
+                                <td>温度 > 65°C</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(255,68,68,0.2);color:#ff4444;border:1px solid #cc3333;">高级</span></td>
+                                <td>弹窗、声音、短信</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,255,136,0.2);color:#00ff88;border:1px solid #00aa66;">启用</span></td>
+                                <td><button class="table-btn" onclick="showMessage('编辑规则')">编辑</button><button class="table-btn" onclick="showMessage('禁用规则')">禁用</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>直流电压异常告警</td>
+                                <td>电压告警</td>
+                                <td>电压 > 800V 或 < 200V</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(255,68,68,0.2);color:#ff4444;border:1px solid #cc3333;">高级</span></td>
+                                <td>弹窗、声音</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,255,136,0.2);color:#00ff88;border:1px solid #00aa66;">启用</span></td>
+                                <td><button class="table-btn" onclick="showMessage('编辑规则')">编辑</button><button class="table-btn" onclick="showMessage('禁用规则')">禁用</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>设备通信超时告警</td>
+                                <td>通信告警</td>
+                                <td>连续 3 次采集失败</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(255,170,0,0.2);color:#ffaa00;border:1px solid #cc8800;">中级</span></td>
+                                <td>弹窗</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,255,136,0.2);color:#00ff88;border:1px solid #00aa66;">启用</span></td>
+                                <td><button class="table-btn" onclick="showMessage('编辑规则')">编辑</button><button class="table-btn" onclick="showMessage('禁用规则')">禁用</button></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>负载率偏高告警</td>
+                                <td>功率告警</td>
+                                <td>负载率 > 85%</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(255,170,0,0.2);color:#ffaa00;border:1px solid #cc8800;">中级</span></td>
+                                <td>弹窗</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,255,136,0.2);color:#00ff88;border:1px solid #00aa66;">启用</span></td>
+                                <td><button class="table-btn" onclick="showMessage('编辑规则')">编辑</button><button class="table-btn" onclick="showMessage('禁用规则')">禁用</button></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>逆变器效率偏低告警</td>
+                                <td>效率告警</td>
+                                <td>效率 < 93%</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(0,170,220,0.2);color:#00aadd;border:1px solid #0088aa;">低级</span></td>
+                                <td>弹窗</td>
+                                <td><span class="status-tag" style="padding:2px 8px;border-radius:3px;font-size:11px;background:rgba(153,153,153,0.2);color:#999;border:1px solid #666;">禁用</span></td>
+                                <td><button class="table-btn" onclick="showMessage('编辑规则')">编辑</button><button class="table-btn" onclick="showMessage('启用规则')">启用</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 历史记录 -->
+                <div id="alarm-history" style="display:none;">
+                    <div class="page-header">
+                        <h2 class="page-title"><i class="fas fa-history"></i> 告警历史记录</h2>
+                        <button class="btn btn-secondary" onclick="showMessage('历史记录已清空')"><i class="fas fa-trash"></i> 清空历史</button>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="date" class="form-input" style="width:180px;" value="2024-03-01">
+                        <span style="color:#7ab8e0;line-height:36px;">至</span>
+                        <input type="date" class="form-input" style="width:180px;" value="2024-03-31">
+                        <select class="form-select" style="width:150px;">
+                            <option value="">全部级别</option>
+                            <option value="high">高级告警</option>
+                            <option value="medium">中级告警</option>
+                            <option value="low">低级告警</option>
+                        </select>
+                        <button class="nav-btn"><i class="fas fa-search"></i> 查询</button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">序号</th>
+                                <th>告警设备</th>
+                                <th>告警内容</th>
+                                <th>告警级别</th>
+                                <th>发生时间</th>
+                                <th>处理时间</th>
+                                <th>处理人员</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>储能柜 A-03</td>
+                                <td>电池温度过高 (68°C)</td>
+                                <td><span class="alarm-level-dot high"></span></td>
+                                <td>2024-03-10 14:32</td>
+                                <td>2024-03-10 15:45</td>
+                                <td>张工</td>
+                                <td><span class="status-tag handled">已处理</span></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>充电桩 B-07</td>
+                                <td>设备通信异常</td>
+                                <td><span class="alarm-level-dot medium"></span></td>
+                                <td>2024-03-08 09:15</td>
+                                <td>2024-03-08 10:30</td>
+                                <td>李工</td>
+                                <td><span class="status-tag handled">已处理</span></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>光伏逆变器 C-05</td>
+                                <td>直流电压异常升高 (820V)</td>
+                                <td><span class="alarm-level-dot high"></span></td>
+                                <td>2024-03-05 11:20</td>
+                                <td>2024-03-05 12:10</td>
+                                <td>王工</td>
+                                <td><span class="status-tag handled">已处理</span></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>配电柜 PDU-01</td>
+                                <td>负载率超过阈值 (88%)</td>
+                                <td><span class="alarm-level-dot medium"></span></td>
+                                <td>2024-03-03 16:45</td>
+                                <td>2024-03-03 17:20</td>
+                                <td>张工</td>
+                                <td><span class="status-tag handled">已处理</span></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>储能终端 A-02</td>
+                                <td>电池 SOC 低于警戒值</td>
+                                <td><span class="alarm-level-dot low"></span></td>
+                                <td>2024-03-01 08:30</td>
+                                <td>2024-03-01 09:15</td>
+                                <td>李工</td>
+                                <td><span class="status-tag handled">已处理</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="pagination">
+                        <button class="page-btn">上一页</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">4</button>
+                        <button class="page-btn">5</button>
+                        <button class="page-btn">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="modal-overlay" id="handleModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">告警处理</span>
+                <button class="modal-close" onclick="closeModal('handleModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">告警设备</label><input type="text" class="form-input" value="储能柜 A-03" readonly></div>
+                    <div class="form-group"><label class="form-label">告警级别</label><input type="text" class="form-input" value="高级告警" readonly></div>
+                </div>
+                <div class="form-group"><label class="form-label">告警内容</label><input type="text" class="form-input" id="alarmContent" value="电池温度过高 (68°C)，已触发过温保护" readonly></div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">告警时间</label><input type="text" class="form-input" value="2024-03-15 14:32:18" readonly></div>
+                    <div class="form-group"><label class="form-label">处理人员</label><input type="text" class="form-input" value="运维工程师" readonly></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">处理方式 <span class="required">*</span></label>
+                        <select class="form-select"><option value="">请选择处理方式</option><option value="remote">远程处理</option><option value="onsite">现场处理</option><option value="ignore">忽略告警</option><option value="escalate">上报处理</option></select>
+                    </div>
+                    <div class="form-group"><label class="form-label">预计恢复时间</label><input type="datetime-local" class="form-input"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">故障原因 <span class="required">*</span></label>
+                        <select class="form-select"><option value="">请选择故障原因</option><option value="overload">设备过载</option><option value="overheat">温度过高</option><option value="comm">通信故障</option><option value="power">供电异常</option><option value="other">其他原因</option></select>
+                    </div>
+                    <div class="form-group"><label class="form-label">是否派单</label><select class="form-select"><option value="no">否</option><option value="yes">是</option></select></div>
+                </div>
+                <div class="form-group"><label class="form-label">处理措施 <span class="required">*</span></label><textarea class="form-input" style="min-height:80px;resize:vertical;" placeholder="请详细描述告警处理措施..."></textarea></div>
+                <div class="form-group"><label class="form-label">备注说明</label><textarea class="form-input" style="min-height:60px;resize:vertical;" placeholder="其他需要说明的信息..."></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('handleModal')">取消</button>
+                <button class="btn btn-primary" onclick="submitHandle()">提交处理</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">告警详情</span>
+                <button class="modal-close" onclick="closeModal('detailModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">告警设备</label><input type="text" class="form-input" value="配电柜 PDU-02" readonly></div>
+                    <div class="form-group"><label class="form-label">告警级别</label><input type="text" class="form-input" value="中级告警" readonly></div>
+                </div>
+                <div class="form-group"><label class="form-label">告警内容</label><input type="text" class="form-input" id="detailAlarmContent" value="负载率超过 85% 阈值 (86.5%)" readonly></div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">告警时间</label><input type="text" class="form-input" value="2024-03-15 13:58:33" readonly></div>
+                    <div class="form-group"><label class="form-label">处理时间</label><input type="text" class="form-input" value="2024-03-15 14:05:20" readonly></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">处理人员</label><input type="text" class="form-input" value="张工" readonly></div>
+                    <div class="form-group"><label class="form-label">当前状态</label><input type="text" class="form-input" value="处理中" readonly></div>
+                </div>
+                <div class="form-group"><label class="form-label">处理措施</label><textarea class="form-input" style="min-height:80px;resize:vertical;" readonly>已安排运维人员现场检查，初步判断为负载分配不均衡，正在调整负载配置。</textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('detailModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function showHandleModal(content) { document.getElementById('alarmContent').value = content; openModal('handleModal'); }
+        function showDetailModal(content) { document.getElementById('detailAlarmContent').value = content; openModal('detailModal'); }
+        function submitHandle() { showMessage('告警处理提交成功'); closeModal('handleModal'); }
+        function exportAlarms() { showMessage('告警数据导出成功'); }
+        
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.main-content > div').forEach(div => { div.style.display = 'none'; });
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        
+        function showMessage(text) { var msg = document.createElement('div'); msg.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#00a8e6 0%,#0088c6 100%);color:#fff;padding:12px 30px;border-radius:4px;z-index:2000;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.3);'; msg.textContent = text; document.body.appendChild(msg); setTimeout(() => { msg.style.opacity = '0'; msg.style.transition = 'opacity 0.3s'; setTimeout(() => msg.remove(), 300); }, 2000); }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => { overlay.addEventListener('click', function(e) { if (e.target === this) { this.classList.remove('show'); } }); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.show').forEach(modal => { modal.classList.remove('show'); }); } });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水工结构渗漏趋势监测预警软件</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "SimSun", sans-serif;
+        }
+
+        body {
+            background: #808080;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .window {
+            width: 1280px;
+            height: 800px;
+            background: #f0f0f0;
+            border: 1px solid #404040;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 标题栏 Win10风格 */
+        .title-bar {
+            height: 32px;
+            background: linear-gradient(180deg, #1a3a5c 0%, #0d2137 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px 0 10px;
+            user-select: none;
+        }
+
+        .title-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .title-left i {
+            font-size: 14px;
+            color: #6cb2eb;
+        }
+
+        .title-user {
+            margin-left: 30px;
+            color: #a8c8e8;
+            font-size: 11px;
+        }
+
+        .window-controls {
+            display: flex;
+            height: 100%;
+        }
+
+        .win-btn {
+            width: 46px;
+            height: 100%;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .win-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .win-btn.close-btn:hover {
+            background: #e81123;
+        }
+
+        .min-icon {
+            width: 10px;
+            height: 1px;
+            background: #fff;
+        }
+
+        .max-icon {
+            width: 10px;
+            height: 10px;
+            border: 1px solid #fff;
+            background: transparent;
+        }
+
+        .close-icon {
+            position: relative;
+            width: 12px;
+            height: 12px;
+        }
+
+        .close-icon::before,
+        .close-icon::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 1px;
+            background: #fff;
+            top: 50%;
+            left: 50%;
+        }
+
+        .close-icon::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+        .close-icon::after {
+            transform: translate(-50%, -50%) rotate(-45deg);
+        }
+
+        /* 菜单栏 */
+        .menu-bar {
+            height: 26px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #d0d0d0;
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+            font-size: 12px;
+        }
+
+        .menu-item {
+            padding: 4px 12px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background: #e5e5e5;
+        }
+
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
+            min-width: 180px;
+            z-index: 1000;
+        }
+
+        .menu-item:hover .menu-dropdown {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 6px 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dropdown-item:hover {
+            background: #0078d4;
+            color: #fff;
+        }
+
+        .dropdown-item i {
+            width: 14px;
+            font-size: 11px;
+        }
+
+        .menu-sep {
+            height: 1px;
+            background: #d0d0d0;
+            margin: 4px 0;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            height: 38px;
+            background: linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%);
+            border-bottom: 1px solid #b0b0b0;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            gap: 4px;
+        }
+
+        .tool-btn {
+            padding: 4px 10px;
+            border: 1px solid #b0b0b0;
+            background: linear-gradient(180deg, #fff 0%, #e8e8e8 100%);
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #333;
+        }
+
+        .tool-btn:hover {
+            background: linear-gradient(180deg, #e5f3ff 0%, #cce8ff 100%);
+            border-color: #0078d4;
+        }
+
+        .tool-btn:active {
+            background: #cce8ff;
+        }
+
+        .tool-btn i {
+            font-size: 12px;
+            color: #1a3a5c;
+        }
+
+        .tool-sep {
+            width: 1px;
+            height: 26px;
+            background: #c0c0c0;
+            margin: 0 6px;
+        }
+
+        /* 主内容区 */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #d4d4d4;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        /* 统计卡片 */
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #a0a0a0;
+            padding: 12px 16px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a3a5c;
+        }
+
+        .stat-num.warn {
+            color: #e67e22;
+        }
+
+        .stat-num.danger {
+            color: #c0392b;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* 数据面板 */
+        .data-panel {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #808080;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-head {
+            height: 28px;
+            background: linear-gradient(180deg, #1a3a5c 0%, #0d2137 100%);
+            color: #fff;
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .panel-head i {
+            margin-right: 8px;
+        }
+
+        /* Tab切换 */
+        .tab-bar {
+            display: flex;
+            background: #e0e0e0;
+            border-bottom: 1px solid #a0a0a0;
+        }
+
+        .tab-item {
+            padding: 8px 20px;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-item:hover {
+            background: #d0d0d0;
+        }
+
+        .tab-item.active {
+            background: #fff;
+            border-bottom: 2px solid #0078d4;
+        }
+
+        .tab-body {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tab-page {
+            display: none;
+            height: 100%;
+            overflow: auto;
+            padding: 10px;
+        }
+
+        .tab-page.active {
+            display: block;
+        }
+
+        /* 操作栏 */
+        .action-row {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .act-btn {
+            padding: 5px 14px;
+            font-size: 12px;
+            border: 1px solid #a0a0a0;
+            background: linear-gradient(180deg, #fff 0%, #e8e8e8 100%);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .act-btn:hover {
+            background: linear-gradient(180deg, #e5f3ff 0%, #cce8ff 100%);
+        }
+
+        .act-btn.primary {
+            background: linear-gradient(180deg, #4a90d9 0%, #2d6aa0 100%);
+            color: #fff;
+            border-color: #2d6aa0;
+        }
+
+        .act-btn.primary:hover {
+            background: linear-gradient(180deg, #5a9fe9 0%, #3d7ab0 100%);
+        }
+
+        .act-btn i {
+            font-size: 11px;
+        }
+
+        /* 数据表格 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th {
+            background: linear-gradient(180deg, #5a7a9a 0%, #3a5a7a 100%);
+            color: #fff;
+            padding: 7px 10px;
+            text-align: left;
+            border: 1px solid #2a4a6a;
+            font-weight: normal;
+        }
+
+        .data-table td {
+            padding: 6px 10px;
+            border: 1px solid #c0c0c0;
+            background: #fff;
+        }
+
+        .data-table tr:nth-child(even) td {
+            background: #f8f8f8;
+        }
+
+        .data-table tr:hover td {
+            background: #e5f3ff;
+        }
+
+        .data-table tr.selected td {
+            background: #cce8ff;
+        }
+
+        .st-normal { color: #27ae60; font-weight: bold; }
+        .st-warn { color: #e67e22; font-weight: bold; }
+        .st-danger { color: #c0392b; font-weight: bold; }
+
+        /* 预警等级标签 */
+        .lv-blue { background: #3498db; color: #fff; padding: 2px 8px; font-size: 11px; }
+        .lv-yellow { background: #f1c40f; color: #333; padding: 2px 8px; font-size: 11px; }
+        .lv-orange { background: #e67e22; color: #fff; padding: 2px 8px; font-size: 11px; }
+        .lv-red { background: #c0392b; color: #fff; padding: 2px 8px; font-size: 11px; }
+
+        /* 图表区 */
+        .chart-box {
+            background: #fff;
+            border: 1px solid #c0c0c0;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .chart-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #1a3a5c;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 200px;
+        }
+
+        .dual-chart {
+            display: flex;
+            gap: 12px;
+        }
+
+        .dual-chart .chart-box {
+            flex: 1;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            height: 26px;
+            background: #f0f0f0;
+            border-top: 1px solid #b0b0b0;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 11px;
+            color: #555;
+        }
+
+        .status-bar span {
+            margin-right: 30px;
+        }
+
+        .status-right {
+            margin-left: auto;
+        }
+
+        /* 弹窗 */
+        .modal-mask {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-mask.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #f0f0f0;
+            border: 1px solid #404040;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.4);
+            min-width: 520px;
+            max-width: 680px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-head {
+            height: 30px;
+            background: linear-gradient(180deg, #1a3a5c 0%, #0d2137 100%);
+            color: #fff;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .modal-close {
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #e81123;
+        }
+
+        .modal-content {
+            padding: 16px;
+            overflow-y: auto;
+            max-height: calc(85vh - 100px);
+        }
+
+        .modal-foot {
+            padding: 12px 16px;
+            background: #e0e0e0;
+            border-top: 1px solid #c0c0c0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-foot button {
+            padding: 6px 22px;
+            font-size: 12px;
+            border: 1px solid #888;
+            cursor: pointer;
+        }
+
+        .btn-ok {
+            background: linear-gradient(180deg, #4a90d9 0%, #2d6aa0 100%);
+            color: #fff;
+            border-color: #2d6aa0;
+        }
+
+        .btn-ok:hover {
+            background: linear-gradient(180deg, #5a9fe9 0%, #3d7ab0 100%);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(180deg, #f5f5f5 0%, #ddd 100%);
+        }
+
+        .btn-cancel:hover {
+            background: linear-gradient(180deg, #fff 0%, #eee 100%);
+        }
+
+        /* 表单 */
+        .form-section {
+            border: 1px solid #c0c0c0;
+            padding: 14px;
+            margin-bottom: 14px;
+            background: #fafafa;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #1a3a5c;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #d0d0d0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label {
+            width: 100px;
+            text-align: right;
+            padding-right: 10px;
+            font-size: 12px;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .form-group label.req::after {
+            content: ' *';
+            color: #c0392b;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            flex: 1;
+            padding: 5px 8px;
+            font-size: 12px;
+            border: 1px solid #a0a0a0;
+            background: #fff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #0078d4;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-group input[readonly] {
+            background: #e8e8e8;
+        }
+
+        /* 提示框 */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a3a5c;
+            color: #fff;
+            padding: 10px 24px;
+            font-size: 12px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+            z-index: 3000;
+            display: none;
+        }
+
+        .toast.success { background: #27ae60; }
+        .toast.error { background: #c0392b; }
+        .toast.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <!-- 标题栏 -->
+        <div class="title-bar">
+            <div class="title-left">
+                <i class="fas fa-water"></i>
+                <span>水工结构渗漏趋势监测预警软件</span>
+                <span class="title-user">当前用户：李宁</span>
+            </div>
+            <div class="window-controls">
+                <button class="win-btn" title="最小化"><span class="min-icon"></span></button>
+                <button class="win-btn" title="最大化"><span class="max-icon"></span></button>
+                <button class="win-btn close-btn" title="关闭"><span class="close-icon"></span></button>
+            </div>
+        </div>
+
+
+
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <button class="tool-btn" onclick="openModal('addPointModal')"><i class="fas fa-plus"></i>添加监测点</button>
+            <button class="tool-btn" onclick="openModal('inputModal')"><i class="fas fa-keyboard"></i>数据录入</button>
+            <span class="tool-sep"></span>
+            <button class="tool-btn" onclick="openModal('trendModal')"><i class="fas fa-chart-line"></i>趋势分析</button>
+            <button class="tool-btn" onclick="openModal('compareModal')"><i class="fas fa-balance-scale"></i>对比分析</button>
+            <span class="tool-sep"></span>
+            <button class="tool-btn" onclick="openModal('alertSetModal')"><i class="fas fa-bell"></i>预警设置</button>
+            <button class="tool-btn" onclick="switchTab(2)"><i class="fas fa-exclamation-triangle"></i>预警记录</button>
+            <span class="tool-sep"></span>
+            <button class="tool-btn" onclick="openModal('reportModal')"><i class="fas fa-file-alt"></i>生成报告</button>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-area">
+            <!-- 统计卡片 -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-num">52</div>
+                    <div class="stat-label">监测点总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num">46</div>
+                    <div class="stat-label">正常运行</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num warn">4</div>
+                    <div class="stat-label">黄色预警</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num danger">2</div>
+                    <div class="stat-label">红色预警</div>
+                </div>
+            </div>
+
+            <!-- 数据面板 -->
+            <div class="data-panel">
+                <div class="panel-head">
+                    <i class="fas fa-database"></i>数据管理中心
+                </div>
+                <div class="tab-bar">
+                    <button class="tab-item active" onclick="switchTab(0)">监测点列表</button>
+                    <button class="tab-item" onclick="switchTab(1)">采集数据</button>
+                    <button class="tab-item" onclick="switchTab(2)">预警记录</button>
+                    <button class="tab-item" onclick="switchTab(3)">趋势图表</button>
+                </div>
+                <div class="tab-body">
+                    <!-- 监测点列表 -->
+                    <div class="tab-page active" id="tab0">
+                        <div class="action-row">
+                            <button class="act-btn primary" onclick="openModal('addPointModal')"><i class="fas fa-plus"></i>添加</button>
+                            <button class="act-btn" onclick="openModal('editPointModal')"><i class="fas fa-edit"></i>编辑</button>
+                            <button class="act-btn" onclick="deleteConfirm()"><i class="fas fa-trash"></i>删除</button>
+                            <button class="act-btn" onclick="toast('数据已刷新','success')"><i class="fas fa-sync"></i>刷新</button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:45px">序号</th>
+                                    <th>监测点编号</th>
+                                    <th>监测点名称</th>
+                                    <th>所属部位</th>
+                                    <th>桩号位置</th>
+                                    <th>设备编号</th>
+                                    <th>渗流量(L/min)</th>
+                                    <th>水压力(kPa)</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr onclick="selectRow(this)">
+                                    <td>1</td>
+                                    <td>JC-ZB-001</td>
+                                    <td>主坝左岸坡脚渗流监测点</td>
+                                    <td>主坝左岸</td>
+                                    <td>0+052.00</td>
+                                    <td>SL-2024-0312</td>
+                                    <td>1.85</td>
+                                    <td>42.6</td>
+                                    <td><span class="st-normal">正常</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>2</td>
+                                    <td>JC-ZB-002</td>
+                                    <td>主坝中部基础渗流监测点</td>
+                                    <td>主坝中部</td>
+                                    <td>0+125.50</td>
+                                    <td>SL-2024-0313</td>
+                                    <td>2.42</td>
+                                    <td>58.3</td>
+                                    <td><span class="st-normal">正常</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>3</td>
+                                    <td>JC-ZB-003</td>
+                                    <td>主坝右岸帷幕后渗流点</td>
+                                    <td>主坝右岸</td>
+                                    <td>0+198.00</td>
+                                    <td>SL-2024-0314</td>
+                                    <td>4.86</td>
+                                    <td>72.5</td>
+                                    <td><span class="st-warn">黄色预警</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>4</td>
+                                    <td>JC-FB-001</td>
+                                    <td>副坝廊道排水孔渗流点</td>
+                                    <td>副坝廊道</td>
+                                    <td>1+035.00</td>
+                                    <td>SL-2024-0315</td>
+                                    <td>7.28</td>
+                                    <td>95.8</td>
+                                    <td><span class="st-danger">红色预警</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>5</td>
+                                    <td>JC-FB-002</td>
+                                    <td>副坝坝基扬压力监测点</td>
+                                    <td>副坝基础</td>
+                                    <td>1+078.50</td>
+                                    <td>SL-2024-0316</td>
+                                    <td>2.15</td>
+                                    <td>48.2</td>
+                                    <td><span class="st-normal">正常</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>6</td>
+                                    <td>JC-XH-001</td>
+                                    <td>泄洪洞进口段渗流监测点</td>
+                                    <td>泄洪洞</td>
+                                    <td>2+015.00</td>
+                                    <td>SL-2024-0317</td>
+                                    <td>1.52</td>
+                                    <td>35.6</td>
+                                    <td><span class="st-normal">正常</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>7</td>
+                                    <td>JC-XH-002</td>
+                                    <td>泄洪洞闸室段渗流监测点</td>
+                                    <td>泄洪洞</td>
+                                    <td>2+068.00</td>
+                                    <td>SL-2024-0318</td>
+                                    <td>5.12</td>
+                                    <td>68.4</td>
+                                    <td><span class="st-warn">黄色预警</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>8</td>
+                                    <td>JC-YL-001</td>
+                                    <td>引水隧洞衬砌裂缝渗流点</td>
+                                    <td>引水隧洞</td>
+                                    <td>3+125.00</td>
+                                    <td>SL-2024-0319</td>
+                                    <td>3.28</td>
+                                    <td>52.1</td>
+                                    <td><span class="st-normal">正常</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 采集数据 -->
+                    <div class="tab-page" id="tab1">
+                        <div class="action-row">
+                            <button class="act-btn primary" onclick="openModal('inputModal')"><i class="fas fa-keyboard"></i>手动录入</button>
+                            <button class="act-btn" onclick="openModal('importModal')"><i class="fas fa-file-import"></i>批量导入</button>
+                            <button class="act-btn" onclick="openModal('exportModal')"><i class="fas fa-file-export"></i>导出</button>
+                            <button class="act-btn" onclick="toast('数据已刷新','success')"><i class="fas fa-sync"></i>刷新</button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:45px">序号</th>
+                                    <th>监测点编号</th>
+                                    <th>采集时间</th>
+                                    <th>渗流量(L/min)</th>
+                                    <th>水压力(kPa)</th>
+                                    <th>水温(℃)</th>
+                                    <th>浊度(NTU)</th>
+                                    <th>采集方式</th>
+                                    <th>数据状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr onclick="selectRow(this)">
+                                    <td>1</td>
+                                    <td>JC-ZB-001</td>
+                                    <td>2024-03-15 08:00</td>
+                                    <td>1.85</td>
+                                    <td>42.6</td>
+                                    <td>14.2</td>
+                                    <td>2.8</td>
+                                    <td>自动采集</td>
+                                    <td><span class="st-normal">有效</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>2</td>
+                                    <td>JC-ZB-002</td>
+                                    <td>2024-03-15 08:00</td>
+                                    <td>2.42</td>
+                                    <td>58.3</td>
+                                    <td>14.5</td>
+                                    <td>3.1</td>
+                                    <td>自动采集</td>
+                                    <td><span class="st-normal">有效</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>3</td>
+                                    <td>JC-ZB-003</td>
+                                    <td>2024-03-15 08:00</td>
+                                    <td>4.86</td>
+                                    <td>72.5</td>
+                                    <td>15.1</td>
+                                    <td>7.6</td>
+                                    <td>自动采集</td>
+                                    <td><span class="st-warn">异常</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>4</td>
+                                    <td>JC-FB-001</td>
+                                    <td>2024-03-15 08:00</td>
+                                    <td>7.28</td>
+                                    <td>95.8</td>
+                                    <td>15.8</td>
+                                    <td>12.4</td>
+                                    <td>自动采集</td>
+                                    <td><span class="st-danger">超限</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>5</td>
+                                    <td>JC-FB-002</td>
+                                    <td>2024-03-15 08:00</td>
+                                    <td>2.15</td>
+                                    <td>48.2</td>
+                                    <td>14.0</td>
+                                    <td>2.5</td>
+                                    <td>自动采集</td>
+                                    <td><span class="st-normal">有效</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>6</td>
+                                    <td>JC-XH-001</td>
+                                    <td>2024-03-15 08:00</td>
+                                    <td>1.52</td>
+                                    <td>35.6</td>
+                                    <td>13.8</td>
+                                    <td>2.2</td>
+                                    <td>手动录入</td>
+                                    <td><span class="st-normal">有效</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>7</td>
+                                    <td>JC-XH-002</td>
+                                    <td>2024-03-15 08:00</td>
+                                    <td>5.12</td>
+                                    <td>68.4</td>
+                                    <td>14.6</td>
+                                    <td>6.2</td>
+                                    <td>自动采集</td>
+                                    <td><span class="st-warn">异常</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>8</td>
+                                    <td>JC-YL-001</td>
+                                    <td>2024-03-15 08:00</td>
+                                    <td>3.28</td>
+                                    <td>52.1</td>
+                                    <td>14.3</td>
+                                    <td>3.8</td>
+                                    <td>自动采集</td>
+                                    <td><span class="st-normal">有效</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 预警记录 -->
+                    <div class="tab-page" id="tab2">
+                        <div class="action-row">
+                            <button class="act-btn primary" onclick="openModal('handleModal')"><i class="fas fa-tasks"></i>处置预警</button>
+                            <button class="act-btn" onclick="openModal('exportModal')"><i class="fas fa-file-export"></i>导出</button>
+                            <button class="act-btn" onclick="toast('数据已刷新','success')"><i class="fas fa-sync"></i>刷新</button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:45px">序号</th>
+                                    <th>预警编号</th>
+                                    <th>监测点</th>
+                                    <th>预警时间</th>
+                                    <th>预警类型</th>
+                                    <th>预警等级</th>
+                                    <th>触发值</th>
+                                    <th>阈值</th>
+                                    <th>处置状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr onclick="selectRow(this)">
+                                    <td>1</td>
+                                    <td>YJ-2024-0156</td>
+                                    <td>JC-FB-001 副坝廊道排水孔</td>
+                                    <td>2024-03-15 07:32</td>
+                                    <td>渗流量超限</td>
+                                    <td><span class="lv-red">红色</span></td>
+                                    <td>7.28 L/min</td>
+                                    <td>5.50 L/min</td>
+                                    <td><span class="st-warn">待处置</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>2</td>
+                                    <td>YJ-2024-0155</td>
+                                    <td>JC-ZB-003 主坝右岸帷幕后</td>
+                                    <td>2024-03-15 06:45</td>
+                                    <td>渗流量偏高</td>
+                                    <td><span class="lv-orange">橙色</span></td>
+                                    <td>4.86 L/min</td>
+                                    <td>4.50 L/min</td>
+                                    <td><span class="st-warn">处置中</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>3</td>
+                                    <td>YJ-2024-0154</td>
+                                    <td>JC-XH-002 泄洪洞闸室段</td>
+                                    <td>2024-03-14 22:18</td>
+                                    <td>水压力偏高</td>
+                                    <td><span class="lv-yellow">黄色</span></td>
+                                    <td>68.4 kPa</td>
+                                    <td>65.0 kPa</td>
+                                    <td><span class="st-warn">处置中</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>4</td>
+                                    <td>YJ-2024-0153</td>
+                                    <td>JC-ZB-003 主坝右岸帷幕后</td>
+                                    <td>2024-03-14 16:35</td>
+                                    <td>浊度异常</td>
+                                    <td><span class="lv-yellow">黄色</span></td>
+                                    <td>7.6 NTU</td>
+                                    <td>7.0 NTU</td>
+                                    <td><span class="st-normal">已处置</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>5</td>
+                                    <td>YJ-2024-0152</td>
+                                    <td>JC-FB-001 副坝廊道排水孔</td>
+                                    <td>2024-03-14 11:22</td>
+                                    <td>渗流量上升</td>
+                                    <td><span class="lv-blue">蓝色</span></td>
+                                    <td>5.85 L/min</td>
+                                    <td>5.50 L/min</td>
+                                    <td><span class="st-normal">已处置</span></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td>6</td>
+                                    <td>YJ-2024-0151</td>
+                                    <td>JC-YL-001 引水隧洞衬砌</td>
+                                    <td>2024-03-13 09:15</td>
+                                    <td>设备离线</td>
+                                    <td><span class="lv-yellow">黄色</span></td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td><span class="st-normal">已处置</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 趋势图表 -->
+                    <div class="tab-page" id="tab3">
+                        <div class="action-row">
+                            <button class="act-btn" onclick="openModal('trendModal')"><i class="fas fa-chart-line"></i>趋势分析</button>
+                            <button class="act-btn" onclick="openModal('compareModal')"><i class="fas fa-balance-scale"></i>对比分析</button>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <!-- 渗流量图表 -->
+                            <div class="chart-box">
+                                <div class="chart-title">渗流量变化趋势 (JC-FB-001)</div>
+                                <svg class="chart-svg" viewBox="0 0 450 200">
+                                    <line x1="50" y1="170" x2="430" y2="170" stroke="#333" stroke-width="1"/>
+                                    <line x1="50" y1="30" x2="50" y2="170" stroke="#333" stroke-width="1"/>
+                                    <line x1="50" y1="65" x2="430" y2="65" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="100" x2="430" y2="100" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="135" x2="430" y2="135" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="55" x2="430" y2="55" stroke="#c0392b" stroke-width="1" stroke-dasharray="5"/>
+                                    <text x="432" y="58" font-size="9" fill="#c0392b">预警线</text>
+                                    <polyline points="70,155 110,150 150,142 190,130 230,115 270,95 310,72 350,55 390,48" fill="none" stroke="#3498db" stroke-width="2"/>
+                                    <circle cx="70" cy="155" r="3" fill="#3498db"/>
+                                    <circle cx="110" cy="150" r="3" fill="#3498db"/>
+                                    <circle cx="150" cy="142" r="3" fill="#3498db"/>
+                                    <circle cx="190" cy="130" r="3" fill="#3498db"/>
+                                    <circle cx="230" cy="115" r="3" fill="#3498db"/>
+                                    <circle cx="270" cy="95" r="3" fill="#e67e22"/>
+                                    <circle cx="310" cy="72" r="3" fill="#e67e22"/>
+                                    <circle cx="350" cy="55" r="3" fill="#c0392b"/>
+                                    <circle cx="390" cy="48" r="3" fill="#c0392b"/>
+                                    <text x="45" y="35" font-size="9" text-anchor="end">10</text>
+                                    <text x="45" y="70" font-size="9" text-anchor="end">7.5</text>
+                                    <text x="45" y="105" font-size="9" text-anchor="end">5</text>
+                                    <text x="45" y="140" font-size="9" text-anchor="end">2.5</text>
+                                    <text x="45" y="175" font-size="9" text-anchor="end">0</text>
+                                    <text x="70" y="185" font-size="8" text-anchor="middle">03-07</text>
+                                    <text x="150" y="185" font-size="8" text-anchor="middle">03-09</text>
+                                    <text x="230" y="185" font-size="8" text-anchor="middle">03-11</text>
+                                    <text x="310" y="185" font-size="8" text-anchor="middle">03-13</text>
+                                    <text x="390" y="185" font-size="8" text-anchor="middle">03-15</text>
+                                    <text x="20" y="100" font-size="9" transform="rotate(-90,20,100)">L/min</text>
+                                </svg>
+                            </div>
+                            <!-- 水压力图表 -->
+                            <div class="chart-box">
+                                <div class="chart-title">水压力变化趋势 (JC-ZB-001)</div>
+                                <svg class="chart-svg" viewBox="0 0 450 200">
+                                    <line x1="50" y1="170" x2="430" y2="170" stroke="#333" stroke-width="1"/>
+                                    <line x1="50" y1="30" x2="50" y2="170" stroke="#333" stroke-width="1"/>
+                                    <line x1="50" y1="65" x2="430" y2="65" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="100" x2="430" y2="100" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="135" x2="430" y2="135" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="45" x2="430" y2="45" stroke="#e67e22" stroke-width="1" stroke-dasharray="5"/>
+                                    <text x="432" y="48" font-size="9" fill="#e67e22">预警线</text>
+                                    <polyline points="70,145 110,138 150,128 190,115 230,98 270,80 310,60 350,45 390,38" fill="none" stroke="#27ae60" stroke-width="2"/>
+                                    <circle cx="70" cy="145" r="3" fill="#27ae60"/>
+                                    <circle cx="110" cy="138" r="3" fill="#27ae60"/>
+                                    <circle cx="150" cy="128" r="3" fill="#27ae60"/>
+                                    <circle cx="190" cy="115" r="3" fill="#27ae60"/>
+                                    <circle cx="230" cy="98" r="3" fill="#27ae60"/>
+                                    <circle cx="270" cy="80" r="3" fill="#f39c12"/>
+                                    <circle cx="310" cy="60" r="3" fill="#f39c12"/>
+                                    <circle cx="350" cy="45" r="3" fill="#e67e22"/>
+                                    <circle cx="390" cy="38" r="3" fill="#e67e22"/>
+                                    <text x="45" y="35" font-size="9" text-anchor="end">100</text>
+                                    <text x="45" y="70" font-size="9" text-anchor="end">75</text>
+                                    <text x="45" y="105" font-size="9" text-anchor="end">50</text>
+                                    <text x="45" y="140" font-size="9" text-anchor="end">25</text>
+                                    <text x="45" y="175" font-size="9" text-anchor="end">0</text>
+                                    <text x="70" y="185" font-size="8" text-anchor="middle">03-07</text>
+                                    <text x="150" y="185" font-size="8" text-anchor="middle">03-09</text>
+                                    <text x="230" y="185" font-size="8" text-anchor="middle">03-11</text>
+                                    <text x="310" y="185" font-size="8" text-anchor="middle">03-13</text>
+                                    <text x="390" y="185" font-size="8" text-anchor="middle">03-15</text>
+                                    <text x="20" y="100" font-size="9" transform="rotate(-90,20,100)">kPa</text>
+                                </svg>
+                            </div>
+                            <!-- 水温图表 -->
+                            <div class="chart-box">
+                                <div class="chart-title">水温变化趋势 (JC-ZB-002)</div>
+                                <svg class="chart-svg" viewBox="0 0 450 200">
+                                    <line x1="50" y1="170" x2="430" y2="170" stroke="#333" stroke-width="1"/>
+                                    <line x1="50" y1="30" x2="50" y2="170" stroke="#333" stroke-width="1"/>
+                                    <line x1="50" y1="65" x2="430" y2="65" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="100" x2="430" y2="100" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="135" x2="430" y2="135" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <polyline points="70,140 110,135 150,128 190,118 230,108 270,95 310,82 350,70 390,62" fill="none" stroke="#e74c3c" stroke-width="2"/>
+                                    <circle cx="70" cy="140" r="3" fill="#e74c3c"/>
+                                    <circle cx="110" cy="135" r="3" fill="#e74c3c"/>
+                                    <circle cx="150" cy="128" r="3" fill="#e74c3c"/>
+                                    <circle cx="190" cy="118" r="3" fill="#e74c3c"/>
+                                    <circle cx="230" cy="108" r="3" fill="#e74c3c"/>
+                                    <circle cx="270" cy="95" r="3" fill="#e74c3c"/>
+                                    <circle cx="310" cy="82" r="3" fill="#e74c3c"/>
+                                    <circle cx="350" cy="70" r="3" fill="#e67e22"/>
+                                    <circle cx="390" cy="62" r="3" fill="#e67e22"/>
+                                    <text x="45" y="35" font-size="9" text-anchor="end">20</text>
+                                    <text x="45" y="70" font-size="9" text-anchor="end">15</text>
+                                    <text x="45" y="105" font-size="9" text-anchor="end">10</text>
+                                    <text x="45" y="140" font-size="9" text-anchor="end">5</text>
+                                    <text x="45" y="175" font-size="9" text-anchor="end">0</text>
+                                    <text x="70" y="185" font-size="8" text-anchor="middle">03-07</text>
+                                    <text x="150" y="185" font-size="8" text-anchor="middle">03-09</text>
+                                    <text x="230" y="185" font-size="8" text-anchor="middle">03-11</text>
+                                    <text x="310" y="185" font-size="8" text-anchor="middle">03-13</text>
+                                    <text x="390" y="185" font-size="8" text-anchor="middle">03-15</text>
+                                    <text x="20" y="100" font-size="9" transform="rotate(-90,20,100)">℃</text>
+                                </svg>
+                            </div>
+                            <!-- 浊度图表 -->
+                            <div class="chart-box">
+                                <div class="chart-title">浊度变化趋势 (JC-ZB-003)</div>
+                                <svg class="chart-svg" viewBox="0 0 450 200">
+                                    <line x1="50" y1="170" x2="430" y2="170" stroke="#333" stroke-width="1"/>
+                                    <line x1="50" y1="30" x2="50" y2="170" stroke="#333" stroke-width="1"/>
+                                    <line x1="50" y1="65" x2="430" y2="65" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="100" x2="430" y2="100" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="135" x2="430" y2="135" stroke="#ddd" stroke-width="1" stroke-dasharray="3"/>
+                                    <line x1="50" y1="50" x2="430" y2="50" stroke="#c0392b" stroke-width="1" stroke-dasharray="5"/>
+                                    <text x="432" y="53" font-size="9" fill="#c0392b">预警线</text>
+                                    <polyline points="70,150 110,145 150,138 190,128 230,115 270,100 310,82 350,65 390,55" fill="none" stroke="#f39c12" stroke-width="2"/>
+                                    <circle cx="70" cy="150" r="3" fill="#f39c12"/>
+                                    <circle cx="110" cy="145" r="3" fill="#f39c12"/>
+                                    <circle cx="150" cy="138" r="3" fill="#f39c12"/>
+                                    <circle cx="190" cy="128" r="3" fill="#f39c12"/>
+                                    <circle cx="230" cy="115" r="3" fill="#f39c12"/>
+                                    <circle cx="270" cy="100" r="3" fill="#e67e22"/>
+                                    <circle cx="310" cy="82" r="3" fill="#e67e22"/>
+                                    <circle cx="350" cy="65" r="3" fill="#c0392b"/>
+                                    <circle cx="390" cy="55" r="3" fill="#c0392b"/>
+                                    <text x="45" y="35" font-size="9" text-anchor="end">15</text>
+                                    <text x="45" y="70" font-size="9" text-anchor="end">10</text>
+                                    <text x="45" y="105" font-size="9" text-anchor="end">5</text>
+                                    <text x="45" y="140" font-size="9" text-anchor="end">0</text>
+                                    <text x="70" y="185" font-size="8" text-anchor="middle">03-07</text>
+                                    <text x="150" y="185" font-size="8" text-anchor="middle">03-09</text>
+                                    <text x="230" y="185" font-size="8" text-anchor="middle">03-11</text>
+                                    <text x="310" y="185" font-size="8" text-anchor="middle">03-13</text>
+                                    <text x="390" y="185" font-size="8" text-anchor="middle">03-15</text>
+                                    <text x="20" y="100" font-size="9" transform="rotate(-90,20,100)">NTU</text>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span>工程：龙门水库大坝安全监测工程</span>
+            <span>监测点：52个</span>
+            <span>预警中：6条</span>
+            <span class="status-right">就绪</span>
+        </div>
+    </div>
+
+    <!-- 提示框 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 添加监测点弹窗 -->
+    <div class="modal-mask" id="addPointModal">
+        <div class="modal-box" style="width:620px;">
+            <div class="modal-head">
+                <span>添加监测点</span>
+                <button class="modal-close" onclick="closeModal('addPointModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">基本信息</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">监测点编号</label>
+                            <input type="text" placeholder="如：JC-ZB-001">
+                        </div>
+                        <div class="form-group">
+                            <label class="req">监测点名称</label>
+                            <input type="text" placeholder="请输入监测点名称">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">所属部位</label>
+                            <select>
+                                <option value="">请选择</option>
+                                <option>主坝左岸</option>
+                                <option>主坝中部</option>
+                                <option>主坝右岸</option>
+                                <option>副坝廊道</option>
+                                <option>副坝基础</option>
+                                <option>泄洪洞</option>
+                                <option>引水隧洞</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="req">监测类型</label>
+                            <select>
+                                <option value="">请选择</option>
+                                <option>渗流量监测</option>
+                                <option>水压力监测</option>
+                                <option>综合监测</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">位置信息</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">桩号位置</label>
+                            <input type="text" placeholder="如：0+125.50">
+                        </div>
+                        <div class="form-group">
+                            <label>高程(m)</label>
+                            <input type="number" placeholder="请输入高程">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>东坐标(m)</label>
+                            <input type="number" placeholder="X坐标">
+                        </div>
+                        <div class="form-group">
+                            <label>北坐标(m)</label>
+                            <input type="number" placeholder="Y坐标">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">设备绑定</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>设备编号</label>
+                            <input type="text" placeholder="如：SL-2024-0312">
+                        </div>
+                        <div class="form-group">
+                            <label>设备型号</label>
+                            <select>
+                                <option value="">请选择</option>
+                                <option>SL-100型渗流计</option>
+                                <option>SL-200型渗流计</option>
+                                <option>YL-50型压力计</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注说明</label>
+                        <textarea placeholder="请输入备注信息"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="submitModal('addPointModal')">确定</button>
+                <button class="btn-cancel" onclick="closeModal('addPointModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑监测点弹窗 -->
+    <div class="modal-mask" id="editPointModal">
+        <div class="modal-box" style="width:620px;">
+            <div class="modal-head">
+                <span>编辑监测点</span>
+                <button class="modal-close" onclick="closeModal('editPointModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">基本信息</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">监测点编号</label>
+                            <input type="text" value="JC-ZB-001" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="req">监测点名称</label>
+                            <input type="text" value="主坝左岸坡脚渗流监测点">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">所属部位</label>
+                            <select>
+                                <option selected>主坝左岸</option>
+                                <option>主坝中部</option>
+                                <option>主坝右岸</option>
+                                <option>副坝廊道</option>
+                                <option>副坝基础</option>
+                                <option>泄洪洞</option>
+                                <option>引水隧洞</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="req">监测类型</label>
+                            <select>
+                                <option>渗流量监测</option>
+                                <option>水压力监测</option>
+                                <option selected>综合监测</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">位置信息</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">桩号位置</label>
+                            <input type="text" value="0+052.00">
+                        </div>
+                        <div class="form-group">
+                            <label>高程(m)</label>
+                            <input type="number" value="168.5">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>东坐标(m)</label>
+                            <input type="number" value="532468.25">
+                        </div>
+                        <div class="form-group">
+                            <label>北坐标(m)</label>
+                            <input type="number" value="3256842.18">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">设备绑定</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>设备编号</label>
+                            <input type="text" value="SL-2024-0312">
+                        </div>
+                        <div class="form-group">
+                            <label>设备型号</label>
+                            <select>
+                                <option>SL-100型渗流计</option>
+                                <option selected>SL-200型渗流计</option>
+                                <option>YL-50型压力计</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注说明</label>
+                        <textarea>左岸坡脚排水沟出口处，用于监测坝体渗流情况</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="submitModal('editPointModal')">保存</button>
+                <button class="btn-cancel" onclick="closeModal('editPointModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 手动录入弹窗 -->
+    <div class="modal-mask" id="inputModal">
+        <div class="modal-box" style="width:580px;">
+            <div class="modal-head">
+                <span>数据手动录入</span>
+                <button class="modal-close" onclick="closeModal('inputModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">监测点选择</div>
+                    <div class="form-group">
+                        <label class="req">监测点</label>
+                        <select>
+                            <option value="">请选择监测点</option>
+                            <option>JC-ZB-001 主坝左岸坡脚渗流监测点</option>
+                            <option>JC-ZB-002 主坝中部基础渗流监测点</option>
+                            <option>JC-ZB-003 主坝右岸帷幕后渗流点</option>
+                            <option>JC-FB-001 副坝廊道排水孔渗流点</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="req">采集时间</label>
+                        <input type="datetime-local">
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">监测数据</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">渗流量(L/min)</label>
+                            <input type="number" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="req">水压力(kPa)</label>
+                            <input type="number" step="0.1" placeholder="0.0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>水温(℃)</label>
+                            <input type="number" step="0.1" placeholder="0.0">
+                        </div>
+                        <div class="form-group">
+                            <label>浊度(NTU)</label>
+                            <input type="number" step="0.1" placeholder="0.0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>pH值</label>
+                            <input type="number" step="0.01" placeholder="7.00">
+                        </div>
+                        <div class="form-group">
+                            <label>电导率(μS/cm)</label>
+                            <input type="number" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">其他信息</div>
+                    <div class="form-group">
+                        <label>数据状态</label>
+                        <select>
+                            <option>有效数据</option>
+                            <option>存疑数据</option>
+                            <option>无效数据</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea placeholder="请输入数据说明或异常情况描述"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="submitModal('inputModal')">保存</button>
+                <button class="btn-cancel" onclick="closeModal('inputModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预警设置弹窗 -->
+    <div class="modal-mask" id="alertSetModal">
+        <div class="modal-box" style="width:620px;">
+            <div class="modal-head">
+                <span>预警阈值设置</span>
+                <button class="modal-close" onclick="closeModal('alertSetModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">适用范围</div>
+                    <div class="form-group">
+                        <label class="req">适用区域</label>
+                        <select>
+                            <option>全部监测点</option>
+                            <option>主坝区域</option>
+                            <option>副坝区域</option>
+                            <option>泄洪洞区域</option>
+                            <option>引水隧洞区域</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="req">监测参数</label>
+                        <select>
+                            <option value="">请选择</option>
+                            <option>渗流量</option>
+                            <option>水压力</option>
+                            <option>浊度</option>
+                            <option>水温</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">预警阈值</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>蓝色预警(提示)</label>
+                            <input type="number" step="0.1" placeholder="下限值">
+                        </div>
+                        <div class="form-group">
+                            <label></label>
+                            <input type="number" step="0.1" placeholder="上限值">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>黄色预警(注意)</label>
+                            <input type="number" step="0.1" placeholder="下限值">
+                        </div>
+                        <div class="form-group">
+                            <label></label>
+                            <input type="number" step="0.1" placeholder="上限值">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>橙色预警(警告)</label>
+                            <input type="number" step="0.1" placeholder="下限值">
+                        </div>
+                        <div class="form-group">
+                            <label></label>
+                            <input type="number" step="0.1" placeholder="上限值">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>红色预警(危险)</label>
+                            <input type="number" step="0.1" placeholder="下限值">
+                        </div>
+                        <div class="form-group">
+                            <label></label>
+                            <input type="number" step="0.1" placeholder="上限值">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">通知设置</div>
+                    <div class="form-group">
+                        <label>通知方式</label>
+                        <select>
+                            <option>系统弹窗</option>
+                            <option>声音提示</option>
+                            <option>弹窗+声音</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>启用状态</label>
+                        <select>
+                            <option>启用</option>
+                            <option>禁用</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="submitModal('alertSetModal')">保存</button>
+                <button class="btn-cancel" onclick="closeModal('alertSetModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预警处置弹窗 -->
+    <div class="modal-mask" id="handleModal">
+        <div class="modal-box" style="width:620px;">
+            <div class="modal-head">
+                <span>预警处置</span>
+                <button class="modal-close" onclick="closeModal('handleModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">预警信息</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>预警编号</label>
+                            <input type="text" value="YJ-2024-0156" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>预警等级</label>
+                            <input type="text" value="红色预警" readonly style="color:#c0392b;font-weight:bold;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>监测点</label>
+                            <input type="text" value="JC-FB-001 副坝廊道排水孔" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>预警时间</label>
+                            <input type="text" value="2024-03-15 07:32" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>预警类型</label>
+                            <input type="text" value="渗流量超限" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>触发值/阈值</label>
+                            <input type="text" value="7.28 / 5.50 L/min" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">处置信息</div>
+                    <div class="form-group">
+                        <label class="req">处置状态</label>
+                        <select>
+                            <option value="">请选择</option>
+                            <option>处置中</option>
+                            <option>已处置</option>
+                            <option>已忽略</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="req">处置措施</label>
+                        <select>
+                            <option value="">请选择</option>
+                            <option>现场巡查</option>
+                            <option>设备维修</option>
+                            <option>加固处理</option>
+                            <option>排水疏导</option>
+                            <option>加强监测</option>
+                            <option>上报主管</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="req">处置说明</label>
+                        <textarea rows="4" placeholder="请详细描述处置过程和结果"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>处置人员</label>
+                        <input type="text" value="李宁" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="submitModal('handleModal')">提交</button>
+                <button class="btn-cancel" onclick="closeModal('handleModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 趋势分析弹窗 -->
+    <div class="modal-mask" id="trendModal">
+        <div class="modal-box" style="width:620px;">
+            <div class="modal-head">
+                <span>渗漏趋势分析</span>
+                <button class="modal-close" onclick="closeModal('trendModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">分析参数</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">监测点</label>
+                            <select>
+                                <option value="">请选择</option>
+                                <option>JC-ZB-001 主坝左岸坡脚</option>
+                                <option>JC-ZB-003 主坝右岸帷幕后</option>
+                                <option selected>JC-FB-001 副坝廊道排水孔</option>
+                                <option>JC-XH-002 泄洪洞闸室段</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="req">分析参数</label>
+                            <select>
+                                <option selected>渗流量</option>
+                                <option>水压力</option>
+                                <option>浊度</option>
+                                <option>水温</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">开始时间</label>
+                            <input type="date" value="2024-03-01">
+                        </div>
+                        <div class="form-group">
+                            <label class="req">结束时间</label>
+                            <input type="date" value="2024-03-15">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">分析方法</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>趋势算法</label>
+                            <select>
+                                <option>线性回归</option>
+                                <option>多项式拟合</option>
+                                <option>移动平均</option>
+                                <option>指数平滑</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>数据粒度</label>
+                            <select>
+                                <option>每小时</option>
+                                <option selected>每天</option>
+                                <option>每周</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>预测周期</label>
+                            <select>
+                                <option>3天</option>
+                                <option selected>7天</option>
+                                <option>14天</option>
+                                <option>30天</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>置信区间</label>
+                            <select>
+                                <option>90%</option>
+                                <option selected>95%</option>
+                                <option>99%</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">输出选项</div>
+                    <div class="form-group">
+                        <label>图表类型</label>
+                        <select>
+                            <option selected>折线图</option>
+                            <option>面积图</option>
+                            <option>散点图</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>显示预警线</label>
+                        <select>
+                            <option selected>是</option>
+                            <option>否</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="runAnalysis()">开始分析</button>
+                <button class="btn-cancel" onclick="closeModal('trendModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 对比分析弹窗 -->
+    <div class="modal-mask" id="compareModal">
+        <div class="modal-box" style="width:620px;">
+            <div class="modal-head">
+                <span>多点对比分析</span>
+                <button class="modal-close" onclick="closeModal('compareModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">对比监测点选择</div>
+                    <div class="form-group">
+                        <label class="req">监测点1</label>
+                        <select>
+                            <option value="">请选择</option>
+                            <option selected>JC-ZB-001 主坝左岸坡脚</option>
+                            <option>JC-ZB-002 主坝中部基础</option>
+                            <option>JC-ZB-003 主坝右岸帷幕后</option>
+                            <option>JC-FB-001 副坝廊道排水孔</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="req">监测点2</label>
+                        <select>
+                            <option value="">请选择</option>
+                            <option>JC-ZB-001 主坝左岸坡脚</option>
+                            <option>JC-ZB-002 主坝中部基础</option>
+                            <option selected>JC-ZB-003 主坝右岸帷幕后</option>
+                            <option>JC-FB-001 副坝廊道排水孔</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>监测点3</label>
+                        <select>
+                            <option value="">不选择</option>
+                            <option>JC-ZB-001 主坝左岸坡脚</option>
+                            <option>JC-ZB-002 主坝中部基础</option>
+                            <option>JC-ZB-003 主坝右岸帷幕后</option>
+                            <option>JC-FB-001 副坝廊道排水孔</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">分析参数</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">对比参数</label>
+                            <select>
+                                <option selected>渗流量</option>
+                                <option>水压力</option>
+                                <option>浊度</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="req">时间范围</label>
+                            <select>
+                                <option>最近7天</option>
+                                <option selected>最近14天</option>
+                                <option>最近30天</option>
+                                <option>最近90天</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>统计方式</label>
+                            <select>
+                                <option selected>均值对比</option>
+                                <option>最大值对比</option>
+                                <option>最小值对比</option>
+                                <option>变化幅度</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>数据粒度</label>
+                            <select>
+                                <option>每小时</option>
+                                <option selected>每天</option>
+                                <option>每周</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">显示选项</div>
+                    <div class="form-group">
+                        <label>图表类型</label>
+                        <select>
+                            <option selected>折线对比图</option>
+                            <option>柱状对比图</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="runAnalysis()">开始对比</button>
+                <button class="btn-cancel" onclick="closeModal('compareModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 生成报告弹窗 -->
+    <div class="modal-mask" id="reportModal">
+        <div class="modal-box" style="width:580px;">
+            <div class="modal-head">
+                <span>生成分析报告</span>
+                <button class="modal-close" onclick="closeModal('reportModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">报告基本信息</div>
+                    <div class="form-group">
+                        <label class="req">报告名称</label>
+                        <input type="text" value="龙门水库渗漏监测分析报告">
+                    </div>
+                    <div class="form-group">
+                        <label class="req">报告类型</label>
+                        <select>
+                            <option>日报</option>
+                            <option selected>周报</option>
+                            <option>月报</option>
+                            <option>季报</option>
+                            <option>年报</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">起始日期</label>
+                            <input type="date" value="2024-03-01">
+                        </div>
+                        <div class="form-group">
+                            <label class="req">截止日期</label>
+                            <input type="date" value="2024-03-15">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">报告内容</div>
+                    <div class="form-group">
+                        <label class="req">包含区域</label>
+                        <select>
+                            <option selected>全部区域</option>
+                            <option>主坝区域</option>
+                            <option>副坝区域</option>
+                            <option>泄洪洞区域</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>输出格式</label>
+                        <select>
+                            <option>PDF文档</option>
+                            <option>Word文档</option>
+                            <option>Excel表格</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>编制人</label>
+                        <input type="text" value="李宁" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="genReport()">生成报告</button>
+                <button class="btn-cancel" onclick="closeModal('reportModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据导入弹窗 -->
+    <div class="modal-mask" id="importModal">
+        <div class="modal-box" style="width:540px;">
+            <div class="modal-head">
+                <span>数据导入</span>
+                <button class="modal-close" onclick="closeModal('importModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">导入设置</div>
+                    <div class="form-group">
+                        <label class="req">数据文件</label>
+                        <input type="file" accept=".xls,.xlsx,.csv">
+                    </div>
+                    <div class="form-group">
+                        <label class="req">文件格式</label>
+                        <select>
+                            <option>Excel文件(.xlsx)</option>
+                            <option>CSV文件(.csv)</option>
+                            <option>文本文件(.txt)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="req">数据类型</label>
+                        <select>
+                            <option>渗流监测数据</option>
+                            <option>水压监测数据</option>
+                            <option>综合监测数据</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>时间列格式</label>
+                        <select>
+                            <option>yyyy-MM-dd HH:mm:ss</option>
+                            <option>yyyy/MM/dd HH:mm:ss</option>
+                            <option>yyyyMMddHHmmss</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>首行处理</label>
+                        <select>
+                            <option>作为标题行跳过</option>
+                            <option>作为数据行导入</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>重复数据</label>
+                        <select>
+                            <option>跳过</option>
+                            <option>覆盖</option>
+                            <option>追加</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>数据校验</label>
+                        <select>
+                            <option>导入前校验</option>
+                            <option>直接导入</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea placeholder="请输入导入说明"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="doImport()">开始导入</button>
+                <button class="btn-cancel" onclick="closeModal('importModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据导出弹窗 -->
+    <div class="modal-mask" id="exportModal">
+        <div class="modal-box" style="width:540px;">
+            <div class="modal-head">
+                <span>数据导出</span>
+                <button class="modal-close" onclick="closeModal('exportModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">导出设置</div>
+                    <div class="form-group">
+                        <label class="req">导出内容</label>
+                        <select>
+                            <option>监测点列表</option>
+                            <option selected>监测数据</option>
+                            <option>预警记录</option>
+                            <option>全部数据</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="req">监测区域</label>
+                        <select>
+                            <option selected>全部区域</option>
+                            <option>主坝区域</option>
+                            <option>副坝区域</option>
+                            <option>泄洪洞区域</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">起始日期</label>
+                            <input type="date" value="2024-03-01">
+                        </div>
+                        <div class="form-group">
+                            <label class="req">截止日期</label>
+                            <input type="date" value="2024-03-15">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="req">导出格式</label>
+                        <select>
+                            <option selected>Excel文件(.xlsx)</option>
+                            <option>CSV文件(.csv)</option>
+                            <option>PDF文件(.pdf)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>包含图表</label>
+                        <select>
+                            <option selected>是</option>
+                            <option>否</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>文件名称</label>
+                        <input type="text" value="渗漏监测数据导出_20240315">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="doExport()">开始导出</button>
+                <button class="btn-cancel" onclick="closeModal('exportModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 采集配置弹窗 -->
+    <div class="modal-mask" id="collectModal">
+        <div class="modal-box" style="width:580px;">
+            <div class="modal-head">
+                <span>数据采集配置</span>
+                <button class="modal-close" onclick="closeModal('collectModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">采集范围</div>
+                    <div class="form-group">
+                        <label class="req">适用区域</label>
+                        <select>
+                            <option selected>全部监测点</option>
+                            <option>主坝区域</option>
+                            <option>副坝区域</option>
+                            <option>泄洪洞区域</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">采集参数</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">采集频率</label>
+                            <select>
+                                <option>5分钟</option>
+                                <option>10分钟</option>
+                                <option selected>30分钟</option>
+                                <option>1小时</option>
+                                <option>2小时</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="req">存储周期</label>
+                            <select>
+                                <option>30天</option>
+                                <option selected>90天</option>
+                                <option>180天</option>
+                                <option>365天</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>通讯协议</label>
+                            <select>
+                                <option selected>Modbus RTU</option>
+                                <option>TCP/IP</option>
+                                <option>串口通讯</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>波特率</label>
+                            <select>
+                                <option selected>9600</option>
+                                <option>19200</option>
+                                <option>38400</option>
+                                <option>115200</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>超时时间(秒)</label>
+                            <input type="number" value="30">
+                        </div>
+                        <div class="form-group">
+                            <label>重试次数</label>
+                            <input type="number" value="3">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">数据校验</div>
+                    <div class="form-group">
+                        <label>自动校验</label>
+                        <select>
+                            <option selected>启用</option>
+                            <option>禁用</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>异常处理</label>
+                        <select>
+                            <option selected>标记异常</option>
+                            <option>丢弃数据</option>
+                            <option>触发预警</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="submitModal('collectModal')">保存</button>
+                <button class="btn-cancel" onclick="closeModal('collectModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据校验弹窗 -->
+    <div class="modal-mask" id="verifyModal">
+        <div class="modal-box" style="width:540px;">
+            <div class="modal-head">
+                <span>数据校验</span>
+                <button class="modal-close" onclick="closeModal('verifyModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">校验范围</div>
+                    <div class="form-group">
+                        <label class="req">监测区域</label>
+                        <select>
+                            <option selected>全部区域</option>
+                            <option>主坝区域</option>
+                            <option>副坝区域</option>
+                            <option>泄洪洞区域</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="req">起始日期</label>
+                            <input type="date" value="2024-03-01">
+                        </div>
+                        <div class="form-group">
+                            <label class="req">截止日期</label>
+                            <input type="date" value="2024-03-15">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">校验规则</div>
+                    <div class="form-group">
+                        <label>空值检查</label>
+                        <select>
+                            <option selected>启用</option>
+                            <option>禁用</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>范围检查</label>
+                        <select>
+                            <option selected>启用</option>
+                            <option>禁用</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>突变检查</label>
+                        <select>
+                            <option selected>启用</option>
+                            <option>禁用</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>突变阈值(%)</label>
+                        <input type="number" value="50">
+                    </div>
+                    <div class="form-group">
+                        <label>异常处理</label>
+                        <select>
+                            <option selected>仅标记</option>
+                            <option>删除数据</option>
+                            <option>插值替换</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="doVerify()">开始校验</button>
+                <button class="btn-cancel" onclick="closeModal('verifyModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设备管理弹窗 -->
+    <div class="modal-mask" id="deviceModal">
+        <div class="modal-box" style="width:650px;">
+            <div class="modal-head">
+                <span>设备管理</span>
+                <button class="modal-close" onclick="closeModal('deviceModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="action-row">
+                    <button class="act-btn primary" onclick="toast('请在设备列表中选择后添加','success')"><i class="fas fa-plus"></i>添加设备</button>
+                    <button class="act-btn" onclick="toast('请先选择设备','error')"><i class="fas fa-edit"></i>编辑</button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40px">序号</th>
+                            <th>设备编号</th>
+                            <th>设备型号</th>
+                            <th>绑定监测点</th>
+                            <th>安装日期</th>
+                            <th>设备状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="selectRow(this)">
+                            <td>1</td>
+                            <td>SL-2024-0312</td>
+                            <td>SL-200型渗流计</td>
+                            <td>JC-ZB-001</td>
+                            <td>2024-01-15</td>
+                            <td><span class="st-normal">正常</span></td>
+                        </tr>
+                        <tr onclick="selectRow(this)">
+                            <td>2</td>
+                            <td>SL-2024-0313</td>
+                            <td>SL-200型渗流计</td>
+                            <td>JC-ZB-002</td>
+                            <td>2024-01-15</td>
+                            <td><span class="st-normal">正常</span></td>
+                        </tr>
+                        <tr onclick="selectRow(this)">
+                            <td>3</td>
+                            <td>SL-2024-0314</td>
+                            <td>SL-200型渗流计</td>
+                            <td>JC-ZB-003</td>
+                            <td>2024-01-16</td>
+                            <td><span class="st-normal">正常</span></td>
+                        </tr>
+                        <tr onclick="selectRow(this)">
+                            <td>4</td>
+                            <td>SL-2024-0315</td>
+                            <td>SL-200型渗流计</td>
+                            <td>JC-FB-001</td>
+                            <td>2024-01-16</td>
+                            <td><span class="st-warn">待维护</span></td>
+                        </tr>
+                        <tr onclick="selectRow(this)">
+                            <td>5</td>
+                            <td>SL-2024-0316</td>
+                            <td>SL-100型渗流计</td>
+                            <td>JC-FB-002</td>
+                            <td>2024-01-18</td>
+                            <td><span class="st-normal">正常</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-cancel" onclick="closeModal('deviceModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建工程弹窗 -->
+    <div class="modal-mask" id="newProjectModal">
+        <div class="modal-box" style="width:540px;">
+            <div class="modal-head">
+                <span>新建工程</span>
+                <button class="modal-close" onclick="closeModal('newProjectModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">工程信息</div>
+                    <div class="form-group">
+                        <label class="req">工程名称</label>
+                        <input type="text" placeholder="请输入工程名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="req">工程编号</label>
+                        <input type="text" placeholder="请输入工程编号">
+                    </div>
+                    <div class="form-group">
+                        <label class="req">工程类型</label>
+                        <select>
+                            <option value="">请选择</option>
+                            <option>大坝工程</option>
+                            <option>水库工程</option>
+                            <option>渠道工程</option>
+                            <option>水闸工程</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>工程等级</label>
+                        <select>
+                            <option>一等</option>
+                            <option>二等</option>
+                            <option selected>三等</option>
+                            <option>四等</option>
+                            <option>五等</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>建设单位</label>
+                        <input type="text" placeholder="请输入建设单位">
+                    </div>
+                    <div class="form-group">
+                        <label>工程地址</label>
+                        <input type="text" placeholder="请输入工程地址">
+                    </div>
+                    <div class="form-group">
+                        <label>工程描述</label>
+                        <textarea placeholder="请输入工程描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>负责人</label>
+                        <input type="text" value="李宁">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="submitModal('newProjectModal')">创建</button>
+                <button class="btn-cancel" onclick="closeModal('newProjectModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 打开工程弹窗 -->
+    <div class="modal-mask" id="openProjectModal">
+        <div class="modal-box" style="width:580px;">
+            <div class="modal-head">
+                <span>打开工程</span>
+                <button class="modal-close" onclick="closeModal('openProjectModal')">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-section">
+                    <div class="section-title">选择工程</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:40px">序号</th>
+                                <th>工程名称</th>
+                                <th>工程类型</th>
+                                <th>创建日期</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr onclick="selectRow(this)" class="selected">
+                                <td>1</td>
+                                <td>龙门水库大坝安全监测工程</td>
+                                <td>大坝工程</td>
+                                <td>2024-01-10</td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td>2</td>
+                                <td>青峰水库监测项目</td>
+                                <td>水库工程</td>
+                                <td>2024-02-05</td>
+                            </tr>
+                            <tr onclick="selectRow(this)">
+                                <td>3</td>
+                                <td>东江引水渠道监测工程</td>
+                                <td>渠道工程</td>
+                                <td>2024-02-20</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-ok" onclick="openProject()">打开</button>
+                <button class="btn-cancel" onclick="closeModal('openProjectModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用说明弹窗 -->
+    <div class="modal-mask" id="helpModal">
+        <div class="modal-box" style="width:580px;">
+            <div class="modal-head">
+                <span>使用说明</span>
+                <button class="modal-close" onclick="closeModal('helpModal')">×</button>
+            </div>
+            <div class="modal-content" style="max-height:400px;">
+                <div class="form-section">
+                    <div class="section-title">功能概述</div>
+                    <p style="font-size:12px;line-height:1.8;color:#333;margin-bottom:10px;">
+                        本软件用于水工结构渗漏趋势监测与预警管理，主要功能包括：
+                    </p>
+                    <ul style="font-size:12px;line-height:1.8;color:#333;padding-left:20px;">
+                        <li>监测点管理：添加、编辑、删除监测点，绑定监测设备</li>
+                        <li>数据采集：配置自动采集参数，支持手动录入和批量导入</li>
+                        <li>趋势分析：渗流量、水压力等参数的趋势分析和预测</li>
+                        <li>预警管理：设置预警阈值，查看和处置预警信息</li>
+                    </ul>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">操作流程</div>
+                    <ol style="font-size:12px;line-height:1.8;color:#333;padding-left:20px;">
+                        <li>新建或打开工程</li>
+                        <li>添加监测点并绑定设备</li>
+                        <li>配置数据采集参数</li>
+                        <li>设置预警阈值</li>
+                        <li>查看监测数据和分析结果</li>
+                        <li>处置预警信息</li>
+                        <li>生成分析报告</li>
+                    </ol>
+                </div>
+                <div class="form-section">
+                    <div class="section-title">快捷键</div>
+                    <ul style="font-size:12px;line-height:1.8;color:#333;padding-left:20px;">
+                        <li>Ctrl+N - 新建工程</li>
+                        <li>Ctrl+O - 打开工程</li>
+                        <li>Ctrl+S - 保存</li>
+                        <li>F5 - 刷新数据</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn-cancel" onclick="closeModal('helpModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 关于弹窗 -->
+    <div class="modal-mask" id="aboutModal">
+        <div class="modal-box" style="width:420px;">
+            <div class="modal-head">
+                <span>关于</span>
+                <button class="modal-close" onclick="closeModal('aboutModal')">×</button>
+            </div>
+            <div class="modal-content" style="text-align:center;padding:30px;">
+                <div style="font-size:16px;font-weight:bold;color:#1a3a5c;margin-bottom:20px;">
+                    水工结构渗漏趋势监测预警软件
+                </div>
+                <div style="font-size:12px;color:#666;line-height:2;">
+                    <p>适用于大坝、水库、渠道等水工结构的</p>
+                    <p>渗漏监测与预警管理</p>
+                </div>
+            </div>
+            <div class="modal-foot" style="justify-content:center;">
+                <button class="btn-cancel" onclick="closeModal('aboutModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 打开弹窗
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+        }
+
+        // 关闭弹窗
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        // 提交弹窗
+        function submitModal(id) {
+            closeModal(id);
+            toast('保存成功', 'success');
+        }
+
+        // 切换Tab
+        function switchTab(index) {
+            document.querySelectorAll('.tab-item').forEach((t, i) => {
+                t.classList.toggle('active', i === index);
+            });
+            document.querySelectorAll('.tab-page').forEach((p, i) => {
+                p.classList.toggle('active', i === index);
+            });
+        }
+
+        // 选中行
+        function selectRow(row) {
+            const table = row.closest('table');
+            table.querySelectorAll('tr').forEach(tr => tr.classList.remove('selected'));
+            row.classList.add('selected');
+        }
+
+        // 提示信息
+        function toast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show ' + (type || '');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        // 删除确认
+        function deleteConfirm() {
+            if (confirm('确定要删除选中的监测点吗？')) {
+                toast('删除成功', 'success');
+            }
+        }
+
+        // 运行分析
+        function runAnalysis() {
+            closeModal('trendModal');
+            closeModal('compareModal');
+            switchTab(3);
+            toast('分析完成', 'success');
+        }
+
+        // 生成报告
+        function genReport() {
+            closeModal('reportModal');
+            toast('报告生成中...', '');
+            setTimeout(() => toast('报告已生成', 'success'), 1500);
+        }
+
+        // 数据导入
+        function doImport() {
+            closeModal('importModal');
+            toast('数据导入中...', '');
+            setTimeout(() => toast('导入完成，共导入186条数据', 'success'), 1500);
+        }
+
+        // 数据导出
+        function doExport() {
+            closeModal('exportModal');
+            toast('数据导出中...', '');
+            setTimeout(() => toast('导出完成', 'success'), 1500);
+        }
+
+        // 数据校验
+        function doVerify() {
+            closeModal('verifyModal');
+            toast('数据校验中...', '');
+            setTimeout(() => toast('校验完成，发现5条异常数据', 'success'), 1500);
+        }
+
+        // 打开工程
+        function openProject() {
+            closeModal('openProjectModal');
+            toast('工程已打开', 'success');
+        }
+
+        // 退出
+        function exitApp() {
+            if (confirm('确定要退出程序吗？')) {
+                window.close();
+            }
+        }
+
+        // 点击遮罩关闭
+        document.querySelectorAll('.modal-mask').forEach(m => {
+            m.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('show');
+            });
+        });
+
+        // 快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'n') { e.preventDefault(); openModal('newProjectModal'); }
+            if (e.ctrlKey && e.key === 'o') { e.preventDefault(); openModal('openProjectModal'); }
+            if (e.ctrlKey && e.key === 's') { e.preventDefault(); toast('工程已保存', 'success'); }
+            if (e.key === 'F5') { e.preventDefault(); toast('数据已刷新', 'success'); }
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-mask.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+    </script>
+</body>
+</html>

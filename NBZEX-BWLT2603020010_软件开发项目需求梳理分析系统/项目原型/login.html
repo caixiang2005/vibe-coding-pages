@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>登录 - 软件开发项目需求梳理分析系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+
+        .window-shadow {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d1d1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="bg-[#F5F5F7] h-screen flex items-center justify-center p-4">
+    <div class="w-full h-full max-w-[980px] max-h-[680px] bg-white rounded-xl overflow-hidden flex flex-col window-shadow border border-gray-200">
+        <div class="h-12 bg-[#EBEBEB] border-b border-gray-300 flex items-center px-4 flex-shrink-0 relative">
+            <div class="flex space-x-2 w-20">
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FF5F57] border border-[#E0443E]"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FFBD2E] border border-[#DEA123]"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#28C840] border border-[#1AAB29]"></div>
+            </div>
+            <div class="absolute left-0 right-0 text-center text-sm font-medium text-gray-600 pointer-events-none">登录</div>
+            <div class="w-20"></div>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center bg-white relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-white via-white to-gray-50"></div>
+
+            <div class="relative w-full max-w-[420px] px-8 py-10">
+                <div class="text-center">
+                    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">软件开发项目需求梳理分析系统</h1>
+                </div>
+
+                <form id="login-form" class="mt-8 space-y-4">
+                    <div>
+                        <input id="account" type="tel" inputmode="numeric" autocomplete="tel"
+                            class="w-full h-11 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                            placeholder="输入手机号" />
+                    </div>
+
+                    <div id="code-row">
+                        <div class="flex items-stretch">
+                            <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+                                class="flex-1 h-11 px-3 text-sm border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                placeholder="输入验证码" />
+                            <button id="send-code" type="button"
+                                class="w-32 h-11 text-sm font-medium rounded-r-lg border border-l-0 border-gray-300 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                                获取验证码
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="submit-btn" type="submit"
+                        class="w-full h-11 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                        登录
+                    </button>
+
+                    <div class="pt-2 text-center text-sm text-gray-500">
+                        还没有账户？
+                        <button type="button" id="create-account" class="text-blue-600 hover:text-blue-700 font-medium">创建账户</button>
+                    </div>
+
+                </form>
+            </div>
+
+            <div id="toast" class="hidden absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-gray-900/90 text-white text-sm shadow-lg"></div>
+
+            <div id="create-modal" class="hidden fixed inset-0 z-20 flex items-center justify-center">
+                <div id="create-backdrop" class="absolute inset-0 bg-black/10 backdrop-blur-[2px]"></div>
+                <div id="create-dialog" class="relative w-[520px] max-w-[92vw] rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
+                    <div id="create-drag-handle" class="h-11 bg-[#EBEBEB] border-b border-gray-300 flex items-center px-4 relative cursor-move select-none">
+                        <div class="flex space-x-2 w-20">
+                            <div class="w-3.5 h-3.5 rounded-full bg-[#FF5F57] border border-[#E0443E]"></div>
+                            <div class="w-3.5 h-3.5 rounded-full bg-[#FFBD2E] border border-[#DEA123]"></div>
+                            <div class="w-3.5 h-3.5 rounded-full bg-[#28C840] border border-[#1AAB29]"></div>
+                        </div>
+                        <div class="absolute left-0 right-0 text-center text-sm font-medium text-gray-600 pointer-events-none">创建账户</div>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">手机号</label>
+                                <input id="create-phone" type="tel" inputmode="numeric" autocomplete="tel"
+                                    class="w-full h-11 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                    placeholder="输入 11 位手机号" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">姓名</label>
+                                <input id="create-name" type="text" autocomplete="name"
+                                    class="w-full h-11 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                    placeholder="输入姓名" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">职位</label>
+                                <input id="create-title" type="text" autocomplete="organization-title"
+                                    class="w-full h-11 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                    placeholder="如：产品经理 / 研发 / 测试" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">设置密码</label>
+                                <div class="relative">
+                                    <input id="create-password" type="password" autocomplete="new-password"
+                                        class="w-full h-11 pr-12 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                        placeholder="至少 8 位，包含字母和数字" />
+                                    <button id="create-toggle-password" type="button"
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-2 rounded">
+                                        <span id="create-toggle-password-icon" class="iconify text-lg" data-icon="carbon:view"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">确认密码</label>
+                                <div class="relative">
+                                    <input id="create-password2" type="password" autocomplete="new-password"
+                                        class="w-full h-11 pr-12 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                        placeholder="再次输入密码" />
+                                    <button id="create-toggle-password2" type="button"
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-2 rounded">
+                                        <span id="create-toggle-password2-icon" class="iconify text-lg" data-icon="carbon:view"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex items-center justify-end gap-2">
+                            <button id="create-cancel" type="button"
+                                class="h-10 px-4 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
+                                取消
+                            </button>
+                            <button id="create-submit" type="button"
+                                class="h-10 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors">
+                                创建账户
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const accountInput = document.getElementById('account');
+        const codeInput = document.getElementById('code');
+        const sendCodeBtn = document.getElementById('send-code');
+        const form = document.getElementById('login-form');
+        const toast = document.getElementById('toast');
+        const createAccountBtn = document.getElementById('create-account');
+        const createModal = document.getElementById('create-modal');
+        const createBackdrop = document.getElementById('create-backdrop');
+        const createDialog = document.getElementById('create-dialog');
+        const createDragHandle = document.getElementById('create-drag-handle');
+        const createCloseBtn = document.getElementById('create-close');
+        const createCancelBtn = document.getElementById('create-cancel');
+        const createSubmitBtn = document.getElementById('create-submit');
+        const createPhoneInput = document.getElementById('create-phone');
+        const createNameInput = document.getElementById('create-name');
+        const createTitleInput = document.getElementById('create-title');
+        const createPasswordInput = document.getElementById('create-password');
+        const createPassword2Input = document.getElementById('create-password2');
+        const createTogglePasswordBtn = document.getElementById('create-toggle-password');
+        const createTogglePasswordIcon = document.getElementById('create-toggle-password-icon');
+        const createTogglePassword2Btn = document.getElementById('create-toggle-password2');
+        const createTogglePassword2Icon = document.getElementById('create-toggle-password2-icon');
+
+        let countdownTimer = null;
+        let countdownLeft = 0;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.remove('hidden');
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2200);
+        }
+
+        function normalizeAccount(v) {
+            return (v || '').trim();
+        }
+
+        function isPhoneNumber(v) {
+            return /^1\d{10}$/.test(v);
+        }
+
+        function isStrongPassword(v) {
+            return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(v || '');
+        }
+
+        async function sha256Hex(input) {
+            const enc = new TextEncoder();
+            const data = enc.encode(input);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const bytes = Array.from(new Uint8Array(hashBuffer));
+            return bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function loadRegisteredUsers() {
+            const raw = localStorage.getItem('registeredUsers');
+            if (!raw) return {};
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') return parsed;
+            } catch (e) {}
+            return {};
+        }
+
+        function saveRegisteredUsers(map) {
+            localStorage.setItem('registeredUsers', JSON.stringify(map || {}));
+        }
+
+        function getRegisteredUser(phone) {
+            const map = loadRegisteredUsers();
+            return map[phone] || null;
+        }
+
+        function upsertRegisteredUser(user) {
+            const map = loadRegisteredUsers();
+            map[user.phone] = user;
+            saveRegisteredUsers(map);
+        }
+
+        function openCreateModal() {
+            const currentPhone = normalizeAccount(accountInput.value);
+            if (currentPhone) createPhoneInput.value = currentPhone;
+            createPasswordInput.value = '';
+            createPassword2Input.value = '';
+            createDialog.style.position = '';
+            createDialog.style.left = '';
+            createDialog.style.top = '';
+            createDialog.style.margin = '';
+            createDialog.style.transform = '';
+            createModal.classList.remove('hidden');
+            setTimeout(() => {
+                if (!createPhoneInput.value) {
+                    createPhoneInput.focus();
+                } else {
+                    createNameInput.focus();
+                }
+            }, 0);
+        }
+
+        function closeCreateModal() {
+            createModal.classList.add('hidden');
+        }
+
+        function enableDialogDrag() {
+            if (!createDialog || !createDragHandle) return;
+
+            const state = { dragging: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 };
+
+            function clamp(value, min, max) {
+                return Math.min(max, Math.max(min, value));
+            }
+
+            function onPointerMove(e) {
+                if (!state.dragging) return;
+                const dx = e.clientX - state.startX;
+                const dy = e.clientY - state.startY;
+                const rect = createDialog.getBoundingClientRect();
+                const margin = 8;
+                const maxLeft = window.innerWidth - rect.width - margin;
+                const maxTop = window.innerHeight - rect.height - margin;
+                const nextLeft = clamp(state.startLeft + dx, margin, Math.max(margin, maxLeft));
+                const nextTop = clamp(state.startTop + dy, margin, Math.max(margin, maxTop));
+                createDialog.style.left = `${nextLeft}px`;
+                createDialog.style.top = `${nextTop}px`;
+            }
+
+            function stopDrag() {
+                if (!state.dragging) return;
+                state.dragging = false;
+                window.removeEventListener('pointermove', onPointerMove, true);
+                window.removeEventListener('pointerup', stopDrag, true);
+                window.removeEventListener('pointercancel', stopDrag, true);
+            }
+
+            createDragHandle.addEventListener('pointerdown', (e) => {
+                if (createModal.classList.contains('hidden')) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                if (e.target.closest('button, input, textarea, select, a')) return;
+
+                const rect = createDialog.getBoundingClientRect();
+                createDialog.style.position = 'fixed';
+                createDialog.style.left = `${rect.left}px`;
+                createDialog.style.top = `${rect.top}px`;
+                createDialog.style.margin = '0';
+                createDialog.style.transform = 'none';
+
+                state.dragging = true;
+                state.startX = e.clientX;
+                state.startY = e.clientY;
+                state.startLeft = rect.left;
+                state.startTop = rect.top;
+
+                if (createDragHandle.setPointerCapture) createDragHandle.setPointerCapture(e.pointerId);
+                window.addEventListener('pointermove', onPointerMove, true);
+                window.addEventListener('pointerup', stopDrag, true);
+                window.addEventListener('pointercancel', stopDrag, true);
+                e.preventDefault();
+            });
+        }
+
+        function startCountdown(sec) {
+            countdownLeft = sec;
+            sendCodeBtn.disabled = true;
+            sendCodeBtn.textContent = `${countdownLeft}s`;
+
+            clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+                countdownLeft -= 1;
+                if (countdownLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                    sendCodeBtn.disabled = false;
+                    sendCodeBtn.textContent = '获取验证码';
+                    return;
+                }
+                sendCodeBtn.textContent = `${countdownLeft}s`;
+            }, 1000);
+        }
+
+        sendCodeBtn.addEventListener('click', () => {
+            const account = normalizeAccount(accountInput.value);
+            if (!account) {
+                showToast('请先输入手机号');
+                accountInput.focus();
+                return;
+            }
+            if (!isPhoneNumber(account)) {
+                showToast('请输入 11 位手机号');
+                accountInput.focus();
+                return;
+            }
+
+            const generated = String(Math.floor(100000 + Math.random() * 900000));
+            const expiresAt = Date.now() + 5 * 60 * 1000;
+            localStorage.setItem('loginOtp', JSON.stringify({ phone: account, code: generated, expiresAt }));
+            startCountdown(60);
+            showToast(`验证码已发送：${generated}`);
+        });
+
+        createAccountBtn.addEventListener('click', () => {
+            openCreateModal();
+        });
+
+        createBackdrop.addEventListener('click', closeCreateModal);
+        if (createDialog) createDialog.addEventListener('click', (e) => e.stopPropagation());
+        if (createCloseBtn) createCloseBtn.addEventListener('click', closeCreateModal);
+        createCancelBtn.addEventListener('click', closeCreateModal);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !createModal.classList.contains('hidden')) {
+                closeCreateModal();
+            }
+        });
+        enableDialogDrag();
+
+        createTogglePasswordBtn.addEventListener('click', () => {
+            const next = createPasswordInput.type === 'password' ? 'text' : 'password';
+            createPasswordInput.type = next;
+            createTogglePasswordIcon.setAttribute('data-icon', next === 'password' ? 'carbon:view' : 'carbon:view-off');
+        });
+
+        createTogglePassword2Btn.addEventListener('click', () => {
+            const next = createPassword2Input.type === 'password' ? 'text' : 'password';
+            createPassword2Input.type = next;
+            createTogglePassword2Icon.setAttribute('data-icon', next === 'password' ? 'carbon:view' : 'carbon:view-off');
+        });
+
+        createSubmitBtn.addEventListener('click', async () => {
+            const phone = normalizeAccount(createPhoneInput.value);
+            const name = (createNameInput.value || '').trim();
+            const title = (createTitleInput.value || '').trim();
+            const pwd = (createPasswordInput.value || '').trim();
+            const pwd2 = (createPassword2Input.value || '').trim();
+
+            if (!phone) {
+                showToast('请输入手机号');
+                createPhoneInput.focus();
+                return;
+            }
+            if (!isPhoneNumber(phone)) {
+                showToast('请输入 11 位手机号');
+                createPhoneInput.focus();
+                return;
+            }
+            if (!name) {
+                showToast('请输入姓名');
+                createNameInput.focus();
+                return;
+            }
+
+            const existing = getRegisteredUser(phone);
+            if (!existing && !pwd) {
+                showToast('请设置密码');
+                createPasswordInput.focus();
+                return;
+            }
+            if (pwd) {
+                if (!isStrongPassword(pwd)) {
+                    showToast('密码至少 8 位且包含字母和数字');
+                    createPasswordInput.focus();
+                    return;
+                }
+                if (pwd !== pwd2) {
+                    showToast('两次输入的密码不一致');
+                    createPassword2Input.focus();
+                    return;
+                }
+            }
+
+            let passwordHash = existing?.passwordHash || null;
+            if (pwd) {
+                try {
+                    passwordHash = await sha256Hex(pwd);
+                } catch (e) {
+                    showToast('当前环境无法安全保存密码');
+                    return;
+                }
+            }
+            const next = {
+                phone,
+                name,
+                title,
+                passwordHash,
+                createdAt: existing?.createdAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            upsertRegisteredUser(next);
+
+            closeCreateModal();
+            accountInput.value = phone;
+            showToast(existing ? '账户信息已更新' : '账户创建成功');
+            codeInput.focus();
+        });
+
+        document.querySelectorAll('[data-provider]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const provider = btn.getAttribute('data-provider');
+                const user = { provider, name: '第三方用户', loginAt: new Date().toISOString() };
+                localStorage.setItem('authUser', JSON.stringify(user));
+                window.location.href = 'index.html';
+            });
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const account = normalizeAccount(accountInput.value);
+            if (!account) {
+                showToast('请输入手机号');
+                accountInput.focus();
+                return;
+            }
+
+            if (!isPhoneNumber(account)) {
+                showToast('请输入 11 位手机号');
+                accountInput.focus();
+                return;
+            }
+
+            const code = (codeInput.value || '').trim();
+            if (!code) {
+                showToast('请输入验证码');
+                codeInput.focus();
+                return;
+            }
+
+            const otpRaw = localStorage.getItem('loginOtp');
+            if (!otpRaw) {
+                showToast('请先获取验证码');
+                return;
+            }
+
+            let otp = null;
+            try { otp = JSON.parse(otpRaw); } catch (e) {}
+            if (!otp || otp.phone !== account) {
+                showToast('验证码与手机号不匹配');
+                return;
+            }
+            if (Date.now() > otp.expiresAt) {
+                showToast('验证码已过期，请重新获取');
+                return;
+            }
+            if (otp.code !== code) {
+                showToast('验证码错误');
+                return;
+            }
+
+            const profile = getRegisteredUser(account);
+            const user = {
+                account,
+                loginType: 'otp',
+                loginAt: new Date().toISOString(),
+                profile: profile ? { name: profile.name, title: profile.title, phone: profile.phone } : null
+            };
+            localStorage.setItem('authUser', JSON.stringify(user));
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+
+</html>

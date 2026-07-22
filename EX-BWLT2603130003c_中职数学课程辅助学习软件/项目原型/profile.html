@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4A6CF7">
+  <title>个人中心 - 中职数学课程辅助学习软件</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    :root{--primary:#4A6CF7;--primary-light:#6B8AFF;--primary-dark:#3451D1;--accent:#FF6B6B;--accent-orange:#FF9F43;--accent-green:#2ED573;--accent-purple:#A66CFF;--bg:#F5F7FB;--card:#FFFFFF;--text:#1E293B;--text-sec:#64748B;--text-light:#94A3B8;--border:#E2E8F0;--shadow:0 2px 12px rgba(74,108,247,0.08);--shadow-lg:0 8px 32px rgba(74,108,247,0.12);--radius:16px;--bottom-nav:64px}
+    html,body{font-family:'Noto Sans SC',sans-serif;background:#1a1a2e;height:100%;overflow:hidden}
+    .phone-frame{width:100%;height:100vh;background:var(--bg);overflow:hidden;position:relative}
+    .page{height:100%;overflow-y:auto;overflow-x:hidden;background:var(--bg);-webkit-overflow-scrolling:touch;padding-bottom:80px}
+    .page::-webkit-scrollbar{display:none}
+    .bottom-nav{height:var(--bottom-nav);background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;position:fixed;bottom:0;left:0;width:100%;z-index:100}
+    .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:all 0.3s;padding:4px 12px}
+    .nav-item i{font-size:22px;color:var(--text-light);transition:all 0.3s}
+    .nav-item span{font-size:10px;color:var(--text-light);transition:all 0.3s;font-weight:500}
+    .nav-item.active i{color:var(--primary)}
+    .nav-item.active span{color:var(--primary)}
+    .profile-header{background:linear-gradient(135deg,var(--primary),var(--accent-purple));padding:24px 20px 50px;text-align:center;position:relative}
+    .profile-header::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:30px;background:var(--bg);border-radius:30px 30px 0 0}
+    .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#FFD93D,#FF6B6B);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff;margin:0 auto 10px;border:4px solid rgba(255,255,255,0.3)}
+    .profile-name{color:#fff;font-size:20px;font-weight:700}
+    .profile-class{color:rgba(255,255,255,0.8);font-size:13px;margin-top:4px}
+    .profile-stats{display:flex;gap:0;margin:-24px 20px 16px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-lg);position:relative;z-index:2;overflow:hidden}
+    .profile-stat{flex:1;padding:18px 10px;text-align:center;border-right:1px solid var(--border)}
+    .profile-stat:last-child{border:none}
+    .profile-stat-num{font-size:22px;font-weight:900;color:var(--primary)}
+    .profile-stat-label{font-size:11px;color:var(--text-light);margin-top:2px}
+    .checkin-btn{width:calc(100% - 32px);margin:0 16px 16px;padding:14px;background:linear-gradient(135deg,var(--accent-green),#7BF0A5);color:#fff;font-size:15px;font-weight:600;border:none;border-radius:var(--radius);cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+    .checkin-btn:active{transform:scale(0.98)}
+    .checkin-btn.done{background:var(--bg);color:var(--text-light);pointer-events:none}
+    .menu-group{background:var(--card);border-radius:var(--radius);margin:0 16px 12px;box-shadow:var(--shadow);overflow:hidden}
+    .menu-item{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;transition:all 0.2s;border-bottom:1px solid var(--border)}
+    .menu-item:last-child{border:none}
+    .menu-item:active{background:#F8FAFF}
+    .menu-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+    .menu-text{flex:1;font-size:14px;font-weight:500;color:var(--text)}
+    .menu-arrow{color:var(--text-light);font-size:16px}
+    .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#1E293B;color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;font-weight:500;z-index:1000;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:all 0.3s}
+    .modal-overlay.show{opacity:1;pointer-events:auto}
+    .modal{background:var(--card);border-radius:var(--radius);width:85%;max-width:320px;transform:scale(0.9);transition:all 0.3s}
+    .modal.show{transform:scale(1)}
+    .modal-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:16px;border-radius:var(--radius) var(--radius) 0 0;text-align:center}
+    .modal-title{color:#fff;font-size:16px;font-weight:700}
+    .modal-body{padding:20px}
+    .modal-text{font-size:14px;color:var(--text);line-height:1.7;text-align:center}
+    .modal-btn{display:block;width:100%;padding:14px;background:var(--primary);color:#fff;font-size:15px;font-weight:600;border:none;border-radius:0 0 var(--radius) var(--radius);cursor:pointer;font-family:inherit;transition:all 0.2s}
+    .modal-btn:active{background:var(--primary-dark)}
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="page">
+      <div class="profile-header">
+        <div class="profile-avatar">高</div>
+        <div class="profile-name">高晶</div>
+        <div class="profile-class">22 级升学班 · 计算机应用</div>
+      </div>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-num">2180</div>
+          <div class="profile-stat-label">学习积分</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-num" style="color:var(--accent-orange)">42</div>
+          <div class="profile-stat-label">连续天数</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-num" style="color:var(--accent-green)">65%</div>
+          <div class="profile-stat-label">完成度</div>
+        </div>
+      </div>
+      <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">
+        <i class="ri-calendar-check-line"></i> 每日打卡
+      </button>
+      <div class="menu-group">
+        <div class="menu-item" onclick="location.href='collect.html'">
+          <div class="menu-icon" style="background:#ECFDF5;color:var(--accent-green)"><i class="ri-bookmark-line"></i></div>
+          <div class="menu-text">我的收藏</div>
+          <div class="menu-arrow"><i class="ri-arrow-right-s-line"></i></div>
+        </div>
+        <div class="menu-item" onclick="location.href='wrong.html'">
+          <div class="menu-icon" style="background:#FFF0F0;color:var(--accent)"><i class="ri-error-warning-line"></i></div>
+          <div class="menu-text">错题本</div>
+          <div class="menu-arrow"><i class="ri-arrow-right-s-line"></i></div>
+        </div>
+        <div class="menu-item" onclick="location.href='record.html'">
+          <div class="menu-icon" style="background:#E8EDFF;color:var(--primary)"><i class="ri-history-line"></i></div>
+          <div class="menu-text">学习记录</div>
+          <div class="menu-arrow"><i class="ri-arrow-right-s-line"></i></div>
+        </div>
+      </div>
+      <div class="menu-group">
+        <div class="menu-item" onclick="location.href='medal.html'">
+          <div class="menu-icon" style="background:#FEF3C7;color:var(--accent-orange)"><i class="ri-medal-line"></i></div>
+          <div class="menu-text">我的勋章</div>
+          <div class="menu-arrow"><i class="ri-arrow-right-s-line"></i></div>
+        </div>
+        <div class="menu-item" onclick="showModal('学习报告','本周学习时长 12 小时，较上周增长 20%。完成练习题 156 道，正确率 85%。')">
+          <div class="menu-icon" style="background:#F0F4FF;color:var(--accent-purple)"><i class="ri-bar-chart-box-line"></i></div>
+          <div class="menu-text">学习报告</div>
+          <div class="menu-arrow"><i class="ri-arrow-right-s-line"></i></div>
+        </div>
+      </div>
+      <div class="menu-group">
+        <div class="menu-item" onclick="location.href='settings.html'">
+          <div class="menu-icon" style="background:#F8FAFC;color:var(--text-sec)"><i class="ri-settings-3-line"></i></div>
+          <div class="menu-text">设置</div>
+          <div class="menu-arrow"><i class="ri-arrow-right-s-line"></i></div>
+        </div>
+        <div class="menu-item" onclick="showModal('帮助中心','请联系客服电话：400-123-4567\n服务时间：周一至周五 9:00-18:00')">
+          <div class="menu-icon" style="background:#F8FAFC;color:var(--text-sec)"><i class="ri-question-line"></i></div>
+          <div class="menu-text">帮助与反馈</div>
+          <div class="menu-arrow"><i class="ri-arrow-right-s-line"></i></div>
+        </div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="location.href='home.html'"><i class="ri-home-5-line"></i><span>首页</span></div>
+      <div class="nav-item" onclick="location.href='study.html'"><i class="ri-book-read-line"></i><span>学习</span></div>
+      <div class="nav-item" onclick="location.href='discover.html'"><i class="ri-compass-3-line"></i><span>发现</span></div>
+      <div class="nav-item active"><i class="ri-user-3-fill"></i><span>我的</span></div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title" id="modalTitle">提示</div>
+        </div>
+        <div class="modal-body">
+          <div class="modal-text" id="modalText"></div>
+        </div>
+        <button class="modal-btn" onclick="closeModal()">确定</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    function doCheckin(){
+      const btn=document.getElementById('checkinBtn');
+      btn.innerHTML='<i class="ri-check-line"></i> 已完成打卡';
+      btn.classList.add('done');
+      showToast('打卡成功！连续打卡 13 天');
+    }
+    function showModal(title,text){
+      document.getElementById('modalTitle').textContent=title;
+      document.getElementById('modalText').textContent=text;
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+    function closeModal(e){
+      if(e&&e.target!==document.getElementById('modalOverlay'))return;
+      document.getElementById('modalOverlay').classList.remove('show');
+    }
+    function showToast(msg){
+      const t=document.getElementById('toast');
+      t.textContent=msg;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'),2000);
+    }
+  </script>
+</body>
+</html>

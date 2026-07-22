@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>措施配置 - 能源产业排污治理措施整合优化平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; background: #f0f0f0; background-image: url('./static/bg.jpeg'); background-size: cover; }
+        .dark body { background: #121212; }
+        .mac-window { width: 1200px; height: 800px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.3); display: flex; flex-direction: column; overflow: hidden; }
+        .dark .mac-window { background: rgba(45, 45, 48, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
+        .sidebar { width: 240px; background: rgba(246, 246, 246, 0.6); border-right: 1px solid rgba(0, 0, 0, 0.1); padding-top: 50px; }
+        .dark .sidebar { background: rgba(30, 30, 30, 0.6); border-right: 1px solid rgba(255, 255, 255, 0.05); }
+        .title-bar { height: 52px; display: flex; align-items: center; padding: 0 16px; -webkit-app-region: drag; border-bottom: 1px solid rgba(0,0,0,0.06); }
+        .dark .title-bar { border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .no-drag { -webkit-app-region: no-drag; }
+        .nav-item { transition: all 0.2s ease; }
+        .nav-item:hover { background: rgba(0, 0, 0, 0.05); border-radius: 6px; }
+        .dark .nav-item:hover { background: rgba(255, 255, 255, 0.1); }
+        .active-nav { background: rgba(0, 122, 255, 0.1); color: #007AFF; border-radius: 6px; }
+        .dark .active-nav { background: rgba(10, 132, 255, 0.25); color: #0A84FF; }
+        .mac-btn { transition: all 0.2s; cursor: pointer; }
+        .mac-btn:active { transform: scale(0.96); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; z-index: 200; }
+        .modal-content { background: white; border-radius: 12px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25); overflow: hidden; }
+        .dark .modal-content { background: #2C2C2E; }
+        .modal-header { height: 40px; background: #F5F5F7; border-bottom: 1px solid #E5E5E7; display: flex; align-items: center; padding: 0 16px; cursor: move; justify-content: space-between; }
+        .dark .modal-header { background: #1C1C1E; border-bottom-color: #38383A; }
+        .table-row:hover { background: rgba(0, 122, 255, 0.05); }
+        .dark .table-row:hover { background: rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+    <div class="mac-window relative">
+        <div class="title-bar absolute top-0 left-0 w-full z-50">
+            <div class="flex items-center w-full">
+                <div class="flex items-center space-x-2 mr-3">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F57]" onclick="window.location.href='main.html'"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#28C840]"></div>
+                </div>
+                <div class="flex-1 flex justify-center">
+                    <span class="text-[14px] font-medium tracking-tight text-gray-600 dark:text-gray-300 whitespace-nowrap">能源产业排污治理措施整合优化平台</span>
+                </div>
+                <div class="flex items-center gap-2 ml-3 no-drag" style="width: 56px;">
+                    <button class="text-gray-500 hover:text-blue-500 w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-white/10" onclick="toggleDarkMode()">
+                        <i class="fa-solid fa-sun" id="dark-mode-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-1 overflow-hidden">
+            <nav class="sidebar flex flex-col px-3">
+                <div class="space-y-1 mb-8 mt-4">
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="main.html">
+                        <i class="fa-solid fa-chart-simple mr-3 w-4"></i>治理看板
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm active-nav" href="assignment.html">
+                        <i class="fa-solid fa-sliders mr-3 w-4"></i>措施配置
+                        <span class="ml-auto w-[20px] h-[20px] bg-red-500 text-white text-center text-[10px] px-1.5 rounded-full">8</span>
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="department.html">
+                        <i class="fa-solid fa-industry mr-3 w-4"></i>企业与工艺
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="history.html">
+                        <i class="fa-solid fa-clock-rotate-left mr-3 w-4"></i>历史监测
+                    </a>
+                    <a class="nav-item flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300" href="settings.html">
+                        <i class="fa-solid fa-gear mr-3 w-4"></i>系统设置
+                    </a>
+                </div>
+                <div class="mt-auto p-4 mb-4">
+                    <div class="flex items-center gap-3 bg-white/60 dark:bg-white/10 p-3 rounded-lg border border-black/5 dark:border-white/10">
+                        <div class="w-8 h-8 rounded-full overflow-hidden border border-white/40">
+                            <img alt="User Avatar" class="w-full h-full object-cover" src="https://i.pravatar.cc/150?img=68"/>
+                        </div>
+                        <div class="text-xs">
+                            <div class="font-semibold text-gray-700 dark:text-gray-200">王敏</div>
+                            <div class="text-gray-500 dark:text-gray-400">登录用户</div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <main class="flex-1 overflow-y-auto pt-[52px] bg-white dark:bg-[#1C1C1E]">
+                <div class="p-6">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold tracking-tight">措施配置</h2>
+                            <p class="text-sm text-gray-500">配置和管理排污治理措施</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="mac-btn px-3 py-1.5 bg-blue-500 text-white rounded-md text-xs font-medium shadow-sm hover:bg-blue-600" onclick="openModal('add-modal')">
+                                <i class="fa-solid fa-plus mr-1"></i>新增措施
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-4 mb-6">
+                        <div class="p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-black/5">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-xs text-gray-400">待执行</span>
+                                <i class="fa-solid fa-clock text-orange-500 text-xs"></i>
+                            </div>
+                            <div class="text-2xl font-bold">12</div>
+                            <div class="text-[10px] text-gray-400 mt-1">待分配措施</div>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-black/5">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-xs text-gray-400">执行中</span>
+                                <i class="fa-solid fa-spinner text-blue-500 text-xs"></i>
+                            </div>
+                            <div class="text-2xl font-bold">8</div>
+                            <div class="text-[10px] text-blue-500 mt-1">正在执行</div>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-black/5">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-xs text-gray-400">已完成</span>
+                                <i class="fa-solid fa-check-circle text-green-500 text-xs"></i>
+                            </div>
+                            <div class="text-2xl font-bold">156</div>
+                            <div class="text-[10px] text-green-500 mt-1">本月完成</div>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-black/5">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-xs text-gray-400">措施类型</span>
+                                <i class="fa-solid fa-tags text-purple-500 text-xs"></i>
+                            </div>
+                            <div class="text-2xl font-bold">6</div>
+                            <div class="text-[10px] text-gray-400 mt-1">可配置类型</div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-black/20 rounded-xl border dark:border-white/5 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
+                            <h3 class="font-semibold text-sm">措施列表</h3>
+                            <div class="flex items-center gap-2">
+                                <select class="text-xs border border-gray-200 dark:border-white/10 rounded px-2 py-1 bg-transparent">
+                                    <option>全部状态</option>
+                                    <option>待执行</option>
+                                    <option>执行中</option>
+                                    <option>已完成</option>
+                                </select>
+                            </div>
+                        </div>
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 dark:bg-white/5 text-xs text-gray-500">
+                                <tr>
+                                    <th class="text-left px-4 py-3 font-medium">措施编号</th>
+                                    <th class="text-left px-4 py-3 font-medium">措施名称</th>
+                                    <th class="text-left px-4 py-3 font-medium">类型</th>
+                                    <th class="text-left px-4 py-3 font-medium">企业</th>
+                                    <th class="text-left px-4 py-3 font-medium">状态</th>
+                                    <th class="text-left px-4 py-3 font-medium">负责人</th>
+                                    <th class="text-left px-4 py-3 font-medium">截止日期</th>
+                                    <th class="text-left px-4 py-3 font-medium">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-white/5">
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">#202</td>
+                                    <td class="px-4 py-3">脱硫优化</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded">工艺优化</span></td>
+                                    <td class="px-4 py-3">华能电厂</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded">执行中</span></td>
+                                    <td class="px-4 py-3">张工</td>
+                                    <td class="px-4 py-3">2026-03-10</td>
+                                    <td class="px-4 py-3">
+                                        <button class="text-blue-500 hover:text-blue-700" onclick="showMeasureDetail('#202', '脱硫优化', '工艺优化', '华能电厂', '执行中', '张工', '2026-03-10')"><i class="fa-solid fa-eye"></i></button>
+                                    </td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">#201</td>
+                                    <td class="px-4 py-3">除尘器检修</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs rounded">设备维护</span></td>
+                                    <td class="px-4 py-3">中石化炼化</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-yellow-100 text-yellow-600 text-xs rounded">待执行</span></td>
+                                    <td class="px-4 py-3">李工</td>
+                                    <td class="px-4 py-3">2026-03-08</td>
+                                    <td class="px-4 py-3">
+                                        <button class="text-blue-500 hover:text-blue-700" onclick="showMeasureDetail('#201', '除尘器检修', '设备维护', '中石化炼化', '待执行', '李工', '2026-03-08')"><i class="fa-solid fa-eye"></i></button>
+                                    </td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">#200</td>
+                                    <td class="px-4 py-3">废水处理升级</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-purple-100 text-purple-600 text-xs rounded">设施升级</span></td>
+                                    <td class="px-4 py-3">华能电厂</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded">已完成</span></td>
+                                    <td class="px-4 py-3">王工</td>
+                                    <td class="px-4 py-3">2026-03-05</td>
+                                    <td class="px-4 py-3">
+                                        <button class="text-blue-500 hover:text-blue-700" onclick="showMeasureDetail('#200', '废水处理升级', '设施升级', '华能电厂', '已完成', '王工', '2026-03-05')"><i class="fa-solid fa-eye"></i></button>
+                                    </td>
+                                </tr>
+                                <tr class="table-row">
+                                    <td class="px-4 py-3 font-medium">#199</td>
+                                    <td class="px-4 py-3">在线监测校准</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-cyan-100 text-cyan-600 text-xs rounded">监测校准</span></td>
+                                    <td class="px-4 py-3">大唐煤业</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded">已完成</span></td>
+                                    <td class="px-4 py-3">赵工</td>
+                                    <td class="px-4 py-3">2026-03-03</td>
+                                    <td class="px-4 py-3">
+                                        <button class="text-blue-500 hover:text-blue-700" onclick="showMeasureDetail('#199', '在线监测校准', '监测校准', '大唐煤业', '已完成', '赵工', '2026-03-03')"><i class="fa-solid fa-eye"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <div id="add-modal" class="modal-overlay hidden">
+            <div class="modal-content w-[500px]" id="add-modal-content">
+                <div class="modal-header" id="add-modal-header">
+                    <div class="flex items-center space-x-2" style="width: 60px;">
+                        <div class="w-3 h-3 rounded-full bg-[#FF5F57]" onclick="closeModal('add-modal')"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#28C840]"></div>
+                    </div>
+                    <span class="text-sm font-medium">新增措施</span>
+                    <div style="width: 60px;"></div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">措施名称</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入措施名称" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">措施类型</label>
+                        <select class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option>工艺优化</option>
+                            <option>设备维护</option>
+                            <option>设施升级</option>
+                            <option>监测校准</option>
+                            <option>其他</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">所属企业</label>
+                        <select class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option>华能电厂</option>
+                            <option>中石化炼化</option>
+                            <option>大唐煤业</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">负责人</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入负责人姓名" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">截止日期</label>
+                        <input type="date" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">措施描述</label>
+                        <textarea rows="3" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入措施描述"></textarea>
+                    </div>
+                </div>
+                <div class="px-6 pb-6 flex justify-end gap-2">
+                    <button class="mac-btn px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/10" onclick="closeModal('add-modal')">取消</button>
+                    <button class="mac-btn px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600" onclick="submitForm()">保存</button>
+                </div>
+            </div>
+        </div>
+        <div id="detail-modal" class="modal-overlay hidden">
+            <div class="modal-content w-[600px]" id="detail-modal-content">
+                <div class="modal-header" id="detail-modal-header">
+                    <div class="flex items-center space-x-2" style="width: 60px;">
+                        <div class="w-3 h-3 rounded-full bg-[#FF5F57]" onclick="closeModal('detail-modal')"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#28C840]"></div>
+                    </div>
+                    <span class="text-sm font-medium">措施详情</span>
+                    <div style="width: 60px;"></div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-xs text-gray-400 mb-1">措施编号</div>
+                            <div class="text-sm font-medium">#202</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 mb-1">状态</div>
+                            <span class="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded">执行中</span>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 mb-1">措施名称</div>
+                            <div class="text-sm font-medium">脱硫优化</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 mb-1">措施类型</div>
+                            <span class="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded">工艺优化</span>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 mb-1">所属企业</div>
+                            <div class="text-sm font-medium">华能电厂</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 mb-1">负责人</div>
+                            <div class="text-sm font-medium">张工</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 mb-1">创建时间</div>
+                            <div class="text-sm font-medium">2026-03-01</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 mb-1">截止日期</div>
+                            <div class="text-sm font-medium">2026-03-10</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">措施描述</div>
+                        <div class="text-sm p-3 bg-gray-50 dark:bg-white/5 rounded-lg">对华能电厂#3机组脱硫系统进行优化升级，调整浆液循环泵运行参数，提高脱硫效率至98%以上。</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-2">执行进度</div>
+                        <div class="w-full bg-gray-200 dark:bg-white/10 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 65%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-400 mt-1">
+                            <span>65%</span>
+                            <span>预计剩余 2 天</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-green-500 text-white text-sm shadow-lg hidden">保存成功！</div>
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            enableDrag(id);
+        }
+        
+        function showMeasureDetail(id, name, type, company, status, person, date) {
+            document.querySelector('#detail-modal .text-sm.font-medium').textContent = '措施详情';
+            var content = document.querySelector('#detail-modal .p-6');
+            content.innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">措施编号</div>
+                        <div class="text-sm font-medium">${id}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">状态</div>
+                        <span class="px-2 py-0.5 ${status === '执行中' ? 'bg-green-100 text-green-600' : status === '待执行' ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600'} text-xs rounded">${status}</span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">措施名称</div>
+                        <div class="text-sm font-medium">${name}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">措施类型</div>
+                        <span class="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded">${type}</span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">所属企业</div>
+                        <div class="text-sm font-medium">${company}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">负责人</div>
+                        <div class="text-sm font-medium">${person}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">创建时间</div>
+                        <div class="text-sm font-medium">2026-03-01</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">截止日期</div>
+                        <div class="text-sm font-medium">${date}</div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="text-xs text-gray-400 mb-1">措施描述</div>
+                    <div class="text-sm p-3 bg-gray-50 dark:bg-white/5 rounded-lg">对${company}${name}进行优化调整，提高治理效率。</div>
+                </div>
+                <div class="mt-4">
+                    <div class="text-xs text-gray-400 mb-2">执行进度</div>
+                    <div class="w-full bg-gray-200 dark:bg-white/10 rounded-full h-2">
+                        <div class="bg-blue-500 h-2 rounded-full" style="width: ${status === '执行中' ? '65%' : status === '待执行' ? '0%' : '100%'}"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>${status === '执行中' ? '65%' : status === '待执行' ? '0%' : '100%'}</span>
+                        <span>${status === '执行中' ? '预计剩余 2 天' : status === '待执行' ? '待开始' : '已完成'}</span>
+                    </div>
+                </div>
+            `;
+            openModal('detail-modal');
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+        function submitForm() {
+            closeModal('add-modal');
+            const toast = document.getElementById('toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2000);
+        }
+
+        function editMeasure(id, name, type, company, status, person, date) {
+            closeModal('detail-modal');
+            document.querySelector('#detail-modal .text-sm.font-medium').textContent = '编辑措施';
+            const detailModal = document.getElementById('detail-modal-content');
+            const content = detailModal.querySelector('.p-6');
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">措施名称</label>
+                        <input type="text" value="${name}" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">措施类型</label>
+                        <select class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option ${type === '工艺优化' ? 'selected' : ''}>工艺优化</option>
+                            <option ${type === '设备维护' ? 'selected' : ''}>设备维护</option>
+                            <option ${type === '设施升级' ? 'selected' : ''}>设施升级</option>
+                            <option ${type === '监测校准' ? 'selected' : ''}>监测校准</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">所属企业</label>
+                        <select class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option ${company === '华能电厂' ? 'selected' : ''}>华能电厂</option>
+                            <option ${company === '中石化炼化' ? 'selected' : ''}>中石化炼化</option>
+                            <option ${company === '大唐煤业' ? 'selected' : ''}>大唐煤业</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">负责人</label>
+                        <input type="text" value="${person}" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">截止日期</label>
+                        <input type="date" value="${date}" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">措施描述</label>
+                        <textarea rows="3" class="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500">对${company}${name}进行优化调整，提高治理效率。</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">执行进度</label>
+                        <input type="range" value="${status === '执行中' ? '65' : status === '待执行' ? '0' : '100'}" class="w-full" />
+                        <div class="flex justify-between text-xs text-gray-400 mt-1">
+                            <span>0%</span>
+                            <span>${status === '执行中' ? '65%' : status === '待执行' ? '0%' : '100%'}</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 pb-6 flex justify-end gap-2 mt-4">
+                    <button class="mac-btn px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-white/10" onclick="showMeasureDetail('${id}', '${name}', '${type}', '${company}', '${status}', '${person}', '${date}')">取消</button>
+                    <button class="mac-btn px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600" onclick="saveEdit()">保存修改</button>
+                </div>
+            `;
+            openModal('detail-modal');
+        }
+
+        function cancelEdit() {
+            closeModal('detail-modal');
+            openModal('detail-modal');
+        }
+
+        function saveEdit() {
+            closeModal('detail-modal');
+            const toast = document.getElementById('toast');
+            toast.textContent = '修改成功！';
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2000);
+        }
+        function enableDrag(modalId) {
+            const modal = document.getElementById(modalId + '-content');
+            const header = document.getElementById(modalId + '-header');
+            let isDragging = false, startX, startY, initialLeft, initialTop;
+            header.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('w-3')) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = modal.getBoundingClientRect();
+                initialLeft = rect.left;
+                initialTop = rect.top;
+                modal.style.position = 'fixed';
+                modal.style.margin = '0';
+            });
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                modal.style.left = initialLeft + dx + 'px';
+                modal.style.top = initialTop + dy + 'px';
+            });
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+            });
+        }
+
+        function toggleDarkMode() {
+            var macWindow = document.querySelector('.mac-window');
+            macWindow.classList.toggle('dark');
+            var icon = document.getElementById('dark-mode-icon');
+            if (macWindow.classList.contains('dark')) {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('darkMode', 'false');
+            }
+        }
+
+        function initDarkMode() {
+            var macWindow = document.querySelector('.mac-window');
+            var icon = document.getElementById('dark-mode-icon');
+            var isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                macWindow.classList.add('dark');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initDarkMode);
+    </script>
+</body>
+</html>

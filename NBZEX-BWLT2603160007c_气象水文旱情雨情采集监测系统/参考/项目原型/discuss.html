@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>案例讨论 - 智能普法多人联机互动学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#0EA5E9',
+                        accent: '#38BDF8',
+                        dark: '#020617',
+                        surface: '#020617',
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .macos-window { width: 1440px; min-height: 900px; background: #020617; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5); }
+        .traffic-lights { width: 12px; height: 12px; border-radius: 50%; }
+        .sidebar-item { transition: all 0.2s ease; }
+        .sidebar-item:hover { background: rgba(37, 99, 235, 0.16); transform: translateX(4px); }
+        .sidebar-item.active { background: linear-gradient(90deg, rgba(37, 99, 235, 0.32), transparent); }
+        .online-indicator { width: 8px; height: 8px; background: #10B981; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .discuss-card { transition: all 0.2s ease; }
+        .discuss-card:hover { border-color: rgba(37, 99, 235, 0.3); }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+    <div class="macos-window rounded-xl overflow-hidden">
+        <!-- macOS 标题栏 -->
+        <div class="bg-surface/80 backdrop-blur-xl px-5 py-3 flex items-center border-b border-white/5">
+            <div class="flex gap-2">
+                <div class="traffic-lights bg-red-500"></div>
+                <div class="traffic-lights bg-yellow-500"></div>
+                <div class="traffic-lights bg-green-500"></div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="text-sm font-medium text-white/80">智能普法多人联机互动学习系统</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10">
+                    <div class="online-indicator"></div>
+                    <span class="text-xs text-green-400 font-medium">1,247 人在线</span>
+                </div>
+                
+            </div>
+        </div>
+
+        <div class="flex h-[856px]">
+            <!-- 侧边栏 -->
+            <div class="w-64 bg-surface/40 border-r border-white/5 p-4">
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-12 h-12 rounded-full border-2 border-primary/50" alt="用户头像">
+                        <div class="flex-1">
+                            <p class="text-white font-semibold text-sm">张明</p>
+                            <p class="text-xs text-white/50">中级学员 · Lv.8</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-white/5">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-white/60">学习进度</span>
+                            <span class="text-primary font-semibold">68%</span>
+                        </div>
+                        <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-primary to-secondary w-[68%] rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+                <nav class="space-y-1">
+                    <a href="main.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="home" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">学习大厅</span>
+                    </a>
+                    <a href="room.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="users" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">多人房间</span>
+                        <span class="ml-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">3</span>
+                    </a>
+                    <a href="live.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="video" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">直播课堂</span>
+                    </a>
+                    <a href="law.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="book-open" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">法规库</span>
+                    </a>
+                    <div class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="message-circle" class="w-5 h-5 text-primary"></i>
+                        <span class="text-sm font-medium text-white">案例讨论</span>
+                    </div>
+                    <a href="achievement.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i data-lucide="trophy" class="w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">成就中心</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="flex-1 overflow-y-auto scrollbar-thin">
+                <div class="sticky top-0 bg-dark/95 backdrop-blur-xl border-b border-white/5 px-8 py-4 z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <h1 class="text-2xl font-bold text-white">案例讨论</h1>
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <input id="discussSearchInput" type="text" placeholder="搜索案例讨论..."
+                                       class="w-64 bg-white/5 border border-white/10 rounded-lg px-4 py-2 pl-10 text-sm text-white placeholder-white/40 focus:outline-none focus:border-primary/50 transition">
+                                <i data-lucide="search" class="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                            </div>
+                            <button id="openComposeDiscussButton" class="px-5 py-2 bg-gradient-to-r from-primary to-secondary rounded-lg text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary/50 transition flex items-center gap-2">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                发起讨论
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex gap-6">
+                        <button class="px-1 py-2 text-sm font-semibold text-primary border-b-2 border-primary">热门讨论</button>
+                        <button class="px-1 py-2 text-sm font-medium text-white/60">最新发布</button>
+                        <button class="px-1 py-2 text-sm font-medium text-white/60">我的参与</button>
+                        <button class="px-1 py-2 text-sm font-medium text-white/60">精华帖</button>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <!-- 置顶案例 -->
+                    <section class="mb-8">
+                        <a href="discuss-detail.html" class="glass-card rounded-2xl p-6 border-l-4 border-primary block hover:border-primary/80 transition">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="pin" class="w-6 h-6 text-white"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="px-2 py-0.5 bg-primary/20 text-primary text-xs rounded-full font-medium">置顶</span>
+                                        <span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-medium">热议</span>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-white mb-2">高空抛物致人损害，物业公司是否应承担侵权责任？</h3>
+                                    <p class="text-sm text-white/60 mb-4">某小区居民楼高层有人抛掷花盆，砸中楼下行人致其重伤。受害人无法确定具体侵权人，遂将整栋楼业主及物业公司一并起诉。本案涉及《民法典》第1254条高空抛物条款的适用，物业公司安全保障义务的认定等关键法律问题...</p>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex items-center gap-2">
+                                                <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-6 h-6 rounded-full" alt="">
+                                                <span class="text-sm text-white/60">王教授</span>
+                                            </div>
+                                            <span class="text-xs text-white/40">3小时前</span>
+                                        </div>
+                                        <div class="flex items-center gap-4 text-xs text-white/40">
+                                            <span class="flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> 128</span>
+                                            <span class="flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> 356</span>
+                                            <span class="flex items-center gap-1"><i data-lucide="eye" class="w-4 h-4"></i> 2,341</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </section>
+
+                    <!-- 讨论列表 -->
+                    <section>
+                        <div id="discussList" class="space-y-4">
+                            <!-- 讨论帖 1 -->
+                            <a href="discuss-detail.html" class="discuss-card glass-card rounded-xl p-5 cursor-pointer block">
+                                <div class="flex items-start gap-4">
+                                    <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-10 h-10 rounded-full flex-shrink-0" alt="">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-sm text-white font-medium">李检察官</span>
+                                            <span class="text-xs text-white/30">· 5小时前</span>
+                                            <span class="px-2 py-0.5 bg-slate-500/20 text-slate-400 text-xs rounded-full">刑法</span>
+                                        </div>
+                                        <h3 class="text-white font-bold mb-2">醉酒驾驶致人死亡，以危险驾驶罪还是以危险方法危害公共安全罪定性？</h3>
+                                        <p class="text-sm text-white/60 mb-3">被告人血液酒精含量为220mg/100ml，驾驶车辆在城市主干道逆行撞击对向车辆，造成两人死亡。对于本案的定性，存在两种不同意见。第一种意见认为应以危险驾驶罪定罪，第二种意见认为...</p>
+                                        <div class="flex items-center gap-4 text-xs text-white/40">
+                                            <span class="flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> 89</span>
+                                            <span class="flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> 234</span>
+                                            <span class="flex items-center gap-1"><i data-lucide="eye" class="w-4 h-4"></i> 1,567</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <!-- 讨论帖 2 -->
+                            <a href="discuss-detail.html" class="discuss-card glass-card rounded-xl p-5 cursor-pointer block">
+                                <div class="flex items-start gap-4">
+                                    <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-10 h-10 rounded-full flex-shrink-0" alt="">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-sm text-white font-medium">陈律师</span>
+                                            <span class="text-xs text-white/30">· 昨天</span>
+                                            <span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">民法</span>
+                                            <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">精华</span>
+                                        </div>
+                                        <h3 class="text-white font-bold mb-2">电商平台"仅退款"政策是否违反合同法基本原则？</h3>
+                                        <p class="text-sm text-white/60 mb-3">近期多家电商平台推出"仅退款"政策，消费者在特定条件下可不退货直接获得退款。部分商家认为该政策侵害了经营者的合法权益，违反了合同法中的公平原则和诚实信用原则...</p>
+                                        <div class="flex items-center gap-4 text-xs text-white/40">
+                                            <span class="flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> 156</span>
+                                            <span class="flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> 421</span>
+                                            <span class="flex items-center gap-1"><i data-lucide="eye" class="w-4 h-4"></i> 3,892</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <!-- 讨论帖 3 -->
+                            <a href="discuss-detail.html" class="discuss-card glass-card rounded-xl p-5 cursor-pointer block">
+                                <div class="flex items-start gap-4">
+                                    <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" class="w-10 h-10 rounded-full flex-shrink-0" alt="">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-sm text-white font-medium">张明</span>
+                                            <span class="text-xs text-white/30">· 前天</span>
+                                            <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">劳动法</span>
+                                        </div>
+                                        <h3 class="text-white font-bold mb-2">企业以"末位淘汰"为由解除劳动合同是否合法？</h3>
+                                        <p class="text-sm text-white/60 mb-3">某互联网公司实行绩效考核末位淘汰制，绩效排名最后10%的员工被通知解除劳动合同。员工王某绩效排名倒数第3位，公司以"不能胜任工作"为由单方面解除劳动合同...</p>
+                                        <div class="flex items-center gap-4 text-xs text-white/40">
+                                            <span class="flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> 67</span>
+                                            <span class="flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> 189</span>
+                                            <span class="flex items-center gap-1"><i data-lucide="eye" class="w-4 h-4"></i> 1,234</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <!-- 讨论帖 4 -->
+                            <a href="discuss-detail.html" class="discuss-card glass-card rounded-xl p-5 cursor-pointer block">
+                                <div class="flex items-start gap-4">
+                                    <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-10 h-10 rounded-full flex-shrink-0" alt="">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-sm text-white font-medium">刘晓芳</span>
+                                            <span class="text-xs text-white/30">· 3天前</span>
+                                            <span class="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-full">行政法</span>
+                                        </div>
+                                        <h3 class="text-white font-bold mb-2">城管强制拆除违建是否需要申请法院强制执行？</h3>
+                                        <p class="text-sm text-white/60 mb-3">某区城管部门认定居民李某搭建的阳光房属于违法建设，在下达限期拆除决定书后，李某未按期自行拆除。城管部门随即组织人员强制拆除。李某不服，提起行政诉讼...</p>
+                                        <div class="flex items-center gap-4 text-xs text-white/40">
+                                            <span class="flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> 45</span>
+                                            <span class="flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> 132</span>
+                                            <span class="flex items-center gap-1"><i data-lucide="eye" class="w-4 h-4"></i> 876</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- 右侧信息栏 -->
+            <div class="w-80 bg-surface/40 border-l border-white/5 p-6 overflow-y-auto scrollbar-thin">
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="flame" class="w-5 h-5 text-primary"></i>
+                        热门话题
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <span class="text-lg font-bold text-primary/60">1</span>
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">AI生成内容的著作权归属</p>
+                                <p class="text-xs text-white/40">1.2万讨论</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <span class="text-lg font-bold text-primary/50">2</span>
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">直播带货虚假宣传法律责任</p>
+                                <p class="text-xs text-white/40">8,932讨论</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <span class="text-lg font-bold text-primary/40">3</span>
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">个人信息保护公益诉讼</p>
+                                <p class="text-xs text-white/40">6,453讨论</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <span class="text-lg font-bold text-white/20">4</span>
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">灵活用工的劳动关系认定</p>
+                                <p class="text-xs text-white/40">5,127讨论</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <span class="text-lg font-bold text-white/20">5</span>
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">业主委员会起诉资格问题</p>
+                                <p class="text-xs text-white/40">3,891讨论</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="award" class="w-5 h-5 text-primary"></i>
+                        活跃贡献者
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold text-yellow-500 w-5">1</span>
+                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-8 h-8 rounded-full" alt="">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">王教授</p>
+                                <p class="text-xs text-white/40">回答 342 次</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold text-gray-400 w-5">2</span>
+                            <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-8 h-8 rounded-full" alt="">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">李检察官</p>
+                                <p class="text-xs text-white/40">回答 287 次</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold text-amber-700 w-5">3</span>
+                            <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-8 h-8 rounded-full" alt="">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">陈律师</p>
+                                <p class="text-xs text-white/40">回答 215 次</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="lightbulb" class="w-5 h-5 text-primary"></i>
+                        讨论须知
+                    </h3>
+                    <div class="space-y-2 text-sm text-white/60">
+                        <p>1. 讨论应基于法律事实和法规依据</p>
+                        <p>2. 尊重不同法律观点，理性讨论</p>
+                        <p>3. 引用法条请注明出处</p>
+                        <p>4. 涉及真实案例请注意隐私保护</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastHost" class="fixed top-6 right-6 z-[60] space-y-2 pointer-events-none"></div>
+
+    <div id="composeDiscussOverlay" class="fixed inset-0 z-50 hidden pointer-events-none">
+        <div id="composeDiscussWindow" role="dialog" aria-modal="false" aria-labelledby="composeDiscussTitle" class="fixed w-full max-w-3xl rounded-2xl border border-white/10 bg-slate-950/70 backdrop-blur-2xl shadow-[0_30px_90px_rgba(0,0,0,0.55)] pointer-events-auto" style="left:50%;top:120px;transform:translateX(-50%);">
+            <div id="composeDiscussTitlebar" class="relative px-5 py-3 border-b border-white/10 cursor-grab select-none">
+                <div class="absolute left-5 top-1/2 -translate-y-1/2 flex gap-2">
+                    <button id="closeComposeDiscussButton" type="button" aria-label="关闭" class="traffic-lights bg-red-500 hover:brightness-110 transition"></button>
+                    <button type="button" tabindex="-1" aria-hidden="true" class="traffic-lights bg-yellow-500 opacity-70"></button>
+                    <button type="button" tabindex="-1" aria-hidden="true" class="traffic-lights bg-green-500 opacity-70"></button>
+                </div>
+                <h2 id="composeDiscussTitle" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-sm font-semibold text-white/85">发起讨论</h2>
+                <div class="h-6"></div>
+            </div>
+
+            <form id="composeDiscussForm" class="px-6 py-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-xs text-white/60 mb-2">讨论标题</label>
+                        <input id="composeDiscussTitleInput" maxlength="60" placeholder="一句话概括争议焦点，例如：高空抛物中物业责任如何认定？" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition" />
+                        <p id="composeDiscussTitleError" class="mt-2 text-xs text-red-300 hidden">标题需为 6–60 个字符</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-white/60 mb-2">领域标签</label>
+                        <select id="composeDiscussCategory" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition">
+                            <option value="刑法" class="bg-slate-950">刑法</option>
+                            <option value="民法" class="bg-slate-950">民法</option>
+                            <option value="劳动法" class="bg-slate-950">劳动法</option>
+                            <option value="行政法" class="bg-slate-950">行政法</option>
+                            <option value="宪法" class="bg-slate-950">宪法</option>
+                            <option value="知识产权" class="bg-slate-950">知识产权</option>
+                            <option value="其他" class="bg-slate-950">其他</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-white/60 mb-2">讨论类型</label>
+                        <select id="composeDiscussType" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition">
+                            <option value="案例分析" class="bg-slate-950">案例分析</option>
+                            <option value="法条适用" class="bg-slate-950">法条适用</option>
+                            <option value="实务经验" class="bg-slate-950">实务经验</option>
+                            <option value="观点争鸣" class="bg-slate-950">观点争鸣</option>
+                        </select>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-xs text-white/60 mb-2">案情 / 问题描述</label>
+                        <textarea id="composeDiscussContent" maxlength="800" rows="7" placeholder="请描述事实经过、争议点以及你想讨论的问题（建议至少 30 字）" class="w-full resize-none bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition"></textarea>
+                        <div class="mt-2 flex items-center justify-between">
+                            <p id="composeDiscussContentHint" class="text-xs text-white/35">最多 800 字</p>
+                            <p id="composeDiscussContentCount" class="text-xs text-white/35">0/800</p>
+                        </div>
+                        <p id="composeDiscussContentError" class="mt-2 text-xs text-red-300 hidden">内容需至少 30 个字符</p>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-xs text-white/60 mb-2">引用法条（可选）</label>
+                        <input id="composeDiscussCitations" maxlength="80" placeholder="例如：民法典 第1254条；侵权责任编" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition" />
+                    </div>
+
+                    <div class="col-span-2">
+                        <div class="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                            <div>
+                                <p class="text-sm text-white font-semibold">匿名发布</p>
+                                <p class="text-xs text-white/45 mt-0.5">适用于隐私敏感案例，系统将隐藏头像与昵称</p>
+                            </div>
+                            <label class="inline-flex items-center cursor-pointer select-none">
+                                <input id="composeDiscussAnonymous" type="checkbox" class="sr-only peer" />
+                                <div class="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-primary/30 relative transition">
+                                    <div class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white/70 peer-checked:translate-x-5 transition"></div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center justify-between">
+                    <div class="text-xs text-white/45">
+                        发布后将显示在列表顶部，并保存到本地
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="cancelComposeDiscussButton" type="button" class="px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/75 text-sm font-semibold hover:bg-white/10 transition">取消</button>
+                        <button id="submitComposeDiscussButton" type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary/50 transition">发布讨论</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+
+            const STORAGE_KEY = 'legalEduDiscuss:v1';
+            const discussList = document.getElementById('discussList');
+            const searchInput = document.getElementById('discussSearchInput');
+            const openComposeButton = document.getElementById('openComposeDiscussButton');
+
+            const overlay = document.getElementById('composeDiscussOverlay');
+            const windowEl = document.getElementById('composeDiscussWindow');
+            const titlebarEl = document.getElementById('composeDiscussTitlebar');
+            const closeButton = document.getElementById('closeComposeDiscussButton');
+            const cancelButton = document.getElementById('cancelComposeDiscussButton');
+
+            const form = document.getElementById('composeDiscussForm');
+            const titleInput = document.getElementById('composeDiscussTitleInput');
+            const titleError = document.getElementById('composeDiscussTitleError');
+            const categoryInput = document.getElementById('composeDiscussCategory');
+            const typeInput = document.getElementById('composeDiscussType');
+            const contentInput = document.getElementById('composeDiscussContent');
+            const contentCount = document.getElementById('composeDiscussContentCount');
+            const contentError = document.getElementById('composeDiscussContentError');
+            const citationsInput = document.getElementById('composeDiscussCitations');
+            const anonymousInput = document.getElementById('composeDiscussAnonymous');
+
+            const toastHost = document.getElementById('toastHost');
+
+            const hostProfile = {
+                name: '张明',
+                avatar: 'https://i04piccdn.sogoucdn.com/87df244df2301756'
+            };
+
+            function clamp(value, min, max) {
+                return Math.max(min, Math.min(max, value));
+            }
+
+            function safeJsonParse(value) {
+                try {
+                    return JSON.parse(value);
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function loadPosts() {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                const parsed = safeJsonParse(raw);
+                if (!Array.isArray(parsed)) return [];
+                return parsed.filter(p => p && typeof p === 'object' && typeof p.id === 'string');
+            }
+
+            function savePosts(posts) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+            }
+
+            function showToast(message, tone) {
+                const el = document.createElement('div');
+                const base = 'pointer-events-none select-none rounded-2xl border px-4 py-3 backdrop-blur-2xl shadow-[0_18px_45px_rgba(0,0,0,0.45)]';
+                const palette = tone === 'error'
+                    ? 'bg-red-950/65 border-red-400/20 text-red-100'
+                    : tone === 'success'
+                        ? 'bg-emerald-950/60 border-emerald-400/20 text-emerald-50'
+                        : 'bg-slate-950/60 border-white/10 text-white/85';
+                el.className = `${base} ${palette}`;
+                el.textContent = message;
+                toastHost.appendChild(el);
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-6px)';
+                    el.style.transition = 'opacity 200ms ease, transform 200ms ease';
+                }, 1800);
+                setTimeout(() => {
+                    el.remove();
+                }, 2100);
+            }
+
+            function centerWindow(topOffset) {
+                const rect = windowEl.getBoundingClientRect();
+                const margin = 14;
+                const left = clamp(Math.round((window.innerWidth - rect.width) / 2), margin, Math.max(margin, window.innerWidth - rect.width - margin));
+                const top = clamp(Math.round((window.innerHeight - rect.height) / 2), margin, Math.max(margin, window.innerHeight - rect.height - margin));
+                windowEl.style.left = `${left}px`;
+                windowEl.style.top = `${typeof topOffset === 'number' ? clamp(topOffset, margin, Math.max(margin, window.innerHeight - rect.height - margin)) : top}px`;
+                windowEl.style.transform = 'none';
+            }
+
+            function openWindow() {
+                overlay.classList.remove('hidden');
+                centerWindow(120);
+                setTimeout(() => {
+                    titleInput.focus();
+                    titleInput.select();
+                }, 0);
+            }
+
+            function closeWindow() {
+                overlay.classList.add('hidden');
+            }
+
+            function makeDraggable(handleEl) {
+                let dragging = false;
+                let startX = 0;
+                let startY = 0;
+                let startLeft = 0;
+                let startTop = 0;
+
+                function onPointerMove(e) {
+                    if (!dragging) return;
+                    const rect = windowEl.getBoundingClientRect();
+                    const margin = 12;
+                    const nextLeft = startLeft + (e.clientX - startX);
+                    const nextTop = startTop + (e.clientY - startY);
+                    const clampedLeft = clamp(nextLeft, margin, Math.max(margin, window.innerWidth - rect.width - margin));
+                    const clampedTop = clamp(nextTop, margin, Math.max(margin, window.innerHeight - rect.height - margin));
+                    windowEl.style.left = `${clampedLeft}px`;
+                    windowEl.style.top = `${clampedTop}px`;
+                }
+
+                function stopDrag() {
+                    dragging = false;
+                    document.removeEventListener('pointermove', onPointerMove);
+                    document.removeEventListener('pointerup', stopDrag);
+                    document.removeEventListener('pointercancel', stopDrag);
+                    handleEl.classList.remove('cursor-grabbing');
+                    handleEl.classList.add('cursor-grab');
+                }
+
+                handleEl.addEventListener('pointerdown', (e) => {
+                    const target = e.target;
+                    if (target && (target.closest('button') || target.closest('input') || target.closest('select') || target.closest('textarea') || target.closest('a'))) return;
+                    dragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    const left = Number.parseFloat(windowEl.style.left);
+                    const top = Number.parseFloat(windowEl.style.top);
+                    const rect = windowEl.getBoundingClientRect();
+                    startLeft = Number.isFinite(left) ? left : rect.left;
+                    startTop = Number.isFinite(top) ? top : rect.top;
+                    windowEl.style.transform = 'none';
+                    handleEl.classList.remove('cursor-grab');
+                    handleEl.classList.add('cursor-grabbing');
+                    document.addEventListener('pointermove', onPointerMove);
+                    document.addEventListener('pointerup', stopDrag);
+                    document.addEventListener('pointercancel', stopDrag);
+                });
+            }
+
+            function timeAgo(iso) {
+                const t = new Date(iso).getTime();
+                if (!Number.isFinite(t)) return '';
+                const diff = Date.now() - t;
+                if (diff < 60 * 1000) return '刚刚';
+                const minutes = Math.floor(diff / (60 * 1000));
+                if (minutes < 60) return `${minutes}分钟前`;
+                const hours = Math.floor(minutes / 60);
+                if (hours < 24) return `${hours}小时前`;
+                const days = Math.floor(hours / 24);
+                return `${days}天前`;
+            }
+
+            function sanitizeText(value) {
+                return (value || '').replace(/\s+/g, ' ').trim();
+            }
+
+            function isValidTitle(value) {
+                const len = value.length;
+                return len >= 6 && len <= 60;
+            }
+
+            function isValidContent(value) {
+                return value.length >= 30;
+            }
+
+            function updateCount() {
+                const len = (contentInput.value || '').length;
+                contentCount.textContent = `${len}/800`;
+            }
+
+            function getCategoryClasses(category) {
+                switch (category) {
+                    case '刑法': return 'bg-slate-500/20 text-slate-300';
+                    case '民法': return 'bg-blue-500/20 text-blue-300';
+                    case '劳动法': return 'bg-emerald-500/20 text-emerald-300';
+                    case '行政法': return 'bg-orange-500/20 text-orange-300';
+                    case '宪法': return 'bg-teal-500/20 text-teal-300';
+                    case '知识产权': return 'bg-yellow-500/20 text-yellow-300';
+                    default: return 'bg-white/10 text-white/70';
+                }
+            }
+
+            function renderPostCard(post) {
+                const a = document.createElement('a');
+                a.href = `discuss-detail.html?postId=${encodeURIComponent(post.id)}`;
+                a.className = 'discuss-card glass-card rounded-xl p-5 cursor-pointer block';
+                a.setAttribute('data-post-id', post.id);
+                a.setAttribute('data-origin', 'persisted');
+
+                const authorName = post.anonymous ? '匿名用户' : post.authorName;
+                const avatar = post.anonymous ? 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y' : post.authorAvatar;
+                const tagClass = getCategoryClasses(post.category);
+                const excerpt = post.content.length > 120 ? `${post.content.slice(0, 120)}...` : post.content;
+
+                const extraTags = [];
+                if (post.type) extraTags.push(`<span class="px-2 py-0.5 bg-white/5 border border-white/10 text-white/70 text-xs rounded-full">${post.type}</span>`);
+                if (post.citations) extraTags.push(`<span class="px-2 py-0.5 bg-white/5 border border-white/10 text-white/70 text-xs rounded-full">引用法条</span>`);
+
+                a.innerHTML = `
+                    <div class="flex items-start gap-4">
+                        <img src="${avatar}" class="w-10 h-10 rounded-full flex-shrink-0" alt="">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                <span class="text-sm text-white font-medium">${authorName}</span>
+                                <span class="text-xs text-white/30">· ${timeAgo(post.createdAt)}</span>
+                                <span class="px-2 py-0.5 ${tagClass} text-xs rounded-full">${post.category}</span>
+                                ${extraTags.join('')}
+                            </div>
+                            <h3 class="text-white font-bold mb-2">${post.title}</h3>
+                            <p class="text-sm text-white/60 mb-3">${excerpt}</p>
+                            <div class="flex items-center gap-4 text-xs text-white/40">
+                                <span class="flex items-center gap-1"><i data-lucide="message-circle" class="w-4 h-4"></i> ${post.comments}</span>
+                                <span class="flex items-center gap-1"><i data-lucide="heart" class="w-4 h-4"></i> ${post.likes}</span>
+                                <span class="flex items-center gap-1"><i data-lucide="eye" class="w-4 h-4"></i> ${post.views.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return a;
+            }
+
+            function renderPersistedPosts() {
+                const existing = discussList.querySelectorAll('[data-origin="persisted"]');
+                existing.forEach(el => el.remove());
+                const head = discussList.firstElementChild;
+                const fragment = document.createDocumentFragment();
+                posts.forEach(post => {
+                    fragment.appendChild(renderPostCard(post));
+                });
+                discussList.insertBefore(fragment, head);
+                lucide.createIcons();
+            }
+
+            function applySearchFilter(query) {
+                const q = (query || '').trim().toLowerCase();
+                const cards = discussList.querySelectorAll('.discuss-card');
+                cards.forEach(card => {
+                    const text = (card.textContent || '').toLowerCase();
+                    card.style.display = q && !text.includes(q) ? 'none' : '';
+                });
+            }
+
+            function resetErrors() {
+                titleError.classList.add('hidden');
+                contentError.classList.add('hidden');
+            }
+
+            let posts = loadPosts();
+            renderPersistedPosts();
+
+            makeDraggable(titlebarEl);
+            updateCount();
+
+            openComposeButton.addEventListener('click', () => {
+                resetErrors();
+                openWindow();
+            });
+            closeButton.addEventListener('click', closeWindow);
+            cancelButton.addEventListener('click', closeWindow);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key !== 'Escape') return;
+                if (!overlay.classList.contains('hidden')) closeWindow();
+            });
+
+            contentInput.addEventListener('input', updateCount);
+            searchInput.addEventListener('input', () => applySearchFilter(searchInput.value));
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                resetErrors();
+
+                const title = sanitizeText(titleInput.value);
+                const content = sanitizeText(contentInput.value);
+                const category = categoryInput.value;
+                const type = typeInput.value;
+                const citations = sanitizeText(citationsInput.value);
+                const anonymous = !!anonymousInput.checked;
+
+                let ok = true;
+                if (!isValidTitle(title)) {
+                    titleError.classList.remove('hidden');
+                    ok = false;
+                }
+                if (!isValidContent(content)) {
+                    contentError.classList.remove('hidden');
+                    ok = false;
+                }
+                if (!ok) {
+                    showToast('请完善讨论标题与内容后再发布', 'error');
+                    return;
+                }
+
+                const createdAt = new Date().toISOString();
+                const id = `post_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                const views = clamp(Math.floor(50 + Math.random() * 180), 10, 99999);
+
+                const post = {
+                    id,
+                    title,
+                    content,
+                    category,
+                    type,
+                    citations,
+                    anonymous,
+                    authorName: hostProfile.name,
+                    authorAvatar: hostProfile.avatar,
+                    createdAt,
+                    comments: 0,
+                    likes: 0,
+                    views
+                };
+
+                posts.unshift(post);
+                savePosts(posts);
+                renderPersistedPosts();
+                applySearchFilter(searchInput.value);
+
+                form.reset();
+                updateCount();
+                closeWindow();
+                showToast('讨论已发布，已显示在列表顶部', 'success');
+            });
+        });
+    </script>
+</body>
+</html>

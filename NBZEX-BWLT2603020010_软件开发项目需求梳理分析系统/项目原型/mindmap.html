@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>思维导图 - 需求梳理分析系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsmind@0.5/style/jsmind.css" />
+    <script src="https://cdn.jsdelivr.net/npm/jsmind@0.5/es6/jsmind.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsmind@0.5/es6/jsmind.draggable.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-image: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+
+        .macos-blur {
+            backdrop-filter: blur(20px);
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .sidebar-item-active {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: #007AFF;
+            font-weight: 500;
+        }
+
+        .window-shadow {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d1d1;
+            border-radius: 10px;
+        }
+
+        /* Mind Map Styles */
+        .mindmap-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 50px;
+            min-width: 100%;
+            min-height: 100%;
+        }
+
+        .mm-node {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            position: relative;
+            transition: all 0.2s;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .mm-node:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+        }
+
+        .mm-root {
+            font-size: 18px;
+            font-weight: bold;
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #1e40af;
+            padding: 15px 30px;
+        }
+
+        .mm-branch {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .mm-children {
+            display: flex;
+            flex-direction: column;
+            margin-left: 40px;
+            position: relative;
+        }
+        
+        /* Connecting lines */
+        .mm-children::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            width: 20px;
+            height: 2px;
+            background: #cbd5e1;
+        }
+
+        .mm-branch-item {
+            position: relative;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .mm-branch-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            width: 20px;
+            height: 2px;
+            background: #cbd5e1;
+        }
+        
+        .mm-children-vertical-line {
+            position: absolute;
+            left: -20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #cbd5e1;
+        }
+    </style>
+</head>
+
+<body class="bg-[#F5F5F7] h-screen flex items-center justify-center p-4">
+    <div class="w-full h-full max-w-[1440px] max-h-[900px] bg-white rounded-xl overflow-hidden flex flex-col window-shadow border border-gray-200">
+        <!-- Title Bar -->
+        <div class="h-12 bg-[#EBEBEB] border-b border-gray-300 flex items-center px-4 flex-shrink-0">
+            <div class="flex space-x-2 w-20">
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FF5F57] border border-[#E0443E]"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#FFBD2E] border border-[#DEA123]"></div>
+                <div class="w-3.5 h-3.5 rounded-full bg-[#28C840] border border-[#1AAB29]"></div>
+            </div>
+            <div class="flex-1 text-center text-sm font-medium text-gray-600">软件开发项目需求梳理分析系统</div>
+            <div class="w-20"></div>
+        </div>
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <div class="w-64 bg-[#F2F2F2] border-r border-gray-200 flex flex-col overflow-hidden">
+                <div class="flex-1 overflow-y-auto p-3 space-y-6">
+                    <div class="flex items-center space-x-3 px-2 py-1">
+                        <img alt="Avatar" class="w-10 h-10 rounded-full border border-gray-300"
+                            src="https://i03piccdn.sogoucdn.com/d3e478a309b93af7" />
+                        <div>
+                            <div class="text-sm font-semibold text-gray-800">张源</div>
+                            <div class="text-xs text-gray-500">产品总监</div>
+                        </div>
+                    </div>
+                    <nav class="space-y-1">
+                        <a class="flex items-center space-x-2 px-3 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                            href="index.html">
+                            <span class="iconify text-lg" data-icon="carbon:dashboard"></span>
+                            <span>项目管理</span>
+                        </a>
+                        <a class="flex items-center space-x-2 px-3 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                            href="analysis.html">
+                            <span class="iconify text-lg" data-icon="carbon:document-view"></span>
+                            <span>需求分析</span>
+                        </a>
+                        <a class="flex items-center space-x-2 px-3 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                            href="collaboration.html">
+                            <span class="iconify text-lg" data-icon="carbon:user-multiple"></span>
+                            <span>协作动态</span>
+                        </a>
+                        <a class="flex items-center space-x-2 px-3 py-1.5 text-gray-600 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                            href="flow.html">
+                            <span class="iconify text-lg" data-icon="carbon:flow"></span>
+                            <span>流程建模</span>
+                        </a>
+                        <a class="sidebar-item-active flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm transition-colors"
+                            href="mindmap.html">
+                            <span class="iconify text-lg" data-icon="carbon:network-4"></span>
+                            <span>思维导图</span>
+                        </a>
+                        
+                    </nav>
+                </div>
+                <div class="p-3 border-t border-gray-200 bg-[#F2F2F2]">
+                    <div class="p-3 bg-white/50 rounded-lg border border-gray-200">
+                        <div class="text-xs text-gray-500 mb-2">本月配额已使用 68%</div>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                            <div class="bg-blue-500 h-1.5 rounded-full" style="width: 68%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col bg-white overflow-hidden relative">
+                <!-- List View -->
+                <div id="list-view" class="flex-1 flex flex-col overflow-hidden">
+                    <div class="h-12 border-b border-gray-200 flex items-center justify-between px-6 bg-white">
+                        <h2 class="text-lg font-medium text-gray-900">思维导图列表</h2>
+                        <button onclick="createNewMindMap()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-1.5 rounded-md shadow-sm transition-all flex items-center">
+                            <span class="iconify mr-1" data-icon="carbon:add"></span> 新建导图
+                        </button>
+                    </div>
+                    <div id="mindmap-list-container" class="flex-1 overflow-auto p-6 bg-gray-50">
+                        <div id="mindmap-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Dynamically rendered -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Editor View -->
+                <div id="editor-view" class="hidden flex-1 flex flex-col overflow-hidden absolute inset-0 bg-white z-10">
+                    <!-- Toolbar -->
+                    <div class="h-12 border-b border-gray-200 flex items-center justify-between px-4 bg-gray-50">
+                        <div class="flex items-center space-x-4">
+                            <button onclick="closeMindMap()" class="text-gray-500 hover:text-gray-700 flex items-center px-2 py-1 hover:bg-gray-200 rounded transition-colors">
+                                <span class="iconify mr-1" data-icon="carbon:arrow-left"></span>
+                                <span class="text-sm">返回列表</span>
+                            </button>
+                            <div class="h-6 w-px bg-gray-300"></div>
+                            <input type="text" id="mm-title-input" class="text-sm font-medium text-gray-900 bg-transparent border-none focus:ring-0 w-64" value="未命名导图">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                             <button onclick="saveMindMap()" class="flex items-center space-x-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors">
+                                <span class="iconify" data-icon="carbon:save"></span>
+                                <span class="text-xs font-medium">保存</span>
+                            </button>
+                            <div class="h-6 w-px bg-gray-300 mx-1"></div>
+                            <button onclick="zoomIn()" class="p-1.5 hover:bg-gray-100 rounded text-gray-600" title="Zoom In">
+                                <span class="iconify" data-icon="carbon:zoom-in"></span>
+                            </button>
+                            <button onclick="zoomOut()" class="p-1.5 hover:bg-gray-100 rounded text-gray-600" title="Zoom Out">
+                                <span class="iconify" data-icon="carbon:zoom-out"></span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Canvas Area with Sidebars -->
+                    <div class="flex-1 flex overflow-hidden relative">
+                        <!-- Left Sidebar: Legends/Draggable -->
+                        <div id="mm-sidebar-left" class="w-60 bg-gray-50 border-r border-gray-200 flex flex-col z-20">
+                            <div class="p-4 border-b border-gray-200">
+                                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">节点组件</h3>
+                            </div>
+                            <div class="p-4 space-y-3 overflow-y-auto flex-1">
+                                <div class="text-xs text-gray-400 mb-2">拖拽组件到画布以添加子节点</div>
+                                
+                                <div class="draggable-node bg-blue-500 text-white p-2 rounded shadow-sm cursor-move flex items-center space-x-2" draggable="true" data-type="topic" data-color="#3b82f6">
+                                    <span class="iconify" data-icon="carbon:circle-filled"></span>
+                                    <span class="text-sm">标准主题</span>
+                                </div>
+                                
+                                <div class="draggable-node bg-orange-500 text-white p-2 rounded shadow-sm cursor-move flex items-center space-x-2" draggable="true" data-type="sub" data-color="#f97316">
+                                    <span class="iconify" data-icon="carbon:radio-button"></span>
+                                    <span class="text-sm">分支主题</span>
+                                </div>
+                                
+                                <div class="draggable-node bg-green-500 text-white p-2 rounded shadow-sm cursor-move flex items-center space-x-2" draggable="true" data-type="info" data-color="#22c55e">
+                                    <span class="iconify" data-icon="carbon:information-filled"></span>
+                                    <span class="text-sm">信息节点</span>
+                                </div>
+                                
+                                <div class="draggable-node bg-purple-500 text-white p-2 rounded shadow-sm cursor-move flex items-center space-x-2" draggable="true" data-type="warning" data-color="#a855f7">
+                                    <span class="iconify" data-icon="carbon:warning-filled"></span>
+                                    <span class="text-sm">关键节点</span>
+                                </div>
+
+                                <div class="mt-6 border-t border-gray-200 pt-4">
+                                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">操作说明</h3>
+                                    <p class="text-xs text-gray-400 leading-relaxed">
+                                        1. 选中画布中的一个节点<br>
+                                        2. 拖拽左侧组件到右侧区域<br>
+                                        3. 自动添加为子节点
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Canvas -->
+                        <div class="flex-1 bg-gray-50 overflow-hidden relative" id="jsmind_container"></div>
+
+                        <!-- Right Sidebar: Properties -->
+                        <div id="mm-sidebar-right" class="w-72 bg-white border-l border-gray-200 flex flex-col z-20">
+                            <div class="p-4 border-b border-gray-200">
+                                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">属性面板</h3>
+                            </div>
+                            
+                            <!-- No Selection State -->
+                            <div id="prop-empty" class="flex-1 flex flex-col items-center justify-center text-gray-400 p-6 text-center">
+                                <span class="iconify text-4xl mb-2" data-icon="carbon:touch-1"></span>
+                                <p class="text-sm">请选择一个节点<br>以编辑属性</p>
+                            </div>
+
+                            <!-- Selected State -->
+                            <div id="prop-form" class="hidden flex-1 overflow-y-auto p-4 space-y-6">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">节点内容</label>
+                                    <textarea id="node-topic" rows="3" class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border" placeholder="输入节点内容..."></textarea>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">背景颜色</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="color" id="node-bg-color" class="h-8 w-14 border border-gray-300 rounded p-0.5 cursor-pointer">
+                                        <span class="text-xs text-gray-500" id="node-bg-color-val">#FFFFFF</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">文字颜色</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="color" id="node-fg-color" class="h-8 w-14 border border-gray-300 rounded p-0.5 cursor-pointer">
+                                        <span class="text-xs text-gray-500" id="node-fg-color-val">#000000</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="pt-4 border-t border-gray-200">
+                                    <button onclick="removeSelectedNode()" class="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <span class="iconify mr-2" data-icon="carbon:trash-can"></span> 删除节点
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                // Mind Map Data Store
+                const mindMapData = {
+                    'mm-001': {
+                        "meta": { "name": "跨境支付系统架构", "author": "张源", "version": "1.0", "updated": "2小时前" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "跨境支付系统", "children": [
+                            { "id": "sub1", "topic": "支付网关", "direction": "right", "children": [
+                                { "id": "sub1-1", "topic": "PayPal" },
+                                { "id": "sub1-2", "topic": "Stripe" }
+                            ]},
+                            { "id": "sub2", "topic": "风控模块", "direction": "right", "children": [
+                                { "id": "sub2-1", "topic": "黑名单" },
+                                { "id": "sub2-2", "topic": "异常监测" },
+                                { "id": "sub2-3", "topic": "人工审核" }
+                            ]},
+                            { "id": "sub3", "topic": "结算中心", "direction": "left", "children": [
+                                { "id": "sub3-1", "topic": "对账报表" }
+                            ]}
+                        ]}
+                    },
+                    'mm-002': {
+                        "meta": { "name": "用户注册流程", "author": "李晓华", "version": "1.0", "updated": "昨天" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "用户注册", "children": [
+                            { "id": "step1", "topic": "填写手机号", "direction": "right" },
+                            { "id": "step2", "topic": "验证码验证", "direction": "right" },
+                            { "id": "step3", "topic": "设置密码", "direction": "right" },
+                            { "id": "step4", "topic": "完善资料", "direction": "right" }
+                        ]}
+                    },
+                    'mm-003': {
+                        "meta": { "name": "运营活动策划", "author": "王建国", "version": "1.0", "updated": "3天前" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "双11活动", "children": [
+                            { "id": "act1", "topic": "预热期", "direction": "right" },
+                            { "id": "act2", "topic": "爆发期", "direction": "right" },
+                            { "id": "act3", "topic": "返场期", "direction": "right" }
+                        ]}
+                    },
+                    'mm-004': {
+                        "meta": { "name": "需求评审会议纪要（V3）", "author": "周雨晴", "version": "3.2", "updated": "10分钟前" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "需求评审", "children": [
+                            { "id": "mm4-1", "topic": "参会人员", "direction": "right", "children": [
+                                { "id": "mm4-1-1", "topic": "产品：周雨晴" },
+                                { "id": "mm4-1-2", "topic": "研发：陈浩然" },
+                                { "id": "mm4-1-3", "topic": "测试：赵文静" },
+                                { "id": "mm4-1-4", "topic": "运营：王建国" }
+                            ]},
+                            { "id": "mm4-2", "topic": "结论", "direction": "right", "children": [
+                                { "id": "mm4-2-1", "topic": "范围确认" },
+                                { "id": "mm4-2-2", "topic": "风险与依赖" },
+                                { "id": "mm4-2-3", "topic": "上线计划" }
+                            ]},
+                            { "id": "mm4-3", "topic": "待办事项", "direction": "left", "children": [
+                                { "id": "mm4-3-1", "topic": "补充埋点方案" },
+                                { "id": "mm4-3-2", "topic": "确认第三方限额" },
+                                { "id": "mm4-3-3", "topic": "输出接口联调清单" }
+                            ]}
+                        ]}
+                    },
+                    'mm-005': {
+                        "meta": { "name": "跨境支付风控策略树", "author": "陈浩然", "version": "2.1", "updated": "1小时前" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "风控策略", "children": [
+                            { "id": "mm5-1", "topic": "前置校验", "direction": "right", "children": [
+                                { "id": "mm5-1-1", "topic": "设备指纹" },
+                                { "id": "mm5-1-2", "topic": "IP/地理位置" },
+                                { "id": "mm5-1-3", "topic": "行为频控" }
+                            ]},
+                            { "id": "mm5-2", "topic": "规则引擎", "direction": "right", "children": [
+                                { "id": "mm5-2-1", "topic": "黑白名单" },
+                                { "id": "mm5-2-2", "topic": "金额阈值" },
+                                { "id": "mm5-2-3", "topic": "多因子命中" }
+                            ]},
+                            { "id": "mm5-3", "topic": "处置动作", "direction": "left", "children": [
+                                { "id": "mm5-3-1", "topic": "放行" },
+                                { "id": "mm5-3-2", "topic": "二次验证" },
+                                { "id": "mm5-3-3", "topic": "拦截+人工审核" }
+                            ]}
+                        ]}
+                    },
+                    'mm-006': {
+                        "meta": { "name": "交易链路埋点设计（含事件字典）", "author": "林可欣", "version": "1.4", "updated": "5小时前" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "埋点方案", "children": [
+                            { "id": "mm6-1", "topic": "核心事件", "direction": "right", "children": [
+                                { "id": "mm6-1-1", "topic": "order_submit" },
+                                { "id": "mm6-1-2", "topic": "pay_redirect" },
+                                { "id": "mm6-1-3", "topic": "pay_result" },
+                                { "id": "mm6-1-4", "topic": "refund_apply" }
+                            ]},
+                            { "id": "mm6-2", "topic": "公共属性", "direction": "right", "children": [
+                                { "id": "mm6-2-1", "topic": "user_id / device_id" },
+                                { "id": "mm6-2-2", "topic": "order_id / amount" },
+                                { "id": "mm6-2-3", "topic": "channel / country" }
+                            ]},
+                            { "id": "mm6-3", "topic": "校验规则", "direction": "left", "children": [
+                                { "id": "mm6-3-1", "topic": "必填字段校验" },
+                                { "id": "mm6-3-2", "topic": "枚举值范围" },
+                                { "id": "mm6-3-3", "topic": "采样与降噪" }
+                            ]}
+                        ]}
+                    },
+                    'mm-007': {
+                        "meta": { "name": "权限与角色模型（RBAC）", "author": "张源", "version": "1.1", "updated": "2026-03-05" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "RBAC 模型", "children": [
+                            { "id": "mm7-1", "topic": "角色", "direction": "right", "children": [
+                                { "id": "mm7-1-1", "topic": "管理员" },
+                                { "id": "mm7-1-2", "topic": "产品经理" },
+                                { "id": "mm7-1-3", "topic": "研发" },
+                                { "id": "mm7-1-4", "topic": "测试" }
+                            ]},
+                            { "id": "mm7-2", "topic": "资源", "direction": "right", "children": [
+                                { "id": "mm7-2-1", "topic": "需求/流程/导图" },
+                                { "id": "mm7-2-2", "topic": "项目配置" },
+                                { "id": "mm7-2-3", "topic": "成员与权限" }
+                            ]},
+                            { "id": "mm7-3", "topic": "授权方式", "direction": "left", "children": [
+                                { "id": "mm7-3-1", "topic": "角色-权限" },
+                                { "id": "mm7-3-2", "topic": "用户-角色" },
+                                { "id": "mm7-3-3", "topic": "临时授权" }
+                            ]}
+                        ]}
+                    },
+                    'mm-008': {
+                        "meta": { "name": "接口联调清单（支付+风控）", "author": "赵文静", "version": "1.0", "updated": "上周" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "联调清单", "children": [
+                            { "id": "mm8-1", "topic": "支付接口", "direction": "right", "children": [
+                                { "id": "mm8-1-1", "topic": "创建订单" },
+                                { "id": "mm8-1-2", "topic": "发起支付" },
+                                { "id": "mm8-1-3", "topic": "支付回调" }
+                            ]},
+                            { "id": "mm8-2", "topic": "风控接口", "direction": "right", "children": [
+                                { "id": "mm8-2-1", "topic": "风险评估" },
+                                { "id": "mm8-2-2", "topic": "黑名单查询" },
+                                { "id": "mm8-2-3", "topic": "人工审核结果" }
+                            ]},
+                            { "id": "mm8-3", "topic": "联调说明", "direction": "left", "children": [
+                                { "id": "mm8-3-1", "topic": "Mock 地址与环境" },
+                                { "id": "mm8-3-2", "topic": "错误码约定" },
+                                { "id": "mm8-3-3", "topic": "日志与追踪ID" }
+                            ]}
+                        ]}
+                    },
+                    'mm-009': {
+                        "meta": { "name": "数据模型：订单/支付/退款", "author": "陈浩然", "version": "1.3", "updated": "2天前" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "数据模型", "children": [
+                            { "id": "mm9-1", "topic": "订单", "direction": "right", "children": [
+                                { "id": "mm9-1-1", "topic": "状态流转" },
+                                { "id": "mm9-1-2", "topic": "价格与币种" },
+                                { "id": "mm9-1-3", "topic": "扩展字段" }
+                            ]},
+                            { "id": "mm9-2", "topic": "支付", "direction": "right", "children": [
+                                { "id": "mm9-2-1", "topic": "支付单号" },
+                                { "id": "mm9-2-2", "topic": "渠道与路由" },
+                                { "id": "mm9-2-3", "topic": "回调一致性" }
+                            ]},
+                            { "id": "mm9-3", "topic": "退款", "direction": "left", "children": [
+                                { "id": "mm9-3-1", "topic": "部分退款" },
+                                { "id": "mm9-3-2", "topic": "原路退回" },
+                                { "id": "mm9-3-3", "topic": "对账补偿" }
+                            ]}
+                        ]}
+                    },
+                    'mm-010': {
+                        "meta": { "name": "测试用例脑图：支付主流程", "author": "赵文静", "version": "1.2", "updated": "6小时前" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "支付测试用例", "children": [
+                            { "id": "mm10-1", "topic": "正常链路", "direction": "right", "children": [
+                                { "id": "mm10-1-1", "topic": "余额充足" },
+                                { "id": "mm10-1-2", "topic": "三方支付成功" }
+                            ]},
+                            { "id": "mm10-2", "topic": "异常链路", "direction": "right", "children": [
+                                { "id": "mm10-2-1", "topic": "超时重试" },
+                                { "id": "mm10-2-2", "topic": "回调重复" },
+                                { "id": "mm10-2-3", "topic": "幂等校验" }
+                            ]},
+                            { "id": "mm10-3", "topic": "风控相关", "direction": "left", "children": [
+                                { "id": "mm10-3-1", "topic": "规则命中" },
+                                { "id": "mm10-3-2", "topic": "人工审核" }
+                            ]}
+                        ]}
+                    },
+                    'mm-011': {
+                        "meta": { "name": "上线发布检查清单", "author": "林可欣", "version": "1.0", "updated": "2小时前" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "发布检查", "children": [
+                            { "id": "mm11-1", "topic": "变更范围", "direction": "right", "children": [
+                                { "id": "mm11-1-1", "topic": "需求关联" },
+                                { "id": "mm11-1-2", "topic": "影响评估" }
+                            ]},
+                            { "id": "mm11-2", "topic": "发布前", "direction": "right", "children": [
+                                { "id": "mm11-2-1", "topic": "回归测试通过" },
+                                { "id": "mm11-2-2", "topic": "灰度策略确认" },
+                                { "id": "mm11-2-3", "topic": "监控告警校验" }
+                            ]},
+                            { "id": "mm11-3", "topic": "发布后", "direction": "left", "children": [
+                                { "id": "mm11-3-1", "topic": "关键指标观察" },
+                                { "id": "mm11-3-2", "topic": "问题回滚预案" }
+                            ]}
+                        ]}
+                    },
+                    'mm-012': {
+                        "meta": { "name": "客户支持 FAQ 脑图（支付失败）", "author": "王建国", "version": "1.0", "updated": "4天前" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "支付失败 FAQ", "children": [
+                            { "id": "mm12-1", "topic": "常见原因", "direction": "right", "children": [
+                                { "id": "mm12-1-1", "topic": "余额不足" },
+                                { "id": "mm12-1-2", "topic": "银行风控拦截" },
+                                { "id": "mm12-1-3", "topic": "网络异常" }
+                            ]},
+                            { "id": "mm12-2", "topic": "排查步骤", "direction": "right", "children": [
+                                { "id": "mm12-2-1", "topic": "核对订单状态" },
+                                { "id": "mm12-2-2", "topic": "查看支付回调" },
+                                { "id": "mm12-2-3", "topic": "检查限额与币种" }
+                            ]},
+                            { "id": "mm12-3", "topic": "客服话术", "direction": "left", "children": [
+                                { "id": "mm12-3-1", "topic": "引导更换支付方式" },
+                                { "id": "mm12-3-2", "topic": "提示稍后重试" },
+                                { "id": "mm12-3-3", "topic": "升级工单处理" }
+                            ]}
+                        ]}
+                    }
+                };
+
+                let jm = null;
+                let currentId = null;
+                let selectedNodeId = null;
+
+                function renderList() {
+                    const grid = document.getElementById('mindmap-grid');
+                    grid.innerHTML = '';
+                    
+                    Object.keys(mindMapData).forEach(id => {
+                        const item = mindMapData[id];
+                        const card = document.createElement('div');
+                        card.className = 'group bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all cursor-pointer relative overflow-hidden';
+                        card.onclick = () => openMindMap(id);
+                        
+                        // Icon based on id hash or random logic (simplified here)
+                        let icon = 'carbon:network-4';
+                        let bgClass = 'bg-blue-50 text-blue-600';
+                        if (id.includes('2')) { icon = 'carbon:flow-data'; bgClass = 'bg-purple-50 text-purple-600'; }
+                        if (id.includes('3')) { icon = 'carbon:idea'; bgClass = 'bg-green-50 text-green-600'; }
+
+                        card.innerHTML = `
+                            <div class="w-12 h-12 rounded-lg ${bgClass} flex items-center justify-center mb-4">
+                                <span class="iconify text-2xl" data-icon="${icon}"></span>
+                            </div>
+                            <h3 class="text-base font-semibold text-gray-900 mb-1">${item.meta.name}</h3>
+                            <p class="text-xs text-gray-500 mb-4">更新于 ${item.meta.updated || '刚刚'} · ${item.meta.author}</p>
+                            <div class="flex items-center justify-between">
+                                <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">思维导图</span>
+                                <span class="text-xs text-gray-400">点击编辑</span>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                }
+
+                function openMindMap(id) {
+                    currentId = id;
+                    document.getElementById('list-view').classList.add('hidden');
+                    document.getElementById('editor-view').classList.remove('hidden');
+                    
+                    const data = mindMapData[id];
+                    document.getElementById('mm-title-input').value = data.meta.name;
+                    
+                    initJsMind(data);
+                    setupDragAndDrop();
+                }
+
+                function initJsMind(data) {
+                    // Reset if exists to ensure clean state or reuse
+                    // For simplicity, we can recreate or just show
+                    if (!jm) {
+                        const options = {
+                            container: 'jsmind_container',
+                            theme: 'primary',
+                            editable: true
+                        };
+                        jm = new jsMind(options);
+                    }
+                    
+                    jm.show(data);
+                    
+                    // Add event listener for selection
+                    jm.add_event_listener(function(type, data) {
+                        if (type === 1) { // 1 means show, 2 resize, 3 edit, 4 select
+                            // Initial show
+                        }
+                        // Note: jsMind event types are integers. 
+                        // Checking jsMind source code logic:
+                        // JS_MIND_EVENT_TYPE_SHOW = 1
+                        // JS_MIND_EVENT_TYPE_RESIZE = 2
+                        // JS_MIND_EVENT_TYPE_EDIT = 3
+                        // JS_MIND_EVENT_TYPE_SELECT = 4
+                        
+                        if (type === 4) { // Select
+                            const node = data.node;
+                            if (node) {
+                                showNodeProperties(node);
+                            } else {
+                                hideNodeProperties();
+                            }
+                        }
+                    });
+                }
+
+                function setupDragAndDrop() {
+                    const draggables = document.querySelectorAll('.draggable-node');
+                    const container = document.getElementById('jsmind_container');
+
+                    draggables.forEach(d => {
+                        d.addEventListener('dragstart', (e) => {
+                            e.dataTransfer.setData('type', d.dataset.type);
+                            e.dataTransfer.setData('color', d.dataset.color);
+                            e.dataTransfer.setData('text', d.querySelector('.text-sm').innerText);
+                        });
+                    });
+
+                    container.addEventListener('dragover', (e) => {
+                        e.preventDefault(); // Allow drop
+                    });
+
+                    container.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const type = e.dataTransfer.getData('type');
+                        const color = e.dataTransfer.getData('color');
+                        const text = e.dataTransfer.getData('text');
+                        
+                        if (jm) {
+                            const selected_node = jm.get_selected_node();
+                            let parent_node = selected_node;
+                            
+                            if (!parent_node) {
+                                // Try to get root
+                                const root = jm.get_root();
+                                if (root) {
+                                    parent_node = root;
+                                    // Optional: Alert user "Added to root because no node selected"
+                                } else {
+                                    return; // No root? Should not happen
+                                }
+                            }
+                            
+                            const nodeid = jsMind.util.uuid.newid();
+                            const topic = text || 'New Node';
+                            const node = jm.add_node(parent_node, nodeid, topic);
+                            
+                            if (node && color) {
+                                jm.set_node_color(nodeid, color, '#fff');
+                            }
+                        }
+                    });
+                }
+
+                // Property Panel Logic
+                const topicInput = document.getElementById('node-topic');
+                const bgInput = document.getElementById('node-bg-color');
+                const fgInput = document.getElementById('node-fg-color');
+                
+                // Bind input events
+                topicInput.addEventListener('input', updateNodeTopic);
+                bgInput.addEventListener('change', updateNodeColor);
+                fgInput.addEventListener('change', updateNodeColor);
+
+                function showNodeProperties(node) {
+                    selectedNodeId = node.id;
+                    document.getElementById('prop-empty').classList.add('hidden');
+                    document.getElementById('prop-form').classList.remove('hidden');
+                    
+                    // Populate fields
+                    topicInput.value = node.topic;
+                    
+                    // Colors - jsMind stores them in data object or style
+                    // node.data['background-color'] or node.style['background-color']?
+                    // Let's assume defaults if not set
+                    const bgColor = node.data['background-color'] || '#ffffff';
+                    const fgColor = node.data['foreground-color'] || '#000000';
+                    
+                    // Convert rgb to hex for input[type=color] if needed
+                    // Simple check - assuming standard colors or implementing helper if needed
+                    // For now, let's just try to set values. 
+                    // Note: input type=color expects #RRGGBB
+                    
+                    bgInput.value = rgbToHex(bgColor) || '#ffffff';
+                    fgInput.value = rgbToHex(fgColor) || '#000000';
+                    
+                    document.getElementById('node-bg-color-val').innerText = bgInput.value;
+                    document.getElementById('node-fg-color-val').innerText = fgInput.value;
+                }
+
+                function hideNodeProperties() {
+                    selectedNodeId = null;
+                    document.getElementById('prop-empty').classList.remove('hidden');
+                    document.getElementById('prop-form').classList.add('hidden');
+                }
+
+                function updateNodeTopic() {
+                    if (selectedNodeId && jm) {
+                        jm.update_node(selectedNodeId, topicInput.value);
+                    }
+                }
+
+                function updateNodeColor() {
+                    if (selectedNodeId && jm) {
+                        const bg = bgInput.value;
+                        const fg = fgInput.value;
+                        jm.set_node_color(selectedNodeId, bg, fg);
+                        
+                        document.getElementById('node-bg-color-val').innerText = bg;
+                        document.getElementById('node-fg-color-val').innerText = fg;
+                    }
+                }
+                
+                function removeSelectedNode() {
+                    if (selectedNodeId && jm) {
+                        jm.remove_node(selectedNodeId);
+                        hideNodeProperties();
+                    }
+                }
+
+                // Helper for color conversion
+                function rgbToHex(color) {
+                    if (!color) return null;
+                    if (color.startsWith('#')) return color;
+                    // Handle rgb(r, g, b)
+                    const rgb = color.match(/\d+/g);
+                    if (rgb && rgb.length === 3) {
+                        return "#" + 
+                            ("0" + parseInt(rgb[0], 10).toString(16)).slice(-2) +
+                            ("0" + parseInt(rgb[1], 10).toString(16)).slice(-2) +
+                            ("0" + parseInt(rgb[2], 10).toString(16)).slice(-2);
+                    }
+                    return null;
+                }
+
+                function saveMindMap() {
+                    if (!currentId || !jm) return;
+                    
+                    const data = jm.get_data();
+                    const name = document.getElementById('mm-title-input').value;
+                    
+                    mindMapData[currentId].data = data.data;
+                    mindMapData[currentId].meta.name = name;
+                    mindMapData[currentId].meta.updated = '刚刚';
+                    
+                    alert('保存成功！');
+                }
+
+                function closeMindMap() {
+                    document.getElementById('editor-view').classList.add('hidden');
+                    document.getElementById('list-view').classList.remove('hidden');
+                    renderList();
+                }
+
+                function createNewMindMap() {
+                    const id = 'mm-' + Date.now();
+                    mindMapData[id] = {
+                        "meta": { "name": "新建思维导图", "author": "当前用户", "version": "1.0", "updated": "刚刚" },
+                        "format": "node_tree",
+                        "data": { "id": "root", "topic": "中心主题" }
+                    };
+                    openMindMap(id);
+                }
+
+                function zoomIn() {
+                    if (jm) jm.view.zoomIn();
+                }
+
+                function zoomOut() {
+                    if (jm) jm.view.zoomOut();
+                }
+
+                // Initial render
+                window.onload = renderList;
+            </script>
+        </div>
+    </div>
+</body>
+
+</html>

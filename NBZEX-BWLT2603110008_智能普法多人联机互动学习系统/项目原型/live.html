@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播课堂 - 智能普法多人联机互动学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#0EA5E9',
+                        accent: '#38BDF8',
+                        dark: '#020617',
+                        surface: '#020617',
+                        glass: 'rgba(15, 23, 42, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: url('./static/bg.jpeg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-family: 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .macos-window {
+            width: 1440px;
+            min-height: 900px;
+            background: #020617;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        }
+        .traffic-lights {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        .sidebar-item:hover {
+            background: rgba(37, 99, 235, 0.16);
+            transform: translateX(4px);
+        }
+        .sidebar-item.active {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.32), transparent);
+        }
+        .live-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .live-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.35);
+            border-color: rgba(37, 99, 235, 0.5);
+        }
+        .online-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563EB 0%, #0EA5E9 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        .live-badge {
+            animation: livePulse 1.5s infinite;
+        }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .modal-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .modal-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .content-hidden { display: none; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-8">
+    <div class="macos-window rounded-xl overflow-hidden">
+        <div class="bg-surface/80 backdrop-blur-xl px-5 py-3 flex items-center border-b border-white/5 relative z-[1000]">
+            <div class="flex gap-2">
+                <div class="traffic-lights bg-red-500"></div>
+                <div class="traffic-lights bg-yellow-500"></div>
+                <div class="traffic-lights bg-green-500"></div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="text-sm font-medium text-white/80">智能普法多人联机互动学习系统</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10">
+                    <div class="online-indicator"></div>
+                    <span class="text-xs text-green-400 font-medium">1,247 人在线</span>
+                </div>
+                <div class="relative">
+                    <button onclick="toggleNotification()" class="relative">
+                        <i class="fa-regular fa-bell w-5 h-5 text-white/60 cursor-pointer hover:text-white transition"></i>
+                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">3</span>
+                    </button>
+                    <div id="notificationDropdown" class="hidden absolute right-0 top-full mt-2 w-80 glass-card rounded-xl overflow-hidden shadow-xl z-[9999]">
+                        <div class="p-4 border-b border-white/10">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-white font-bold">通知中心</h3>
+                                <button class="text-xs text-primary hover:underline">全部已读</button>
+                            </div>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto">
+                            <div class="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-video text-red-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">《刑事案件办理》直播已开始</p>
+                                        <p class="text-xs text-white/40 mt-1">5分钟前</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-calendar text-blue-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">您订阅的《民法典》直播明天开始</p>
+                                        <p class="text-xs text-white/40 mt-1">1小时前</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-3 hover:bg-white/5 cursor-pointer transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-star text-yellow-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-white/90">王教授发布了新的回放视频</p>
+                                        <p class="text-xs text-white/40 mt-1">2小时前</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex h-[856px]">
+            <div class="w-64 bg-surface/40 border-r border-white/5 p-4">
+                <div class="glass-card rounded-xl p-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <img src="https://i04piccdn.sogoucdn.com/87df244df2301756" 
+                             class="w-12 h-12 rounded-full border-2 border-primary/50" alt="用户头像">
+                        <div class="flex-1">
+                            <p class="text-white font-semibold text-sm">张明</p>
+                            <p class="text-xs text-white/50">中级学员 · Lv.8</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-white/5">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-white/60">学习进度</span>
+                            <span class="text-primary font-semibold">68%</span>
+                        </div>
+                        <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-primary to-secondary w-[68%] rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="space-y-1">
+                    <a href="main.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-home w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">学习大厅</span>
+                    </a>
+                    <a href="rooms.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-users w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">多人房间</span>
+                        <span class="ml-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">3</span>
+                    </a>
+                    <div class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-video w-5 h-5 text-primary"></i>
+                        <span class="text-sm font-medium text-white">直播课堂</span>
+                    </div>
+                    <a href="laws.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-book-open w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">法规库</span>
+                    </a>
+                    <a href="discussion.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-comments w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">案例讨论</span>
+                    </a>
+                    <a href="achievements.html" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer">
+                        <i class="fa-solid fa-trophy w-5 h-5 text-white/60"></i>
+                        <span class="text-sm font-medium text-white/80">成就中心</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="flex-1 overflow-y-auto scrollbar-thin">
+                <div class="sticky top-0 bg-dark/95 backdrop-blur-xl border-b border-white/5 px-8 py-4 z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 class="text-2xl font-bold text-white">直播课堂</h1>
+                            <p class="text-sm text-white/60 mt-1">实时互动学习，权威讲师在线授课</p>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/20">
+                            <div class="w-2 h-2 bg-red-500 rounded-full live-badge"></div>
+                            <span class="text-red-400 text-sm font-medium">3个直播进行中</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-6">
+                        <button onclick="switchTab('live')" id="tab-live" class="tab-btn px-1 py-2 text-sm font-semibold text-primary border-b-2 border-primary">正在直播</button>
+                        <button onclick="switchTab('upcoming')" id="tab-upcoming" class="tab-btn px-1 py-2 text-sm font-medium text-white/60 hover:text-white transition">即将开始</button>
+                        <button onclick="switchTab('replay')" id="tab-replay" class="tab-btn px-1 py-2 text-sm font-medium text-white/60 hover:text-white transition">精彩回放</button>
+                        <button onclick="switchTab('subscribe')" id="tab-subscribe" class="tab-btn px-1 py-2 text-sm font-medium text-white/60 hover:text-white transition">我的订阅</button>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <div id="content-live" class="content-section">
+                        <div class="mb-6">
+                            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-circle text-red-500 text-xs live-badge"></i>
+                                正在直播
+                            </h2>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="live-card glass-card rounded-xl overflow-hidden cursor-pointer" onclick="openLiveModal('刑事案件办理全流程实务', '李检察官', '正在进行中', 234, 'https://i01piccdn.sogoucdn.com/fea1f39361143fbf')">
+                                    <div class="relative">
+                                        <img src="https://images.unsplash.com/photo-1505663912202-ac22d4cb3707?auto=format&fit=crop&w=800&q=80" 
+                                             class="w-full h-48 object-cover" alt="直播封面">
+                                        <div class="absolute top-3 left-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full font-semibold live-badge">
+                                            <i class="fa-solid fa-circle text-[6px] mr-1"></i>直播中
+                                        </div>
+                                        <div class="absolute bottom-3 left-3 px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded flex items-center gap-1">
+                                            <i class="fa-solid fa-eye"></i>
+                                            <span>234人在看</span>
+                                        </div>
+                                    </div>
+                                    <div class="p-5">
+                                        <h3 class="text-white font-bold text-lg mb-2">刑事案件办理全流程实务</h3>
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-3">
+                                                <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-8 h-8 rounded-full">
+                                                <span class="text-sm text-white/80">李检察官</span>
+                                            </div>
+                                            <button class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg font-medium transition">
+                                                <i class="fa-solid fa-play mr-1"></i>进入观看
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="live-card glass-card rounded-xl overflow-hidden cursor-pointer" onclick="openLiveModal('民法典婚姻家庭编精讲', '王教授', '正在进行中', 456, 'https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb')">
+                                    <div class="relative">
+                                        <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80" 
+                                             class="w-full h-48 object-cover" alt="直播封面">
+                                        <div class="absolute top-3 left-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full font-semibold live-badge">
+                                            <i class="fa-solid fa-circle text-[6px] mr-1"></i>直播中
+                                        </div>
+                                        <div class="absolute bottom-3 left-3 px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded flex items-center gap-1">
+                                            <i class="fa-solid fa-eye"></i>
+                                            <span>456人在看</span>
+                                        </div>
+                                    </div>
+                                    <div class="p-5">
+                                        <h3 class="text-white font-bold text-lg mb-2">民法典婚姻家庭编精讲</h3>
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-3">
+                                                <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-8 h-8 rounded-full">
+                                                <span class="text-sm text-white/80">王教授</span>
+                                            </div>
+                                            <button class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg font-medium transition">
+                                                <i class="fa-solid fa-play mr-1"></i>进入观看
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-upcoming" class="content-section content-hidden">
+                        <div class="mb-6">
+                            <h2 class="text-lg font-bold text-white mb-4">
+                                <i class="fa-solid fa-clock text-yellow-500 mr-2"></i>即将开始
+                            </h2>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="live-card glass-card rounded-xl p-4 cursor-pointer" onclick="openUpcomingModal('合同法务风险防控', '陈律师', '明天 20:00')">
+                                    <div class="flex items-center gap-4 mb-3">
+                                        <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-14 h-14 rounded-full">
+                                        <div>
+                                            <h3 class="text-white font-bold text-sm">合同法务风险防控</h3>
+                                            <p class="text-xs text-white/60 mt-1">陈律师</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-yellow-400"><i class="fa-solid fa-clock mr-1"></i>明天 20:00</span>
+                                        <button class="px-3 py-1 bg-white/10 hover:bg-white/20 text-white/80 text-xs rounded-lg transition">
+                                            <i class="fa-solid fa-bell mr-1"></i>预约
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="live-card glass-card rounded-xl p-4 cursor-pointer" onclick="openUpcomingModal('劳动争议处理技巧', '赵法官', '后天 19:30')">
+                                    <div class="flex items-center gap-4 mb-3">
+                                        <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-14 h-14 rounded-full">
+                                        <div>
+                                            <h3 class="text-white font-bold text-sm">劳动争议处理技巧</h3>
+                                            <p class="text-xs text-white/60 mt-1">赵法官</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-yellow-400"><i class="fa-solid fa-clock mr-1"></i>后天 19:30</span>
+                                        <button class="px-3 py-1 bg-white/10 hover:bg-white/20 text-white/80 text-xs rounded-lg transition">
+                                            <i class="fa-solid fa-bell mr-1"></i>预约
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="live-card glass-card rounded-xl p-4 cursor-pointer" onclick="openUpcomingModal('知识产权保护实务', '周律师', '周五 21:00')">
+                                    <div class="flex items-center gap-4 mb-3">
+                                        <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-14 h-14 rounded-full">
+                                        <div>
+                                            <h3 class="text-white font-bold text-sm">知识产权保护实务</h3>
+                                            <p class="text-xs text-white/60 mt-1">周律师</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-yellow-400"><i class="fa-solid fa-clock mr-1"></i>周五 21:00</span>
+                                        <button class="px-3 py-1 bg-white/10 hover:bg-white/20 text-white/80 text-xs rounded-lg transition">
+                                            <i class="fa-solid fa-bell mr-1"></i>预约
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-replay" class="content-section content-hidden">
+                        <div class="mb-6">
+                            <h2 class="text-lg font-bold text-white mb-4">
+                                <i class="fa-solid fa-film text-blue-500 mr-2"></i>精彩回放
+                            </h2>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="live-card glass-card rounded-xl overflow-hidden cursor-pointer" onclick="openReplayModal('行政诉讼法律实务', '郑法官', '2小时前', '7.3万人学习', 'https://i01piccdn.sogoucdn.com/fea1f39361143fbf')">
+                                    <div class="relative">
+                                        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80" 
+                                             class="w-full h-36 object-cover" alt="回放封面">
+                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                            <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                                <i class="fa-solid fa-play text-white text-lg"></i>
+                                            </div>
+                                        </div>
+                                        <div class="absolute bottom-2 right-2 px-2 py-1 bg-black/60 text-white text-xs rounded">
+                                            8:32
+                                        </div>
+                                    </div>
+                                    <div class="p-4">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-8 h-8 rounded-full">
+                                            <div class="flex-1">
+                                                <h3 class="text-white font-bold text-sm">行政诉讼法律实务与案例</h3>
+                                                <p class="text-xs text-white/60">郑法官 · 2小时前</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="live-card glass-card rounded-xl overflow-hidden cursor-pointer" onclick="openReplayModal('公司股权架构设计', '吴律师', '昨天', '5.1万人学习', 'https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb')">
+                                    <div class="relative">
+                                        <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=600&q=80" 
+                                             class="w-full h-36 object-cover" alt="回放封面">
+                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                            <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                                <i class="fa-solid fa-play text-white text-lg"></i>
+                                            </div>
+                                        </div>
+                                        <div class="absolute bottom-2 right-2 px-2 py-1 bg-black/60 text-white text-xs rounded">
+                                            10:15
+                                        </div>
+                                    </div>
+                                    <div class="p-4">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-8 h-8 rounded-full">
+                                            <div class="flex-1">
+                                                <h3 class="text-white font-bold text-sm">公司股权架构与治理</h3>
+                                                <p class="text-xs text-white/60">吴律师 · 昨天</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="live-card glass-card rounded-xl overflow-hidden cursor-pointer" onclick="openReplayModal('民事诉讼程序解读', '刘法官', '3天前', '4.8万人学习', 'https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7')">
+                                    <div class="relative">
+                                        <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=600&q=80" 
+                                             class="w-full h-36 object-cover" alt="回放封面">
+                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                            <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                                <i class="fa-solid fa-play text-white text-lg"></i>
+                                            </div>
+                                        </div>
+                                        <div class="absolute bottom-2 right-2 px-2 py-1 bg-black/60 text-white text-xs rounded">
+                                            6:48
+                                        </div>
+                                    </div>
+                                    <div class="p-4">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-8 h-8 rounded-full">
+                                            <div class="flex-1">
+                                                <h3 class="text-white font-bold text-sm">民事诉讼程序解读</h3>
+                                                <p class="text-xs text-white/60">刘法官 · 3天前</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-subscribe" class="content-section content-hidden">
+                        <div class="mb-6">
+                            <h2 class="text-lg font-bold text-white mb-4">
+                                <i class="fa-solid fa-star text-yellow-500 mr-2"></i>我的订阅讲师
+                            </h2>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="glass-card rounded-xl p-4">
+                                    <div class="flex items-center gap-4">
+                                        <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-14 h-14 rounded-full">
+                                        <div class="flex-1">
+                                            <h3 class="text-white font-bold">王教授</h3>
+                                            <p class="text-xs text-white/60">民法专家 · 28.6万粉丝</p>
+                                        </div>
+                                        <button class="px-3 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg">
+                                            <i class="fa-solid fa-bell mr-1"></i>已订阅
+                                        </button>
+                                    </div>
+                                    <div class="mt-3 pt-3 border-t border-white/5">
+                                        <p class="text-xs text-white/50">下次直播：明天 20:00 《民法典物权编解析》</p>
+                                    </div>
+                                </div>
+                                <div class="glass-card rounded-xl p-4">
+                                    <div class="flex items-center gap-4">
+                                        <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-14 h-14 rounded-full">
+                                        <div class="flex-1">
+                                            <h3 class="text-white font-bold">李检察官</h3>
+                                            <p class="text-xs text-white/60">刑诉专家 · 22.3万粉丝</p>
+                                        </div>
+                                        <button class="px-3 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg">
+                                            <i class="fa-solid fa-bell mr-1"></i>已订阅
+                                        </button>
+                                    </div>
+                                    <div class="mt-3 pt-3 border-t border-white/5">
+                                        <p class="text-xs text-white/50">下次直播：周三 19:30 《刑事辩护技巧》</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-80 bg-surface/40 border-l border-white/5 p-6 overflow-y-auto scrollbar-thin">
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-week w-5 h-5 text-primary"></i>
+                        本周直播日历
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-2">
+                            <div class="w-10 h-10 rounded-lg bg-red-500/20 flex flex-col items-center justify-center">
+                                <span class="text-xs text-red-400">今天</span>
+                                <span class="text-sm font-bold text-white">3场</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white/80">刑事实务、民法精讲</p>
+                                <p class="text-xs text-white/40">19:00-22:00</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2">
+                            <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex flex-col items-center justify-center">
+                                <span class="text-xs text-yellow-400">明天</span>
+                                <span class="text-sm font-bold text-white">2场</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white/80">合同法、劳动法</p>
+                                <p class="text-xs text-white/40">19:30-21:30</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-2">
+                            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex flex-col items-center justify-center">
+                                <span class="text-xs text-blue-400">后天</span>
+                                <span class="text-sm font-bold text-white">1场</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-white/80">知识产权专题</p>
+                                <p class="text-xs text-white/40">20:00-22:00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5 mb-6">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-star w-5 h-5 text-yellow-500"></i>
+                        讲师推荐
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-10 h-10 rounded-full">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">王教授</p>
+                                <p class="text-xs text-white/40">民法专家 · 12年教学</p>
+                            </div>
+                            <button class="px-2 py-1 bg-primary/20 text-primary text-xs rounded hover:bg-primary/30 transition">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-10 h-10 rounded-full">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">李检察官</p>
+                                <p class="text-xs text-white/40">刑诉专家 · 8年实务</p>
+                            </div>
+                            <button class="px-2 py-1 bg-primary/20 text-primary text-xs rounded hover:bg-primary/30 transition">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+                            <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-10 h-10 rounded-full">
+                            <div class="flex-1">
+                                <p class="text-sm text-white font-medium">陈律师</p>
+                                <p class="text-xs text-white/40">合同法专家</p>
+                            </div>
+                            <button class="px-2 py-1 bg-primary/20 text-primary text-xs rounded hover:bg-primary/30 transition">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-xl p-5">
+                    <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-fire w-5 h-5 text-orange-500"></i>
+                        热门讲师
+                    </h3>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="w-6 text-center text-yellow-500 font-bold">1</span>
+                            <span class="text-white/80 flex-1">王教授</span>
+                            <span class="text-white/40">28.6万粉丝</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="w-6 text-center text-white/60 font-bold">2</span>
+                            <span class="text-white/80 flex-1">李检察官</span>
+                            <span class="text-white/40">22.3万粉丝</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="w-6 text-center text-orange-400 font-bold">3</span>
+                            <span class="text-white/80 flex-1">陈律师</span>
+                            <span class="text-white/40">18.5万粉丝</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="liveModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+        <div class="modal-content glass-card rounded-2xl p-6 w-[560px]">
+            <div class="flex items-center justify-between mb-6">
+                <div class="modal-dots">
+                    <span class="bg-red-500"></span>
+                    <span class="bg-yellow-500"></span>
+                    <span class="bg-green-500"></span>
+                </div>
+                <h3 id="liveModalTitle" class="text-xl font-bold text-white text-center flex-1">直播详情</h3>
+                <button onclick="closeLiveModal()" class="text-white/60 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="relative rounded-xl overflow-hidden">
+                    <img id="liveModalImg" src="https://images.unsplash.com/photo-1505663912202-ac22d4cb3707?auto=format&fit=crop&w=800&q=80" 
+                         class="w-full h-48 object-cover" alt="直播封面">
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div class="w-16 h-16 rounded-full bg-red-500/80 backdrop-blur-sm flex items-center justify-center cursor-pointer hover:bg-red-600 transition">
+                            <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
+                        </div>
+                    </div>
+                    <div class="absolute top-3 left-3 px-3 py-1 bg-red-500 text-white text-sm rounded-full">
+                        <i class="fa-solid fa-circle text-[6px] mr-1"></i>直播中
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 p-4 bg-white/5 rounded-xl">
+                    <img id="liveModalAvatar" src="https://i05piccdn.sogoucdn.com/7c3f9c9e3a4f1b2d" class="w-12 h-12 rounded-full">
+                    <div class="flex-1">
+                        <h4 id="liveModalName" class="text-white font-bold">刑事案件办理全流程实务</h4>
+                        <p id="liveModalTeacher" class="text-sm text-white/60">讲师：李检察官</p>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-white/60">
+                        <i class="fa-solid fa-eye"></i>
+                        <span id="liveModalViewers">234人在看</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="p-3 bg-white/5 rounded-xl text-center">
+                        <p class="text-lg font-bold text-primary">2小时</p>
+                        <p class="text-xs text-white/60 mt-1">课程时长</p>
+                    </div>
+                    <div class="p-3 bg-white/5 rounded-xl text-center">
+                        <p class="text-lg font-bold text-secondary">12章</p>
+                        <p class="text-xs text-white/60 mt-1">章节数</p>
+                    </div>
+                    <div class="p-3 bg-white/5 rounded-xl text-center">
+                        <p class="text-lg font-bold text-green-400">8.2万</p>
+                        <p class="text-xs text-white/60 mt-1">学习人数</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeLiveModal()" class="btn-secondary flex-1 py-3 rounded-lg text-white font-medium">
+                    返回
+                </button>
+                <button onclick="enterLive()" class="btn-primary flex-1 py-3 rounded-lg text-white font-semibold">
+                    <i class="fa-solid fa-play mr-2"></i>进入直播
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="upcomingModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+        <div class="modal-content glass-card rounded-2xl p-6 w-[420px]">
+            <div class="flex items-center justify-between mb-6">
+                <div class="modal-dots">
+                    <span class="bg-red-500"></span>
+                    <span class="bg-yellow-500"></span>
+                    <span class="bg-green-500"></span>
+                </div>
+                <h3 id="upcomingModalTitle" class="text-xl font-bold text-white text-center flex-1">预约直播</h3>
+                <button onclick="closeUpcomingModal()" class="text-white/60 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-bell text-white text-2xl"></i>
+                </div>
+                <h4 id="upcomingModalName" class="text-white font-bold text-lg mb-2">合同法务风险防控</h4>
+                <p id="upcomingModalTeacher" class="text-white/60 mb-4">讲师：陈律师</p>
+                <p id="upcomingModalTime" class="text-primary font-medium mb-6"><i class="fa-solid fa-clock mr-2"></i>明天 20:00</p>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeUpcomingModal()" class="btn-secondary flex-1 py-3 rounded-lg text-white font-medium">
+                    取消
+                </button>
+                <button onclick="subscribeLive()" class="btn-primary flex-1 py-3 rounded-lg text-white font-semibold">
+                    确认预约
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="replayModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+        <div class="modal-content glass-card rounded-2xl w-[1100px] max-h-[85vh] overflow-hidden">
+            <div class="sticky top-0 bg-dark/95 backdrop-blur-xl border-b border-white/5 px-8 py-4 z-10 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="modal-dots">
+                        <span class="bg-red-500"></span>
+                        <span class="bg-yellow-500"></span>
+                        <span class="bg-green-500"></span>
+                    </div>
+                    <h3 id="replayModalTitle" class="text-xl font-bold text-white">精彩回放</h3>
+                </div>
+                <button onclick="closeReplayModal()" class="text-white/60 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto scrollbar-thin">
+                <div class="flex">
+                    <div class="flex-1 p-6">
+                        <div class="relative rounded-xl overflow-hidden bg-black/50 aspect-video mb-6">
+                            <img id="replayModalImg" src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80" 
+                                 class="w-full h-full object-cover" alt="视频封面">
+                            <div id="replayOverlay" class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center cursor-pointer" onclick="toggleVideoPlay()">
+                                <div class="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 hover:bg-white/30 transition">
+                                    <i class="fa-solid fa-play text-white text-3xl ml-1"></i>
+                                </div>
+                                <span class="text-white/80 text-sm">点击播放视频</span>
+                            </div>
+                            <div id="videoControls" class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent hidden">
+                                <div class="flex items-center gap-4 mb-2">
+                                    <button onclick="toggleVideoPlay()" class="text-white hover:text-primary transition">
+                                        <i class="fa-solid fa-play text-lg"></i>
+                                    </button>
+                                    <div class="flex-1 h-1 bg-white/30 rounded-full cursor-pointer">
+                                        <div class="h-full bg-primary rounded-full" style="width: 35%"></div>
+                                    </div>
+                                    <span class="text-white/80 text-xs">3:42 / 8:32</span>
+                                    <button class="text-white hover:text-primary transition ml-2">
+                                        <i class="fa-solid fa-volume-high"></i>
+                                    </button>
+                                    <button class="text-white hover:text-primary transition">
+                                        <i class="fa-solid fa-expand"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-white/5 rounded-xl mb-4">
+                            <img id="replayModalAvatar" src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-14 h-14 rounded-full">
+                            <div class="flex-1">
+                                <h4 id="replayModalName" class="text-white font-bold text-lg">行政诉讼法律实务与案例</h4>
+                                <p id="replayModalTeacher" class="text-sm text-white/60">讲师：郑法官</p>
+                            </div>
+                            <button class="px-4 py-2 bg-primary/20 text-primary rounded-lg hover:bg-primary/30 transition">
+                                <i class="fa-solid fa-plus mr-2"></i>订阅
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-6 p-4 bg-white/5 rounded-xl mb-6">
+                            <span class="text-sm text-white/60"><i class="fa-solid fa-eye mr-2"></i><span id="replayModalViews">7.3万人学习</span></span>
+                            <span class="text-sm text-white/60"><i class="fa-solid fa-clock mr-2"></i><span id="replayModalTime">2小时前</span></span>
+                            <span class="text-sm text-white/60"><i class="fa-solid fa-film mr-2"></i>时长 8:32</span>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-white font-semibold mb-3">课程简介</h4>
+                            <p class="text-white/70 text-sm leading-relaxed">
+                                本课程详细讲解行政诉讼的基本概念、程序和实务技巧。通过实际案例分析，帮助学员掌握行政诉讼的各个环节，提升法律实务能力。
+                            </p>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-white font-semibold mb-3">课程大纲</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition cursor-pointer">
+                                    <span class="w-6 h-6 rounded-full bg-primary/20 text-primary text-xs flex items-center justify-center">1</span>
+                                    <span class="text-white/80 text-sm flex-1">行政诉讼概述与基本概念</span>
+                                    <span class="text-white/40 text-xs">12:35</span>
+                                </div>
+                                <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition cursor-pointer">
+                                    <span class="w-6 h-6 rounded-full bg-primary/20 text-primary text-xs flex items-center justify-center">2</span>
+                                    <span class="text-white/80 text-sm flex-1">行政诉讼程序详解</span>
+                                    <span class="text-white/40 text-xs">18:42</span>
+                                </div>
+                                <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition cursor-pointer">
+                                    <span class="w-6 h-6 rounded-full bg-primary/20 text-primary text-xs flex items-center justify-center">3</span>
+                                    <span class="text-white/80 text-sm flex-1">典型案例分析</span>
+                                    <span class="text-white/40 text-xs">25:18</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-80 border-l border-white/5 p-6 overflow-y-auto max-h-[calc(85vh-80px)]">
+                        <h4 class="text-white font-semibold mb-4">相关推荐</h4>
+                        <div class="space-y-4">
+                            <div class="cursor-pointer" onclick="openReplayModal('民事诉讼程序解读', '刘法官', '3天前', '4.8万人学习', 'https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7')">
+                                <div class="relative rounded-lg overflow-hidden mb-2">
+                                    <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=400&q=80" class="w-full h-28 object-cover" alt="推荐视频">
+                                    <span class="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/60 text-white text-xs rounded">6:48</span>
+                                </div>
+                                <h5 class="text-white/80 text-sm font-medium mb-1">民事诉讼程序解读</h5>
+                                <p class="text-white/40 text-xs">刘法官 · 4.8万人学习</p>
+                            </div>
+                            <div class="cursor-pointer" onclick="openReplayModal('合同法务风险防控', '陈律师', '昨天', '5.6万人学习', 'https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb')">
+                                <div class="relative rounded-lg overflow-hidden mb-2">
+                                    <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80" class="w-full h-28 object-cover" alt="推荐视频">
+                                    <span class="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/60 text-white text-xs rounded">10:15</span>
+                                </div>
+                                <h5 class="text-white/80 text-sm font-medium mb-1">合同法务风险防控</h5>
+                                <p class="text-white/40 text-xs">陈律师 · 5.6万人学习</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="liveModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50">
+        <div class="modal-content glass-card rounded-2xl w-[1100px] max-h-[85vh] overflow-hidden">
+            <div class="sticky top-0 bg-dark/95 backdrop-blur-xl border-b border-white/5 px-8 py-4 z-10 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="modal-dots">
+                        <span class="bg-red-500"></span>
+                        <span class="bg-yellow-500"></span>
+                        <span class="bg-green-500"></span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="px-2 py-1 bg-red-500 text-white text-xs rounded-full font-semibold">
+                            <i class="fa-solid fa-circle text-[6px] mr-1"></i>直播中
+                        </span>
+                        <h3 id="liveModalTitle" class="text-xl font-bold text-white">刑事案件办理全流程实务</h3>
+                    </div>
+                </div>
+                <button onclick="closeLiveModal()" class="text-white/60 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto scrollbar-thin">
+                <div class="flex">
+                    <div class="flex-1 p-6">
+                        <div class="relative rounded-xl overflow-hidden bg-black/50 aspect-video mb-6">
+                            <img id="liveModalImg" src="https://images.unsplash.com/photo-1505663912202-ac22d4cb3707?auto=format&fit=crop&w=800&q=80" 
+                                 class="w-full h-full object-cover" alt="直播封面">
+                            <div class="absolute inset-0 bg-black/30 flex flex-col items-center justify-center">
+                                <div class="w-20 h-20 rounded-full bg-red-500/80 flex items-center justify-center animate-pulse">
+                                    <i class="fa-solid fa-video text-white text-3xl"></i>
+                                </div>
+                                <span class="text-white/80 text-sm mt-4">正在直播 · <span id="liveModalViewers">234</span>人在看</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-white/5 rounded-xl mb-4">
+                            <img id="liveModalAvatar" src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-14 h-14 rounded-full">
+                            <div class="flex-1">
+                                <h4 id="liveModalTeacher" class="text-white font-bold text-lg">李检察官</h4>
+                                <p class="text-sm text-white/60">刑事案件办理全流程实务</p>
+                            </div>
+                            <button class="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition">
+                                <i class="fa-solid fa-bell mr-2"></i>预约
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-6 p-4 bg-white/5 rounded-xl mb-6">
+                            <span class="text-sm text-white/60"><i class="fa-solid fa-eye mr-2"></i><span id="liveModalViewerCount">234</span>人在看</span>
+                            <span class="text-sm text-white/60"><i class="fa-solid fa-clock mr-2"></i>直播中</span>
+                            <span class="text-sm text-white/60"><i class="fa-solid fa-share mr-2"></i>分享</span>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="text-white font-semibold mb-3">课程简介</h4>
+                            <p class="text-white/70 text-sm leading-relaxed">
+                                本课程由资深检察官讲解刑事案件办理的全流程实务，从侦查、起诉到审判各阶段进行详细解读，帮助学员全面掌握刑事案件办理要点。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="w-80 border-l border-white/5 p-6 overflow-y-auto max-h-[calc(85vh-80px)]">
+                        <h4 class="text-white font-semibold mb-4">直播聊天</h4>
+                        <div class="space-y-3 mb-4 max-h-64 overflow-y-auto">
+                            <div class="flex gap-2">
+                                <img src="https://i01piccdn.sogoucdn.com/fea1f39361143fbf" class="w-6 h-6 rounded-full">
+                                <div>
+                                    <span class="text-primary text-xs">刘晓梅：</span>
+                                    <span class="text-white/70 text-xs">检察官讲得太好了！</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <img src="https://i04piccdn.sogoucdn.com/304deb0b4a5f12eb" class="w-6 h-6 rounded-full">
+                                <div>
+                                    <span class="text-blue-400 text-xs">王建国：</span>
+                                    <span class="text-white/70 text-xs">这个案例很典型</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <img src="https://i03piccdn.sogoucdn.com/15e9b22c35ae1ee7" class="w-6 h-6 rounded-full">
+                                <div>
+                                    <span class="text-green-400 text-xs">李梅：</span>
+                                    <span class="text-white/70 text-xs">请问取保候审的条件是？</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" placeholder="说点什么..." class="flex-1 px-3 py-2 bg-white/5 rounded-lg text-white text-sm border border-white/10 focus:border-primary/50 outline-none">
+                            <button class="px-3 py-2 bg-primary rounded-lg text-white text-sm hover:bg-primary/80 transition">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+                btn.classList.add('text-white/60', 'font-medium');
+            });
+            document.getElementById('tab-' + tab).classList.remove('text-white/60', 'font-medium');
+            document.getElementById('tab-' + tab).classList.add('text-primary', 'border-b-2', 'border-primary', 'font-semibold');
+            
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.add('content-hidden');
+            });
+            document.getElementById('content-' + tab).classList.remove('content-hidden');
+        }
+
+        function openLiveModal(title, teacher, status, viewers, avatar) {
+            document.getElementById('liveModalTitle').textContent = title;
+            document.getElementById('liveModalTeacher').textContent = teacher;
+            document.getElementById('liveModalViewers').textContent = viewers;
+            document.getElementById('liveModalViewerCount').textContent = viewers;
+            if (avatar) {
+                document.getElementById('liveModalAvatar').src = avatar;
+            }
+            document.getElementById('liveModal').classList.remove('hidden');
+            document.getElementById('liveModal').classList.add('flex');
+        }
+
+        function closeLiveModal() {
+            document.getElementById('liveModal').classList.add('hidden');
+            document.getElementById('liveModal').classList.remove('flex');
+        }
+
+        function enterLive() {
+            alert('正在进入直播间...');
+            closeLiveModal();
+        }
+
+        function openUpcomingModal(title, teacher, time) {
+            document.getElementById('upcomingModalTitle').textContent = title;
+            document.getElementById('upcomingModalName').textContent = title;
+            document.getElementById('upcomingModalTeacher').textContent = '讲师：' + teacher;
+            document.getElementById('upcomingModalTime').innerHTML = '<i class="fa-solid fa-clock mr-2"></i>' + time;
+            document.getElementById('upcomingModal').classList.remove('hidden');
+            document.getElementById('upcomingModal').classList.add('flex');
+        }
+
+        function closeUpcomingModal() {
+            document.getElementById('upcomingModal').classList.add('hidden');
+            document.getElementById('upcomingModal').classList.remove('flex');
+        }
+
+        function subscribeLive() {
+            alert('预约成功！直播开始前会提醒您。');
+            closeUpcomingModal();
+        }
+
+        function openReplayModal(title, teacher, time, views, avatar) {
+            document.getElementById('replayModalTitle').textContent = title;
+            document.getElementById('replayModalName').textContent = title;
+            document.getElementById('replayModalTeacher').textContent = '讲师：' + teacher;
+            document.getElementById('replayModalTime').textContent = time;
+            document.getElementById('replayModalViews').textContent = views;
+            if (avatar) {
+                document.getElementById('replayModalAvatar').src = avatar;
+            }
+            document.getElementById('replayModal').classList.remove('hidden');
+            document.getElementById('replayModal').classList.add('flex');
+        }
+
+        function closeReplayModal() {
+            document.getElementById('replayModal').classList.add('hidden');
+            document.getElementById('replayModal').classList.remove('flex');
+        }
+
+        function watchReplay() {
+            alert('正在加载回放视频...');
+            closeReplayModal();
+        }
+
+        document.getElementById('liveModal').addEventListener('click', function(e) {
+            if (e.target === this) closeLiveModal();
+        });
+
+        document.getElementById('upcomingModal').addEventListener('click', function(e) {
+            if (e.target === this) closeUpcomingModal();
+        });
+
+        document.getElementById('replayModal').addEventListener('click', function(e) {
+            if (e.target === this) closeReplayModal();
+        });
+
+        function toggleNotification() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const bell = e.target.closest('.fa-bell');
+            if (!bell && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

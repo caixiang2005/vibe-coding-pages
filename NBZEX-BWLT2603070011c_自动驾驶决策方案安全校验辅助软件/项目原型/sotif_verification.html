@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOTIF 验证 - 自动驾驶决策方案安全校验辅助软件</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <style>
+        :root { --mac-bg-0: #0b0c0f; --mac-bg-1: #0f1117; --mac-surface: rgba(28, 28, 30, 0.72); --mac-surface-strong: rgba(28, 28, 30, 0.86); --mac-border: rgba(255, 255, 255, 0.10); --mac-border-soft: rgba(255, 255, 255, 0.08); --mac-text: rgba(255, 255, 255, 0.92); --mac-text-dim: rgba(255, 255, 255, 0.68); --mac-text-muted: rgba(255, 255, 255, 0.48); --mac-blue: #0a84ff; --mac-blue-dim: rgba(10, 132, 255, 0.22); --mac-shadow: 0 20px 60px rgba(0, 0, 0, 0.55); --mac-window-radius: 18px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: url('./static/bg.jpeg'); background-size: cover; background-position: center; color: var(--mac-text); overflow: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .liquid-glass { background: var(--mac-surface); backdrop-filter: saturate(180%) blur(26px); -webkit-backdrop-filter: saturate(180%) blur(26px); border: 1px solid var(--mac-border-soft); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset; }
+        .mac-desktop { width: 100vw; height: 100vh; padding: 18px; display: flex; align-items: center; justify-content: center; }
+        .mac-window { width: 1440px; height: 900px; border-radius: var(--mac-window-radius); box-shadow: var(--mac-shadow); border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; background: rgba(15, 17, 23, 0.35); display: flex; flex-direction: column; }
+        .mac-titlebar { height: 52px; padding: 0 14px; display: flex; align-items: center; gap: 12px; background: var(--mac-surface-strong); backdrop-filter: saturate(180%) blur(26px); -webkit-backdrop-filter: saturate(180%) blur(26px); border-bottom: 1px solid var(--mac-border-soft); user-select: none; flex-shrink: 0; }
+        .mac-traffic { display: flex; align-items: center; gap: 8px; padding: 0 4px; }
+        .mac-dot { width: 12px; height: 12px; border-radius: 9999px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28) inset; }
+        .mac-dot.red { background: #ff5f57; } .mac-dot.yellow { background: #febc2e; } .mac-dot.green { background: #28c840; } .mac-dot.gray { background: rgba(255, 255, 255, 0.28); }
+        .mac-title { flex: 1; text-align: center; font-size: 13px; font-weight: 600; letter-spacing: 0.2px; color: rgba(255, 255, 255, 0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-item { display: flex; align-items: center; padding: 10px 12px; font-size: 14px; color: rgba(255, 255, 255, 0.68); border-radius: 10px; transition: all 0.2s ease; text-decoration: none; margin-bottom: 4px; cursor: pointer; }
+        .sidebar-item:hover { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.92); }
+        .sidebar-item.active { background: var(--mac-blue-dim); color: var(--mac-blue); box-shadow: 0 0 0 1px rgba(10, 132, 255, 0.20) inset; }
+        .sidebar-item i { margin-right: 12px; font-size: 16px; width: 20px; text-align: center; }
+        .control-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border: none; outline: none; }
+        .control-btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+        .control-btn:active { transform: scale(0.95); }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); }
+        .draggable-window { position: fixed; z-index: 1000; background: var(--mac-surface-strong); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden; display: flex; flex-direction: column; }
+        .window-header { height: 38px; padding: 0 12px; display: flex; align-items: center; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: move; user-select: none; }
+        .window-body { padding: 16px; color: var(--mac-text); overflow-y: auto; max-height: 80vh; }
+        .btn-primary { background-color: var(--mac-blue); color: white; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+        .btn-secondary { background-color: rgba(255, 255, 255, 0.1); color: white; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+        .btn-danger { background-color: #ff453a; color: white; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+        .input-field { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 8px 12px; border-radius: 6px; width: 100%; outline: none; transition: border-color 0.2s; }
+        .input-field:focus { border-color: var(--mac-blue); }
+        @supports not ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) { .liquid-glass, .mac-titlebar, .draggable-window { background: rgba(28, 28, 30, 0.95); } }
+    </style>
+</head>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<body class="overflow-hidden">
+    <div class="mac-desktop">
+        <div class="mac-window">
+            <header class="mac-titlebar">
+                <div class="mac-traffic"><span class="mac-dot red"></span><span class="mac-dot yellow"></span><span class="mac-dot green"></span></div>
+                <div class="mac-title" style="text-align: center;">自动驾驶决策方案安全校验辅助软件</div>
+            </header>
+            <div class="flex h-[calc(100%-52px)] overflow-hidden">
+                <aside class="w-[280px] liquid-glass border-r border-white/10 flex flex-col p-4">
+                    <nav class="flex-1 space-y-1">
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="index.html">
+                            <i class="fa-solid fa-gauge-high"></i>
+                            主校验台
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="data_analysis.html">
+                            <i class="fa-solid fa-chart-line"></i>
+                            数据分析
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="scenario_library.html">
+                            <i class="fa-solid fa-layer-group"></i>
+                            场景库
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="compliance_check.html">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            合规性检查
+                        </a>
+                        <a class="sidebar-item active flex items-center px-3 py-2.5 text-sm" href="sotif_verification.html">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            SOTIF 验证
+                        </a>
+                        <a class="sidebar-item flex items-center px-3 py-2.5 text-sm" href="system_settings.html">
+                            <i class="fa-solid fa-gear"></i>
+                            系统设置
+                        </a>
+                    </nav>
+                    <div class="mt-auto pt-4 border-t border-white/10 flex items-center gap-3 px-2">
+                        <div class="relative w-10 h-10 flex items-center justify-center font-bold text-white">
+                            <img class="w-full h-full object-cover rounded-full " alt="王一辰"
+                                src="https://i02piccdn.sogoucdn.com/40248540f6e11524" />
+                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black/50 rounded-full"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-white/90">王一辰</span>
+                            <span class="text-[10px] text-white/55 leading-none">高级校验工程师</span>
+                        </div>
+                        <button class="ml-auto text-white/55 hover:text-white/85 transition-colors">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                </aside>
+                <main class="flex-1 flex flex-col relative bg-black/40 p-6 overflow-y-auto custom-scrollbar">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-xl font-semibold text-white">SOTIF 预期功能安全</h1>
+                        <button id="btn-new-trigger" class="control-btn px-4 py-2 bg-red-600 text-white rounded-lg text-sm">
+                            <i class="fa-solid fa-bolt mr-2"></i> 触发事件
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="liquid-glass p-5 rounded-xl">
+                            <h3 class="text-sm font-semibold text-white mb-4">已知危害场景 (Known Hazards)</h3>
+                            <div class="space-y-3">
+                                <div class="p-3 bg-white/5 rounded-lg border border-white/10 flex justify-between items-center">
+                                    <div>
+                                        <div class="text-xs text-gray-400">传感器脏污</div>
+                                        <div class="text-sm text-white">Camera Lens Occlusion</div>
+                                    </div>
+                                    <span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">中等触发</span>
+                                </div>
+                                <div class="p-3 bg-white/5 rounded-lg border border-white/10 flex justify-between items-center">
+                                    <div>
+                                        <div class="text-xs text-gray-400">强光直射</div>
+                                        <div class="text-sm text-white">Sunlight Glare</div>
+                                    </div>
+                                    <span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">高触发</span>
+                                </div>
+                                <div class="p-3 bg-white/5 rounded-lg border border-white/10 flex justify-between items-center">
+                                    <div>
+                                        <div class="text-xs text-gray-400">目标遮挡</div>
+                                        <div class="text-sm text-white">Target Occlusion</div>
+                                    </div>
+                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">低触发</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="liquid-glass p-5 rounded-xl">
+                            <h3 class="text-sm font-semibold text-white mb-4">触发频率分布</h3>
+                            <div id="chart-sotif" class="w-full h-48"></div>
+                        </div>
+                    </div>
+
+                    <div class="liquid-glass rounded-xl p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-sm font-semibold text-white">场景日志</h3>
+                            <button class="text-xs text-gray-400 hover:text-white"><i class="fa-solid fa-filter"></i> 筛选</button>
+                        </div>
+                        <div class="space-y-2 font-mono text-xs" id="sotif-logs">
+                            <div class="p-2 border-l-2 border-green-500 bg-green-500/5">
+                                <span class="text-green-400">[14:05:22]</span> <span class="text-gray-300">系统正常运行，置信度 98%</span>
+                            </div>
+                            <div class="p-2 border-l-2 border-yellow-500 bg-yellow-500/5">
+                                <span class="text-yellow-400">[14:06:10]</span> <span class="text-gray-300">检测到前方强反光，置信度降至 85%</span>
+                            </div>
+                            <div class="p-2 border-l-2 border-red-500 bg-red-500/5">
+                                <span class="text-red-400">[14:06:15]</span> <span class="text-gray-300">触发安全接管请求 (SOTIF Safe Stop)</span>
+                            </div>
+                            <div class="p-2 border-l-2 border-green-500 bg-green-500/5">
+                                <span class="text-green-400">[14:06:20]</span> <span class="text-gray-300">安全停车成功，等待接管</span>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Common JS Functions
+        function initDraggableWindow(windowElement) {
+            const header = windowElement.querySelector('.window-header');
+            if (!header) return;
+            let isDragging = false, startX, startY, initialLeft, initialTop;
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.closest('button')) return;
+                isDragging = true;
+                startX = e.clientX; startY = e.clientY;
+                initialLeft = windowElement.offsetLeft; initialTop = windowElement.offsetTop;
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                windowElement.style.left = (initialLeft + e.clientX - startX) + 'px';
+                windowElement.style.top = (initialTop + e.clientY - startY) + 'px';
+            }
+            function onMouseUp() { isDragging = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }
+        }
+        function createWindow(title, contentHtml, options = {}) {
+            const { width = '500px' } = options;
+            const win = document.createElement('div');
+            win.className = 'draggable-window';
+            win.style.width = width;
+            win.style.left = '50%'; win.style.top = '50%'; win.style.transform = 'translate(-50%, -50%)';
+            win.innerHTML = `<div class="window-header"><div class="mac-traffic"><span class="mac-dot red" data-close="1"></span><span class="mac-dot yellow"></span><span class="mac-dot green"></span></div><div class="mac-title" style="font-size:12px;text-align:center;">${title}</div></div><div class="window-body">${contentHtml}</div>`;
+            document.body.appendChild(win);
+            initDraggableWindow(win);
+            win.querySelector('[data-close="1"]')?.addEventListener('click', () => win.remove());
+            return win;
+        }
+        function showConfirm(title, message, onConfirm) {
+            const html = `<div style="margin-bottom:15px;">${message}</div><div style="display:flex;justify-content:flex-end;gap:10px;"><button class="btn-secondary" id="mc">取消</button><button class="btn-primary" id="mk">确认</button></div>`;
+            const win = createWindow(title, html);
+            win.querySelector('#mk').addEventListener('click', () => { win.remove(); if(onConfirm) onConfirm(); });
+            win.querySelector('#mc').addEventListener('click', () => win.remove());
+        }
+        function showAlert(type, message) {
+            const colors = {success:'text-green-400',error:'text-red-400',info:'text-blue-400',warning:'text-yellow-400'};
+            const icons = {success:'fa-check-circle',error:'fa-circle-xmark',info:'fa-circle-info',warning:'fa-triangle-exclamation'};
+            const html = `<div class="flex items-center gap-3 py-2"><i class="fa-solid ${icons[type]} ${colors[type]} text-xl"></i><span class="text-white">${message}</span></div><div class="flex justify-end mt-2"><button class="btn-primary text-xs" id="alert-ok">确定</button></div>`;
+            const win = createWindow('提示', html, {width:'300px'});
+            win.querySelector('#alert-ok').addEventListener('click', () => win.remove());
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const chart = echarts.init(document.getElementById('chart-sotif'));
+            chart.setOption({
+                color: ['#ff453a', '#ffd60a', '#30d158'],
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: '70%',
+                    data: [
+                        { value: 35, name: '感知误检' },
+                        { value: 25, name: '决策超时' },
+                        { value: 40, name: '功能受限' }
+                    ],
+                    label: { color: '#fff', fontSize: 10 }
+                }]
+            });
+
+            document.getElementById('btn-new-trigger').addEventListener('click', () => {
+                const html = `
+                    <div class="space-y-3">
+                        <p class="text-sm text-gray-300">选择要注入的 SOTIF 触发条件：</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button class="p-2 bg-white/5 hover:bg-white/10 rounded text-xs text-left" onclick="injectTrigger('Camera Glare')">
+                                <i class="fa-solid fa-sun text-yellow-400 mr-1"></i> 摄像头强光
+                            </button>
+                            <button class="p-2 bg-white/5 hover:bg-white/10 rounded text-xs text-left" onclick="injectTrigger('GPS Signal Lost')">
+                                <i class="fa-solid fa-location-crosshairs text-red-400 mr-1"></i> GPS 丢失
+                            </button>
+                            <button class="p-2 bg-white/5 hover:bg-white/10 rounded text-xs text-left" onclick="injectTrigger('Fog Detection')">
+                                <i class="fa-solid fa-smog text-blue-400 mr-1"></i> 浓雾识别
+                            </button>
+                             <button class="p-2 bg-white/5 hover:bg-white/10 rounded text-xs text-left" onclick="injectTrigger('Pedestrian Distraction')">
+                                <i class="fa-solid fa-person-walking text-purple-400 mr-1"></i> 行人干扰
+                            </button>
+                        </div>
+                    </div>
+                `;
+                const win = createWindow('SOTIF 触发注入', html);
+
+                window.injectTrigger = (type) => {
+                    win.remove();
+                    const log = document.getElementById('sotif-logs');
+                    const div = document.createElement('div');
+                    div.className = 'p-2 border-l-2 border-red-500 bg-red-500/5 animate-pulse';
+                    div.innerHTML = `<span class="text-red-400">[现在]</span> <span class="text-gray-300">注入了触发条件: ${type}</span>`;
+                    log.prepend(div);
+                    showAlert('info', `已注入 SOTIF 触发条件: ${type}`);
+                };
+            });
+        });
+    </script>
+</body>
+</html>

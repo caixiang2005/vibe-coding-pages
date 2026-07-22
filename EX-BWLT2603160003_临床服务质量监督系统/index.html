@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>临床服务质量监督系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "SimSun", sans-serif;
+        }
+
+        body {
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .window {
+            width: 1200px;
+            height: 720px;
+            max-width: 100%;
+            background: linear-gradient(180deg, #d4d4d8 0%, #c8c8cc 100%);
+            border: 1px solid #888;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 标题栏 */
+        .title-bar {
+            background: linear-gradient(180deg, #4a5d80 0%, #3d4f6f 50%, #2d3e5c 100%);
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+            user-select: none;
+        }
+
+        .title-bar-text {
+            color: #fff;
+            font-size: 13px;
+            font-weight: normal;
+            padding-left: 6px;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+        }
+
+        .title-bar-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .title-bar-controls button {
+            width: 28px;
+            height: 20px;
+            border: none;
+            background: linear-gradient(180deg, #6b7fa3 0%, #5a6e8f 100%);
+            color: #fff;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title-bar-controls button:hover {
+            background: linear-gradient(180deg, #7b8fb3 0%, #6a7e9f 100%);
+        }
+
+        .title-bar-controls .close-btn:hover {
+            background: #c42b1c;
+        }
+
+        .btn-minimize::before {
+            content: "";
+            width: 10px;
+            height: 1px;
+            background: #fff;
+            display: block;
+        }
+
+        .btn-maximize {
+            position: relative;
+        }
+
+        .btn-maximize::before {
+            content: "";
+            width: 10px;
+            height: 8px;
+            border: 1px solid #fff;
+            display: block;
+            background: transparent;
+        }
+
+        .btn-close::before {
+            content: "×";
+            font-size: 16px;
+            font-weight: normal;
+        }
+
+        /* 菜单栏 */
+        .menu-bar {
+            background: linear-gradient(180deg, #e8e8ec 0%, #d8d8dc 100%);
+            border-bottom: 1px solid #a0a0a4;
+            padding: 2px 4px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .menu-item {
+            padding: 4px 12px;
+            font-size: 12px;
+            color: #1a1a4a;
+            cursor: pointer;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+
+        .menu-item:hover {
+            background: #b8c8e0;
+            border: 1px solid #8098c0;
+        }
+
+        .menu-item.active {
+            background: #b8c8e0;
+            border: 1px solid #8098c0;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            background: linear-gradient(180deg, #d0d4dc 0%, #b8bcc8 100%);
+            border-bottom: 1px solid #9098a4;
+            padding: 6px 8px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toolbar-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 12px;
+            background: linear-gradient(180deg, #e8ecf4 0%, #d0d4e0 100%);
+            border: 1px solid #9098a8;
+            cursor: pointer;
+            min-width: 60px;
+            transition: all 0.15s;
+        }
+
+        .toolbar-btn:hover {
+            background: linear-gradient(180deg, #f0f4fc 0%, #e0e4f0 100%);
+            border-color: #7080a0;
+        }
+
+        .toolbar-btn:active {
+            background: linear-gradient(180deg, #c0c4d0 0%, #b0b4c0 100%);
+            transform: translateY(1px);
+        }
+
+        .toolbar-btn i {
+            font-size: 20px;
+            color: #3a4a6a;
+            margin-bottom: 4px;
+        }
+
+        .toolbar-btn span {
+            font-size: 11px;
+            color: #2a3a5a;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            background: linear-gradient(180deg, #a0a4ac 0%, #888c94 100%);
+            margin: 0 4px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            display: flex;
+            background: #c8ccd4;
+            min-height: 560px;
+        }
+
+        /* 左侧面板 */
+        .left-panel {
+            width: 160px;
+            background: linear-gradient(180deg, #d4d8e0 0%, #c0c4cc 100%);
+            border-right: 1px solid #9098a4;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .panel-header {
+            background: linear-gradient(90deg, #4a6a3a 0%, #5a7a4a 100%);
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .record-list {
+            background: #fff;
+            border: 1px solid #9098a4;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 60px;
+        }
+
+        .record-item {
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #1a2a4a;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e4;
+        }
+
+        .record-item:hover {
+            background: #d0e0f0;
+        }
+
+        .record-item.active {
+            background: #4a6a9a;
+            color: #fff;
+        }
+
+        .panel-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: linear-gradient(180deg, #e8ecf4 0%, #d0d4e0 100%);
+            border: 1px solid #9098a8;
+            cursor: pointer;
+            font-size: 11px;
+            color: #2a3a5a;
+            flex-shrink: 0;
+        }
+
+        .panel-btn:hover {
+            background: linear-gradient(180deg, #f0f4fc 0%, #e0e4f0 100%);
+        }
+
+        .panel-btn i {
+            color: #4a6a3a;
+        }
+
+        /* 右侧主区域 */
+        .right-panel {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .nav-btn {
+            padding: 4px 12px;
+            background: linear-gradient(180deg, #e8ecf4 0%, #d0d4e0 100%);
+            border: 1px solid #9098a8;
+            cursor: pointer;
+            font-size: 11px;
+            color: #2a3a5a;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(180deg, #f0f4fc 0%, #e0e4f0 100%);
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1a2a4a;
+            text-align: center;
+            flex: 1;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            padding: 4px 12px;
+            background: linear-gradient(180deg, #e8ecf4 0%, #d0d4e0 100%);
+            border: 1px solid #9098a8;
+            cursor: pointer;
+            font-size: 11px;
+            color: #2a3a5a;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(180deg, #fff 0%, #f0f4fc 100%);
+        }
+
+        .form-container {
+            background: #f4f6f8;
+            border: 1px solid #9098a4;
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-section {
+            margin-bottom: 12px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            color: #2a3a5a;
+            white-space: nowrap;
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 3px 6px;
+            border: 1px solid #9098a8;
+            font-size: 12px;
+            background: #fff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4a6a9a;
+        }
+
+        .form-group input[type="text"] {
+            width: 120px;
+        }
+
+        .form-group select {
+            width: 100px;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            height: 60px;
+            padding: 4px 6px;
+            border: 1px solid #9098a8;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .section-title {
+            font-size: 12px;
+            color: #1a2a4a;
+            font-weight: bold;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #c0c4cc;
+        }
+
+        .full-width {
+            flex: 1;
+        }
+
+        .full-width textarea {
+            width: 100%;
+        }
+
+        /* 数据表格 */
+        .data-table-container {
+            margin-top: 12px;
+            border: 1px solid #9098a4;
+            background: #fff;
+            flex: 1;
+            overflow: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .data-table th {
+            background: linear-gradient(180deg, #d0d8e4 0%, #b8c0d0 100%);
+            padding: 6px 8px;
+            text-align: left;
+            color: #1a2a4a;
+            border-bottom: 1px solid #9098a4;
+            font-weight: normal;
+        }
+
+        .data-table td {
+            padding: 5px 8px;
+            border-bottom: 1px solid #e0e0e4;
+            color: #2a3a5a;
+        }
+
+        .data-table tr:hover {
+            background: #e8f0f8;
+        }
+
+        .data-table tr.selected {
+            background: #c0d0e8;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            background: linear-gradient(180deg, #d8dce4 0%, #c8ccd4 100%);
+            border-top: 1px solid #fff;
+            padding: 4px 12px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #3a4a6a;
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #d4d8e0;
+            border: 1px solid #888;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-title {
+            background: linear-gradient(180deg, #4a5d80 0%, #3d4f6f 50%, #2d3e5c 100%);
+            color: #fff;
+            padding: 6px 12px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .modal-close:hover {
+            background: #c42b1c;
+        }
+
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            max-height: calc(90vh - 100px);
+        }
+
+        .modal-footer {
+            padding: 12px 16px;
+            background: #c8ccd4;
+            border-top: 1px solid #a0a4ac;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            padding: 6px 24px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid #9098a8;
+            background: linear-gradient(180deg, #e8ecf4 0%, #d0d4e0 100%);
+            color: #2a3a5a;
+        }
+
+        .modal-btn:hover {
+            background: linear-gradient(180deg, #f0f4fc 0%, #e0e4f0 100%);
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(180deg, #5a7a9a 0%, #4a6a8a 100%);
+            color: #fff;
+            border-color: #3a5a7a;
+        }
+
+        .modal-btn.primary:hover {
+            background: linear-gradient(180deg, #6a8aaa 0%, #5a7a9a 100%);
+        }
+
+        .modal-form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 10px;
+        }
+
+        .modal-form-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .modal-form-group label {
+            font-size: 12px;
+            color: #2a3a5a;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .modal-form-group input,
+        .modal-form-group select,
+        .modal-form-group textarea {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #9098a8;
+            font-size: 12px;
+            background: #fff;
+        }
+
+        .modal-form-group textarea {
+            height: 60px;
+            resize: vertical;
+        }
+
+        .modal-form-group.full {
+            flex-basis: 100%;
+        }
+
+        .required::after {
+            content: "*";
+            color: #c00;
+            margin-left: 2px;
+        }
+
+        /* 统计面板 */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: linear-gradient(180deg, #f8f9fa 0%, #e8eaec 100%);
+            border: 1px solid #9098a4;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3a5a8a;
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: #5a6a7a;
+            margin-top: 4px;
+        }
+
+        /* 查询条件 */
+        .search-bar {
+            background: #e8eaec;
+            border: 1px solid #9098a4;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-bar label {
+            font-size: 12px;
+            color: #2a3a5a;
+        }
+
+        .search-bar input,
+        .search-bar select {
+            padding: 3px 8px;
+            border: 1px solid #9098a8;
+            font-size: 12px;
+        }
+
+        .search-btn {
+            padding: 4px 16px;
+            background: linear-gradient(180deg, #5a7a9a 0%, #4a6a8a 100%);
+            color: #fff;
+            border: 1px solid #3a5a7a;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(180deg, #6a8aaa 0%, #5a7a9a 100%);
+        }
+
+        /* 评分星星 */
+        .rating-stars {
+            display: flex;
+            gap: 4px;
+        }
+
+        .rating-stars i {
+            color: #d4a017;
+            font-size: 14px;
+        }
+
+        .rating-stars i.empty {
+            color: #c0c4cc;
+        }
+
+        /* 状态标签 */
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 10px;
+            border-radius: 2px;
+        }
+
+        .status-tag.pending {
+            background: #fef3cd;
+            color: #856404;
+        }
+
+        .status-tag.processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-tag.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-tag.overdue {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <!-- 标题栏 -->
+        <div class="title-bar">
+            <span class="title-bar-text"><i class="fas fa-clipboard-check"></i> 临床服务质量监督系统</span>
+            <div class="title-bar-controls">
+                <button class="btn-minimize" title="最小化"></button>
+                <button class="btn-maximize" title="最大化"></button>
+                <button class="btn-close close-btn" title="关闭" onclick="window.close()"></button>
+            </div>
+        </div>
+
+        <!-- 菜单栏 -->
+        <div class="menu-bar">
+            <div class="menu-item active"><i class="fas fa-home"></i> 首页</div>
+            <div class="menu-item" onclick="location.href='inspection.html'"><i class="fas fa-clipboard-check"></i> 质量检查</div>
+            <div class="menu-item" onclick="location.href='complaint.html'"><i class="fas fa-comment-medical"></i> 投诉管理</div>
+            <div class="menu-item" onclick="location.href='rectification.html'"><i class="fas fa-tasks"></i> 整改任务</div>
+            <div class="menu-item" onclick="location.href='performance.html'"><i class="fas fa-star-half-alt"></i> 绩效考核</div>
+            <div class="menu-item" onclick="location.href='statistics.html'"><i class="fas fa-chart-bar"></i> 数据统计</div>
+            <div class="menu-item" onclick="location.href='settings.html'"><i class="fas fa-cog"></i> 系统设置</div>
+        </div>
+
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <button class="toolbar-btn" onclick="openModal('inspectionModal')">
+                <i class="fas fa-plus-circle"></i>
+                <span>新增检查</span>
+            </button>
+            <button class="toolbar-btn" onclick="openModal('complaintModal')">
+                <i class="fas fa-comment-medical"></i>
+                <span>登记投诉</span>
+            </button>
+            <button class="toolbar-btn" onclick="openModal('rectificationModal')">
+                <i class="fas fa-tasks"></i>
+                <span>整改任务</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="openModal('performanceModal')">
+                <i class="fas fa-star-half-alt"></i>
+                <span>绩效评分</span>
+            </button>
+            <button class="toolbar-btn" onclick="openModal('queryModal')">
+                <i class="fas fa-search"></i>
+                <span>数据查询</span>
+            </button>
+            <button class="toolbar-btn" onclick="openModal('statisticsModal')">
+                <i class="fas fa-chart-bar"></i>
+                <span>统计分析</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="exportData()">
+                <i class="fas fa-file-export"></i>
+                <span>导出数据</span>
+            </button>
+            <button class="toolbar-btn" onclick="printReport()">
+                <i class="fas fa-print"></i>
+                <span>打印报表</span>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="openModal('settingsModal')">
+                <i class="fas fa-cog"></i>
+                <span>系统设置</span>
+            </button>
+            <button class="toolbar-btn" onclick="exitSystem()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>退出系统</span>
+            </button>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 左侧面板 -->
+            <div class="left-panel">
+                <div class="panel-header">待处理任务</div>
+                <div class="record-list" id="taskList">
+                    <div class="record-item active">急诊科服务检查</div>
+                    <div class="record-item">内科护理投诉</div>
+                    <div class="record-item">外科整改跟进</div>
+                    <div class="record-item">门诊窗口复查</div>
+                    <div class="record-item">住院部回访</div>
+                    <div class="record-item">检验科整改</div>
+                    <div class="record-item">影像科投诉</div>
+                </div>
+
+                <div class="panel-header">近期检查记录</div>
+                <div class="record-list" id="recordList">
+                    <div class="record-item">心内科 - 2024/03/20</div>
+                    <div class="record-item">呼吸科 - 2024/03/19</div>
+                    <div class="record-item">消化科 - 2024/03/18</div>
+                    <div class="record-item">神经科 - 2024/03/17</div>
+                    <div class="record-item">骨科 - 2024/03/16</div>
+                    <div class="record-item">妇产科 - 2024/03/15</div>
+                </div>
+
+        
+                <button class="panel-btn" onclick="refreshList()">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>刷新列表</span>
+                </button>
+            </div>
+
+            <!-- 右侧主区域 -->
+            <div class="right-panel">
+                <div class="form-header">
+                    <button class="nav-btn" onclick="prevRecord()">上一条</button>
+                    <div class="form-title">市第一人民医院 —— 服务质量监督</div>
+                    <button class="nav-btn" onclick="nextRecord()">下一条</button>
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="switchTab(this, 'inspection')">检查详情</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'history')">历史记录</button>
+                    </div>
+                </div>
+
+                <div class="form-container">
+                    <!-- 统计概览 -->
+                    <div class="stats-panel">
+                        <div class="stat-card">
+                            <div class="number">156</div>
+                            <div class="label">本月检查次数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number">23</div>
+                            <div class="label">待处理投诉</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number">12</div>
+                            <div class="label">整改中任务</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number">94.6%</div>
+                            <div class="label">服务满意度</div>
+                        </div>
+                    </div>
+
+                    <!-- 查询条件 -->
+                    <div class="search-bar">
+                        <label>检查科室:</label>
+                        <select id="searchDept">
+                            <option value="">全部科室</option>
+                            <option value="急诊科">急诊科</option>
+                            <option value="内科">内科</option>
+                            <option value="外科">外科</option>
+                            <option value="门诊部">门诊部</option>
+                        </select>
+                        <label>检查类型:</label>
+                        <select id="searchType">
+                            <option value="">全部类型</option>
+                            <option value="日常巡查">日常巡查</option>
+                            <option value="专项检查">专项检查</option>
+                            <option value="投诉核查">投诉核查</option>
+                        </select>
+                        <label>处理状态:</label>
+                        <select id="searchStatus">
+                            <option value="">全部状态</option>
+                            <option value="待处理">待处理</option>
+                            <option value="处理中">处理中</option>
+                            <option value="已完成">已完成</option>
+                        </select>
+                        <button class="search-btn" onclick="searchRecords()">查询</button>
+                    </div>
+
+                    <!-- 数据列表 -->
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:30px;"><input type="checkbox" onclick="selectAll(this)"></th>
+                                    <th style="width:100px;">检查编号</th>
+                                    <th style="width:80px;">检查科室</th>
+                                    <th style="width:80px;">检查类型</th>
+                                    <th style="width:90px;">检查日期</th>
+                                    <th style="width:70px;">检查人员</th>
+                                    <th>发现问题</th>
+                                    <th style="width:70px;">严重程度</th>
+                                    <th style="width:70px;">处理状态</th>
+                                    <th style="width:60px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr onclick="selectRow(this)" class="selected">
+                                    <td><input type="checkbox" checked></td>
+                                    <td>QC2024032001</td>
+                                    <td>急诊科</td>
+                                    <td>日常巡查</td>
+                                    <td>2024-03-20</td>
+                                    <td>王明华</td>
+                                    <td>急诊分诊等待时间超标，部分患者等待超过30分钟</td>
+                                    <td><span class="status-tag overdue">严重</span></td>
+                                    <td><span class="status-tag processing">处理中</span></td>
+                                    <td><a href="javascript:void(0)" onclick="viewDetail('QC2024032001')">查看</a></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td><input type="checkbox"></td>
+                                    <td>QC2024031901</td>
+                                    <td>内科病房</td>
+                                    <td>投诉核查</td>
+                                    <td>2024-03-19</td>
+                                    <td>李秀芳</td>
+                                    <td>护士交接班记录不完整，存在信息遗漏</td>
+                                    <td><span class="status-tag pending">一般</span></td>
+                                    <td><span class="status-tag completed">已完成</span></td>
+                                    <td><a href="javascript:void(0)" onclick="viewDetail('QC2024031901')">查看</a></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td><input type="checkbox"></td>
+                                    <td>QC2024031801</td>
+                                    <td>外科病房</td>
+                                    <td>专项检查</td>
+                                    <td>2024-03-18</td>
+                                    <td>王明华</td>
+                                    <td>手术器械消毒记录规范，符合标准要求</td>
+                                    <td><span class="status-tag completed">合格</span></td>
+                                    <td><span class="status-tag completed">已完成</span></td>
+                                    <td><a href="javascript:void(0)" onclick="viewDetail('QC2024031801')">查看</a></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td><input type="checkbox"></td>
+                                    <td>QC2024031701</td>
+                                    <td>门诊收费</td>
+                                    <td>日常巡查</td>
+                                    <td>2024-03-17</td>
+                                    <td>陈建国</td>
+                                    <td>窗口服务态度有待改进，需加强培训</td>
+                                    <td><span class="status-tag pending">一般</span></td>
+                                    <td><span class="status-tag processing">处理中</span></td>
+                                    <td><a href="javascript:void(0)" onclick="viewDetail('QC2024031701')">查看</a></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td><input type="checkbox"></td>
+                                    <td>QC2024031601</td>
+                                    <td>检验科</td>
+                                    <td>专项检查</td>
+                                    <td>2024-03-16</td>
+                                    <td>李秀芳</td>
+                                    <td>标本采集流程规范，报告出具及时</td>
+                                    <td><span class="status-tag completed">合格</span></td>
+                                    <td><span class="status-tag completed">已完成</span></td>
+                                    <td><a href="javascript:void(0)" onclick="viewDetail('QC2024031601')">查看</a></td>
+                                </tr>
+                                <tr onclick="selectRow(this)">
+                                    <td><input type="checkbox"></td>
+                                    <td>QC2024031501</td>
+                                    <td>药房</td>
+                                    <td>投诉核查</td>
+                                    <td>2024-03-15</td>
+                                    <td>王明华</td>
+                                    <td>药品发放核对流程需优化，存在效率问题</td>
+                                    <td><span class="status-tag pending">一般</span></td>
+                                    <td><span class="status-tag pending">待处理</span></td>
+                                    <td><a href="javascript:void(0)" onclick="viewDetail('QC2024031501')">查看</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span>当前用户: 王明华 (质量监督员)</span>
+            <span>科室: 医务质控部</span>
+        </div>
+    </div>
+
+    <!-- 新增检查弹窗 -->
+    <div class="modal-overlay" id="inspectionModal">
+        <div class="modal">
+            <div class="modal-title">
+                <span><i class="fas fa-plus-circle"></i> 新增质量检查</span>
+                <button class="modal-close" onclick="closeModal('inspectionModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">检查编号</label>
+                        <input type="text" value="QC2024032002" readonly>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">检查日期</label>
+                        <input type="date" value="2024-03-20">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">检查科室</label>
+                        <select>
+                            <option value="">请选择科室</option>
+                            <option value="急诊科">急诊科</option>
+                            <option value="内科病房">内科病房</option>
+                            <option value="外科病房">外科病房</option>
+                            <option value="门诊部">门诊部</option>
+                            <option value="检验科">检验科</option>
+                            <option value="影像科">影像科</option>
+                            <option value="药房">药房</option>
+                            <option value="手术室">手术室</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">检查类型</label>
+                        <select>
+                            <option value="">请选择类型</option>
+                            <option value="日常巡查">日常巡查</option>
+                            <option value="专项检查">专项检查</option>
+                            <option value="投诉核查">投诉核查</option>
+                            <option value="飞行检查">飞行检查</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">检查人员</label>
+                        <input type="text" value="王明华">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>陪同人员</label>
+                        <input type="text" placeholder="请输入陪同人员">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">服务规范评分</label>
+                        <select>
+                            <option value="5">优秀 (5分)</option>
+                            <option value="4">良好 (4分)</option>
+                            <option value="3">合格 (3分)</option>
+                            <option value="2">待改进 (2分)</option>
+                            <option value="1">不合格 (1分)</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">环境卫生评分</label>
+                        <select>
+                            <option value="5">优秀 (5分)</option>
+                            <option value="4">良好 (4分)</option>
+                            <option value="3">合格 (3分)</option>
+                            <option value="2">待改进 (2分)</option>
+                            <option value="1">不合格 (1分)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">制度执行评分</label>
+                        <select>
+                            <option value="5">优秀 (5分)</option>
+                            <option value="4">良好 (4分)</option>
+                            <option value="3">合格 (3分)</option>
+                            <option value="2">待改进 (2分)</option>
+                            <option value="1">不合格 (1分)</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">严重程度</label>
+                        <select>
+                            <option value="合格">合格</option>
+                            <option value="一般">一般问题</option>
+                            <option value="严重">严重问题</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label class="required">检查内容</label>
+                        <textarea placeholder="请详细描述本次检查的具体内容和检查项目"></textarea>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>发现问题</label>
+                        <textarea placeholder="请描述检查中发现的问题"></textarea>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>整改建议</label>
+                        <textarea placeholder="请提出针对性的整改建议"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="saveInspection()">保存检查</button>
+                <button class="modal-btn" onclick="closeModal('inspectionModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 投诉登记弹窗 -->
+    <div class="modal-overlay" id="complaintModal">
+        <div class="modal">
+            <div class="modal-title">
+                <span><i class="fas fa-comment-medical"></i> 登记患者投诉</span>
+                <button class="modal-close" onclick="closeModal('complaintModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">投诉编号</label>
+                        <input type="text" value="TS2024032001" readonly>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">投诉日期</label>
+                        <input type="date" value="2024-03-20">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">投诉人姓名</label>
+                        <input type="text" placeholder="请输入投诉人姓名">
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">联系电话</label>
+                        <input type="text" placeholder="请输入联系电话">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">被投诉科室</label>
+                        <select>
+                            <option value="">请选择科室</option>
+                            <option value="急诊科">急诊科</option>
+                            <option value="内科病房">内科病房</option>
+                            <option value="外科病房">外科病房</option>
+                            <option value="门诊部">门诊部</option>
+                            <option value="检验科">检验科</option>
+                            <option value="收费窗口">收费窗口</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>被投诉人员</label>
+                        <input type="text" placeholder="如有具体人员请填写">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">投诉类型</label>
+                        <select>
+                            <option value="">请选择类型</option>
+                            <option value="服务态度">服务态度</option>
+                            <option value="医疗质量">医疗质量</option>
+                            <option value="等待时间">等待时间</option>
+                            <option value="收费问题">收费问题</option>
+                            <option value="环境设施">环境设施</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">紧急程度</label>
+                        <select>
+                            <option value="普通">普通</option>
+                            <option value="重要">重要</option>
+                            <option value="紧急">紧急</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">投诉渠道</label>
+                        <select>
+                            <option value="现场投诉">现场投诉</option>
+                            <option value="电话投诉">电话投诉</option>
+                            <option value="意见箱">意见箱</option>
+                            <option value="网络平台">网络平台</option>
+                            <option value="上级转办">上级转办</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>就诊卡号</label>
+                        <input type="text" placeholder="如有请填写">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label class="required">投诉内容</label>
+                        <textarea placeholder="请详细描述投诉的具体情况"></textarea>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>患者诉求</label>
+                        <textarea placeholder="请记录投诉人的具体诉求"></textarea>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>受理意见</label>
+                        <textarea placeholder="请填写初步受理意见"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="saveComplaint()">登记投诉</button>
+                <button class="modal-btn" onclick="closeModal('complaintModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 整改任务弹窗 -->
+    <div class="modal-overlay" id="rectificationModal">
+        <div class="modal">
+            <div class="modal-title">
+                <span><i class="fas fa-tasks"></i> 创建整改任务</span>
+                <button class="modal-close" onclick="closeModal('rectificationModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">任务编号</label>
+                        <input type="text" value="ZG2024032001" readonly>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">创建日期</label>
+                        <input type="date" value="2024-03-20">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">关联检查号</label>
+                        <input type="text" value="QC2024032001">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>关联投诉号</label>
+                        <input type="text" placeholder="如有关联投诉请填写">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">责任科室</label>
+                        <select>
+                            <option value="">请选择科室</option>
+                            <option value="急诊科">急诊科</option>
+                            <option value="内科病房">内科病房</option>
+                            <option value="外科病房">外科病房</option>
+                            <option value="门诊部">门诊部</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">责任人</label>
+                        <input type="text" placeholder="请输入责任人姓名">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">整改期限</label>
+                        <input type="date" value="2024-03-27">
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">优先级</label>
+                        <select>
+                            <option value="普通">普通</option>
+                            <option value="重要">重要</option>
+                            <option value="紧急">紧急</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">问题类型</label>
+                        <select>
+                            <option value="">请选择类型</option>
+                            <option value="服务流程">服务流程</option>
+                            <option value="人员素质">人员素质</option>
+                            <option value="制度执行">制度执行</option>
+                            <option value="设备设施">设备设施</option>
+                            <option value="环境卫生">环境卫生</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>监督人员</label>
+                        <input type="text" value="王明华">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label class="required">问题描述</label>
+                        <textarea placeholder="请详细描述需要整改的问题"></textarea>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label class="required">整改要求</label>
+                        <textarea placeholder="请明确整改的具体要求和标准"></textarea>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>整改措施</label>
+                        <textarea placeholder="请填写拟采取的整改措施"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="saveRectification()">创建任务</button>
+                <button class="modal-btn" onclick="closeModal('rectificationModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 绩效评分弹窗 -->
+    <div class="modal-overlay" id="performanceModal">
+        <div class="modal">
+            <div class="modal-title">
+                <span><i class="fas fa-star-half-alt"></i> 服务绩效评分</span>
+                <button class="modal-close" onclick="closeModal('performanceModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">评分编号</label>
+                        <input type="text" value="KH2024030001" readonly>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">考核周期</label>
+                        <select>
+                            <option value="2024-03">2024年3月</option>
+                            <option value="2024-02">2024年2月</option>
+                            <option value="2024-01">2024年1月</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">被考核科室</label>
+                        <select>
+                            <option value="">请选择科室</option>
+                            <option value="急诊科">急诊科</option>
+                            <option value="内科病房">内科病房</option>
+                            <option value="外科病房">外科病房</option>
+                            <option value="门诊部">门诊部</option>
+                            <option value="检验科">检验科</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>科室负责人</label>
+                        <input type="text" placeholder="自动带出">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">服务态度 (20%)</label>
+                        <select>
+                            <option value="20">优秀 (20分)</option>
+                            <option value="16">良好 (16分)</option>
+                            <option value="12">合格 (12分)</option>
+                            <option value="8">待改进 (8分)</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">工作效率 (20%)</label>
+                        <select>
+                            <option value="20">优秀 (20分)</option>
+                            <option value="16">良好 (16分)</option>
+                            <option value="12">合格 (12分)</option>
+                            <option value="8">待改进 (8分)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">制度执行 (20%)</label>
+                        <select>
+                            <option value="20">优秀 (20分)</option>
+                            <option value="16">良好 (16分)</option>
+                            <option value="12">合格 (12分)</option>
+                            <option value="8">待改进 (8分)</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label class="required">患者满意 (25%)</label>
+                        <select>
+                            <option value="25">优秀 (25分)</option>
+                            <option value="20">良好 (20分)</option>
+                            <option value="15">合格 (15分)</option>
+                            <option value="10">待改进 (10分)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label class="required">整改落实 (15%)</label>
+                        <select>
+                            <option value="15">优秀 (15分)</option>
+                            <option value="12">良好 (12分)</option>
+                            <option value="9">合格 (9分)</option>
+                            <option value="6">待改进 (6分)</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>综合得分</label>
+                        <input type="text" value="自动计算" readonly style="background:#f0f0f0;">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>检查次数</label>
+                        <input type="text" value="8" readonly style="background:#f0f0f0;">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>投诉次数</label>
+                        <input type="text" value="2" readonly style="background:#f0f0f0;">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>考核评语</label>
+                        <textarea placeholder="请填写综合考核评语"></textarea>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>改进建议</label>
+                        <textarea placeholder="请填写下阶段改进建议"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="savePerformance()">提交评分</button>
+                <button class="modal-btn" onclick="closeModal('performanceModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据查询弹窗 -->
+    <div class="modal-overlay" id="queryModal">
+        <div class="modal">
+            <div class="modal-title">
+                <span><i class="fas fa-search"></i> 高级数据查询</span>
+                <button class="modal-close" onclick="closeModal('queryModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>查询类型</label>
+                        <select>
+                            <option value="inspection">质量检查记录</option>
+                            <option value="complaint">投诉处理记录</option>
+                            <option value="rectification">整改任务记录</option>
+                            <option value="performance">绩效考核记录</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>记录编号</label>
+                        <input type="text" placeholder="支持模糊查询">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>开始日期</label>
+                        <input type="date" value="2024-03-01">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>结束日期</label>
+                        <input type="date" value="2024-03-20">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>涉及科室</label>
+                        <select>
+                            <option value="">全部科室</option>
+                            <option value="急诊科">急诊科</option>
+                            <option value="内科病房">内科病房</option>
+                            <option value="外科病房">外科病房</option>
+                            <option value="门诊部">门诊部</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>处理状态</label>
+                        <select>
+                            <option value="">全部状态</option>
+                            <option value="待处理">待处理</option>
+                            <option value="处理中">处理中</option>
+                            <option value="已完成">已完成</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>严重程度</label>
+                        <select>
+                            <option value="">全部</option>
+                            <option value="合格">合格</option>
+                            <option value="一般">一般</option>
+                            <option value="严重">严重</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>检查人员</label>
+                        <select>
+                            <option value="">全部人员</option>
+                            <option value="王明华">王明华</option>
+                            <option value="李秀芳">李秀芳</option>
+                            <option value="陈建国">陈建国</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <label>关键词</label>
+                        <input type="text" placeholder="在问题描述中搜索关键词" style="width:100%;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="executeQuery()">开始查询</button>
+                <button class="modal-btn" onclick="resetQuery()">重置条件</button>
+                <button class="modal-btn" onclick="closeModal('queryModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计分析弹窗 -->
+    <div class="modal-overlay" id="statisticsModal">
+        <div class="modal" style="max-width:800px;">
+            <div class="modal-title">
+                <span><i class="fas fa-chart-bar"></i> 统计分析报表</span>
+                <button class="modal-close" onclick="closeModal('statisticsModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>统计周期</label>
+                        <select id="statsPeriod" onchange="updateStats()">
+                            <option value="month">本月统计</option>
+                            <option value="quarter">本季度统计</option>
+                            <option value="year">本年度统计</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>统计维度</label>
+                        <select>
+                            <option value="dept">按科室统计</option>
+                            <option value="type">按类型统计</option>
+                            <option value="person">按人员统计</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="stats-panel" style="margin-top:16px;">
+                    <div class="stat-card">
+                        <div class="number">156</div>
+                        <div class="label">检查总次数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">42</div>
+                        <div class="label">投诉总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">38</div>
+                        <div class="label">整改任务</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">91.2%</div>
+                        <div class="label">整改完成率</div>
+                    </div>
+                </div>
+                <div class="section-title" style="margin-top:16px;">各科室检查情况统计</div>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>科室名称</th>
+                                <th>检查次数</th>
+                                <th>发现问题</th>
+                                <th>投诉次数</th>
+                                <th>整改任务</th>
+                                <th>完成率</th>
+                                <th>综合评分</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>急诊科</td>
+                                <td>24</td>
+                                <td>8</td>
+                                <td>5</td>
+                                <td>6</td>
+                                <td>83.3%</td>
+                                <td>86.5</td>
+                            </tr>
+                            <tr>
+                                <td>内科病房</td>
+                                <td>28</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>100%</td>
+                                <td>92.3</td>
+                            </tr>
+                            <tr>
+                                <td>外科病房</td>
+                                <td>22</td>
+                                <td>4</td>
+                                <td>2</td>
+                                <td>3</td>
+                                <td>100%</td>
+                                <td>94.1</td>
+                            </tr>
+                            <tr>
+                                <td>门诊部</td>
+                                <td>32</td>
+                                <td>10</td>
+                                <td>8</td>
+                                <td>8</td>
+                                <td>87.5%</td>
+                                <td>84.2</td>
+                            </tr>
+                            <tr>
+                                <td>检验科</td>
+                                <td>18</td>
+                                <td>2</td>
+                                <td>1</td>
+                                <td>2</td>
+                                <td>100%</td>
+                                <td>96.8</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="exportStats()">导出报表</button>
+                <button class="modal-btn" onclick="printStats()">打印报表</button>
+                <button class="modal-btn" onclick="closeModal('statisticsModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统设置弹窗 -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-title">
+                <span><i class="fas fa-cog"></i> 系统参数设置</span>
+                <button class="modal-close" onclick="closeModal('settingsModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">基本设置</div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>医院名称</label>
+                        <input type="text" value="市第一人民医院">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>部门名称</label>
+                        <input type="text" value="医务质控部">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>默认整改期限</label>
+                        <select>
+                            <option value="3">3天</option>
+                            <option value="7" selected>7天</option>
+                            <option value="14">14天</option>
+                            <option value="30">30天</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>逾期提醒天数</label>
+                        <select>
+                            <option value="1">提前1天</option>
+                            <option value="2">提前2天</option>
+                            <option value="3" selected>提前3天</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="section-title" style="margin-top:16px;">评分标准设置</div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>优秀标准</label>
+                        <input type="text" value="90分及以上">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>良好标准</label>
+                        <input type="text" value="80-89分">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>合格标准</label>
+                        <input type="text" value="60-79分">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>不合格标准</label>
+                        <input type="text" value="60分以下">
+                    </div>
+                </div>
+                <div class="section-title" style="margin-top:16px;">数据管理</div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>数据保留期限</label>
+                        <select>
+                            <option value="1">1年</option>
+                            <option value="2">2年</option>
+                            <option value="3" selected>3年</option>
+                            <option value="5">5年</option>
+                        </select>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>自动备份</label>
+                        <select>
+                            <option value="daily">每日备份</option>
+                            <option value="weekly" selected>每周备份</option>
+                            <option value="monthly">每月备份</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="saveSettings()">保存设置</button>
+                <button class="modal-btn" onclick="closeModal('settingsModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情查看弹窗 -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal" style="max-width:750px;">
+            <div class="modal-title">
+                <span><i class="fas fa-file-alt"></i> 检查记录详情</span>
+                <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="section-title">基本信息</div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>检查编号</label>
+                        <input type="text" value="QC2024032001" readonly style="background:#f0f0f0;">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>检查日期</label>
+                        <input type="text" value="2024-03-20" readonly style="background:#f0f0f0;">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>检查科室</label>
+                        <input type="text" value="急诊科" readonly style="background:#f0f0f0;">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>检查类型</label>
+                        <input type="text" value="日常巡查" readonly style="background:#f0f0f0;">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>检查人员</label>
+                        <input type="text" value="王明华" readonly style="background:#f0f0f0;">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>严重程度</label>
+                        <input type="text" value="严重" readonly style="background:#f0f0f0;">
+                    </div>
+                </div>
+                <div class="section-title" style="margin-top:12px;">评分情况</div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>服务规范</label>
+                        <input type="text" value="3分 (合格)" readonly style="background:#f0f0f0;">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>环境卫生</label>
+                        <input type="text" value="4分 (良好)" readonly style="background:#f0f0f0;">
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>制度执行</label>
+                        <input type="text" value="3分 (合格)" readonly style="background:#f0f0f0;">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>综合得分</label>
+                        <input type="text" value="76分" readonly style="background:#f0f0f0;">
+                    </div>
+                </div>
+                <div class="section-title" style="margin-top:12px;">问题描述</div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <textarea readonly style="background:#f0f0f0;height:50px;">急诊分诊等待时间超标，部分患者等待超过30分钟，分诊护士人手不足，高峰期患者积压严重。</textarea>
+                    </div>
+                </div>
+                <div class="section-title" style="margin-top:12px;">整改建议</div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group full">
+                        <textarea readonly style="background:#f0f0f0;height:50px;">1. 增派分诊护士，特别是高峰时段；2. 优化分诊流程，提高效率；3. 设置预检分诊区域，分流轻症患者。</textarea>
+                    </div>
+                </div>
+                <div class="section-title" style="margin-top:12px;">处理进度</div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label>当前状态</label>
+                        <input type="text" value="处理中" readonly style="background:#cce5ff;">
+                    </div>
+                    <div class="modal-form-group">
+                        <label>整改期限</label>
+                        <input type="text" value="2024-03-27" readonly style="background:#f0f0f0;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="createRectification()">创建整改</button>
+                <button class="modal-btn" onclick="printDetail()">打印详情</button>
+                <button class="modal-btn" onclick="closeModal('detailModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 打开弹窗
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        // 关闭弹窗
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // 点击遮罩关闭弹窗
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        // 选择表格行
+        function selectRow(row) {
+            document.querySelectorAll('.data-table tbody tr').forEach(function(tr) {
+                tr.classList.remove('selected');
+                tr.querySelector('input[type="checkbox"]').checked = false;
+            });
+            row.classList.add('selected');
+            row.querySelector('input[type="checkbox"]').checked = true;
+        }
+
+        // 全选/取消全选
+        function selectAll(checkbox) {
+            document.querySelectorAll('.data-table tbody input[type="checkbox"]').forEach(function(cb) {
+                cb.checked = checkbox.checked;
+                if (checkbox.checked) {
+                    cb.closest('tr').classList.add('selected');
+                } else {
+                    cb.closest('tr').classList.remove('selected');
+                }
+            });
+        }
+
+        // 查看详情
+        function viewDetail(recordId) {
+            openModal('detailModal');
+        }
+
+        // 编辑记录
+        function editRecord() {
+            openModal('inspectionModal');
+        }
+
+        // 删除记录
+        function deleteRecord() {
+            if (confirm('确定要删除选中的记录吗？此操作不可恢复。')) {
+                alert('记录已删除');
+            }
+        }
+
+        // 保存记录
+        function saveRecord() {
+            alert('记录已保存');
+        }
+
+        // 保存检查
+        function saveInspection() {
+            alert('质量检查记录已保存');
+            closeModal('inspectionModal');
+        }
+
+        // 保存投诉
+        function saveComplaint() {
+            alert('投诉信息已登记');
+            closeModal('complaintModal');
+        }
+
+        // 保存整改
+        function saveRectification() {
+            alert('整改任务已创建');
+            closeModal('rectificationModal');
+        }
+
+        // 保存绩效
+        function savePerformance() {
+            alert('绩效评分已提交');
+            closeModal('performanceModal');
+        }
+
+        // 执行查询
+        function executeQuery() {
+            alert('查询完成，共找到 23 条记录');
+            closeModal('queryModal');
+        }
+
+        // 重置查询
+        function resetQuery() {
+            alert('查询条件已重置');
+        }
+
+        // 保存设置
+        function saveSettings() {
+            alert('系统设置已保存');
+            closeModal('settingsModal');
+        }
+
+        // 导出数据
+        function exportData() {
+            alert('数据导出成功，文件已保存至下载目录');
+        }
+
+        // 导出统计
+        function exportStats() {
+            alert('统计报表导出成功');
+        }
+
+        // 打印报表
+        function printReport() {
+            alert('正在准备打印...');
+        }
+
+        // 打印统计
+        function printStats() {
+            alert('正在准备打印统计报表...');
+        }
+
+        // 打印详情
+        function printDetail() {
+            alert('正在准备打印详情...');
+        }
+
+        // 创建整改
+        function createRectification() {
+            closeModal('detailModal');
+            openModal('rectificationModal');
+        }
+
+        // 刷新列表
+        function refreshList() {
+            alert('列表已刷新');
+        }
+
+        // 搜索记录
+        function searchRecords() {
+            alert('查询完成');
+        }
+
+        // 上一条
+        function prevRecord() {
+            alert('已切换至上一条记录');
+        }
+
+        // 下一条
+        function nextRecord() {
+            alert('已切换至下一条记录');
+        }
+
+        // 切换标签页
+        function switchTab(btn, tabName) {
+            document.querySelectorAll('.tab-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+
+        // 更新统计
+        function updateStats() {
+            // 模拟更新统计数据
+        }
+
+        // 退出系统
+        function exitSystem() {
+            if (confirm('确定要退出系统吗？')) {
+                alert('系统已退出');
+            }
+        }
+
+        // 左侧列表点击事件
+        document.querySelectorAll('.record-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.record-item').forEach(function(i) {
+                    i.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

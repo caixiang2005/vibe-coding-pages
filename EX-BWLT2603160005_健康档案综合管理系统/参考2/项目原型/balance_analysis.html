@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>流域水资源供需结构分析计算软件</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: url('./static/bg.jpg') no-repeat;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .mac-window {
+      width: 1120px;
+      max-width: 96vw;
+      background: #1e1e1e;
+      border-radius: 10px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .title-bar {
+      height: 38px;
+      background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .traffic-light.close { background: #ff5f57; border: 0.5px solid #e0443e; }
+    .traffic-light.minimize { background: #febc2e; border: 0.5px solid #dea123; }
+    .traffic-light.maximize { background: #28c840; border: 0.5px solid #1aab29; }
+
+    .title-bar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #999;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .toolbar {
+      height: 40px;
+      background: linear-gradient(180deg, #292929, #232323);
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 2px;
+    }
+
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      color: #aaa;
+      font-size: 11.5px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #ddd;
+    }
+
+    .tool-btn:active {
+      transform: scale(0.97);
+    }
+
+    .tool-sep {
+      width: 1px;
+      height: 20px;
+      background: #3a3a3a;
+      margin: 0 6px;
+    }
+
+    .toolbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px 3px 6px;
+      background: rgba(74, 144, 226, 0.12);
+      border: 1px solid rgba(74, 144, 226, 0.25);
+      border-radius: 12px;
+      color: #7ab8f5;
+      font-size: 11px;
+    }
+
+    .user-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .main-layout {
+      display: flex;
+      height: 620px;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #252525;
+      border-right: 1px solid #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 12px 14px 8px;
+      color: #666;
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-item {
+      padding: 6px 8px;
+      color: #aaa;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #ccc;
+    }
+
+    .nav-item:active {
+      transform: scale(0.98);
+    }
+
+    .nav-item.active {
+      background: rgba(74, 144, 226, 0.15);
+      color: #7ab8f5;
+    }
+
+    .nav-item i {
+      width: 13px;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 10px 14px;
+      border-top: 1px solid #1e1e1e;
+    }
+
+    .project-info {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .project-label {
+      color: #555;
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .project-name {
+      color: #bbb;
+      font-size: 11.5px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .project-meta {
+      display: flex;
+      gap: 12px;
+    }
+
+    .project-meta span {
+      color: #666;
+      font-size: 10px;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #1e1e1e;
+    }
+
+    .tab-bar {
+      display: flex;
+      background: #222;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .tab {
+      padding: 9px 18px;
+      color: #777;
+      font-size: 12px;
+      cursor: pointer;
+      border-right: 1px solid #1a1a1a;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .tab:hover { color: #aaa; background: rgba(255, 255, 255, 0.02); }
+    .tab.active { color: #ddd; background: #1e1e1e; }
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #4a90e2;
+    }
+
+    .content-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .content-body::-webkit-scrollbar { width: 6px; }
+    .content-body::-webkit-scrollbar-track { background: transparent; }
+    .content-body::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
+
+    .card {
+      background: #262626;
+      border-radius: 8px;
+      border: 1px solid #333;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      color: #ccc;
+      font-size: 12.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .dot-blue { background: #4a90e2; }
+    .dot-green { background: #28c840; }
+    .dot-orange { background: #f5a623; }
+    .dot-purple { background: #9b59b6; }
+    .dot-red { background: #e74c3c; }
+
+    .card-badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .badge-info {
+      background: rgba(74, 144, 226, 0.12);
+      color: #7ab8f5;
+      border: 1px solid rgba(74, 144, 226, 0.2);
+    }
+
+    .badge-success {
+      background: rgba(40, 200, 64, 0.12);
+      color: #28c840;
+      border: 1px solid rgba(40, 200, 64, 0.2);
+    }
+
+    .badge-warning {
+      background: rgba(245, 166, 35, 0.12);
+      color: #f5a623;
+      border: 1px solid rgba(245, 166, 35, 0.2);
+    }
+
+    .card-body { padding: 14px; }
+
+    .stats-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .stat-block {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .stat-value.blue { color: #4a90e2; }
+    .stat-value.green { color: #28c840; }
+    .stat-value.orange { color: #f5a623; }
+    .stat-value.red { color: #e74c3c; }
+
+    .stat-label { color: #777; font-size: 10.5px; }
+    .stat-sub { color: #555; font-size: 9.5px; margin-top: 2px; }
+
+    .full-width { grid-column: 1 / -1; }
+
+    .balance-chart {
+      height: 140px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+    }
+
+    .balance-bar-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .balance-bar {
+      width: 100%;
+      height: 100px;
+      background: #333;
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .balance-bar-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      transition: height 0.5s ease;
+    }
+
+    .balance-bar-fill.surplus {
+      background: linear-gradient(180deg, #28c840, #1fa032);
+    }
+
+    .balance-bar-fill.deficit {
+      background: linear-gradient(180deg, #e74c3c, #c0392b);
+    }
+
+    .balance-bar-label {
+      color: #555;
+      font-size: 9px;
+      text-align: center;
+    }
+
+    .balance-bar-value {
+      color: #888;
+      font-size: 10px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      padding: 7px 10px;
+      text-align: left;
+      color: #777;
+      font-size: 10.5px;
+      font-weight: 500;
+      border-bottom: 1px solid #333;
+    }
+
+    .data-table td {
+      padding: 6px 10px;
+      color: #bbb;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .td-highlight { color: #4a90e2; font-weight: 500; }
+    .td-positive { color: #28c840; }
+    .td-negative { color: #e74c3c; }
+
+    .status-bar {
+      height: 24px;
+      background: #222;
+      border-top: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+    }
+
+    .status-item {
+      color: #555;
+      font-size: 10.5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #28c840;
+    }
+
+    .status-right {
+      margin-left: auto;
+      display: flex;
+      gap: 14px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card { animation: fadeIn 0.4s ease both; }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 2px; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #2a2a2a;
+      border-radius: 10px;
+      border: 1px solid #3a3a3a;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      min-width: 380px;
+      max-width: 500px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #3a3a3a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .modal-traffic-lights {
+      position: absolute;
+      left: 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #ff5f57;
+      border: 0.5px solid #e0443e;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #febc2e;
+      border: 0.5px solid #dea123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28c840;
+      border: 0.5px solid #1aab29;
+    }
+
+    .modal-title {
+      color: #ddd;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .modal-body { padding: 16px; }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #3a3a3a;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn-secondary { background: #3a3a3a; color: #aaa; }
+    .btn-secondary:hover { background: #444; color: #fff; }
+    .btn-primary { background: #4a90e2; color: #fff; }
+    .btn-primary:hover { background: #5a9fe8; }
+
+    .form-group { margin-bottom: 12px; }
+
+    .form-label {
+      display: block;
+      color: #888;
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 12px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #4a90e2;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 7px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .form-select:focus { outline: none; border-color: #4a90e2; }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .form-row .form-group { flex: 1; }
+
+    .analysis-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .analysis-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #1e1e1e;
+      border: 1px solid #3a3a3a;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .analysis-option:hover {
+      border-color: #4a90e2;
+      background: rgba(74, 144, 226, 0.05);
+    }
+
+    .analysis-option input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: #4a90e2;
+    }
+
+    .analysis-option span {
+      color: #aaa;
+      font-size: 11.5px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mac-window">
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <div class="traffic-light close"></div>
+        <div class="traffic-light minimize"></div>
+        <div class="traffic-light maximize"></div>
+      </div>
+      <span class="title-bar-text">流域水资源供需结构分析计算软件</span>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool-btn" onclick="location.href='main.html'">
+        <i class="fa-solid fa-arrow-left"></i>
+        返回
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnNewAnalysis">
+        <i class="fa-solid fa-plus"></i>
+        新增分析
+      </button>
+      <button class="tool-btn" id="btnCompare">
+        <i class="fa-solid fa-code-compare"></i>
+        对比分析
+      </button>
+      <button class="tool-btn" id="btnExport">
+        <i class="fa-solid fa-download"></i>
+        导出成果
+      </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btnRunBalance" style="color:#4a90e2;">
+        <i class="fa-solid fa-play"></i>
+        运行平衡分析
+      </button>
+      <div class="toolbar-right">
+        <div class="user-badge">
+          <img class="user-avatar" src="https://i01piccdn.sogoucdn.com/4a7eff1521dc451e" alt="于露" />
+          于露
+        </div>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">功能导航</div>
+
+        <div class="nav-item" onclick="location.href='main.html'">
+          <i class="fa-solid fa-table-cells"></i>
+          供需总览
+        </div>
+        <div class="nav-item" onclick="location.href='need_water.html'">
+          <i class="fa-solid fa-users"></i>
+          需水预测
+        </div>
+        <div class="nav-item" onclick="location.href='supply_analysis.html'">
+          <i class="fa-solid fa-droplet"></i>
+          供水分析
+        </div>
+        <div class="nav-item active">
+          <i class="fa-solid fa-chart-column"></i>
+          供需平衡分析
+        </div>
+        <div class="nav-item" onclick="location.href='water_balance_check.html'">
+          <i class="fa-solid fa-check-double"></i>
+          水量平衡校核
+        </div>
+        <div class="nav-item" onclick="location.href='scheme_comparison.html'">
+          <i class="fa-solid fa-code-compare"></i>
+          方案比选
+        </div>
+        <div class="nav-item" onclick="location.href='results_output.html'">
+          <i class="fa-solid fa-file-lines"></i>
+          成果输出
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="project-info">
+            <div class="project-label">当前项目</div>
+            <div class="project-name">海河流域水资源配置</div>
+            <div class="project-meta">
+              <span>规划水平年：2035</span>
+              <span>P=75%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <div class="content-body">
+          <div class="card full-width">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-blue"></span> 供需平衡分析总览 (2035 年 P=75%)</div>
+              <span class="card-badge badge-success">分析完成</span>
+            </div>
+            <div class="card-body">
+              <div class="stats-row">
+                <div class="stat-block">
+                  <div class="stat-value blue">438.6</div>
+                  <div class="stat-label">总供水量 (亿 m3)</div>
+                  <div class="stat-sub">可供水量</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value orange">471.2</div>
+                  <div class="stat-label">总需水量 (亿 m3)</div>
+                  <div class="stat-sub">预测需水</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value red">-32.6</div>
+                  <div class="stat-label">供需差值 (亿 m3)</div>
+                  <div class="stat-sub">缺水状态</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value green">93.1%</div>
+                  <div class="stat-label">供水保证率</div>
+                  <div class="stat-sub">满足程度</div>
+                </div>
+                <div class="stat-block">
+                  <div class="stat-value blue">6.9%</div>
+                  <div class="stat-label">缺水率</div>
+                  <div class="stat-sub">缺水程度</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-green"></span> 分区供需平衡对比</div>
+              <span class="card-badge badge-info">8 个分区</span>
+            </div>
+            <div class="card-body" style="padding: 8px 14px;">
+              <div class="balance-chart">
+                <div class="balance-bar-wrapper">
+                  <div class="balance-bar">
+                    <div class="balance-bar-fill deficit" style="height:90%"></div>
+                  </div>
+                  <div class="balance-bar-value" style="color:#e74c3c;">-5.8</div>
+                  <div class="balance-bar-label">滦河</div>
+                </div>
+                <div class="balance-bar-wrapper">
+                  <div class="balance-bar">
+                    <div class="balance-bar-fill deficit" style="height:83%"></div>
+                  </div>
+                  <div class="balance-bar-value" style="color:#e74c3c;">-10.3</div>
+                  <div class="balance-bar-label">北三河</div>
+                </div>
+                <div class="balance-bar-wrapper">
+                  <div class="balance-bar">
+                    <div class="balance-bar-fill surplus" style="height:100%"></div>
+                  </div>
+                  <div class="balance-bar-value" style="color:#28c840;">+5.2</div>
+                  <div class="balance-bar-label">永定河</div>
+                </div>
+                <div class="balance-bar-wrapper">
+                  <div class="balance-bar">
+                    <div class="balance-bar-fill deficit" style="height:77%"></div>
+                  </div>
+                  <div class="balance-bar-value" style="color:#e74c3c;">-16.2</div>
+                  <div class="balance-bar-label">大清河</div>
+                </div>
+                <div class="balance-bar-wrapper">
+                  <div class="balance-bar">
+                    <div class="balance-bar-fill surplus" style="height:100%"></div>
+                  </div>
+                  <div class="balance-bar-value" style="color:#28c840;">+1.4</div>
+                  <div class="balance-bar-label">子牙河</div>
+                </div>
+                <div class="balance-bar-wrapper">
+                  <div class="balance-bar">
+                    <div class="balance-bar-fill deficit" style="height:81%"></div>
+                  </div>
+                  <div class="balance-bar-value" style="color:#e74c3c;">-7.9</div>
+                  <div class="balance-bar-label">黑龙港</div>
+                </div>
+                <div class="balance-bar-wrapper">
+                  <div class="balance-bar">
+                    <div class="balance-bar-fill surplus" style="height:100%"></div>
+                  </div>
+                  <div class="balance-bar-value" style="color:#28c840;">+4.1</div>
+                  <div class="balance-bar-label">漳卫河</div>
+                </div>
+                <div class="balance-bar-wrapper">
+                  <div class="balance-bar">
+                    <div class="balance-bar-fill deficit" style="height:95%"></div>
+                  </div>
+                  <div class="balance-bar-value" style="color:#e74c3c;">-3.1</div>
+                  <div class="balance-bar-label">徒骇马颊</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-orange"></span> 缺水类型分析</div>
+            </div>
+            <div class="card-body" style="padding: 8px 14px;">
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="color:#888;font-size:10px;width:60px;">资源性缺水</span>
+                  <div style="flex:1;height:8px;background:#333;border-radius:4px;overflow:hidden;">
+                    <div style="height:100%;width:65%;background:linear-gradient(90deg,#e74c3c,#c0392b);border-radius:4px;"></div>
+                  </div>
+                  <span style="color:#aaa;font-size:10px;width:40px;text-align:right;">65%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="color:#888;font-size:10px;width:60px;">工程性缺水</span>
+                  <div style="flex:1;height:8px;background:#333;border-radius:4px;overflow:hidden;">
+                    <div style="height:100%;width:25%;background:linear-gradient(90deg,#f5a623,#d4891a);border-radius:4px;"></div>
+                  </div>
+                  <span style="color:#aaa;font-size:10px;width:40px;text-align:right;">25%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="color:#888;font-size:10px;width:60px;">水质性缺水</span>
+                  <div style="flex:1;height:8px;background:#333;border-radius:4px;overflow:hidden;">
+                    <div style="height:100%;width:10%;background:linear-gradient(90deg,#9b59b6,#7d4792);border-radius:4px;"></div>
+                  </div>
+                  <span style="color:#aaa;font-size:10px;width:40px;text-align:right;">10%</span>
+                </div>
+              </div>
+              <div style="margin-top:12px;padding:10px;background:#1e1e1e;border-radius:5px;border:1px solid #333;">
+                <div style="color:#888;font-size:10px;margin-bottom:6px;">主要缺水原因</div>
+                <div style="color:#aaa;font-size:11px;line-height:1.6;">
+                  <div><i class="fa-solid fa-circle-exclamation" style="color:#e74c3c;margin-right:6px;"></i>水资源总量不足，人均占有量低</div>
+                  <div><i class="fa-solid fa-circle-exclamation" style="color:#f5a623;margin-right:6px;"></i>时空分布不均，年内年际变化大</div>
+                  <div><i class="fa-solid fa-circle-exclamation" style="color:#9b59b6;margin-right:6px;"></i>局部地区水污染问题突出</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card full-width">
+            <div class="card-header">
+              <div class="card-title"><span class="dot dot-purple"></span> 分区供需平衡计算成果表</div>
+              <span class="card-badge badge-info">单位：亿 m3</span>
+            </div>
+            <div class="card-body" style="padding: 0; overflow-x: auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>计算分区</th>
+                    <th>总需水</th>
+                    <th>总供水</th>
+                    <th>余缺量</th>
+                    <th>缺水率</th>
+                    <th>供水保证率</th>
+                    <th>平衡状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>滦河水系</td>
+                    <td>64.7</td>
+                    <td>58.9</td>
+                    <td class="td-negative">-5.8</td>
+                    <td class="td-negative">9.0%</td>
+                    <td>91.0%</td>
+                    <td><span style="color:#e74c3c;font-size:10px;"><i class="fa-solid fa-circle-exclamation"></i> 缺水</span></td>
+                  </tr>
+                  <tr>
+                    <td>北三河水系</td>
+                    <td>60.9</td>
+                    <td>50.6</td>
+                    <td class="td-negative">-10.3</td>
+                    <td class="td-negative">16.9%</td>
+                    <td>83.1%</td>
+                    <td><span style="color:#e74c3c;font-size:10px;"><i class="fa-solid fa-circle-exclamation"></i> 缺水</span></td>
+                  </tr>
+                  <tr>
+                    <td>永定河水系</td>
+                    <td>62.3</td>
+                    <td>67.5</td>
+                    <td class="td-positive">+5.2</td>
+                    <td class="td-positive">--</td>
+                    <td>100%</td>
+                    <td><span style="color:#28c840;font-size:10px;"><i class="fa-solid fa-circle-check"></i> 平衡</span></td>
+                  </tr>
+                  <tr>
+                    <td>大清河水系</td>
+                    <td>69.3</td>
+                    <td>53.1</td>
+                    <td class="td-negative">-16.2</td>
+                    <td class="td-negative">23.4%</td>
+                    <td>76.6%</td>
+                    <td><span style="color:#e74c3c;font-size:10px;"><i class="fa-solid fa-circle-exclamation"></i> 缺水</span></td>
+                  </tr>
+                  <tr>
+                    <td>子牙河水系</td>
+                    <td>46.8</td>
+                    <td>48.2</td>
+                    <td class="td-positive">+1.4</td>
+                    <td class="td-positive">--</td>
+                    <td>100%</td>
+                    <td><span style="color:#28c840;font-size:10px;"><i class="fa-solid fa-circle-check"></i> 平衡</span></td>
+                  </tr>
+                  <tr>
+                    <td>黑龙港</td>
+                    <td>41.0</td>
+                    <td>33.1</td>
+                    <td class="td-negative">-7.9</td>
+                    <td class="td-negative">19.3%</td>
+                    <td>80.7%</td>
+                    <td><span style="color:#e74c3c;font-size:10px;"><i class="fa-solid fa-circle-exclamation"></i> 缺水</span></td>
+                  </tr>
+                  <tr>
+                    <td>漳卫河水系</td>
+                    <td>66.1</td>
+                    <td>70.2</td>
+                    <td class="td-positive">+4.1</td>
+                    <td class="td-positive">--</td>
+                    <td>100%</td>
+                    <td><span style="color:#28c840;font-size:10px;"><i class="fa-solid fa-circle-check"></i> 平衡</span></td>
+                  </tr>
+                  <tr>
+                    <td>徒骇马颊河</td>
+                    <td>60.1</td>
+                    <td>57.0</td>
+                    <td class="td-negative">-3.1</td>
+                    <td class="td-negative">5.2%</td>
+                    <td>94.8%</td>
+                    <td><span style="color:#f5a623;font-size:10px;"><i class="fa-solid fa-circle-half-stroke"></i> 基本平衡</span></td>
+                  </tr>
+                  <tr style="background: rgba(74,144,226,0.06);">
+                    <td style="font-weight:600; color:#ddd;">合计</td>
+                    <td style="font-weight:600; color:#ddd;">471.2</td>
+                    <td style="font-weight:600; color:#ddd;">438.6</td>
+                    <td style="font-weight:600; color:#e74c3c;">-32.6</td>
+                    <td style="font-weight:600; color:#e74c3c;">6.9%</td>
+                    <td style="font-weight:600; color:#4a90e2;">93.1%</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-dot"></span>
+            分析模型就绪
+          </div>
+          <div class="status-item">分析年份：2035</div>
+          <div class="status-item">保证率：P=75%</div>
+          <div class="status-right">
+            <div class="status-item">计算分区：8</div>
+            <div class="status-item">缺水分区：5</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.getElementById('btnNewAnalysis').addEventListener('click', () => {
+      openModal(
+        '新增平衡分析',
+        `<div class="form-group">
+          <label class="form-label">分析名称</label>
+          <input type="text" class="form-input" placeholder="请输入分析名称">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">规划水平年</label>
+            <input type="text" class="form-input" value="2035">
+          </div>
+          <div class="form-group">
+            <label class="form-label">设计保证率</label>
+            <select class="form-select">
+              <option>P=50%</option>
+              <option selected>P=75%</option>
+              <option>P=90%</option>
+              <option>P=95%</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">分析类型</label>
+          <div class="analysis-options">
+            <label class="analysis-option">
+              <input type="checkbox" checked>
+              <span>供需总量分析</span>
+            </label>
+            <label class="analysis-option">
+              <input type="checkbox" checked>
+              <span>分区平衡分析</span>
+            </label>
+            <label class="analysis-option">
+              <input type="checkbox" checked>
+              <span>缺水类型分析</span>
+            </label>
+            <label class="analysis-option">
+              <input type="checkbox">
+              <span>敏感性分析</span>
+            </label>
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary">创建分析</button>`
+      );
+    });
+
+    document.getElementById('btnCompare').addEventListener('click', () => {
+      openModal(
+        '对比分析',
+        `<div class="form-group">
+          <label class="form-label">对比方案</label>
+          <select class="form-select">
+            <option>方案一：现状工程</option>
+            <option selected>方案二：规划工程</option>
+            <option>方案三：强化节水</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">对比基准年</label>
+          <select class="form-select">
+            <option>2020</option>
+            <option>2025</option>
+            <option>2030</option>
+            <option selected>2035</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">对比指标</label>
+          <div class="analysis-options">
+            <label class="analysis-option">
+              <input type="checkbox" checked>
+              <span>供水总量</span>
+            </label>
+            <label class="analysis-option">
+              <input type="checkbox" checked>
+              <span>需水总量</span>
+            </label>
+            <label class="analysis-option">
+              <input type="checkbox" checked>
+              <span>缺水率</span>
+            </label>
+            <label class="analysis-option">
+              <input type="checkbox" checked>
+              <span>保证率</span>
+            </label>
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary">开始对比</button>`
+      );
+    });
+
+    document.getElementById('btnExport').addEventListener('click', () => {
+      openModal(
+        '导出分析成果',
+        `<div class="form-group">
+          <label class="form-label">导出格式</label>
+          <select class="form-select">
+            <option>PDF 报告</option>
+            <option selected>Excel 数据</option>
+            <option>Word 文档</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">导出内容</label>
+          <div class="analysis-options">
+            <label class="analysis-option">
+              <input type="checkbox" checked>
+              <span>平衡分析表</span>
+            </label>
+            <label class="analysis-option">
+              <input type="checkbox" checked>
+              <span>缺水分析图</span>
+            </label>
+            <label class="analysis-option">
+              <input type="checkbox">
+              <span>对比分析图</span>
+            </label>
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">取消</button>
+         <button class="btn btn-primary" onclick="exportAnalysis()">导出</button>`
+      );
+    });
+
+    function exportAnalysis() {
+      openModal(
+        '导出成功',
+        `<div style="text-align:center;padding:20px;">
+          <i class="fa-solid fa-circle-check" style="font-size:48px;color:#28c840;margin-bottom:12px;"></i>
+          <div style="color:#aaa;font-size:12px;margin-bottom:6px;">分析成果已导出</div>
+          <div style="color:#888;font-size:10px;margin-top:8px;">导出路径：D:\水资源项目\输出</div>
+          <div style="margin-top:12px;text-align:left;padding:12px;background:#1e1e1e;border-radius:5px;">
+            <div style="display:flex;align-items:center;gap:8px;color:#ccc;font-size:11px;margin-bottom:6px;">
+              <i class="fa-solid fa-file-pdf" style="color:#e74c3c;"></i>
+              供需平衡分析报告.pdf
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;color:#ccc;font-size:11px;">
+              <i class="fa-solid fa-file-excel" style="color:#28c840;"></i>
+              分区平衡计算表.xlsx
+            </div>
+          </div>
+        </div>`,
+        `<button class="btn btn-primary" onclick="closeModal()">确定</button>`
+      );
+    }
+
+    document.getElementById('btnRunBalance').addEventListener('click', () => {
+      let progress = 0;
+      openModal(
+        '运行平衡分析',
+        `<div style="text-align:center;padding:10px;">
+          <i class="fa-solid fa-chart-column" style="font-size:32px;color:#4a90e2;margin-bottom:12px;"></i>
+          <div style="color:#888;font-size:11px;margin-bottom:8px;">正在计算分区供需平衡...</div>
+        </div>
+        <div style="padding:10px;background:#1e1e1e;border-radius:5px;">
+          <div style="display:flex;justify-content:space-between;color:#777;font-size:10px;margin-bottom:6px;">
+            <span>计算进度</span>
+            <span id="calcProgress">0%</span>
+          </div>
+          <div style="height:4px;background:#333;border-radius:2px;overflow:hidden;">
+            <div id="calcProgressBar" style="height:100%;background:#4a90e2;width:0%;transition:width 0.3s;"></div>
+          </div>
+        </div>`,
+        `<button class="btn btn-secondary" id="btnCancelCalc">取消</button>`
+      );
+
+      const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          document.getElementById('calcProgress').textContent = '100%';
+          document.getElementById('calcProgressBar').style.width = '100%';
+          document.getElementById('btnCancelCalc').textContent = '完成';
+          document.getElementById('btnCancelCalc').onclick = closeModal;
+        } else {
+          document.getElementById('calcProgress').textContent = Math.round(progress) + '%';
+          document.getElementById('calcProgressBar').style.width = progress + '%';
+        }
+      }, 200);
+
+      document.getElementById('btnCancelCalc').addEventListener('click', () => {
+        clearInterval(interval);
+        closeModal();
+      });
+    });
+  </script>
+
+</body>
+
+</html>

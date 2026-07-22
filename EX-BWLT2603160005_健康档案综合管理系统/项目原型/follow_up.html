@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>健康档案综合管理系统 - 随访记录</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f5f5f7;
+      --text-primary: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --text-tertiary: #aeaeb2;
+      --accent: #0071e3;
+      --accent-light: #e8f2fd;
+      --green: #34c759;
+      --orange: #ff9500;
+      --red: #ff3b30;
+      --border: #d2d2d7;
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+      --window-shadow: 0 22px 70px rgba(0, 0, 0, .18), 0 0 0 .5px rgba(0, 0, 0, .08);
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: url('./static/bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .mac-window {
+      width: 1200px;
+      height: 780px;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--window-shadow);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .titlebar {
+      height: 52px;
+      background: linear-gradient(180deg, #f6f6f6, #e8e8e8);
+      border-bottom: 1px solid #d0d0d0;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .tl-close {
+      background: #ff5f57;
+      border: 1px solid #e0443e;
+    }
+
+    .tl-minimize {
+      background: #febc2e;
+      border: 1px solid #dea123;
+    }
+
+    .tl-maximize {
+      background: #28c840;
+      border: 1px solid #1aab29;
+    }
+
+    .titlebar-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .main-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #f0f0f2;
+      border-right: 1px solid var(--border);
+      padding: 12px 8px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section {
+      margin-bottom: 20px;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      padding: 4px 12px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(0, 0, 0, .04);
+    }
+
+    .sidebar-item:active {
+      transform: scale(0.98);
+    }
+
+    .sidebar-item.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .sidebar-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--text-tertiary);
+    }
+
+    .sidebar-item.active .sidebar-icon {
+      color: #fff;
+    }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .content {
+      flex: 1;
+      min-height: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .content-top {
+      padding: 24px 24px 0;
+      flex-shrink: 0;
+    }
+
+    .content-top h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .content-top-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .btn {
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #005bb5;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #f5f5f7;
+    }
+
+    .tabs-bar {
+      display: flex;
+      gap: 0;
+      margin-top: 16px;
+      border-bottom: 2px solid #e8e8ea;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all .15s;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .detail-layout {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .list-pane {
+      width: 340px;
+      border-right: 1px solid #e8e8ea;
+      overflow-y: auto;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    .detail-pane {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      background: var(--bg);
+      padding: 24px;
+    }
+
+    .detail-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      color: var(--text-tertiary);
+      font-size: 14px;
+    }
+
+    .list-search {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f2;
+    }
+
+    .list-search input {
+      width: 100%;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      background: var(--bg);
+    }
+
+    .list-search input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, .12);
+    }
+
+    .list-item {
+      padding: 14px 16px;
+      border-bottom: 1px solid #f5f5f7;
+      cursor: pointer;
+      transition: all .1s;
+    }
+
+    .list-item:hover {
+      background: #fafafa;
+    }
+
+    .list-item.selected {
+      background: var(--accent-light);
+      border-left: 3px solid var(--accent);
+    }
+
+    .li-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .li-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .li-tag {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .li-tag.completed {
+      background: #e8faf0;
+      color: var(--green);
+    }
+
+    .li-tag.pending {
+      background: #fff5e6;
+      color: var(--orange);
+    }
+
+    .li-tag.overdue {
+      background: #fce4e4;
+      color: var(--red);
+    }
+
+    .li-meta {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    .li-preview {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .detail-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .detail-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-sm:hover {
+      background: #f5f5f7;
+    }
+
+    .btn-sm.primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+    }
+
+    .form-section {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 16px;
+      border: 1px solid rgba(0, 0, 0, .04);
+    }
+
+    .form-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f0f0f2;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+
+    .form-value {
+      font-size: 14px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .form-value.warning {
+      color: var(--orange);
+    }
+
+    .form-value.danger {
+      color: var(--red);
+    }
+
+    .form-value.normal {
+      color: var(--green);
+    }
+
+    .form-full {
+      grid-column: span 2;
+    }
+
+    .form-textarea {
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.6;
+      background: #fafafa;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #f0f0f2;
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: #e8e8ea;
+    }
+
+    .tl-item {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .tl-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .tl-dot {
+      position: absolute;
+      left: -21px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    .tl-dot.green {
+      box-shadow: 0 0 0 2px var(--green);
+    }
+
+    .tl-dot.orange {
+      box-shadow: 0 0 0 2px var(--orange);
+    }
+
+    .tl-time {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    .tl-content {
+      font-size: 13px;
+      color: var(--text-primary);
+      margin-top: 3px;
+    }
+
+    .tl-by {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      min-width: 480px;
+      max-width: 580px;
+      transform: scale(0.9) translateY(-20px);
+      transition: transform 0.25s ease;
+      overflow: hidden;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: linear-gradient(180deg, #f6f6f6, #e8e8e8);
+    }
+
+    .modal-traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-traffic-light.close {
+      background: #ff5f57;
+      border: 1px solid #e0443e;
+    }
+
+    .modal-traffic-light.minimize {
+      background: #febc2e;
+      border: 1px solid #dea123;
+    }
+
+    .modal-traffic-light.maximize {
+      background: #28c840;
+      border: 1px solid #1aab29;
+    }
+
+    .modal-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .modal-body {
+      padding: 20px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      background: #fafafa;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .filter-btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover {
+      background: #f5f5f7;
+    }
+
+    .filter-btn:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mac-window">
+    <div class="titlebar">
+      <div class="traffic-lights">
+        <div class="traffic-light tl-close" onclick="window.close()"></div>
+        <div class="traffic-light tl-minimize"></div>
+        <div class="traffic-light tl-maximize"></div>
+      </div>
+      <span class="titlebar-text">健康档案综合管理系统</span>
+    </div>
+    <div class="main-layout">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">导航</div>
+          <div class="sidebar-item" onclick="window.location.href = 'dashboard.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <rect x="2" y="2" width="7" height="7" rx="1.5" />
+              <rect x="11" y="2" width="7" height="7" rx="1.5" />
+              <rect x="2" y="11" width="7" height="7" rx="1.5" />
+              <rect x="11" y="11" width="7" height="7" rx="1.5" />
+            </svg>
+            工作台
+          </div>
+          <div class="sidebar-item" onclick="window.location.href = 'resident_records.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 2a4 4 0 100 8 4 4 0 000-8zM3 18a7 7 0 0114 0H3z" />
+            </svg>
+            居民档案
+            <span class="sidebar-badge">12</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href = 'health_exam.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M9 2a1 1 0 00-1 1v1H5a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2h-3V3a1 1 0 00-1-1H9zm0 2h2v1H9V4zm-4 4h10v8H5V8z" />
+            </svg>
+            健康体检
+          </div>
+          <div class="sidebar-item" onclick="window.location.href = 'chronic_disease.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+            </svg>
+            慢病管理
+          </div>
+          <div class="sidebar-item active" onclick="window.location.href = 'follow_up.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm1 4h8v2H6V7zm0 4h5v2H6v-2z" />
+            </svg>
+            随访记录
+            <span class="sidebar-badge">3</span>
+          </div>
+          <div class="sidebar-item" onclick="window.location.href = 'statistics.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 5a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm0 5a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" />
+            </svg>
+            统计报表
+          </div>
+          <div class="sidebar-item" onclick="window.location.href = 'system_settings.html'">
+            <svg class="sidebar-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" />
+            </svg>
+            系统设置
+          </div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="content-top">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <h1>随访记录管理</h1>
+              <div class="content-top-sub">管理慢病患者定期随访，跟踪病情变化与用药调整</div>
+            </div>
+            <button class="btn btn-primary" onclick="openNewFollowupModal()">+ 新建随访</button>
+          </div>
+          <div class="tabs-bar">
+            <div class="tab active" onclick="switchTab('all', this)">全部 (<span id="count-all">0</span>)</div>
+            <div class="tab" onclick="switchTab('pending', this)">待随访 (<span id="count-pending">0</span>)</div>
+            <div class="tab" onclick="switchTab('completed', this)">已完成 (<span id="count-completed">0</span>)</div>
+            <div class="tab" onclick="switchTab('overdue', this)">已逾期 (<span id="count-overdue">0</span>)</div>
+          </div>
+        </div>
+        <div class="detail-layout">
+          <div class="list-pane">
+            <div class="list-search"><input type="text" id="searchInput" placeholder="搜索随访记录..." oninput="filterList()"></div>
+            <div id="listContainer"></div>
+          </div>
+          <div class="detail-pane" id="detailPane">
+            <div class="detail-empty">请选择一条随访记录</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-traffic-lights">
+          <div class="modal-traffic-light close" onclick="closeModal()"></div>
+          <div class="modal-traffic-light minimize"></div>
+          <div class="modal-traffic-light maximize"></div>
+        </div>
+        <span class="modal-title" id="modalTitle">弹窗标题</span>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+
+    let currentTab = 'all';
+    let selectedId = null;
+
+    const followupData = [
+      { id: 1, name: '陈美华', type: '糖尿病随访', status: 'completed', date: '2026-03-24', planDate: '2026-03-25', method: '门诊', tag: '已完成', bp: '124/78', glucose: '7.2', hba1c: '6.8', weight: '58.5', prevWeight: '59.2', symptom: '偶有口干，无多饮多尿', sign: '足背动脉搏动正常，双足感觉正常', medication: '二甲双胍 0.5g bid，阿卡波糖 50mg tid', adjust: '维持当前方案不变', guidance: '1. 继续低糖低脂饮食，每日主食不超过250g\n2. 坚持每日步行30分钟以上\n3. 注意足部护理，每日检查足部皮肤\n4. 每周自测空腹血糖2-3次，记录血糖日志\n5. 下次随访前复查糖化血红蛋白', ua: '18', lipid: 'TC 4.8 / TG 1.2 / LDL 2.6', timeline: [{ date: '2026-03-24', content: '季度随访完成，血糖控制基本达标，HbA1c 6.8%', by: '张医生', color: 'green' }, { date: '2025-12-20', content: '季度随访完成，HbA1c 7.1%，增加阿卡波糖', by: '张医生', color: 'green' }, { date: '2025-09-15', content: '季度随访，HbA1c 7.5%偏高，加强饮食指导', by: '刘医生', color: 'orange' }, { date: '2025-06-10', content: '季度随访完成，新诊断2型糖尿病，开始二甲双胍治疗', by: '张医生', color: 'green' }] },
+      { id: 2, name: '李建国', type: '高血压随访', status: 'overdue', date: '', planDate: '2026-03-22', method: '上门', tag: '已逾期', bp: '156/98', glucose: '', hba1c: '', weight: '78.2', prevWeight: '78.0', symptom: '头痛、头晕', sign: '血压偏高，双下肢无水肿', medication: '硝苯地平缓释片 20mg qd', adjust: '需调整用药', guidance: '1. 低盐饮食，每日盐摄入不超过5g\n2. 规律作息，避免情绪激动\n3. 适当运动，以散步为主\n4. 密切监测血压变化', ua: '', lipid: '', timeline: [{ date: '2025-12-18', content: '季度随访，血压控制一般，调整用药', by: '王医生', color: 'orange' }, { date: '2025-09-20', content: '季度随访，血压达标，继续当前方案', by: '王医生', color: 'green' }] },
+      { id: 3, name: '王秀兰', type: '高血压随访', status: 'pending', date: '', planDate: '2026-03-29', method: '门诊', tag: '待随访', bp: '148/92', glucose: '5.6', hba1c: '', weight: '65.5', prevWeight: '66.0', symptom: '无明显不适', sign: '血压偏高，余可', medication: '氨氯地平 5mg qd', adjust: '待评估', guidance: '1. 低盐低脂饮食\n2. 按时服药，定期监测血压\n3. 适当运动，控制体重', ua: '', lipid: 'TC 5.8 / TG 1.4 / LDL 3.8', timeline: [{ date: '2026-03-20', content: '健康体检，血压偏高，开始降压治疗', by: '张医生', color: 'green' }] },
+      { id: 4, name: '黄国庆', type: '糖尿病随访', status: 'pending', date: '', planDate: '2026-03-27', method: '门诊', tag: '待随访', bp: '128/82', glucose: '8.5', hba1c: '7.9', weight: '72.0', prevWeight: '71.5', symptom: '口干多饮加重', sign: '足背动脉搏动可', medication: '格列齐特 30mg qd，二甲双胍 0.5g bid', adjust: '需调整胰岛素用量', guidance: '1. 低糖饮食，主食限量\n2. 增加运动量\n3. 学习胰岛素注射技术\n4. 监测血糖，记录日志', ua: '25', lipid: 'TC 5.2 / TG 1.8 / LDL 3.0', timeline: [{ date: '2026-01-10', content: '月度随访，血糖控制欠佳，增加格列齐特', by: '李医生', color: 'orange' }, { date: '2025-12-05', content: '月度随访，调整二甲双胍剂量', by: '李医生', color: 'orange' }] },
+      { id: 5, name: '赵德明', type: '高血压随访', status: 'completed', date: '2026-03-18', planDate: '2026-03-20', method: '门诊', tag: '已完成', bp: '136/84', glucose: '', hba1c: '', weight: '70.0', prevWeight: '71.0', symptom: '无特殊不适', sign: '血压控制良好', medication: '厄贝沙坦 150mg qd', adjust: '维持当前方案', guidance: '1. 继续低盐饮食\n2. 保持规律运动\n3. 定期复查', ua: '', lipid: '', timeline: [{ date: '2026-03-18', content: '季度随访，血压控制达标', by: '刘医生', color: 'green' }, { date: '2025-12-15', content: '季度随访，血压略高，增加厄贝沙坦剂量', by: '刘医生', color: 'orange' }] },
+      { id: 6, name: '周雪梅', type: '冠心病随访', status: 'completed', date: '2026-03-22', planDate: '2026-03-21', method: '门诊', tag: '已完成', bp: '118/72', glucose: '5.2', hba1c: '', weight: '55.0', prevWeight: '55.5', symptom: '偶有胸闷，无心绞痛发作', sign: '心率齐，无杂音', medication: '阿司匹林 100mg qd，阿托伐他汀 20mg qn', adjust: '维持当前方案', guidance: '1. 低脂低盐饮食\n2. 保持心情舒畅\n3. 适度散步活动\n4. 如有胸痛及时就医', ua: '', lipid: 'TC 4.5 / TG 1.0 / LDL 2.2', timeline: [{ date: '2026-03-22', content: '季度随访，病情稳定，继续当前治疗', by: '张医生', color: 'green' }, { date: '2025-12-18', content: '季度随访，无心绞痛发作', by: '张医生', color: 'green' }] },
+      { id: 7, name: '吴志强', type: '高血压随访', status: 'overdue', date: '', planDate: '2026-03-18', method: '上门', tag: '已逾期', bp: '162/102', glucose: '', hba1c: '', weight: '85.0', prevWeight: '84.5', symptom: '头晕明显', sign: '血压显著升高', medication: '替米沙坦 80mg qd', adjust: '需联合用药', guidance: '1. 立即低盐饮食\n2. 卧床休息\n3. 尽快门诊调整用药', ua: '', lipid: '', timeline: [{ date: '2026-01-15', content: '月度随访，血压控制欠佳', by: '王医生', color: 'orange' }] },
+      { id: 8, name: '张丽娟', type: '糖尿病随访', status: 'completed', date: '2026-03-15', planDate: '2026-03-15', method: '电话', tag: '已完成', bp: '122/76', glucose: '6.5', hba1c: '6.5', weight: '60.0', prevWeight: '60.5', symptom: '无明显不适', sign: '一般情况可', medication: '二甲双胍 0.5g bid', adjust: '维持当前方案', guidance: '1. 继续糖尿病饮食\n2. 每周监测血糖\n3. 下次复查糖化血红蛋白', ua: '15', lipid: 'TC 4.6 / TG 1.1 / LDL 2.4', timeline: [{ date: '2026-03-15', content: '电话随访，血糖控制良好', by: '李医生', color: 'green' }, { date: '2025-12-10', content: '季度随访，HbA1c 6.6%，控制达标', by: '李医生', color: 'green' }] },
+      { id: 9, name: '刘广福', type: '慢阻肺随访', status: 'pending', date: '', planDate: '2026-03-28', method: '上门', tag: '待随访', bp: '130/80', glucose: '5.8', hba1c: '', weight: '62.0', prevWeight: '62.5', symptom: '咳嗽咳痰好转，无气促', sign: '双肺呼吸音粗，无啰音', medication: '沙美特罗替卡松粉吸入剂 50/250 bid', adjust: '待评估', guidance: '1. 继续吸入治疗\n2. 避免受凉\n3. 呼吸功能锻炼', ua: '', lipid: '', timeline: [{ date: '2026-02-25', content: '急性加重住院治疗后出院随访', by: '刘医生', color: 'orange' }] },
+      { id: 10, name: '马桂英', type: '高血压随访', status: 'overdue', date: '', planDate: '2026-03-25', method: '门诊', tag: '已逾期', bp: '152/96', glucose: '', hba1c: '', weight: '68.0', prevWeight: '67.5', symptom: '偶有头晕', sign: '血压偏高', medication: '左氨氯地平 5mg qd', adjust: '需调整', guidance: '1. 低盐饮食\n2. 按时服药\n3. 避免情绪激动', ua: '', lipid: '', timeline: [{ date: '2026-01-20', content: '月度随访，血压控制尚可', by: '张医生', color: 'green' }] },
+      { id: 11, name: '孙建军', type: '糖尿病随访', status: 'pending', date: '', planDate: '2026-03-30', method: '门诊', tag: '待随访', bp: '126/80', glucose: '7.8', hba1c: '7.2', weight: '75.0', prevWeight: '74.5', symptom: '视物模糊', sign: '足背动脉搏动减弱', medication: '二甲双胍 0.5g tid', adjust: '待评估并发症', guidance: '1. 控制饮食\n2. 预约眼科检查\n3. 继续监测血糖', ua: '35', lipid: 'TC 5.5 / TG 2.0 / LDL 3.2', timeline: [{ date: '2026-02-28', content: '月度随访，出现视物模糊症状', by: '王医生', color: 'orange' }] },
+      { id: 12, name: '郑芳芳', type: '甲状腺功能减退随访', status: 'completed', date: '2026-03-10', planDate: '2026-03-12', method: '门诊', tag: '已完成', bp: '115/70', glucose: '5.0', hba1c: '', weight: '52.0', prevWeight: '52.5', symptom: '无明显不适', sign: '甲状腺无肿大', medication: '左甲状腺素钠 50ug qd', adjust: '维持当前方案', guidance: '1. 按时服药，定期复查甲功\n2. 避免食用含碘食物\n3. 保持情绪稳定', ua: '', lipid: 'TC 4.2 / TG 0.9 / LDL 2.0', timeline: [{ date: '2026-03-10', content: '季度随访，TSH 2.5，控制良好', by: '李医生', color: 'green' }, { date: '2025-12-05', content: '季度随访，TSH 3.2，轻度升高', by: '李医生', color: 'orange' }] }
+    ];
+
+    function getStatusClass(status) {
+      return status === 'completed' ? 'completed' : status === 'pending' ? 'pending' : 'overdue';
+    }
+
+    function getMetaText(item) {
+      if (item.status === 'completed') {
+        return item.type + ' / ' + item.date;
+      } else if (item.status === 'pending') {
+        return item.type + ' / 计划' + item.planDate;
+      } else {
+        return item.type + ' / 应于' + item.planDate;
+      }
+    }
+
+    function renderList() {
+      const container = document.getElementById('listContainer');
+      const searchText = document.getElementById('searchInput').value.toLowerCase();
+      let filtered = followupData;
+      
+      if (currentTab !== 'all') {
+        filtered = filtered.filter(item => item.status === currentTab);
+      }
+      
+      if (searchText) {
+        filtered = filtered.filter(item => 
+          item.name.toLowerCase().includes(searchText) || 
+          item.type.toLowerCase().includes(searchText)
+        );
+      }
+      
+      document.getElementById('count-all').textContent = followupData.length;
+      document.getElementById('count-pending').textContent = followupData.filter(i => i.status === 'pending').length;
+      document.getElementById('count-completed').textContent = followupData.filter(i => i.status === 'completed').length;
+      document.getElementById('count-overdue').textContent = followupData.filter(i => i.status === 'overdue').length;
+      
+      if (filtered.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:13px;">暂无随访记录</div>';
+        return;
+      }
+      
+      container.innerHTML = filtered.map(item => `
+        <div class="list-item ${item.id === selectedId ? 'selected' : ''}" onclick="selectItem(${item.id})">
+          <div class="li-top"><span class="li-name">${item.name}</span><span class="li-tag ${getStatusClass(item.status)}">${item.tag}</span></div>
+          <div class="li-meta">${getMetaText(item)}</div>
+          <div class="li-preview">${item.symptom}</div>
+        </div>
+      `).join('');
+    }
+
+    function switchTab(tab, el) {
+      currentTab = tab;
+      selectedId = null;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      renderList();
+      resetDetailPane();
+    }
+
+    function filterList() {
+      renderList();
+    }
+
+    function resetDetailPane() {
+      document.getElementById('detailPane').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:14px;">请选择一条随访记录</div>';
+    }
+
+    function selectItem(id) {
+      selectedId = id;
+      renderList();
+      showDetail(id);
+    }
+
+    function showDetail(id) {
+      const item = followupData.find(i => i.id === id);
+      if (!item) return;
+      
+      const glucoseClass = item.glucose && item.hba1c ? (parseFloat(item.hba1c) < 7 ? 'normal' : 'warning') : '';
+      const bpClass = item.bp ? (item.bp.startsWith('15') || item.bp.startsWith('16') || item.bp.startsWith('14') && item.bp.includes('9') ? 'danger' : item.bp.startsWith('14') || item.bp.startsWith('13') ? 'normal' : '') : '';
+      
+      let labSection = '';
+      if (item.glucose || item.hba1c || item.ua || item.lipid) {
+        labSection = `
+          <div class="form-section">
+            <div class="form-section-title">实验室检查</div>
+            <div class="form-grid">
+              ${item.glucose ? `<div class="form-group"><div class="form-label">空腹血糖</div><div class="form-value ${item.glucose > 7 ? 'warning' : 'normal'}">${item.glucose} mmol/L (参考: 4.4-6.1)</div></div>` : ''}
+              ${item.hba1c ? `<div class="form-group"><div class="form-label">糖化血红蛋白</div><div class="form-value ${glucoseClass}">${item.hba1c}% (参考: <7.0%)</div></div>` : ''}
+              ${item.ua ? `<div class="form-group"><div class="form-label">尿微量白蛋白</div><div class="form-value normal">${item.ua} mg/L (参考: <30)</div></div>` : ''}
+              ${item.lipid ? `<div class="form-group"><div class="form-label">血脂四项</div><div class="form-value normal">${item.lipid}</div></div>` : ''}
+            </div>
+          </div>`;
+      }
+      
+      const timelineHtml = item.timeline.map(t => `
+        <div class="tl-item">
+          <div class="tl-dot ${t.color}"></div>
+          <div class="tl-time">${t.date}</div>
+          <div class="tl-content">${t.content}</div>
+          <div class="tl-by">${t.by}</div>
+        </div>
+      `).join('');
+      
+      document.getElementById('detailPane').innerHTML = `
+        <div class="detail-header">
+          <div>
+            <div class="detail-title">${item.name} - ${item.type}</div>
+            <div class="detail-meta">随访编号：FU${item.planDate.replace(/-/g, '')}-${String(item.id).padStart(3, '0')} / ${item.status === 'completed' ? '随访日期' : '计划日期'}：${item.status === 'completed' ? item.date : item.planDate} / 随访方式：${item.method}</div>
+          </div>
+          <div class="detail-actions">
+            <button class="btn-sm" onclick="openPrintFollowupModal('${item.name}', 'FU${item.planDate.replace(/-/g, '')}-${String(item.id).padStart(3, '0')}')">打印</button>
+            <button class="btn-sm primary" onclick="openEditFollowupModal(${item.id})">编辑</button>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">症状与体征</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <div class="form-label">当前症状</div>
+              <div class="form-value">${item.symptom}</div>
+            </div>
+            <div class="form-group">
+              <div class="form-label">体征</div>
+              <div class="form-value">${item.sign}</div>
+            </div>
+            <div class="form-group">
+              <div class="form-label">血压</div>
+              <div class="form-value ${bpClass}">${item.bp || '--'} mmHg</div>
+            </div>
+            <div class="form-group">
+              <div class="form-label">体重</div>
+              <div class="form-value">${item.weight} kg ${item.prevWeight ? '(上次: ' + item.prevWeight + ' kg)' : ''}</div>
+            </div>
+          </div>
+        </div>
+        ${labSection}
+        <div class="form-section">
+          <div class="form-section-title">用药及健康指导</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <div class="form-label">当前用药</div>
+              <div class="form-value">${item.medication}</div>
+            </div>
+            <div class="form-group">
+              <div class="form-label">用药调整</div>
+              <div class="form-value">${item.adjust}</div>
+            </div>
+            <div class="form-group form-full">
+              <div class="form-label">健康指导</div>
+              <div class="form-textarea">${item.guidance.replace(/\n/g, '<br>')}</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">随访历史时间线</div>
+          <div class="timeline">
+            ${timelineHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function openModal(title, bodyHtml, footerHtml) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = bodyHtml;
+      modalFooter.innerHTML = footerHtml;
+      modalOverlay.classList.add('active');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('active');
+    }
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    function openNewFollowupModal() {
+      openModal('新建随访记录', `
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">患者姓名</label>
+            <select class="form-select" id="newPatient">
+              <option>王秀兰</option>
+              <option>李建国</option>
+              <option>陈美华</option>
+              <option>赵德明</option>
+              <option>黄国庆</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">随访类型</label>
+            <select class="form-select">
+              <option>高血压随访</option>
+              <option>糖尿病随访</option>
+              <option>冠心病随访</option>
+              <option>综合随访</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">计划日期</label>
+            <input type="date" class="form-input" value="2026-03-26">
+          </div>
+          <div class="form-group">
+            <label class="form-label">随访方式</label>
+            <select class="form-select">
+              <option>门诊</option>
+              <option>上门</option>
+              <option>电话</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">收缩压 (mmHg)</label>
+            <input type="number" class="form-input" placeholder="请输入">
+          </div>
+          <div class="form-group">
+            <label class="form-label">舒张压 (mmHg)</label>
+            <input type="number" class="form-input" placeholder="请输入">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">空腹血糖 (mmol/L)</label>
+            <input type="number" class="form-input" step="0.1" placeholder="请输入">
+          </div>
+          <div class="form-group">
+            <label class="form-label">体重 (kg)</label>
+            <input type="number" class="form-input" step="0.1" placeholder="请输入">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">当前症状</label>
+          <input type="text" class="form-input" placeholder="请描述患者当前主要症状">
+        </div>
+        <div class="form-group">
+          <label class="form-label">用药情况</label>
+          <input type="text" class="form-input" placeholder="请输入当前用药情况">
+        </div>
+        <div class="form-group">
+          <label class="form-label">健康指导</label>
+          <input type="text" class="form-input" placeholder="请输入健康指导建议">
+        </div>
+        <div class="form-group">
+          <label class="form-label">下次随访时间</label>
+          <input type="date" class="form-input">
+        </div>
+      `, '<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal();alert(\'随访记录创建成功！\')">创建</button>');
+    }
+
+    function openEditFollowupModal(id) {
+      const item = followupData.find(i => i.id === id);
+      if (!item) return;
+      openModal('编辑随访记录', `
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">患者姓名</label>
+            <select class="form-select">
+              <option selected>${item.name}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">随访类型</label>
+            <select class="form-select">
+              <option selected>${item.type}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">随访日期</label>
+            <input type="date" class="form-input" value="${item.date || item.planDate}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">随访方式</label>
+            <select class="form-select">
+              <option selected>${item.method}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">收缩压 (mmHg)</label>
+            <input type="number" class="form-input" value="${item.bp.split('/')[0] || ''}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">舒张压 (mmHg)</label>
+            <input type="number" class="form-input" value="${item.bp.split('/')[1] || ''}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">空腹血糖 (mmol/L)</label>
+            <input type="number" class="form-input" step="0.1" value="${item.glucose || ''}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">糖化血红蛋白 (%)</label>
+            <input type="number" class="form-input" step="0.1" value="${item.hba1c || ''}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">当前症状</label>
+          <input type="text" class="form-input" value="${item.symptom}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">用药调整</label>
+          <input type="text" class="form-input" value="${item.adjust}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">健康指导</label>
+          <input type="text" class="form-input" value="${item.guidance.replace(/<br>/g, '')}">
+        </div>
+      `, '<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal();alert(\'随访记录已保存！\')">保存</button>');
+    }
+
+    function openPrintFollowupModal(name, code) {
+      openModal('打印随访记录', `
+        <div style="text-align:center;padding:10px 0;">
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">确定要打印${name}的随访记录吗？</p>
+          <p style="font-size:12px;color:var(--text-tertiary);">随访编号：${code}</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">打印格式</label>
+          <select class="form-select">
+            <option>标准随访记录表</option>
+            <option>详细检验报告</option>
+            <option>简明健康摘要</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" checked style="width:14px;height:14px;">
+            <span style="font-size:13px;color:var(--text-primary);">包含历史记录</span>
+          </label>
+        </div>
+      `, '<button class="btn btn-secondary" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="closeModal();alert(\'正在准备打印...\');setTimeout(()=>alert(\'随访记录已发送至打印机！\'),1000)">打印</button>');
+    }
+
+    renderList();
+  </script>
+</body>
+
+</html>
