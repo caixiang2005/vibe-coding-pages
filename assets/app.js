@@ -75,7 +75,6 @@ function render() {
   grid.innerHTML = list.map((project, index) => `
     <article class="project-card" style="animation-delay: ${Math.min(index * 0.025, 0.35)}s">
       <div class="project-card__meta">
-        <span>${project.code}</span>
         <span class="badge ${project.screenshots ? "" : "badge--muted"}">${project.screenshots ? "含截图" : "原型页面"}</span>
       </div>
       <h3>${project.name}</h3>
