@@ -81,7 +81,6 @@ function render() {
       <p class="slug">${project.slug}</p>
       <ul class="modules">${project.modules.map((item) => `<li>${item}</li>`).join("")}</ul>
       <div class="project-card__footer">
-        <span>${project.pages} ${project.entry.match(/\.(png|jpe?g|webp)$/i) ? "张截图" : "个 HTML 页面"}</span>
         <a class="open-link" href="${projectUrl(project)}">打开入口</a>
       </div>
     </article>
